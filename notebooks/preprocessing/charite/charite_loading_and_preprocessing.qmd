@@ -1,0 +1,508 @@
+---
+title: "charite_loading_and_preprocessing"
+author: "Avihay Cohen"
+---
+
+# 2. Charite's List: Loading and Cleaning
+
+<br>
+
+The Charite dois and ids list was derived from an output table of a manual screening process that was originally performed in order to label datasets as "Open Data" or "Not Open Data".
+
+<br>
+
+```{r Load Charites list}
+# 2.  Loading and cleaning Charite's list ------------------------------------------------------
+
+# Here we're loading:
+  # 2 tables of dois for 2020-2022: One from Ana and the other one from the dashboard.
+  # 1 table of dois for 2023 (there's no additional "dashboard" table for 2023).
+
+# First we'll wrangle and clean Ana's table for 2020-2022.
+# We'll then inner_join this table with the dashboard table to make sure that Ana's table has dois from Charite.
+
+# The goal is to verify that dois of originating papers are in both Ana’s list and the dashboard's (which includes only dois from Charite).
+
+# Load Charite's dois from Ana
+
+dois_from_Ana_until_2022_orig <- read.csv(
+  file.path(root_dir, "Data Inputs", "Raw files", "Charite DOIs List", "master_od_screening_manual_check_2020_2022_unsure_corrected.csv"),
+  header = TRUE,
+  sep = ";"
+) |> # 2020-2022
+  filter(
+    identifier != "https://www.ncbi.nlm.nih.gov/sra/?term=SRR8454256") # remove case from original list, as it hasn't been found in the actual paper during data validation
+
+dois_from_Ana_2023_orig <- read.csv(
+  file.path(root_dir, "Data Inputs", "Raw files", "Charite DOIs List", "od_lom_result_2023_dataset_level_v4.csv"),
+  header = TRUE,
+    sep = ";") # 2023
+
+# Load dashboard's dois
+
+dashboard_dois <- read.csv(
+  file.path(root_dir, "Data Inputs", "Raw files", "Charite Open Data Dashboard DOIs List", "dashboard_metrics.csv"),
+  header = TRUE,
+  sep = ",") |> 
+  mutate(doi = gsub("\\+", "/", doi)) |> 
+  mutate(doi = tolower(doi))
+
+dashboard_dois_dedup <- dashboard_dois |> group_by(doi) |> slice(1) |> ungroup() # deduplicate dois
+```
+
+### 2.1 Cleaning Steps
+
+<br>
+
+After the initial inspection, the Charite list was wrangled and cleaned further: <br>
+
+1.  **Standardized** NA notation and upper/lower cases.
+
+2.  Removed **".txt"** trail from doi.
+
+3.  Removed cases where doi and article were both **NA**.
+
+4.  **Merged** "doi" and "article" columns into "doi".
+
+5.  **Merged** "identifier" and "data_identifier" columns into "identifier".
+
+6.  **Merged** "open_data_assessment" and "assessment" columns into "open_data_assessment".
+
+7.  Removed cases where identifier and data_identifier were both **NA**.
+
+8.  Removed cases where identifier / data_identifier were **clearly not identifiers**.
+
+9.  Removed **NAs and duplicates**.
+
+10. Verifying that all dois are indeed **Charite** dois.
+
+<br>
+
+These steps have resulted in **Table 10.** below:
+
+```{r Charite wrangling}
+
+# Wrangling the Charite lists and binding them into one list
+
+# 1. Charite's dois from Ana (2020-2022)
+
+dois_from_Ana_until_2022 <- dois_from_Ana_until_2022_orig |> 
+  # "tolower" and replace + with /
+  mutate(doi = gsub("\\+", "/", doi)) |>
+  mutate(doi = tolower(doi)) |> 
+  mutate(article = gsub("\\+", "/", article)) |> 
+  mutate(article = tolower(article)) |>
+  # replace "na" with true NA
+  mutate(across(c(article, doi), ~ na_if(., "na"))) |> 
+  # dplyr::filter out cases where both doi and article are NA
+  dplyr::filter(!(is.na(doi) & is.na(article))) |>
+  # remove ".txt" from strings
+  mutate(article = str_remove(article, fixed(".txt"))) |>
+  mutate(doi = str_remove(doi, fixed(".txt"))) |>
+  # merge doi and article columns: replace "doi" with "article" where "doi" is NA
+  mutate(doi = case_when(is.na(doi) ~ article, .default = doi)) |> 
+  # merge identifier and data_identifier columns
+  mutate(identifier = case_when(is.na(identifier) ~ data_identifier, .default = identifier)) |>
+  select(-c(article, data_identifier)) |> 
+  # merge open_data_assessment and assessment columns
+  mutate(open_data_assessment = case_when(is.na(open_data_assessment) ~ assessment, .default = open_data_assessment)) |>
+  select(-assessment) |> 
+  # rewrite "own_open-data" as "own_open_data"
+  mutate(own_or_reuse_data = case_when(
+    own_or_reuse_data == "own_open-data"
+    ~ "own_open_data",
+    .default = own_or_reuse_data
+  ))
+
+# 2. Explore which cases to include
+
+cases_of_ids <- dois_from_Ana_until_2022 |>
+  group_by(open_data_assessment, own_or_reuse_data, data_access) |>
+  summarise(n = n()) |>
+  arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
+
+# write_csv_cr(cases_of_ids, file = file.path(root_dir, "Results Verification", "identifiers to include - DCC.csv"), row.names = F) # sent to Evgeny and Ana
+
+# Evgeny and Ana replied that each of the 3 cases below should be included:
+# access = yes, own = unsure / own, assessment = open data
+# access = unsure, own = own, assessment = open data
+# access = restricted, own = unsure / own / NULL, assessment = NULL
+
+# 3. Filter to get only relevant cases
+
+dois_from_Ana_for_matching_until_2022 <- dois_from_Ana_until_2022 |> 
+  filter(
+    (open_data_assessment == "open_data"
+    & own_or_reuse_data %in% c("own_open_data",
+                               "unsure")
+    & data_access %in% c("yes",
+                         "unsure")
+    )
+    | (data_access == "restricted"
+       & own_or_reuse_data %in% c("unsure",
+                                  "own_open_data",
+                                  "NULL")
+       & open_data_assessment == "NULL")
+  )
+
+# 4. Filter out dois that are not in the Charite dashboard
+
+charite_dois_and_ids_until_2022 <- dois_from_Ana_for_matching_until_2022 |> 
+  inner_join(dashboard_dois_dedup, by = "doi") |> 
+  select(doi, identifier) # Notice I'm not deduplicating dois because I want to get the dataset (identifier) level
+
+# 5. Wrangle Charite's dois from Ana (2023): Less wrangling needed here due to a cleaner source file.
+
+dois_from_Ana_2023 <- dois_from_Ana_2023_orig |> 
+  # "tolower"
+  mutate(doi = gsub("\\+", "/", doi)) |>
+  # replace + with /
+  mutate(doi = tolower(doi)) |> 
+  # rename identifer column
+  rename(identifier = data_identifier)
+
+# 6. Again, filter to get only relevant cases
+
+dois_from_Ana_for_matching_2023 <- dois_from_Ana_2023 |> 
+  filter(
+    (open_data_assessment == "open_data"
+    & own_or_reuse_data %in% c("own_open_data",
+                               "unsure")
+    & data_access %in% c("yes",
+                         "unsure")
+    )
+    | (data_access == "restricted"
+       & own_or_reuse_data %in% c("unsure",
+                                  "own_open_data",
+                                  "NULL")
+       & open_data_assessment == "NULL")
+  )
+
+# Note: the dashboard doesn't contain dois from 2023 anyway, so there's no need to join with the dashboard again.
+
+# 7. Bind 2020-2022 and 2023 tables into one table
+
+charite_dois_and_ids <- charite_dois_and_ids_until_2022 |> 
+  bind_rows(
+    dois_from_Ana_for_matching_2023 |>
+      select(doi, identifier)) |> 
+  mutate(identifier = tolower(identifier))
+
+save_cr(charite_dois_and_ids, file = file.path(root_dir, "Data Wrangling", "Charite Wrangling Steps", "1_charite_dois_and_ids.RData"))
+
+# Get the same list but with data access information for Sankey plot:
+
+charite_ids_until_2022_with_access_info <- dois_from_Ana_for_matching_until_2022 |> 
+  inner_join(dashboard_dois_dedup, by = "doi") |> 
+  select(identifier, data_access) # Notice I'm not deduplicating dois because I want to get the dataset (identifier) level
+
+charite_dois_and_ids_with_access_info <- charite_ids_until_2022_with_access_info |> 
+  bind_rows(
+    dois_from_Ana_for_matching_2023 |>
+      select(identifier, data_access)) |> 
+  mutate(identifier = tolower(identifier))
+
+save_cr(charite_dois_and_ids_with_access_info, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "charite_dois_and_ids_with_access_info.RData"))
+```
+
+<br>
+
+#### Table 10. Charite's Papers and Identifiers of Data Originating from Them
+
+<br>
+
+```{r Charites list table}
+
+charite_dois_and_ids_utf <- data.frame(lapply(charite_dois_and_ids, function(x) {
+     if (is.character(x)) {
+         iconv(x, from = "", to = "UTF-8", sub = "byte")
+     } else {
+         x
+     }
+ })) # troubleshooting encoding issue
+
+
+# Render table
+
+datatable(
+  charite_dois_and_ids_utf,
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+## 2.2 Automatically Standardizing Charite's Identifiers
+
+<br>
+
+Before matching identifiers between the DCC and Charite lists, the Charite **"identifier"** column had to be standardized into one format where possible and cleaned, as it was typed-in manually and didn't always follow a certain structure of an identifier or an accession number. This was done by the following steps:
+
+<br>
+
+1.  Automatically cleaning the typed-in accession numbers / data set identifiers / urls, using a function written by **Vladislav Nachev**. <br>
+2.  Manually validating the automatic extraction and correcting and standardizing identifiers where needed.
+
+<br>
+
+-   Most identifiers were quickly verified as valid extraction using common prefix matches (e.g. "gse"). <br>
+
+-   Others had no prefix and therefore had to be manually validated. <br>
+
+-   The rest were manually corrected to a structure that would maximize the chances for a match with the DCC identifiers list.
+
+<br>
+
+**32** values had no identifiers. These were excluded from the matching list.
+
+<br>
+
+The distribution of manual validation methods can be seen in **Table 11.** below:
+
+```{r Automatic extraction of accession numbers, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Function for accession numbers extraction (Written by Vladislav Nachev):
+
+extract_acc_nr <- function(url_string, pattern) {
+  url_string <- tolower(url_string) # standardizing for lower case
+  acc_nr <- elements <- NULL
+  if (stringr::str_detect(url_string, "osf")) { # extracting osf acc_nr
+    return(url_string |> 
+             stringr::str_extract("osf.*$") |>
+             stringr::str_remove("\\?.*") |> 
+             stringr::str_remove("\\/$") |> 
+             (\(x) paste0("//", x))())
+  } else if (stringr::str_detect(url_string, "doi\\:")) { # removing "doi" prefixes
+    return(url_string |> 
+             stringr::str_remove(".*\\: ?") |> 
+             stringr::str_squish() |> 
+             stringr::str_remove("\\.$"))
+  } else if (stringr::str_detect(url_string, "doi(\\.org)?\\/")) {
+    return(url_string |> 
+             stringr::str_remove(".*doi(\\.org)?\\/") |>
+             stringr::str_remove("(\\/|\\.)$")) 
+  }  else if (stringr::str_detect(url_string, "git(hu|la)b")) { # handling git
+    acc_nr <- tibble::tibble(elements = url_string)
+  } else if (stringr::str_detect(url_string, pattern)) { # handling common patterns
+    url_string <- stringr::str_remove(url_string, ".*\\?")
+    acc_nr <- tibble::tibble(elements = unlist(strsplit(url_string, "&"))) |> 
+      dplyr::filter(stringr::str_detect(elements, pattern)) 
+  } else {
+    acc_nr <- tibble::tibble(elements = unlist(strsplit(url_string, "\\/"))) |> 
+      dplyr::filter(stringr::str_length(elements) > 1,
+                    !stringr::str_detect(elements, "#|descriptors|files")) |> 
+      dplyr::slice_tail(n = 1)
+  }
+  acc_nr <- acc_nr |> 
+    dplyr::mutate(elements = stringr::str_remove(elements, "(\\?.*$)") |>
+                    stringr::str_remove("(.*\\=)") |> 
+                    stringr::str_remove("https?:?") |> 
+                    stringr::str_remove("\\.v?\\d{1,3}$")) |> 
+    dplyr::pull(elements)
+  
+  if (stringr::str_detect(url_string, "figshare\\.com\\/")) {
+    acc_nr <- paste0("10.6084/m9.figshare.", acc_nr)
+  }
+  return(acc_nr)
+}
+
+pattern <- "(acc(?!ess)|accession|ccdcid|studyid|id|run|term|acc)\\=" # we build this pattern when looking for url keyvalue pairs
+
+# Applying the function to clean accession numbers
+charite_dois_and_ids_clean <- charite_dois_and_ids |>
+  mutate(charite_data_id_or_acc_nr = map_chr(identifier, \(x) extract_acc_nr(x, pattern)))
+
+# Save
+save_cr(charite_dois_and_ids_clean, file = file.path(root_dir,
+                                                     "Data Wrangling",
+                                                     "Charite Wrangling Steps",
+                                                     "2_charite_dois_and_ids_clean.RData"))
+```
+
+```{r Load manual validation of accession numbers extraction}
+
+# The manual validation process was done in a separate file and resulted in the file:
+  # Manual validation of accession numbers extraction function for charite papers.csv
+
+# So in this chunk we will load the most recent .csv file from the manual validation directory and assign it to "charite_dois_and_ids_clean_manually_validated", and then wrangle it to show the manual validation process.
+
+# 1. Loading the most recent .csv file and assigning it to "charite_dois_and_ids_clean_manually_validated"
+
+# Locate dir
+files <- list.files(file.path(root_dir,
+                              "Results Verification",
+                              "Manual validation of accession numbers extraction function for charite papers"),
+                    pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE)
+
+# Identify the latest file based on modification time
+latest_file_name <- files[which.max(file.info(files)$mtime)]
+
+# Load the file into the global environment
+latest_file_to_load <- read_csv(latest_file_name)
+
+# Assign the loaded object to a new variable name
+manual_validation_done <- latest_file_to_load
+
+# 2. Wrangle to show validation process
+
+# Group cases
+manually_validated_summary <- manual_validation_done |> 
+  group_by(valid, type, comments) |> 
+  summarise(n = n())
+
+# Get relevant cases for matching
+charite_dois_and_ids_clean_manually_validated <- manual_validation_done |> 
+  filter(valid == TRUE | is.na(valid)) |> 
+  mutate(charite_data_id_or_acc_nr_merged = charite_data_id_or_acc_nr_merged |>
+           str_remove_all("[/\\.]+$") # Remove all trailing slashes and dots (no further cleaning needed)
+  )
+
+rm(latest_file_to_load) # clean up
+```
+
+```{r Save charite_dois_and_ids_clean_manually_validated, eval = if (params$execute_falses) TRUE else FALSE}
+save_cr(charite_dois_and_ids_clean_manually_validated, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "charite_dois_and_ids_clean_manually_validated.RData"))
+```
+
+<br>
+
+#### Table 11. Manual Validation of Datasets Identifiers and Accession Numbers
+
+<br>
+
+```{r manual validation process table}
+
+# Prepare table
+
+manually_validated_for_table <- manually_validated_summary |> 
+ mutate(category = case_when(
+    is.na(type) & is.na(comments) ~ "Extracted automatically using prefixes",
+    type == "acc_nr" & is.na(comments) ~ "Validated as extracted correctly",
+    comments == "manually corrected" ~ "Manually corrected",
+    comments == "no identifier" ~ "No identifier"
+  )) |>
+  group_by(category) |>
+  summarise(`Number of Cases` = sum(n, na.rm = TRUE), .groups = "drop") |>
+  arrange(match(category, c(
+    "Extracted automatically using prefixes",
+    "No prefixes; Validated as extracted correctly",
+    "Manually corrected following the automatic extraction",
+    "No identifier"
+  ))) |>
+  select(`Number of Cases`, Comments = category)
+
+# Render table
+
+datatable(
+  manually_validated_for_table, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+**Table 12.** below shows cases that had no identifiers in the Charite list.
+
+<br>
+
+#### Table 12. Cases with no identifiers
+
+<br>
+
+```{r  Cases with no identifiers}
+
+# Prepare table
+
+manually_validated_no_id <- manual_validation_done |> 
+ filter(comments == "no identifier")
+
+# Render table
+
+datatable(
+  manually_validated_no_id, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+```{r Examining cases with no identifiers}
+
+# I want to understand how come there are cases with no identifiers when the Charite cases are supposed to be only 1 of these 3 criteria:
+  # access = yes, own = unsure / own, assessment = open data
+  # access = unsure, own = own, assessment = open data
+  # access = restricted, own = unsure / own / NULL, assessment = NULL
+
+# So first, I'll get all the "no identifier" values that were left after manual validation
+manually_validated_no_id <- manual_validation_done |> 
+ filter(comments == "no identifier") |> 
+  select(doi, identifier) |> 
+  arrange(doi, identifier)
+
+# Then I'll check where do they come from in the original files with steps backwards:
+
+# so just before Vladi's function (meaning all cases until 2023)
+no_id_in_anas_list_before_std_func <- charite_dois_and_ids|>
+  inner_join(manually_validated_no_id,
+             by = c("doi" ,"identifier")) |> 
+    arrange(doi, identifier) # they are here
+
+# So they are in the list before Vladi's function. Let's see their origin a step backwards:
+
+# 2022
+no_id_in_charite_2022 <- charite_dois_and_ids_until_2022 |>
+  mutate(doi = tolower(doi),
+         identifier = tolower(identifier)) |> 
+  inner_join(manually_validated_no_id, by = c("doi" ,"identifier")) # nothing is from until_2022
+
+no_id_in_orig_id_2022 <- dois_from_Ana_until_2022_orig |> 
+   mutate(doi = tolower(doi),
+          identifier = tolower(identifier),
+          article = tolower(article),
+          data_identifier = tolower(data_identifier)) |>
+  inner_join(manually_validated_no_id, by = c("doi" ,"identifier")) # nothing in original file as well (id col)
+
+no_id_in_orig_d_id_2022 <- dois_from_Ana_until_2022_orig |> 
+   mutate(doi = tolower(doi),
+          identifier = tolower(identifier),
+          article = tolower(article),
+          data_identifier = tolower(data_identifier)) |>
+  inner_join(manually_validated_no_id, by = c("article" = "doi" ,"data_identifier" = "identifier")) # nothing in original file as well (id col)
+
+# So none of the "no identifier" cases are originating from "_until_2022".
+
+# 2023
+no_id_in_charite_2023 <- dois_from_Ana_for_matching_2023 |>
+  mutate(doi = tolower(doi),
+         identifier = tolower(identifier)) |> 
+  inner_join(manually_validated_no_id, by = c("doi" ,"identifier"))
+
+# So all of the 32 cases of "no identifier" originated from 2023. Let's see how and why did they pass the "open data" criteria filter.
+
+# Conclusion: they are general data repositories without accession numbers that were included because of data_access = restricted / approved by Ana.
+
+```

@@ -1,0 +1,37 @@
+---
+title: Investigating the Reuse of Biomedical Data Using the Data Citation Corpus
+authors:
+  - name: 
+    affiliation: 
+    roles: writing
+    corresponding: true
+    orcid: 
+
+  - name: 
+    affiliation: 
+    roles: writing
+    orcid:
+    
+  - name: 
+    affiliation: 
+    roles: writing
+    orcid:
+      
+  - name: 
+    affiliation: 
+    roles: writing
+    orcid:   
+  
+  - name: 
+    affiliation: 
+    roles: writing
+    orcid: 
+  - name: 
+    affiliation: 
+    roles: writing
+    orcid: 
+---
+
+Your text goes here.
+
+# Plots

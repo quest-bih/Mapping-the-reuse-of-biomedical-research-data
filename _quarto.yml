@@ -1,0 +1,22 @@
+project:
+  type: manuscript
+  output-dir: _output
+    
+manuscript:
+  article: index.qmd
+  notebooks:
+    - notebook: notebooks/plots/plots.qmd  # plots
+
+format:
+  html:
+    comments:
+      hypothesis: true
+  docx: default
+  pdf: default
+  jats: default
+
+execute:
+  freeze: auto
+
+editor: visual
+

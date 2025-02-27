@@ -1,0 +1,1115 @@
+---
+title: "dcc_loading_and_preprocessing"
+author: "Avihay Cohen"
+---
+
+
+# 1. DCC: Loading, Overview and Cleaning
+
+<br>
+
+The DCC was downloaded as a list of csv files that were then combined into one file. The file was then cleaned using the steps below: <br>
+
+1.  **Renaming** columns for internal analysis purposes <br>
+
+2.  **Exploring** missing values <br>
+
+3.  Validating records' **dates** <br>
+
+4.  **Standardizing** doi and identifier columns: <br>
+
+    -   Bringing all values of doi and dataset to **lower case** <br>
+
+    -   **Replacing** commas with dots <br>
+
+    -   **Removing** dots and slashes trails and spaces from values <br>
+
+    -   **Removing** version information from identifiers values <br>
+
+5.  Standardizing identifiers of **general repositories** (zenodo, figshare, osf, dryad) to a doi format
+
+
+
+
+```{r DCC: Loading and cleaning, eval = if (params$execute_falses) TRUE else FALSE}
+# 1. Loading and cleaning the DCC list (v2) ---------------------------------------------------------
+
+# DCC data dictionary can be found here:
+# v3 https://zenodo.org/records/14897662
+
+# Uncomment when running chunk independently:
+# selected_dir <- selectDirectory(caption = "Select a Directory") # select DCC csv files directory
+
+# Check if directory is already set
+if (!exists("selected_dir")) {
+  # Try to select a directory
+  selected_dir <- tryCatch({
+    tclvalue(tkchooseDirectory(title = "Please select a directory containing DCC corpus csv files"))
+  }, error = function(e) {
+    stop("No directory selected or selection was cancelled!")
+  })
+  
+  if (nchar(selected_dir) == 0) {
+    stop("Directory selection was cancelled!")
+  }
+}
+
+message("Selected directory: ", selected_dir)
+
+# Set wd
+setwd(selected_dir)
+
+# Get a list of all CSV files in the directory
+file_list <- list.files(pattern = "*.csv")
+
+# Read all CSV files into a list of data frames
+data_list <- lapply(file_list, read.csv)
+
+# Combine the list of data frames into a single data frame
+DCC_corpus_orig <- bind_rows(data_list)
+
+# Create a folder for the downloaded DCC
+dir.create(file.path(root_dir, "Data Inputs", "Raw files", "DCC Corpus Original"), showWarnings = FALSE)
+
+# Save DCC as .RData object
+save_cr(DCC_corpus_orig, file = file.path(root_dir, "Data Inputs", "Raw files", "DCC Corpus Original", "DCC_corpus_v2_orig.RData"))
+
+setwd(root_dir) # return to root directory
+
+DCC_corpus <- DCC_corpus_orig # assign _orig to a new variable
+
+rm(data_list, file_list) # clean up
+```
+
+```{r DCC: Dates exploration, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Convert "created", "updated" and "publishedDate" to date type
+
+# str(DCC_corpus$created)
+# str(DCC_corpus$publishedDate)
+
+DCC_corpus_1_dates <- DCC_corpus |>
+  mutate(created = ymd_hms(created),
+         updated = ymd_hms(updated),
+         publishedDate = ymd_hms(publishedDate),
+         created = as.Date(created),
+         updated = as.Date(updated),
+         publishedDate = as.Date(publishedDate))
+
+# Get min and max dates
+min_c <- min(DCC_corpus_1_dates$created, na.rm = TRUE)
+max_c <- max(DCC_corpus_1_dates$created, na.rm = TRUE)
+
+min_u <- min(DCC_corpus_1_dates$updated, na.rm = TRUE)
+max_u <- max(DCC_corpus_1_dates$updated, na.rm = TRUE)
+
+min_p <- min(DCC_corpus_1_dates$publishedDate, na.rm = TRUE)
+max_p <- max(DCC_corpus_1_dates$publishedDate, na.rm = TRUE)
+
+# Save variables
+save_cr(min_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_c.RData"))
+save_cr(max_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_c.RData"))
+save_cr(min_u, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_u.RData"))
+save_cr(max_u, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_u.RData"))
+save_cr(min_p, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_p.RData"))
+save_cr(max_p, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_p.RData"))
+
+# Save 1st DCC wrangling step
+save_cr(DCC_corpus_1_dates, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps","DCC_corpus_1_dates.RData"))
+```
+
+```{r DCC: Renaming columns, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Rename columns and initial characters cleaning for the DOI and data identifier columns
+
+DCC_corpus_2_renamed_clean <- DCC_corpus_1_dates |>
+  rename(doi = publication,
+         data_id_or_acc_nr = dataset) |> # rename columns
+  mutate(data_id_or_acc_nr = str_to_lower(data_id_or_acc_nr), # tolower
+         data_id_or_acc_nr = str_remove_all(data_id_or_acc_nr, " "), # remove blank spaces
+         data_id_or_acc_nr = str_replace_all(data_id_or_acc_nr, ",", "."), # replace "," with "."
+         # Same procedure for DOIs
+         doi = str_to_lower(doi), 
+         doi = str_remove_all(doi, " "), 
+         doi = str_replace_all(doi, ",", "."),
+         doi = str_replace(doi, "https://doi.org/", "")) # standardize DOIs (remove prefixes)
+
+# Save 2nd DCC wrangling step
+save_cr(DCC_corpus_2_renamed_clean, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_2_renamed_clean.RData"))
+```
+
+```{r DCC: Standardizing general repositories entries zenodo, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Exploring & standardizing the general repositories values (zenodo): std to: 10.5281/zenodo.xxxxx
+
+# DCC_corpus_2_renamed_clean |> filter(str_detect(data_id_or_acc_nr, "zenodo")) |> View() # not standardized in DCC
+
+# Replace with "10.5281/zenodo." and append what comes after "zenodo." in the original value
+DCC_corpus_3_std_gen_rep <- DCC_corpus_2_renamed_clean |> 
+  mutate(data_id_or_acc_nr = case_when(
+    str_detect(data_id_or_acc_nr, "zenodo\\.")
+    ~ paste0("10.5281/zenodo.", str_extract(data_id_or_acc_nr, "zenodo\\.[^zenodo.]*$") |>
+               str_remove("zenodo\\.")),  # detect the last "zenodo." and append what comes after
+    .default = data_id_or_acc_nr))
+
+# DCC_corpus_3_std_gen_rep |> filter(str_detect(data_id_or_acc_nr, "zenodo")
+#                   & !str_detect(data_id_or_acc_nr, "^10\\.5281/zenodo\\.")) |> View() # uncomment to view the rest (looks irrelevant)
+
+# Get the rest that my code didn't handle
+zenodo_na <- DCC_corpus_3_std_gen_rep |> filter(data_id_or_acc_nr == "10.5281/zenodo.NA")
+
+save_cr(zenodo_na, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "zenodo_na.RData")) # save
+```
+
+```{r DCC: Standardizing general repositories entries OSF, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Exploring & standardizing the general repositories values (osf): std to: //osf.io/xxxxx
+
+DCC_corpus_2_renamed_clean |> filter(str_detect(data_id_or_acc_nr, "osf")) |> View() # not standardized in DCC
+
+# When an identifier ends with "osf.io/*anything*", keep this ending, add "//" before it and remove trailing "/"
+DCC_corpus_3_std_gen_rep <- DCC_corpus_3_std_gen_rep |> 
+mutate(data_id_or_acc_nr = case_when(
+  str_detect(data_id_or_acc_nr, "osf\\.io/.+$")
+  ~ paste0("//", str_replace(str_extract(data_id_or_acc_nr, "osf\\.io/.+$"), "/$", "")),  
+    .default =  data_id_or_acc_nr))
+
+# Get the rest that my code didn't handle
+osf_not_std <- DCC_corpus_3_std_gen_rep |>
+  filter(str_detect(data_id_or_acc_nr, "osf")) |>
+  filter(!str_starts(data_id_or_acc_nr, "//osf.io"))
+
+save_cr(osf_not_std, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "osf_not_std.RData")) # save
+```
+
+```{r DCC: Standardizing general repositories entries Figshare, eval = if (params$execute_falses) TRUE else FALSE}
+
+# # Exploring & standardizing the general repositories values (figshare): std to: 10.6084/m9.figshare.xxxxx
+
+DCC_corpus_2_renamed_clean |> filter(str_detect(data_id_or_acc_nr, "figshare")) |> View() # not standardized in DCC
+
+# When an identifier has with "10.6084/m9.figshare.*anything*", keep this string and anything after it and remove trailing "/"
+DCC_corpus_3_std_gen_rep <- DCC_corpus_3_std_gen_rep |> 
+mutate(data_id_or_acc_nr = case_when(
+  str_detect(data_id_or_acc_nr, "10\\.6084/m9\\.figshare\\..+$")
+  ~ paste0("", str_replace(str_extract(data_id_or_acc_nr, "10\\.6084/m9\\.figshare\\..+$"), "/$", "")),  
+    .default = data_id_or_acc_nr))
+
+# Standardize identifiers that have "m9.figshare" in them but don't start with "10.6084/m9.figshare."
+DCC_corpus_3_std_gen_rep <- DCC_corpus_3_std_gen_rep |>
+  mutate(data_id_or_acc_nr = case_when(
+    str_detect(data_id_or_acc_nr, "m9.figshare") & !str_starts(data_id_or_acc_nr, "10.6084/m9.figshare.") ~ 
+      str_replace(data_id_or_acc_nr, ".*?(m9\\.figshare\\..*)", "10.6084/\\1"),
+    .default = data_id_or_acc_nr
+  ))
+
+# Get the rest that my code didn't handle
+figshare_not_std <- DCC_corpus_3_std_gen_rep |>
+  filter(str_detect(data_id_or_acc_nr, "m9.figshare")) |>
+  filter(!str_starts(data_id_or_acc_nr, "10.6084/m9.figshare."))
+
+save_cr(figshare_not_std, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "figshare_not_std.RData")) # save
+```
+
+```{r DCC: Standardizing general repositories entries Dryad, eval = if (params$execute_falses) TRUE else FALSE}
+
+# # Exploring & standardizing the general repositories values (dryad): std to: 10.5061/dryad/xxxxx
+
+# DCC_corpus_2_renamed_clean |> filter(str_detect(data_id_or_acc_nr, "dryad")) |> View() # not standardized in DCC
+
+# Standardize identifiers that have "10.5061/dryad." in them but don't start with "10.5061/dryad."
+DCC_corpus_3_std_gen_rep <- DCC_corpus_3_std_gen_rep |>
+  mutate(data_id_or_acc_nr = case_when(
+    str_detect(data_id_or_acc_nr, "10.5061/dryad\\.") & !str_starts(data_id_or_acc_nr, "10.5061/dryad\\.") ~ 
+      str_replace(data_id_or_acc_nr, ".*?(10\\.5061/dryad\\..*)", "\\1"),
+    .default = data_id_or_acc_nr
+  ))
+
+# Get the rest that my code didn't handle
+dryad_not_std <- DCC_corpus_3_std_gen_rep |>
+  filter(str_detect(data_id_or_acc_nr, "10.5061/dryad.")) |>
+  filter(!str_starts(data_id_or_acc_nr, "10.5061/dryad."))
+
+save_cr(dryad_not_std, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dryad_not_std.RData")) # save
+
+# Save 3rd DCC wrangling step
+save_cr(DCC_corpus_3_std_gen_rep, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_3_std_gen_rep.RData"))
+```
+
+```{r DCC: Removing version information, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Remove version information from data_id_or_acc_nr and doi columns
+
+DCC_corpus_4_rm_v_info <- DCC_corpus_3_std_gen_rep |>
+  mutate(
+    data_id_or_acc_nr = str_replace(data_id_or_acc_nr,  "\\.v\\d+(/t\\d+)?(\\.p\\d+)?$", ""),
+    doi = str_replace(doi, "\\.v\\d+(/t\\d+)?(\\.p\\d+)?$", "")
+  ) # if a string ends with ".v" followed by an integer / ".t" and any number / ".p" and any number, remove the ".v" and everything that follows.
+
+# Get the rest
+ver_info <- DCC_corpus_4_rm_v_info |> 
+  filter(str_detect(data_id_or_acc_nr, "\\.(v|t|p)\\d+$"))
+
+save_cr(ver_info, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "ver_info.RData")) # save
+
+# Save 4th DCC wrangling step
+save_cr(DCC_corpus_4_rm_v_info, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_4_rm_v_info.RData"))
+```
+
+```{r DCC: Removing excess characters, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Cleaning records end with dots or "/" or has commas in DCC and Charite's lists
+
+DCC_corpus_5_ex_chr_rm <- DCC_corpus_4_rm_v_info |> 
+  mutate(
+    doi = doi |> 
+      str_replace_all(",", ".") |>      # replace commas with dots
+      str_trim() |>                     # remove leading and trailing spaces
+      str_remove_all("\\s") |>          # remove all spaces in the string
+      str_remove_all("[/\\.]+$"),       # remove all trailing slashes and dots
+    data_id_or_acc_nr = data_id_or_acc_nr |> 
+      str_replace_all(",", ".") |>      # same procedure for id column
+      str_trim() |>                     
+      str_remove_all("\\s") |>          
+      str_remove_all("[/\\.]+$")        
+  )
+
+# Save 5th DCC wrangling step
+save_cr(DCC_corpus_5_ex_chr_rm, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_5_ex_chr_rm.RData"))
+```
+
+```{r Standardized data sets' DOIs}
+
+# Get cases where a DOI of a data set doesn't start with "10."
+
+distinct_doi_prefixes <- DCC_corpus_5_ex_chr_rm  |> 
+  mutate(prefix = str_extract(data_id_or_acc_nr, "^.*(?=/10\\.)"))  |> 
+  distinct(prefix) |> 
+  na.omit()
+
+DCC_corpus_6_doi_pref_rm <- DCC_corpus_5_ex_chr_rm  |> 
+  mutate(data_id_or_acc_nr = str_remove(data_id_or_acc_nr, "^.*(?=/10\\.)/"))  # Remove prefix including the slash
+
+DCC_corpus_6_doi_pref_rm  |> 
+  mutate(prefix = str_extract(data_id_or_acc_nr, "^.*(?=/10\\.)"))  |> 
+  distinct(prefix) |> 
+  na.omit() |>
+  View()   # Check
+
+DCC_corpus_6_doi_pref_rm  |> 
+  mutate(prefix = str_extract(doi, "^.*(?=/10\\.)"))  |> 
+  distinct(prefix) |> 
+  na.omit() |>
+  View()   # Check for paper's dois as well: looks ok.
+
+# Save omitted prefixes
+save_cr(distinct_doi_prefixes, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "distinct_doi_prefixes.RData"))
+
+# Save 6th DCC wrangling step
+save_cr(DCC_corpus_6_doi_pref_rm, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_6_doi_pref_rm.RData"))
+```
+
+```{r DCC: Get cases where doi is the same as id, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Get cases where paper's doi = dataset's id (after removing excess characters)
+
+doi_is_id <- DCC_corpus_6_doi_pref_rm |>
+  filter(doi == data_id_or_acc_nr)
+
+save_cr(doi_is_id, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "doi_is_id.RData")) # save
+
+# Create a sample for rendering
+doi_is_id_sampled <- doi_is_id |> sample_n(100)
+
+save_cr(doi_is_id_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "doi_is_id_sampled.RData")) # save
+```
+
+<br>
+
+## 1.1 DCC Data Dictionary
+
+<br>
+
+**Table 1.** Below shows the relevant columns for the analysis and their description.
+
+<br>
+
+#### Table 1. DCC Data dictionary
+
+<br>
+
+```{r DCC data dictionary}
+
+# Create data dictionary table
+dcc_cols_dict <- tibble(
+  Column_name = c(
+    "publication",         
+    "publishedDate",
+    "dataset",
+    "repository",
+    "publisher",      
+    "journal"
+  ),
+  Description = c(
+    "Citing paper's DOI",
+    "of citing paper",
+    "Data identifier (=doi) or accession number (cited dataset)",
+    "of cited dataset",
+    "of citing paper",
+    "of citing paper"
+  )
+)
+
+# Render table
+
+datatable(
+  dcc_cols_dict, 
+  options = list(
+    pageLength = -1,  # display all entries by default
+    scrollY = "200px",  # enable vertical scrolling
+    scrollX = TRUE,     # enable horizontal scrolling for both content and header
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+## 1.2 Dates of Records
+
+<br>
+
+The earliest and latest publication dates were examined for validity, as shown in **Table 2.** below:
+
+<br>
+
+#### Table 2. Dates of records in DCC list
+
+<br>
+
+```{r DCC records dates}
+
+# Load dates of original DCC
+
+load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_c.RData"))
+load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_c.RData"))
+load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_u.RData"))
+load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_u.RData"))
+load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_p.RData"))
+load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_p.RData"))
+
+# Create earliest and latest dates table
+dcc_dates <- tibble(
+  Earliest_publication_date = min_p,
+  Latest_publication_date = max_p,
+  Earliest_update_date = min_u,
+  Latest_updated_date = max_u,
+  Earliest_added_date = min_c,
+  Latest_added_date = min_c
+)
+
+# Render table
+
+datatable(
+  dcc_dates, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,     
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+```{r DCC extreme publication dates, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Get earliest publication date
+dcc_earliest_paper <- DCC_corpus_1_dates |>
+  filter(publishedDate == min(publishedDate, na.rm = TRUE))
+
+save_cr(dcc_earliest_paper, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_earliest_paper.RData")) # save
+
+# Get latest publication date
+dcc_papers_after_2025 <- DCC_corpus_1_dates |>
+  filter(year(publishedDate) > 2025)
+
+save_cr(dcc_papers_after_2024, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_papers_after_2025.RData")) # save
+
+rm(DCC_corpus_1_dates) # clean up
+```
+
+<br>
+
+The earliest publication date is a real paper published in Transactions of the American Philosophical Society journal.
+
+<br>
+
+Publication dates written as later than 2025 look like typos (e.g. 2019 is falsely written as 2109) or cases that are entirely invalid for our analysis purpose (e.g. where values in the DOI and the dataset columns are identical). These cases are shown in **Table 3.** below:
+
+<br>
+
+#### Table 3. Papers written as published after 2025
+
+```{r DCC dates typos table}
+
+# Render table
+
+datatable(
+  dcc_papers_after_2025, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+
+```
+
+<br>
+
+## 1.3 NAs, NULLs and Blank Values
+
+<br>
+
+**Table 4.** below shows counts and proportion of NA, NULL and blank values across all columns of DCC. There were no missing values in the doi or dataset columns.
+
+#### Table 4. NAs, NULLs and blank values
+
+<br>
+
+```{r DCC NAs, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Create NAs, NULLs and blanks table 
+
+dcc_na_null_blank <- tibble(
+    na_count = summarise_all(DCC_corpus, function(x) sum(is.na(x))),
+    null_count = summarise_all(DCC_corpus, function(x) sum(sapply(x, is.null))),
+    blank_count = summarise_all(DCC_corpus, function(x) sum(x == "", na.rm = TRUE))
+)
+
+save_cr(dcc_na_null_blank, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_na_null_blank.RData")) # save
+
+# Create reduced table for rendering
+
+dcc_na_null_blank_reduced <- dcc_na_null_blank |> 
+  unnest(cols = everything(), names_sep = "_") |>
+    pivot_longer(
+      cols = everything(),
+      names_to = "count_type",
+      values_to = "value_count") |>
+  filter(value_count > 0) |> 
+  mutate(percentage_of_corpus = paste0(sprintf("%.2f", (value_count / nrow(DCC_corpus)) * 100), "%")) |> 
+  mutate(count_type = case_when(
+    count_type == "na_count_publishedDate" ~ "DCC Publication date column 'NA's",
+    count_type == "blank_count_repository" ~ "Repository column: no value",
+    count_type == "blank_count_publisher" ~ "Publisher column: no value",
+    count_type == "blank_count_journal" ~ "Journal column: no value",
+    count_type == "blank_count_title" ~ "Paper titel column: no value",
+    count_type == "blank_count_subjects" ~ "Subject column: no value",
+    count_type == "blank_count_affiliations" ~ "Affiliation column: no value",
+    count_type == "blank_count_funders" ~ "Funder column: no value",
+    .default = count_type))
+
+
+save_cr(dcc_na_null_blank_reduced, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_na_null_blank_reduced.RData")) # save
+
+rm(DCC_corpus) # clean up
+
+```
+
+```{r DCC NAs table}
+
+# Render table
+
+datatable(
+  dcc_na_null_blank_reduced, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+
+```
+
+<br>
+
+## 1.4 General Repositories
+
+<br>
+
+For the purpose of matching data sets identifiers in the corpus with another identifiers list, general repositories (zenodo, osf, figshare, dryad) were standardized to a reduced doi format. **Table 5.** below shows the proportion of general repositories cases in the corpus.
+
+<br>
+
+```{r Proportion of general repositories in DCC, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Get total count if generak repositories (to use later in percentages calcaultion)
+
+dcc_id_dist <- DCC_corpus_5_ex_chr_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
+
+# Create general repositories counts and percentages table
+
+gen_rep_dcc <- DCC_corpus_5_ex_chr_rm |> 
+  summarize(
+    osf = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, "osf")]),
+    zenodo = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, "zenodo")]),
+    dryad = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, "dryad")]),
+    figshare = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, "figshare")]),
+    harvard = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, "harvard")])
+  ) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Repository",
+    values_to = "Count"
+  ) |> 
+  mutate(
+    Percentage = paste0(
+      sprintf("%.2f", Count / dcc_id_dist * 100), "%"
+    )
+  )
+
+save_cr(gen_rep_dcc, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "gen_rep_dcc.RData")) # save
+```
+
+```{r DCC general repositories nonstandardized, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Create tables of general repositories cases that needed standardizing
+
+# zenodo
+
+zenodo_tibble <- DCC_corpus_2_renamed_clean |>
+  filter(
+    str_detect(data_id_or_acc_nr, "zenodo\\.") &
+    !str_detect(data_id_or_acc_nr, "^10\\.5281/zenodo\\.\\d+$")
+  )
+
+# osf
+
+osf_tibble <- DCC_corpus_2_renamed_clean |>
+  filter(
+    str_detect(data_id_or_acc_nr, "osf\\.io/.+$") &
+    !str_detect(data_id_or_acc_nr, "^https?://osf\\.io/\\w+$")
+  )
+
+# figshare
+
+figshare_tibble <- DCC_corpus_2_renamed_clean |>
+  filter(
+    str_detect(data_id_or_acc_nr, "10\\.6084/m9\\.figshare\\..+$") &
+    !str_detect(data_id_or_acc_nr, "^10\\.6084/m9\\.figshare\\.\\d+$")
+  )
+
+# dryad
+
+dryad_tibble <- DCC_corpus_2_renamed_clean |>
+  filter(
+    str_detect(data_id_or_acc_nr, "10\\.5061/dryad\\.") &
+    !str_detect(data_id_or_acc_nr, "^10\\.5061/dryad\\.\\d+$")
+  )
+
+# Save tables
+
+save_cr(zenodo_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",   "zenodo_tibble.RData"))
+save_cr(osf_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",      "osf_tibble.RData"))
+save_cr(figshare_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "figshare_tibble.RData"))
+save_cr(dryad_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",    "dryad_tibble.RData"))
+
+# Get counts
+
+z_tib_c <- zenodo_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # zenodo
+o_tib_c <- osf_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # osf
+f_tib_c <- figshare_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # figshare
+d_tib_c <- dryad_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # dryad
+
+# Save counts
+
+save_cr(z_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "z_tib_c.RData"))
+save_cr(o_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "o_tib_c.RData"))
+save_cr(f_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "f_tib_c.RData"))
+save_cr(d_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "d_tib_c.RData"))
+
+# Create sample tables for rendering
+
+zenodo_tibble_sampled <- zenodo_tibble |> sample_n(100)
+osf_tibble_sampled <- osf_tibble |> sample_n(100)
+figshare_tibble_sampled <- figshare_tibble |> sample_n(100)
+dryad_tibble_sampled <- dryad_tibble |> sample_n(100)
+
+# Save sample tables
+
+save_cr(zenodo_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",   "zenodo_tibble_sampled.RData"))
+save_cr(osf_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",      "osf_tibble_sampled.RData"))
+save_cr(figshare_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "figshare_tibble_sampled.RData"))
+save_cr(dryad_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",    "dryad_tibble_sampled.RData"))
+
+rm(DCC_corpus_2_renamed_clean) # clean up
+```
+
+<br>
+
+Figshare cases were standardized to the format: 10.6084/m9.figshare.xxxxx <br>
+
+Zenodo cases were standardized to the format: 10.5281/zenodo.xxxxx <br>
+
+Dryad cases were standardized to the format: 10.5061/dryad.xxxxx <br>
+
+OSF cases were standardized to the format: //osf.io/xxxxx <br> <br> Below are tables of sample cases of each general repository in its original form. Some of the cases include dois and identifiers that were actually referring to the same url, as will be shown later in the document.
+
+<br>
+
+##### Table 6.a. Non-standardized Identifiers: Figshare
+
+<br>
+
+```{r nonstandardized general repositories figshare table}
+
+# Render table
+
+datatable(
+  figshare_tibble_sampled, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+##### Table 6.b. Non-standardized Identifiers: Zenodo
+
+<br>
+
+```{r nonstandardized general repositories zenodo table}
+
+# Render table
+
+datatable(
+  zenodo_tibble_sampled,
+  options = list(
+    pageLength = -1,
+    scrollY = "200px",
+    scrollX = TRUE,
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+##### Table 6.c. Non-standardized Identifiers: Dryad
+
+<br>
+
+```{r nonstandardized general repositories dryad table}
+
+# Render table
+
+datatable(
+  dryad_tibble_sampled, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+##### Table 6.d. Non-standardized Identifiers: OSF
+
+<br>
+
+```{r nonstandardized general repositories osf table}
+
+# Render table
+
+datatable(
+  osf_tibble_sampled, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+<br>
+
+### Remaining cases after standardization process
+
+<br>
+
+Cases that were left non-standardized after the standardization procedure were either non valid (e.g. **"10.5281/zenodo.NA"**) or had the same value for the paper's doi and the data set identifier: <br>
+
+<br>
+
+#### Zenodo
+
+```{r Cases left after standardizing zenodo table}
+
+# Render table
+
+datatable(
+  zenodo_na, 
+  options = list(
+    title = "Zenodo",
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+#### Figshare
+
+```{r Cases left after standardizing figshare table}
+
+# Render table
+
+datatable(
+  figshare_not_std, 
+  options = list(
+    title = "Figshare",
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+#### OSF
+
+```{r Cases left after standardizing osf table}
+
+# Render table
+
+datatable(
+  osf_not_std, 
+  options = list(
+    title = "OSF",
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+
+
+```
+
+<br>
+
+## 1.5 Data Set Version Information
+
+<br>
+
+Version information was removed from DOIs and dataset identifiers. **Table 7.** below shows a sample of DOIs and identifiers with version information.
+
+#### Table 7. DOIs or Identifiers with Version Information (Sample)
+
+<br>
+
+```{r DCC ids with version info, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Create a table of cases with version trails: ends with ".v" followed by an integer / ".t" and any number / ".p" and any number
+
+trail_cases_tibble <- DCC_corpus_3_std_gen_rep |>
+  filter(
+    str_detect(data_id_or_acc_nr, "\\.v\\d+(/t\\d+)?(\\.p\\d+)?$") |
+    str_detect(doi, "\\.v\\d+(/t\\d+)?(\\.p\\d+)?$")
+  )
+
+save_cr(trail_cases_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "trail_cases_tibble.RData")) # save
+
+# Get counts
+
+no_of_cases_with_v_info <- nrow(trail_cases_tibble)
+
+save_cr(no_of_cases_with_v_info, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "no_of_cases_with_v_info.RData")) # save
+
+# Create a sample table
+
+trail_cases_tibble_sampled <- trail_cases_tibble |> sample_n(100)
+
+save_cr(trail_cases_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "trail_cases_tibble_sampled.RData")) # save
+
+rm(DCC_corpus_3_std_gen_rep) # clean up
+```
+
+```{r DCC ids with version info table}
+
+# Render table
+
+datatable(
+  trail_cases_tibble_sampled, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons',  class = 'stripe hover cell-border' # Add light styling
+  )
+```
+
+<br>
+
+Overall, the DCC contained **`r no_of_cases_with_v_info`** cases with version information within a DOI or an Identifier
+
+<br>
+
+## 1.6 Blank Spaces, Commas and Trails Dots and Slashes
+
+<br>
+
+Cases where either the DOI or the dataset columns ended with "/" or ".", or contained "," or " " were identified. <br> Then commas were replaced with dots, and any blanks or ending slashes or dots were removed. This was done after standardizing general repositories and removing data set version information, for the remaining cases. <br>
+
+**Table 8.** below shows how many cases of each were present in the original DCC ("Before Standardization"), after standardization of general repositories and data set version information removal ("After Standardization") and after the additional excess characters removal (last column in Table 8.). <br>
+
+```{r count excess characthers in DCC, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Create table of cases ending with dots or slashes, or ones that have commas in them
+
+# Before standardization
+
+count_exc_characters_pre <- tibble(
+  slash_id = DCC_corpus_orig  |>
+    filter(str_ends(dataset, "/")) |>
+    nrow(), # id ends with slash
+  
+  commas_id = DCC_corpus_orig  |>
+    filter(str_detect(dataset, ",")) |>
+    nrow(), # id contains commas
+  
+  ends_with_dot_id = DCC_corpus_orig  |>
+    filter(str_ends(dataset, "\\.")) |>
+    nrow(), # id ends with dot
+  
+  slash_doi = DCC_corpus_orig  |>
+    filter(str_ends(publication, "/")) |>
+    nrow(), # doi ends with slash
+  
+  commas_doi = DCC_corpus_orig  |> 
+    filter(str_detect(publication, ",")) |>
+    nrow(), # doi contains commas
+  
+  ends_with_dot_doi = DCC_corpus_orig  |>
+    filter(str_ends(publication, "\\.")) |>
+    nrow(), # doi ends with dot
+  
+  spaces_id = DCC_corpus_orig  |> 
+    filter(str_detect(dataset, "\\s")) |>
+    nrow(), # id contains spaces
+  
+  spaces_doi = DCC_corpus_orig  |>
+    filter(str_detect(publication, "\\s")) |>
+    nrow() # doi contains spaces
+)
+
+# After standardization
+
+count_exc_characters_post <- tibble(
+  slash_id = DCC_corpus_4_rm_v_info  |>
+    filter(str_ends(data_id_or_acc_nr, "/")) |>
+    nrow(), # id ends with slash
+  
+  commas_id = DCC_corpus_4_rm_v_info  |>
+    filter(str_detect(data_id_or_acc_nr, ",")) |>
+    nrow(), # id contains commas
+  
+  ends_with_dot_id = DCC_corpus_4_rm_v_info  |>
+    filter(str_ends(data_id_or_acc_nr, "\\.")) |>
+    nrow(), # id ends with dot
+  
+  slash_doi = DCC_corpus_4_rm_v_info  |>
+    filter(str_ends(doi, "/")) |>
+    nrow(), # doi ends with slash
+  
+  commas_doi = DCC_corpus_4_rm_v_info  |> 
+    filter(str_detect(doi, ",")) |>
+    nrow(), # doi contains commas
+  
+  ends_with_dot_doi = DCC_corpus_4_rm_v_info  |>
+    filter(str_ends(doi, "\\.")) |>
+    nrow(), # doi ends with dot
+  
+  spaces_id = DCC_corpus_4_rm_v_info  |> 
+    filter(str_detect(data_id_or_acc_nr, "\\s")) |>
+    nrow(), # id contains spaces
+  
+  spaces_doi = DCC_corpus_4_rm_v_info  |>
+    filter(str_detect(doi, "\\s")) |>
+    nrow() # doi contains spaces
+)
+
+# Save
+save_cr(count_exc_characters_pre, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "count_exc_characters_pre.RData"))
+save_cr(count_exc_characters_post, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "count_exc_characters_post.RData"))
+
+# Prepare tables for rendering
+
+# Before Standardization
+
+count_exc_characters_pre_renamed <- count_exc_characters_pre |> 
+  rename(
+    `IDs Ending with Slash` = slash_id,
+    `IDs Containing Commas` = commas_id,
+    `IDs Ending with Dot` = ends_with_dot_id,
+    `DOIs Ending with Slash` = slash_doi,
+    `DOIs Containing Commas` = commas_doi,
+    `DOIs Ending with Dot` = ends_with_dot_doi,
+    `IDs Containing Spaces` = spaces_id,
+    `DOIs Containing Spaces` = spaces_doi
+  ) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Category",
+    values_to = "Before Standardization"
+  ) |> 
+  arrange(desc(`Before Standardization`))
+
+# After Standardization
+
+count_exc_characters_post_renamed <- count_exc_characters_post |> 
+  rename(
+    `IDs Ending with Slash` = slash_id,
+    `IDs Containing Commas` = commas_id,
+    `IDs Ending with Dot` = ends_with_dot_id,
+    `DOIs Ending with Slash` = slash_doi,
+    `DOIs Containing Commas` = commas_doi,
+    `DOIs Ending with Dot` = ends_with_dot_doi,
+    `IDs Containing Spaces` = spaces_id,
+    `DOIs Containing Spaces` = spaces_doi
+  ) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Category",
+    values_to = "After Standardization"
+  ) |> 
+  arrange(desc(`After Standardization`))
+
+# Get counts
+
+count_exc_characters_summary <- count_exc_characters_pre_renamed |> 
+  full_join(count_exc_characters_post_renamed, by = "Category") |> 
+  bind_cols((tibble(`After excess characters removal` = rep(0, nrow(count_exc_characters_post_renamed)))))
+
+save_cr(count_exc_characters_summary, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "count_exc_characters_summary.RData")) # save
+
+rm(DCC_corpus_4_rm_v_info) # clean up
+```
+
+<br>
+
+#### Table 8. Cases with Excess Charachters
+
+<br>
+
+```{r Cases with Excess Charachters table}
+
+# Render table
+
+datatable(
+  count_exc_characters_summary, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons',  class = 'stripe hover cell-border' # Add light styling
+  )
+```
+
+<br>
+
+As shown in **Table 9.** below, after removing excess characters and trails from DOIs and data set identifiers, cases where these two values were actually the same were discovered. These cases weren't visible before standardizing and cleaning the DOIs and the data set identifiers, meaning a simple comparison between the DOI and dataset columns resulted in 0 results.
+
+<br>
+
+#### Table 9. Cases where value of paper's DOI is the same as value of dataset's identifier (Sample)
+
+<br>
+
+```{r doi_is_id table}
+
+# Render table
+
+datatable(
+  doi_is_id_sampled, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
+
+```{r remove vars from env, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Clean up
+
+rm(
+  figshare_tibble,
+  dryad_tibble,
+  osf_tibble,
+  zenodo_tibble,
+  figshare_not_std,
+  dryad_not_std,
+  osf_not_std,
+  zenodo_na,
+  DCC_corpus_5_ex_chr_rm
+)
+```

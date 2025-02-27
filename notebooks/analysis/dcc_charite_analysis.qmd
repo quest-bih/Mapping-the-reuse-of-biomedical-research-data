@@ -1,0 +1,553 @@
+---
+title: "dcc_charite_analysis"
+author: "Avihay Cohen"
+---
+
+# 4. Matching DCC and Charite Lists by Dataset Identifiers
+
+<br>
+
+The matching was done by joining the two lists by the **identifier** columns. The result can be seen in **Table 13.** below:
+
+```{r Matching manually validated Charite list with DCC, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Perform the join using the id columns (keep all columns)
+dcc_charite_joined <- charite_dois_and_ids_clean_manually_validated |>
+  inner_join(DCC_corpus_6_doi_pref_rm, by = c("charite_data_id_or_acc_nr_merged" = "data_id_or_acc_nr"),
+             suffix = c("_charite", "_dcc")) |>
+  select(everything())
+
+# Save
+save_cr(dcc_charite_joined, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_charite_joined.RData"))
+
+rm(DCC_corpus_6_doi_pref_rm) # clean up
+```
+
+<br>
+
+#### Table 13. Matched DCC-Charite List
+
+<br>
+
+```{r dcc-charite joined table}
+
+# Render table
+
+datatable(
+  dcc_charite_joined, 
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+
+```
+
+<br>
+
+# 5. Cleaning Matched DCC-Charite List
+
+<br>
+
+The matched list was cleaned as follows:
+
+<br>
+
+1.  **Renaming** columns
+
+2.  Removing cases where there's the same url in the **"identifier"** and **"doi"** columns (resulting in invalid cases for matching).
+
+3.  Removing **self-citations** (where cited paper's doi value is the same as the citing paper's doi value).
+
+4.  **Deduplication**.
+
+5.  Removing cases of \*authors overlap\*\* between the cited and the citing papers (resulting from preprint and published papers or from self-citations).
+
+6.  Completing missing information about **journals** and **publication years** of citing papers, cited papers and datasets.
+
+7.  Verifying that cases where the citing paper publication year is stated as **earlier** than the publication year of the Charite paper are due to the fact that the Charite paper has reused it's own data that was generated and published earlier.
+
+8.  Verifying that cases where the citing paper was published **before 2016** are correct.
+
+9.  Verifying that cases where the citing paper publication year is stated as **earlier** than the dataset publication year are correct.
+
+<br>
+
+The exclusion steps are illustrated in **Figure 1.** below, followed by the cleaned matched list resulted from it (seen in **Table 13.**).
+
+```{r Cleaning dcc-charite joined, eval = if (params$execute_falses) TRUE else FALSE}
+
+# 1. Initial cleaning and exclusion
+
+dcc_charite_joined_1_rn <- dcc_charite_joined |> 
+  select(-c(
+    identifier,
+    charite_data_id_or_acc_nr,
+    charite_data_id_or_acc_nr_v,
+    valid,
+    type,
+    comments,
+    validated
+  )) |> 
+  rename(charite_data_id_or_acc_nr = charite_data_id_or_acc_nr_merged) # select relevant columns and rename identifier column
+
+# save
+save_cr(dcc_charite_joined_1_rn, file = file.path(root_dir,
+                                                  "Data Wrangling",
+                                                  "DCC-Charite Joined List Wrangling Steps",
+                                                  "dcc_charite_joined_1_rn.RData"))
+
+# Helper function to extract the last part of the string after the last '/' (used in the next wrangling step)
+extract_ending <- function(x) {
+  str_extract(x, "[^/]+$")
+}
+
+dcc_charite_joined_2_rm_doi_ids <- dcc_charite_joined_1_rn |>
+  mutate(
+    charite_data_id_or_acc_nr = tolower(charite_data_id_or_acc_nr),
+    doi_dcc = tolower(doi_dcc)) |>
+  mutate(
+    col1_ending = extract_ending(charite_data_id_or_acc_nr),
+    col2_ending = extract_ending(doi_dcc)
+  ) |>
+  filter(charite_data_id_or_acc_nr != doi_dcc
+         | col1_ending != col2_ending) |>
+  filter(col1_ending != col2_ending) |> 
+  select(-col1_ending, -col2_ending) # remove cases with doi = data_id or last part of each other are the same
+  # It's enough to remove similar endings, because they indicate all doi = data_id cases , even when doi / data_id are in different formats
+
+# save
+save_cr(dcc_charite_joined_2_rm_doi_ids, file = file.path(root_dir,
+                                                          "Data Wrangling",
+                                                          "DCC-Charite Joined List Wrangling Steps",
+                                                          "dcc_charite_joined_2_rm_doi_ids.RData"))
+
+dcc_charite_joined_3_rm_self <- dcc_charite_joined_2_rm_doi_ids |> 
+  mutate(doi_dcc = tolower(doi_dcc)) |> 
+  filter(doi_charite != doi_dcc) # remove self-citations
+
+# save
+save_cr(dcc_charite_joined_3_rm_self, file = file.path(root_dir,
+                                                       "Data Wrangling",
+                                                       "DCC-Charite Joined List Wrangling Steps",
+                                                       "dcc_charite_joined_3_rm_self.RData"))
+
+dcc_charite_joined_4_dist <- dcc_charite_joined_3_rm_self |>
+  distinct() # deduplicate
+
+# save
+save_cr(dcc_charite_joined_4_dist, file = file.path(root_dir,
+                                                    "Data Wrangling",
+                                                    "DCC-Charite Joined List Wrangling Steps",
+                                                    "dcc_charite_joined_4_dist.RData"))
+
+    # 11.10.2024 Ana changed 2 values in dois_from_Ana_orig file, but they're both not included in the dashboard join anyway.
+    # 
+    # Here's my validation:
+    # 
+    # dois_from_Ana_orig_changed <- read.csv(
+    #   file.path(root_dir, "Raw files", "Charite DOIs List", "master_od_screening_manual_check_2020_2022_unsure_corrected.csv"),
+    #   header = TRUE,
+    #   sep = ";") # read corrected csv
+    # 
+    # diff <- setdiff(dois_from_Ana_orig, dois_from_Ana_orig_changed) # get cases that are different between the two csv files
+    # 
+    # dois_from_Ana_orig |> select(article, doi, data_access, own_or_reuse_data, identifier, data_identifier, assessment, open_data_assessment) |>
+    #   filter(article %in% diff$article) |> 
+    #   View() # view different cases in original file
+    #
+    # dois_from_Ana_orig_changed |> select(article, doi, data_access, own_or_reuse_data, identifier, data_identifier, assessment, open_data_assessment) |>     #   filter(article %in% diff$article) |> 
+    #   View() # view different cases in corrected file
+
+# 2. Excluding authors overlap:
+
+# Create doi lists for charite and dcc to extract info for
+
+charite_dois_for_au_and_year_info <- dcc_charite_joined_4_dist |> 
+  select(doi_charite) |>
+  rename(doi = doi_charite) |> 
+  distinct()
+  
+write_csv_cr(charite_dois_for_au_and_year_info,
+        file = file.path(root_dir,
+                         "Data Inputs",
+                         "Meta data for joined dcc-charite list",
+                         "DOIs to get info of",
+                         "charite_dois_for_au_and_year_info.csv"),
+        row.names = FALSE)
+
+dcc_dois_for_au_and_year_info <- dcc_charite_joined_4_dist |> 
+  select(doi_dcc) |>
+  rename(doi = doi_dcc) |> 
+  distinct()
+  
+write_csv_cr(dcc_dois_for_au_and_year_info,
+        file = file.path(root_dir,
+                         "Data Inputs",
+                         "Meta data for joined dcc-charite list",
+                         "DOIs to get info of",
+                         "dcc_dois_for_au_and_year_info.csv"),
+        row.names = FALSE)
+
+# Get authors and years info:
+
+load(file.path(root_dir, "Data Inputs", "Meta data for joined dcc-charite list", "authors info", "full_authors_info.RData")) # get full authors info
+
+# For DCC
+
+authors_info_dcc_old <- full_authors_info |> 
+  select(doi_dcc, authors_dcc) |> 
+  distinct() # get previously extracted dcc authors info (from a previous iteration of the matching process)
+
+added_authors_info_dcc <- read.csv(
+  file.path(root_dir, "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "dcc_new_doi_authors_and_years.csv"),
+  header = TRUE,
+  sep = ","
+)
+  
+authors_info_dcc <- authors_info_dcc_old |>
+  rename(doi = doi_dcc) |> 
+  bind_rows(added_authors_info_dcc |>
+              select(-publication_year) |> 
+              rename(authors_dcc = authors)) |> 
+  distinct() # bind with newly extracted dcc authors info (from the latest iteration of the matching process)
+
+# For Charite
+
+authors_info_charite_old <- full_authors_info |> 
+  select(doi_charite, authors_charite) |> 
+  distinct() # get previously extracted Charite authors info (from a previous iteration of the matching process)
+
+added_authors_info_charite <- read.csv(
+  file.path(root_dir, "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "charite_dois_for_au_and_year_info.csv"),
+  header = TRUE,
+  sep = ","
+)
+
+authors_info_charite <- authors_info_charite_old |>
+  rename(doi = doi_charite) |> 
+  bind_rows(added_authors_info_charite) |> 
+  distinct() |> # bind with newly extracted Cahrite authors info (from the latest iteration of the matching process)
+  group_by(doi) |> slice(1) |> ungroup() # keep only the 1st doi in a group where there might be slight changes in authors names (manually validated)
+
+# Rename both authors lists before joining
+authors_info_charite <- authors_info_charite |> rename(doi_charite = doi)
+authors_info_dcc <- authors_info_dcc |> rename(doi_dcc = doi)
+
+dcc_charite_joined_5_au_info <- dcc_charite_joined_4_dist |>
+  left_join(authors_info_dcc, by = "doi_dcc") |>
+  left_join(authors_info_charite, by = "doi_charite") # join author info into _4
+
+  # Verify that if doi_dcc == doi_charite then authors_dcc == authors_charite, and verify the same for "!="
+  # dcc_charite_joined_5_au_info |> 
+  #   filter((doi_dcc == doi_charite & authors_dcc != authors_charite) |      # Case 1: DOIs match but authors differ
+  #            (doi_dcc != doi_charite & authors_dcc == authors_charite)) |>  # Case 2: DOIs differ but authors are the same
+  #   View()
+  
+  # All cases are preprints or actual articles (so different dois) with same authors and same paper
+  
+  # Verify that there are no NAs left
+  # dcc_charite_joined_5_au_info |> filter(is.na(authors_charite) | is.na(authors_dcc)) |> select(doi_dcc) |> distinct() |> View() 
+
+# Save
+save_cr(dcc_charite_joined_5_au_info, file = file.path(root_dir,
+                                                       "Data Wrangling",
+                                                       "DCC-Charite Joined List Wrangling Steps",
+                                                       "dcc_charite_joined_5_au_info.RData"))
+
+# Filter to a new "joined" (6) by no common authors:
+
+# Function to check if there are no common elements between two semicolon-separated strings
+no_common_element <- function(x, y) {
+  x_split <- str_split(x, ";")[[1]] # Split column x by semicolons
+  y_split <- str_split(y, ";")[[1]] # Split column y by semicolons
+  length(intersect(x_split, y_split)) == 0 # TRUE if no common elements
+}
+
+# Apply the filter using the function to create a matched list with no "Author Overlap"
+dcc_charite_joined_6_rm_au_ov <- dcc_charite_joined_5_au_info  |> 
+  filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
+  distinct(doi_charite, charite_data_id_or_acc_nr, id, doi_dcc, .keep_all = TRUE)
+
+# Save
+save_cr(dcc_charite_joined_6_rm_au_ov, file = file.path(root_dir,
+                                                        "Data Wrangling",
+                                                        "DCC-Charite Joined List Wrangling Steps",
+                                                        "dcc_charite_joined_6_rm_au_ov.RData"))
+
+# 3. Complete missing journals and paper publication years:
+
+# Get years info (newest 2023 batch was already loaded earlier as "added_authors_info_dcc / _charite")
+
+load(file.path(root_dir,
+               "Data Inputs",
+               "Meta data for joined dcc-charite list",
+               "publication years info",
+               "df_charite_results.RData")) # get charite years
+
+load(file.path(root_dir,
+               "Data Inputs",
+               "Meta data for joined dcc-charite list",
+               "publication years info",
+               "df_dcc_results.RData")) # get DCC years
+
+# Prepare dfs for joining (make sure dois are standardized, select relevant columns, rename doi columns)
+
+df_dcc_results <- df_dcc_results |> 
+  mutate(doi = str_replace(url, "https://doi.org/", "")) |> 
+  select(doi, publication_year) |> 
+  rename(doi_dcc = doi)
+
+df_charite_results <- df_charite_results |> 
+  mutate(doi = str_replace(url, "https://doi.org/", "")) |> 
+  select(doi, publication_year) |> 
+  rename(doi_charite = doi)
+
+# Join into the matched list
+
+dcc_charite_joined_7_years_info <- dcc_charite_joined_6_rm_au_ov |> 
+  left_join(df_charite_results, by = "doi_charite") |> 
+  left_join(df_dcc_results, by = "doi_dcc") |> 
+  rename(year_charite = publication_year.x,
+         year_dcc = publication_year.y)
+
+# Complete the rest of the years information using the "added_authors_info_dcc / _charite" variables loaded earlier:
+
+# Prepare dfs for joining (make sure dois are standardized, select relevant columns, rename doi columns)
+
+added_authors_info_dcc_for_adding <- added_authors_info_dcc |> 
+  mutate(doi = str_replace(doi, "https://doi.org/", "")) |> 
+  select(doi, publication_year) |> 
+  rename(doi_dcc = doi)
+
+added_authors_info_charite_for_adding <- added_authors_info_charite |> 
+  mutate(doi = str_replace(doi, "https://doi.org/", "")) |> 
+  select(doi, publication_year) |> 
+  rename(doi_charite = doi)
+
+# Join into the matched list
+
+dcc_charite_joined_7_years_info <- dcc_charite_joined_7_years_info |> 
+  left_join(added_authors_info_charite_for_adding, by = "doi_charite") |> 
+  left_join(added_authors_info_dcc_for_adding, by = "doi_dcc") |> 
+  mutate(year_charite = case_when(is.na(year_charite) ~ publication_year.x, .default = year_charite)) |>
+  mutate(year_dcc = case_when(is.na(year_dcc) ~ publication_year.y, .default = year_dcc)) |>
+  select(-c(publication_year.x, publication_year.y))
+
+# dcc_charite_joined_7_years_info |> filter(is.na(year_charite)) |> select(doi_charite) |> distinct() |> View() # check
+# dcc_charite_joined_7_years_info |> filter(is.na(year_dcc)) |> select(doi_dcc) |> distinct() |> View() # check
+
+# Save
+save_cr(dcc_charite_joined_7_years_info, file = file.path(root_dir,
+                                                          "Data Wrangling",
+                                                          "DCC-Charite Joined List Wrangling Steps",
+                                                          "dcc_charite_joined_7_years_info.RData"))
+```
+
+```{r manually extract datasets years, eval = FALSE}
+
+# 4. Add publication years of data sets
+
+# Get distinct identifiers of data sets for manual adding of their publication years
+
+identifiers <- dcc_charite_joined_5_au_info |> 
+  select(doi_charite, charite_data_id_or_acc_nr) |> 
+  distinct()
+
+# Save
+write_csv_cr(identifiers,
+          file = file.path(root_dir,
+                           "Results Verification",
+                           "Datasets years",
+                           "datasets_years.csv"),
+          row.names = FALSE)
+
+# Information about data sets publication years was then manually added, verified and saved under "datasets_years_filled_after_EB_verification.csv".
+```
+
+```{r load and add datasets years info, eval = if (params$execute_falses) TRUE else FALSE}
+
+# Load information about data sets publication years
+
+full_ds_years_info <- read.csv(
+  file.path(root_dir, "Results Verification", "Datasets years", "datasets_years_filled_after_EB_verification.csv"),
+  header = TRUE,
+  sep = ","
+)
+
+# Prepare for joining
+
+full_ds_years_info_for_joining <- full_ds_years_info |> 
+  select(charite_data_id_or_acc_nr, charite_id_year) |> 
+  distinct()
+
+# Join
+
+dcc_charite_joined_8_ds_years_info <- dcc_charite_joined_7_years_info |> 
+  left_join(full_ds_years_info_for_joining, by = "charite_data_id_or_acc_nr") |> 
+  rename(dataset_publication_year = charite_id_year)
+
+# Save
+save_cr(dcc_charite_joined_8_ds_years_info, file = file.path(root_dir,
+                                                             "Data Wrangling",
+                                                             "DCC-Charite Joined List Wrangling Steps",
+                                                             "dcc_charite_joined_8_ds_years_info.RData"))
+
+# 5. Manually add Journals info where it was still missing
+
+# dcc_charite_joined_8_ds_years_info |> filter(journal == "") |> select(doi_dcc) |> distinct() |> View() # check before adding
+
+dcc_charite_joined_9_jr_info <- dcc_charite_joined_8_ds_years_info |> 
+  mutate(journal = case_when(
+    doi_dcc == "10.1101/2021.05.03.437411" ~ "bioRxiv",
+    doi_dcc == "10.1101/2020.06.27.175430" ~ "bioRxiv",
+    doi_dcc == "10.1016/b978-0-12-821618-7.00111-5" ~ "Encyclopedia of Cell Biology",
+    doi_dcc == "10.1101/2021.05.14.444026" ~ "bioRxiv",
+    doi_dcc == "10.1101/2020.06.01.127589" ~ "bioRxiv",
+    doi_dcc == "10.21203/rs.3.rs-1287631/v1" ~ "Nature Portfolio",
+    doi_dcc == "10.1101/2022.03.15.484018" ~ "bioRxiv",
+    doi_dcc == "10.1038/s41588-019-0351-9" ~ "Nature Genetics",
+    doi_dcc == "10.1101/2020.09.06.20189159" ~ "medRxiv",
+    doi_dcc == "10.1101/2023.03.31.23287997" ~ "medRxiv",
+    doi_dcc == "10.1101/2023.02.02.23285208" ~ "medRxiv",
+    doi_dcc == "10.1101/2023.02.22.529542" ~ "bioRxiv",
+    doi_dcc == "10.1101/2020.08.27.270819" ~ "bioRxiv",
+    doi_dcc == "10.3389/fgene.2021.717621" ~ "Frontiers in Genetics",
+    doi_dcc == "10.1101/2021.11.23.469714" ~ "bioRxiv",
+    doi_dcc == "10.1371/journal.pone.0249148" ~ "PLOS ONE",
+    doi_dcc == "10.1186/s13059-021-02335-w" ~ "Genome Biology",
+    doi_dcc == "10.1101/2020.05.04.075291" ~ "bioRxiv",
+    doi_dcc == "10.1101/2023.04.07.536073" ~ "bioRxiv",
+    .default = journal))
+
+# dcc_charite_joined_9_jr_info |> filter(journal == "") |> select(doi_dcc) |> distinct() |> View() # check after adding
+
+# Save
+save_cr(dcc_charite_joined_9_jr_info, file = file.path(root_dir,
+                                                       "Data Wrangling",
+                                                       "DCC-Charite Joined List Wrangling Steps",
+                                                       "dcc_charite_joined_9_jr_info.RData"))
+
+# 6. Create tables for verification:
+
+    # Cases where DCC paper publication year is stated as earlier than 2017
+
+    year_2016_and_earlier <- dcc_charite_joined_9_jr_info |> 
+      filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
+      select(doi_dcc,
+             doi_charite,
+             charite_data_id_or_acc_nr,
+             year_dcc,
+             year_charite)
+    
+    # Save
+    write_csv_cr(year_2016_and_earlier,
+              file = file.path(root_dir,
+                               "Results Verification",
+                               "Year lag",
+                               "year_2016_and_earlier.csv"),
+              row.names = FALSE)
+
+
+    # Cases where DCC paper publication year is stated as earlier than Charite paper publication year
+
+    dcc_earlier_than_charite <- dcc_charite_joined_9_jr_info |> 
+      filter(as.numeric(year_dcc) < year_charite) |> 
+      mutate(lag = as.numeric(year_dcc) - year_charite) |> 
+        select(doi_dcc,
+             doi_charite,
+             charite_data_id_or_acc_nr,
+             year_dcc,
+             year_charite,
+             lag)
+  
+    # Save
+    write_csv_cr(dcc_earlier_than_charite,
+              file = file.path(root_dir,
+                               "Results Verification",
+                               "Year lag",
+                               "dcc_earlier_than_charite.csv"),
+              row.names = FALSE)
+
+# 7. Check if there are any cases that are invalid and need removal, according to results of section (6) abouve
+    
+  # There was actually nothing to exclude. See Evgeny's message after a sample check:
+  # https://teams.microsoft.com/l/message/19:ad68b3fd-e590-4981-92ff-3ae78e877fd9_cba60d9f-88ed-4fe4-ac8c-0c0e5477dfee@unq.gbl.spaces/1729246170305?context=%7B%22contextType%22%3A%22chat%22%7D
+
+# 8. Create a table with cases where there are different Charite paper dois for the same accession number
+    
+    # Create table for verification
+    
+    same_data_id_with_different_charite_papers <- dcc_charite_joined_9_jr_info |>
+      select(doi_charite, charite_data_id_or_acc_nr) |> 
+      group_by(charite_data_id_or_acc_nr) |>
+      filter(n() > 1 & (n_distinct(doi_charite) > 1)) |>
+      distinct() |>
+      ungroup()
+    
+    # Save
+    write_csv_cr(same_data_id_with_different_charite_papers,
+              file = file.path(root_dir,
+                               "Results Verification",
+                               "Different charite papers with the same id",
+                               "same_data_id_with_different_charite_papers.csv"),
+              row.names = F)
+    
+    # Evgeny approved these cases as valid.
+```
+
+<br>
+
+**Note:** A data article was discovered in the Charite list (10.1016/j.dib.2021.107320) during a routine manual validation of the code. It was removed automatically during the removal of papers with author(s) overlap step. This means that there could potentially be more data articles in the matched DCC-Charite list.
+
+<br>
+
+**Figure 1.** above shows the exclusion steps that were made on the matched DCC-Charite list and their effect on the remaining number of citing papers and cited identifiers. The gray numbers indicate how many papers / identifiers were removed in each step.
+
+#### Table 14. Cleaned Matched DCC-Charite List
+
+<br>
+
+```{r dcc-charite joined list after cleaning table}
+
+# Load the most recent .RData file from the "dcc-charite joined wrangling steps" directory and assign it to "dcc_charite_joined_final"
+
+# locate dir
+files <- list.files(file.path(root_dir,
+                              "Data Wrangling",
+                              "DCC-Charite Joined List Wrangling Steps"), 
+                    pattern = "\\.RData$", full.names = TRUE, ignore.case = TRUE)
+
+# Identify the latest file based on modification time
+latest_file <- files[which.max(file.info(files)$mtime)]
+
+# Load the file into the global environment
+loaded_objects <- load(latest_file)
+
+# Assign the loaded object to a new variable name
+dcc_charite_joined_final <- get(loaded_objects, envir = .GlobalEnv)
+rm(loaded_objects) # clean up
+
+  # make sure there's no missing data (besides the missing data in the original DCC which is not relevant)
+  # dcc_charite_joined_final |> summarise(across(everything(), ~ any(is.na(.) | . == ""))) |> View()
+
+# Render table
+
+datatable(
+  dcc_charite_joined_final,
+  options = list(
+    pageLength = -1,  
+    scrollY = "200px", 
+    scrollX = TRUE,    
+    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+    dom = 'Bfrtip',
+    buttons = c('csv')
+    ),
+  extensions = 'Buttons'
+  )
+```
