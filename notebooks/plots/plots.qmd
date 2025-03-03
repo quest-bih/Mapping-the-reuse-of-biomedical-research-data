@@ -7,9 +7,12 @@ format:
     self-contained: true
 editor: visual
 execute: # local chunk options will override the defaults below
+  cache: false
+  freeze: false # everything will re-run every time
   warning: false # supress warning messages
   message: false # supress messages
   echo: false # do not show code unless specified otherwise
+  eval: true
 ---
 
 ```{r setup}
@@ -20,6 +23,10 @@ Sys.setenv(LANG = "EN")  # Set environment language to English
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, patchwork, RColorBrewer, here, networkD3)
+
+knitr::opts_chunk$set(cache = FALSE,
+                      autodep = TRUE,
+                      fig.path = here("_output", "index_files", "figure-html"))
 
 # Load _5 for counting with author overlap:
 
@@ -47,22 +54,31 @@ rm(loaded_objects) # clean up
 
 ```
 
-#### Figure 1. Stepwise Case Exclusion of Identifiers and Papers in Matched DCC-Charite List
+# Exclusion process of cases from the matched list
 
 <!-- <br> -->
 
 <!-- ![](Data%20Inputs/Plot/Exclusion_steps.PNG) -->
 
-<!-- ** recreate it with code! ** -->
+<!-- \*\* recreate it with code! \*\* -->
 
+```{r Exclusion process of cases from the matched list}
+
+```
 
 <br>
 
-#### Figure 2. Distinct Number of Citing Papers and Identifiers in Matched DCC-Charite List
+# Distinct Number of Papers and Datasets in Found in the DCC
 
 <br>
 
-```{r Count distinct cases and ids with and without authors overlap plot}
+```{r Distinct Number of Papers and Datasets in Found in the DCC}
+#| label: fig-distinct-numbers
+#| fig-cap: Distinct Number of Papers and Datasets in Found in the DCC
+#| fig-format: png
+
+print("Running setup chunk")
+
 
 # 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)
 
@@ -181,112 +197,15 @@ combined_count_tibbles |>
         panel.spacing = unit(5, "lines")) + # Remove x-axis title
   labs(
     y = "Count")
-
-# # Get counts of distinct identifiers
-# 
-# dist_id_charite <- charite_dois_and_ids_clean_manually_validated |> select(charite_data_id_or_acc_nr_merged) |> distinct() |> nrow()
-# 
-# dist_id_charite_found_in_dcc <- combined_count_tibbles |>
-#   filter(tibble_source == "No Author Overlap", variable == "Datasets") |>
-#   select(value)
-#   
-# dist_id_ratio <- sprintf("%.2f%%", dist_id_charite_found_in_dcc / dist_id_charite * 100)
 ```
 
-```{r distinct dcc papers and ids}
+# Distribution Frequency of Datasets References
 
-# # distinct number of dois and ids in dcc after cleaning
-# dcc_doi_distinct <- DCC_corpus_5_ex_chr_rm |> select(doi) |> distinct() |> nrow()
-# dcc_id_distinct <- DCC_corpus_5_ex_chr_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
-# 
-# # save
-# save_cr(dcc_doi_distinct, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_doi_distinct.RData"))
-# save_cr(dcc_id_distinct, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData"))
-```
+```{r Distribution Frequency of Datasets References}
 
-<br>
-
-#### Figure 3a. Data sets citing distribution
-
-<br>
-
-```{r Data sets citing distribution plot}
-#| label: fig-datasets_distribution
-#| fig-cap: References Distribution of Datasets
-
-dcc_charite_joined_final |> 
-  group_by(charite_data_id_or_acc_nr) |> 
-  summarise(n = n()) |> 
-  mutate(charite_data_id_or_acc_nr = case_when(
-    n < 6 ~ "Others (n < 6)",
-    .default = charite_data_id_or_acc_nr)) |>
-  group_by(charite_data_id_or_acc_nr) |> 
-  summarise(n = sum(n)) |>
-  filter(charite_data_id_or_acc_nr != "Others (n < 6)") |> 
-  
-  ggplot(aes(x = reorder(charite_data_id_or_acc_nr, n), y = n)) +
-  geom_bar(stat = "identity",
-           position = position_dodge(width = 0.9),
-           fill = "#80CBC4",
-           color = "#80CBC4") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
-  geom_text(aes(label = n),
-              position = position_dodge(width = 0.9),
-              vjust = 0.5,
-              hjust = -0.5,
-              size = 4, color = "black") + # Use contrasting color
-  scale_y_continuous(expand = expansion(mult = c(0.15, 0.15))) + # Adds 5% padding on both sides of the y-axis
-  coord_flip() + 
-  labs(x = "Identifier", y = "Count") +
-  theme_classic()
-```
-
-<br>
-
-**Note:** There were other accession numbers (with less than 6 occurrences each) that are not appearing on the figure above (summing up to **87** cases).
-
-<br>
-
-#### Figure 3b. Data sets citing distribution
-
-<br>
-
-```{r Data sets citing distribution b plot}
-
-# For poster:
-#
-# dcc_charite_joined_final |>
-#   group_by(charite_data_id_or_acc_nr) |>
-#   summarise(n = n()) |>
-#   ggplot(aes(x = n)) +
-#   geom_histogram(
-#     bins = 10,                  # Adjust bins to log-scaled data
-#     color = "black", fill = NA
-#   ) +
-#   stat_bin(
-#     bins = 10,                  # Same binning as histograms
-#     geom = "text",
-#     aes(label = ..count..),
-#     vjust = -0.3,               # Position labels above bars
-#     size = 8                    # Font size of labels
-#   ) +
-#   scale_x_log10(
-#     breaks = c(1, 3, 10, 40, 100),  # Custom breaks for the x-axis
-#     labels = c(1, 3, 10, 40, 100)   # Labels for x-axis
-#   ) +
-#   labs(
-#     x = "Number of Citations (log scale)",
-#     y = "Number of Data Identifiers (log scale)"
-#   ) +
-#   theme_classic() +
-#   theme(
-#     axis.text = element_text(size = 20, color = "black"),                
-#     axis.title = element_text(size = 26, face = "bold"),
-#     axis.title.x = element_text(margin = margin(t = 20)), 
-#     axis.title.y = element_text(margin = margin(r = 20))
-#     )
-  
+#| label: fig-datasets-freq-dist
+#| fig-cap: Distribution Frequency of Datasets References
+#| fig-format: png
 
 dcc_charite_joined_final |>
   group_by(charite_data_id_or_acc_nr) |>
@@ -315,13 +234,13 @@ dcc_charite_joined_final |>
 
 ```
 
-<br>
+# Distribution of References Across Repositories
 
-#### Figure 4. Repositories distribution
+```{r Distribution of References Across Repositories}
 
-<br>
-
-```{r Repositories distribution plot}
+#| label: fig-repo-dist
+#| fig-cap: Distribution of References Across Repositories
+#| fig-format: png
 
 # Create table
 
@@ -340,34 +259,6 @@ rep_dt <- dcc_charite_joined_final |>
     repository == "The Protein Data Bank" ~ "PDB",
     .default = repository # shorten rep names for a nicer appearance
   ))
-
-# # Plot
-
-# For Poster
-#
-# 
-# rep_dt |> 
-#   ggplot(aes(x = reorder(repository, n), y = n)) +
-#   geom_bar(stat = "identity",
-#            position = "dodge",
-#            fill = "#80CBC4",
-#            color = "black") +
-#   geom_bar(stat = "identity", fill = "gray30",
-#            alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
-# geom_text(aes(y = n + 2, label = n),
-#             vjust = 0.5,
-#             hjust = 0,
-#             size = 8, color = "black") + # text next to bars
-#   scale_y_continuous(expand = expansion(mult = c(0.15, 0.15))) + # Adds 5% padding on both sides of the y-axis
-#   coord_flip() + 
-#   labs(x = "Repository", y = "Number of Citing Papers") +
-#   theme_classic() +
-#   theme(
-#    axis.text = element_text(size = 20, color = "black"),                
-#    axis.title = element_text(size = 26, face = "bold"),
-#    axis.title.x = element_text(margin = margin(t = 40)), 
-#    axis.title.y = element_text(margin = margin(r = 40))
-#    ) 
 
 
 rep_dt |>
@@ -389,154 +280,14 @@ geom_text(aes(y = n + 2, label = n),
 
 ```
 
-<br>
+# Datasets References by Year
 
-#### Figure 5. Journals distribution
+```{r Datasets References by Year}
 
-<br>
+#| label: fig-ref-by-year
+#| fig-cap: Datasets References by Year
+#| fig-format: png
 
-```{r Journals distribution plot}
-
-# Create table
-
-jour_dt <- dcc_charite_joined_final |>
-  group_by(journal) |> 
-  summarise(n = n()) |>
-  arrange(desc(n))
-
-slice_to <- 7 # set plot's cut-off
-
-jour_dt |> 
-  slice(1:slice_to) |> # change plot's cut-off here
-  group_by(journal) |> 
-  summarise(n = sum(n)) |>
-  ggplot(aes(x = reorder(journal, n), y = n)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           fill = "#80CBC4",
-           color = "black") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
-  geom_text(aes(y = n + 2, label = n),
-            vjust = 0.5,
-            hjust = 0,
-            size = 4, color = "black") + # text next to bars
-  coord_flip() + 
-  labs(x = "Journal", y = "Count") +
-  theme_classic()
-```
-
-<br>
-
-**Note:** There were other journals (summing up to `r nrow(jour_dt) - slice_to` cases) that had less than 10 appearances in the matched list and are not appearing in the figure above.
-
-<br>
-
-#### Figure 6. Distribution of Citing papers' Publication Years
-
-<br>
-
-```{r Distribution of Citing papers Publication Years plot}
-
-# Create table
-
-year_dcc_dt_gen <- dcc_charite_joined_final |>
-  select(doi_dcc, year_dcc, charite_data_id_or_acc_nr) |>
-  distinct() |>
-  group_by(year_dcc) |>
-  summarise(n = n())
-
-# Plot
-
-year_dcc_dt_gen |> 
-   ggplot(aes(x = year_dcc, y = n)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           fill = "#80CBC4",
-           color = "black") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
-  geom_text(aes(y = n + 2, label = n),
-            vjust = -0.5,
-            hjust = 0.5,
-            size = 4, color = "black") + # text next to bars
-  labs(x = "Publication Year", y = "Count") +
-  theme_classic() +
-  scale_x_continuous(breaks = seq(min(year_dcc_dt_gen$year_dcc), max(year_dcc_dt_gen$year_dcc), by = 1))
-```
-
-<br>
-
-#### Figure 7. Distribution of Citing papers' Publication Years with Cited Accesion Number Information
-
-<br>
-
-```{r top 4 accession numbers along the years plot}
-
-# Create table
-
-year_dcc_dt_top_4 <- dcc_charite_joined_final |>
-  select(doi_dcc, charite_data_id_or_acc_nr, year_dcc) |> 
-  distinct() |> 
-  count(charite_data_id_or_acc_nr, sort = TRUE) |> 
-  slice_head(n = 4)
-
-year_dcc_dt_top_4_for_plot <- year_dcc_dt_top_4 |>
-  inner_join(dcc_charite_joined_final, by = "charite_data_id_or_acc_nr")
-
-
-# Plot
-
-year_dcc_dt_top_4_for_plot_agg <- year_dcc_dt_top_4_for_plot |> 
-  group_by(charite_data_id_or_acc_nr, year_dcc) |> 
-  summarise(count = n(), .groups = "drop") |> 
-  filter(year_dcc != "2023")
-
-# # Create the line plot for poster
-# ggplot(year_dcc_dt_top_4_for_plot_agg,
-#        aes(x = year_dcc,
-#            y = count,
-#            color = factor(charite_data_id_or_acc_nr),
-#            group = charite_data_id_or_acc_nr)) +
-#   geom_line(size = 1) +                
-#   geom_point(size = 2) +               
-#   labs(
-#     x = "Year",
-#     y = "Number of Citations",
-#     color = "Accession Number",
-#   ) +
-#   scale_x_continuous(breaks = seq(2012, 2022, 1)) +
-#   theme_classic() +
-#   theme(
-#    axis.text = element_text(size = 20, color = "black"),                
-#    axis.title = element_text(size = 26, face = "bold"),
-#    axis.title.x = element_text(margin = margin(t = 40)), 
-#    axis.title.y = element_text(margin = margin(r = 40)),
-#    legend.text = element_text(size = 24),
-#    legend.title = element_text(size = 26, face = "bold", margin = margin(b = 20)),
-#    legend.key.height = unit(40, "pt")
-#    )
-
-
-# Create the line plot for poster
-ggplot(year_dcc_dt_top_4_for_plot_agg,
-       aes(x = year_dcc,
-           y = count,
-           color = factor(charite_data_id_or_acc_nr),
-           group = charite_data_id_or_acc_nr)) +
-  geom_line(size = 1) +
-  geom_point(size = 2) +
-  labs(
-    x = "Year",
-    y = "Number of Citations",
-    color = "Accession Number",
-  ) +
-  scale_x_continuous(breaks = seq(2012, 2022, 1)) +
-  theme_classic()
-
-# Alternatives:
-
-# Plot 1
 
 # Create table
 
@@ -556,35 +307,6 @@ year_dcc_dt_all_for_plot_agg <- year_dcc_dt_all_for_plot |>
   summarise(count = n(), .groups = "drop") |> 
   filter(year_dcc != "2023")
 
-# # For Poster
-# 
-# ggplot(year_dcc_dt_all_for_plot_agg, aes(x = factor(year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
-#   geom_bar(stat = "identity",
-#            position = "stack",
-#            aes(y = count)) +
-# geom_text(
-#   data = year_dcc_dt_all_for_plot_agg |> 
-#     group_by(year_dcc) |> 
-#     filter(!(year_dcc %in% c(2012, 2013, 2015, 2017) & count == min(count))),  # Exclude only in specific years
-#   aes(y = count, label = count), 
-#   position = position_stack(vjust = 0.5)) +
-#   labs(
-#     x = "Year",
-#     y = "Count",
-#     fill = "Accession Number"
-#   ) +
-#   scale_fill_manual(values = c("#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
-#   theme_classic() +
-#   theme(
-#   axis.text = element_text(size = 20, color = "black"),                
-#   axis.title = element_text(size = 26, face = "bold"),
-#   axis.title.x = element_text(margin = margin(t = 40)), 
-#   axis.title.y = element_text(margin = margin(r = 40)),
-#   legend.text = element_text(size = 24),
-#   legend.title = element_text(size = 26, face = "bold", margin = margin(b = 20)),
-#   legend.key.height = unit(40, "pt")
-#   )
-
 ggplot(year_dcc_dt_all_for_plot_agg, aes(x = factor(year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
   geom_bar(stat = "identity",
            position = "stack",
@@ -601,221 +323,27 @@ geom_text(
     fill = "Accession Number"
   ) +
   scale_fill_manual(values = c("#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
-  theme_classic() +
-  theme(
-    axis.text = element_text(size = 20, color = "black"),                
-    axis.title = element_text(size = 26, face = "bold"),
-    axis.title.x = element_text(margin = margin(t = 40)), 
-    axis.title.y = element_text(margin = margin(r = 40)),
-    legend.text = element_text(size = 24),
-    legend.title = element_text(size = 26, face = "bold", margin = margin(b = 20)),
-    legend.key.height = unit(40, "pt")
-    )
-
-
-# # Plot 2
-# 
-# ggplot(year_dcc_dt_top_4_for_plot, aes(x = factor(year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
-#   geom_bar(position = "stack") +
-#   geom_text(
-#     stat = "count",
-#     aes(label = after_stat(count)),       # Use counts as labels
-#     position = position_stack(vjust = 0.5), # Center labels within the segments
-#     color = "black",              # Use white for readability
-#     size = 4                      # Adjust label size
-#   ) +
-#   labs(
-#     x = "Year",
-#     y = "Number of Citations",
-#     fill = "Accession Number"
-#   ) +
-#   scale_fill_manual(values = c("#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA")) +
-#   theme_classic()
-# 
-# # Plot 3
-# 
-# year_dcc_dt_top_4_for_plot_agg <- year_dcc_dt_top_4_for_plot |> 
-#   group_by(charite_data_id_or_acc_nr, year_dcc) |> 
-#   summarise(count = n(), .groups = "drop")
-# 
-# # Create the line plot
-# ggplot(year_dcc_dt_top_4_for_plot_agg,
-#        aes(x = year_dcc,
-#            y = count,
-#            color = factor(charite_data_id_or_acc_nr),
-#            group = charite_data_id_or_acc_nr)) +
-#   geom_line(size = 1) +                
-#   #geom_point(size = 2) +               
-#   labs(
-#     x = "Year",
-#     y = "Number of Citations",
-#     color = "Accession Number",
-#   ) +
-#   scale_x_continuous(breaks = seq(2012, 2022, 1)) +
-#   theme_classic()
-# 
+  theme_classic() #+
+  # theme(
+  #   axis.text = element_text(size = 20, color = "black"),                
+  #   axis.title = element_text(size = 26, face = "bold"),
+  #   axis.title.x = element_text(margin = margin(t = 40)), 
+  #   axis.title.y = element_text(margin = margin(r = 40)),
+  #   legend.text = element_text(size = 24),
+  #   legend.title = element_text(size = 26, face = "bold", margin = margin(b = 20)),
+  #   legend.key.height = unit(40, "pt")
+  #   )
 
 
 ```
 
-<br>
+# Datasets Access, Repositories and Covid-relationship
 
-**Note:** Only the 4 most cited datasets are present in the figure below.
+```{r Datasets Access, Repositories and Covid-relationship}
 
-<br>
-
-#### Figure 8. Distribution of Cited papers' Publication Years
-
-<br>
-
-```{r Distribution of Cited papers Publication Years plot}
-#| label: fig-cited_papers_years
-#| fig-cap: Distribution of Cited papers Publication Years plot
-# Create table
-
-year_charite_dt <- dcc_charite_joined_final |>
-  select(doi_charite, year_charite) |>
-  distinct() |>
-  group_by(year_charite) |>
-  summarise(n = n())
-
-# Plot
-
-year_charite_dt |>
-   ggplot(aes(x = year_charite, y = n)) +
-   geom_bar(stat = "identity",
-           position = "dodge",
-           fill = "#80CBC4",
-           color = "black") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
-  geom_text(aes(y = n + 2, label = n),
-            vjust = 0.5,
-            hjust = 0.5,
-            size = 4, color = "black") + # text next to bars
-  labs(x = "Publication Year", y = "Distinct Number of Cited Papers") +
-  theme_classic() +
-  scale_x_continuous(breaks = seq(min(year_charite_dt$year_charite), max(year_charite_dt$year_charite), by = 1))
-```
-
-### Figure 9. General Repositories Proportion in Charite
-
-```{r General Repositories Proportion in Charite}
-
-# # Count
-# 
-# charite_id_dist <- charite_dois_and_ids_clean_manually_validated |> select(charite_data_id_or_acc_nr) |> distinct() |> nrow()
-# 
-# gen_rep_charite_count <- charite_dois_and_ids_clean_manually_validated |> 
-#     summarize(
-#       osf = sum(str_detect(charite_data_id_or_acc_nr_merged, "osf")),
-#       zenodo = sum(str_detect(charite_data_id_or_acc_nr_merged, "zenodo")),
-#       dryad = sum(str_detect(charite_data_id_or_acc_nr_merged, "dryad")),
-#       figshare = sum(str_detect(charite_data_id_or_acc_nr_merged, "figshare")),
-#       harvard = sum(str_detect(charite_data_id_or_acc_nr_merged, "harvard"))) |> 
-#       pivot_longer(cols = everything(), names_to = "category", values_to = "value1") # prepare for joining before plotting
-# 
-# # %
-# 
-# gen_rep_charite_perc <- charite_dois_and_ids_clean_manually_validated |> 
-#     summarize(
-#       osf = sum(str_detect(charite_data_id_or_acc_nr_merged, "osf")),
-#       zenodo = sum(str_detect(charite_data_id_or_acc_nr_merged, "zenodo")),
-#       dryad = sum(str_detect(charite_data_id_or_acc_nr_merged, "dryad")),
-#       figshare = sum(str_detect(charite_data_id_or_acc_nr_merged, "figshare")),
-#       harvard = sum(str_detect(charite_data_id_or_acc_nr_merged, "harvard"))) |> 
-#       mutate(across(everything(), ~ paste0(sprintf("%.2f", . / charite_id_dist * 100), "%"))) |> 
-#       pivot_longer(cols = everything(), names_to = "category", values_to = "value2") # prepare for joining before plotting
-# 
-# # Create table with combined label
-# 
-# gen_rep_charite_for_plot <- gen_rep_charite_count |>
-#   left_join(gen_rep_charite_perc, by = "category") |>
-#   mutate(label = paste0(value1, " (", value2, ")"))
-# 
-# # Plot
-# 
-# gen_rep_charite_for_plot |>
-#   filter(category != "harvard") |> # 0 harvard cases
-#     mutate(category = fct_reorder(category, value1, .desc = TRUE)) |> # Reorder categories by value1
-#    ggplot(aes(x = category, y = value1)) +
-#    geom_bar(stat = "identity",
-#            position = "dodge",
-#            fill = "#80CBC4",
-#            color = "black") +
-#    geom_text(aes(label = label), 
-#              vjust = -0.5, # Adjust text position above the bars
-#              size = 4, 
-#              color = "black") +
-#    labs(x = "General Repository", y = "Number of Cases") +
-#    theme_classic()
-```
-
-### Figure 10. General Repositories Proportion in DCC
-
-```{r General Repositories Proportion in DCC}
-
-# # Create table
-# 
-# gen_rep_dcc_for_plot <- gen_rep_dcc |> 
-#   mutate(label = paste0(Count, " (", Percentage, ")")) |> 
-#   rename(category = Repository,
-#          value1 = Count,
-#          value2 = Percentage)
-# 
-# # Plot
-# 
-# gen_rep_dcc_for_plot |>
-#   filter(category != "harvard") |> # 0 harvard cases
-#     mutate(category = fct_reorder(category, value1, .desc = TRUE)) |> # Reorder categories by value1
-#    ggplot(aes(x = category, y = value1)) +
-#    geom_bar(stat = "identity",
-#            position = "dodge",
-#            fill = "#80CBC4",
-#            color = "black") +
-#    geom_text(aes(label = label), 
-#              vjust = -0.5, # Adjust text position above the bars
-#              size = 4, 
-#              color = "black") +
-#    labs(x = "General Repository", y = "Number of Cases") +
-#    theme_classic()
-```
-
-### Figure 11. Datasets Publication Years in Matched DCC-Charite List
-
-```{r Distribution of Datasets Publication Years plot}
-
-# Create table
-
-year_ds <- dcc_charite_joined_final |>
-  select(doi_charite, dataset_publication_year) |> 
-  distinct() |>
-  group_by(dataset_publication_year) |>
-  summarise(n = n())
-
-# Plot
-
-year_ds |> 
-   ggplot(aes(x = dataset_publication_year, y = n)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           fill = "#80CBC4",
-           color = "black") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
-  geom_text(aes(label = n),
-            vjust = 0.5,
-            hjust = -0.5,
-            size = 4, color = "black") + # text next to bars
-  coord_flip() + 
-  labs(x = "Publication Year", y = "Count") +
-  theme_classic() +
-  scale_x_continuous(breaks = seq(min(year_ds$dataset_publication_year), max(year_ds$dataset_publication_year), by = 1))
-```
-
-### Figure 12. Counts of Accession Numbers, Data Access, Repositories and Covid Related cases
-
-```{r Counts}
+#| label: fig-datasets-properties
+#| fig-cap: Datasets Access, Repositories and Covid-relationship
+#| fig-format: png
 
 # restricted_info <- manual_validation_done |> 
 #   left_join(charite_dois_and_ids_with_access_info, by = "identifier") |> 

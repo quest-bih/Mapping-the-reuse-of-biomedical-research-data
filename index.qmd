@@ -1,37 +1,47 @@
 ---
 title: Investigating the Reuse of Biomedical Data Using the Data Citation Corpus
 authors:
-  - name: 
-    affiliation: 
-    roles: writing
+  - name: "name"
+    affiliation: "aff"
+    roles: "writing"
     corresponding: true
-    orcid: 
+    orcid: "000"
 
-  - name: 
-    affiliation: 
-    roles: writing
-    orcid:
-    
-  - name: 
-    affiliation: 
-    roles: writing
-    orcid:
-      
-  - name: 
-    affiliation: 
-    roles: writing
-    orcid:   
-  
-  - name: 
-    affiliation: 
-    roles: writing
-    orcid: 
-  - name: 
-    affiliation: 
-    roles: writing
-    orcid: 
+execute:
+  freeze: false
+  cache: false
+  eval: true
+  always: true
 ---
+
+# Evgeny
 
 Your text goes here.
 
-# Plots
+# 
+
+# Plots Presentation:
+
+{{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-distinct-numbers >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-repo-dist >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-ref-by-year >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-datasets-properties >}}
+
+# Plots Cross-referencing:
+
+@fig-datasets-freq-dist
+
+@fig-distinct-numbers
+
+@fig-repo-dist
+
+@fig-ref-by-year
+
+@fig-datasets-properties
+
+# Avihay

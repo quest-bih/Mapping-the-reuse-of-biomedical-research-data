@@ -551,3 +551,15 @@ datatable(
   extensions = 'Buttons'
   )
 ```
+
+
+```{r distinct dcc papers and ids}
+
+# # distinct number of dois and ids in dcc after cleaning
+# dcc_doi_distinct <- DCC_corpus_5_ex_chr_rm |> select(doi) |> distinct() |> nrow()
+# dcc_id_distinct <- DCC_corpus_5_ex_chr_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
+# 
+# # save
+# save_cr(dcc_doi_distinct, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_doi_distinct.RData"))
+# save_cr(dcc_id_distinct, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData"))
+```

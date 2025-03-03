@@ -1,7 +1,7 @@
 project:
   type: manuscript
   output-dir: _output
-    
+
 manuscript:
   article: index.qmd
   notebooks:
@@ -16,7 +16,9 @@ format:
   jats: default
 
 execute:
-  freeze: auto
+  freeze: false
+  cache: false
+  always: true
 
 editor: visual
 
