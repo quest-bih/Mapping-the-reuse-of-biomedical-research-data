@@ -6,6 +6,8 @@ manuscript:
   article: index.qmd
   notebooks:
     - notebook: notebooks/plots/plots.qmd  # plots
+#    - notebook: notebooks/preprocessing/charite/charite_loading_and_preprocessing.qmd # charite preprocessing
+#    - notebook: notebooks/preprocessing/dcc/dcc_loading_and_preprocessing.qmd.qmd # dcc preprocessing
 
 format:
   html:

@@ -3,7 +3,6 @@ title: "dcc_loading_and_preprocessing"
 author: "Avihay Cohen"
 ---
 
-
 # 1. DCC: Loading, Overview and Cleaning
 
 <br>
@@ -28,14 +27,11 @@ The DCC was downloaded as a list of csv files that were then combined into one f
 
 5.  Standardizing identifiers of **general repositories** (zenodo, figshare, osf, dryad) to a doi format
 
-
-
-
-```{r DCC: Loading and cleaning, eval = if (params$execute_falses) TRUE else FALSE}
-# 1. Loading and cleaning the DCC list (v2) ---------------------------------------------------------
+```{r DCC: Loading and cleaning}
+# 1. Loading and cleaning the DCC list (v3) ---------------------------------------------------------
 
 # DCC data dictionary can be found here:
-# v3 https://zenodo.org/records/14897662
+# https://zenodo.org/records/14897662
 
 # Uncomment when running chunk independently:
 # selected_dir <- selectDirectory(caption = "Select a Directory") # select DCC csv files directory
@@ -68,20 +64,19 @@ data_list <- lapply(file_list, read.csv)
 # Combine the list of data frames into a single data frame
 DCC_corpus_orig <- bind_rows(data_list)
 
-# Create a folder for the downloaded DCC
-dir.create(file.path(root_dir, "Data Inputs", "Raw files", "DCC Corpus Original"), showWarnings = FALSE)
-
 # Save DCC as .RData object
-save_cr(DCC_corpus_orig, file = file.path(root_dir, "Data Inputs", "Raw files", "DCC Corpus Original", "DCC_corpus_v2_orig.RData"))
-
-setwd(root_dir) # return to root directory
+save_cr(DCC_corpus_orig, file = file.path(here(
+  "data",
+  "raw",
+  "dcc",
+  "DCC_corpus_v2_orig.RData")))
 
 DCC_corpus <- DCC_corpus_orig # assign _orig to a new variable
 
 rm(data_list, file_list) # clean up
 ```
 
-```{r DCC: Dates exploration, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Dates exploration}
 
 # Convert "created", "updated" and "publishedDate" to date type
 
@@ -107,18 +102,18 @@ min_p <- min(DCC_corpus_1_dates$publishedDate, na.rm = TRUE)
 max_p <- max(DCC_corpus_1_dates$publishedDate, na.rm = TRUE)
 
 # Save variables
-save_cr(min_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_c.RData"))
-save_cr(max_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_c.RData"))
-save_cr(min_u, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_u.RData"))
-save_cr(max_u, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_u.RData"))
-save_cr(min_p, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_p.RData"))
-save_cr(max_p, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_p.RData"))
+save_cr(min_c, file = file.path(here("data", "inputs_for_quick_render", "min_c.RData")))
+save_cr(max_c, file = file.path(here("data", "inputs_for_quick_render", "max_c.RData")))
+save_cr(min_u, file = file.path(here("data", "inputs_for_quick_render", "min_u.RData")))
+save_cr(max_u, file = file.path(here("data", "inputs_for_quick_render", "max_u.RData")))
+save_cr(min_p, file = file.path(here("data", "inputs_for_quick_render", "min_p.RData")))
+save_cr(max_p, file = file.path(here("data", "inputs_for_quick_render", "max_p.RData")))
 
 # Save 1st DCC wrangling step
-save_cr(DCC_corpus_1_dates, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps","DCC_corpus_1_dates.RData"))
+save_cr(DCC_corpus_1_dates, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_1_dates.RData")))
 ```
 
-```{r DCC: Renaming columns, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Renaming columns}
 
 # Rename columns and initial characters cleaning for the DOI and data identifier columns
 
@@ -135,10 +130,10 @@ DCC_corpus_2_renamed_clean <- DCC_corpus_1_dates |>
          doi = str_replace(doi, "https://doi.org/", "")) # standardize DOIs (remove prefixes)
 
 # Save 2nd DCC wrangling step
-save_cr(DCC_corpus_2_renamed_clean, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_2_renamed_clean.RData"))
+save_cr(DCC_corpus_2_renamed_clean, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_2_renamed_clean.RData")))
 ```
 
-```{r DCC: Standardizing general repositories entries zenodo, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Standardizing general repositories entries zenodo}
 
 # Exploring & standardizing the general repositories values (zenodo): std to: 10.5281/zenodo.xxxxx
 
@@ -158,10 +153,10 @@ DCC_corpus_3_std_gen_rep <- DCC_corpus_2_renamed_clean |>
 # Get the rest that my code didn't handle
 zenodo_na <- DCC_corpus_3_std_gen_rep |> filter(data_id_or_acc_nr == "10.5281/zenodo.NA")
 
-save_cr(zenodo_na, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "zenodo_na.RData")) # save
+save_cr(zenodo_na, file = file.path(here("data", "inputs_for_quick_render", "zenodo_na.RData"))) # save
 ```
 
-```{r DCC: Standardizing general repositories entries OSF, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Standardizing general repositories entries OSF}
 
 # Exploring & standardizing the general repositories values (osf): std to: //osf.io/xxxxx
 
@@ -179,10 +174,10 @@ osf_not_std <- DCC_corpus_3_std_gen_rep |>
   filter(str_detect(data_id_or_acc_nr, "osf")) |>
   filter(!str_starts(data_id_or_acc_nr, "//osf.io"))
 
-save_cr(osf_not_std, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "osf_not_std.RData")) # save
+save_cr(osf_not_std, file = file.path(here("data", "inputs_for_quick_render", "osf_not_std.RData"))) # save
 ```
 
-```{r DCC: Standardizing general repositories entries Figshare, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Standardizing general repositories entries Figshare}
 
 # # Exploring & standardizing the general repositories values (figshare): std to: 10.6084/m9.figshare.xxxxx
 
@@ -208,10 +203,10 @@ figshare_not_std <- DCC_corpus_3_std_gen_rep |>
   filter(str_detect(data_id_or_acc_nr, "m9.figshare")) |>
   filter(!str_starts(data_id_or_acc_nr, "10.6084/m9.figshare."))
 
-save_cr(figshare_not_std, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "figshare_not_std.RData")) # save
+save_cr(figshare_not_std, file = file.path(here("data", "inputs_for_quick_render", "figshare_not_std.RData"))) # save
 ```
 
-```{r DCC: Standardizing general repositories entries Dryad, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Standardizing general repositories entries Dryad}
 
 # # Exploring & standardizing the general repositories values (dryad): std to: 10.5061/dryad/xxxxx
 
@@ -230,13 +225,13 @@ dryad_not_std <- DCC_corpus_3_std_gen_rep |>
   filter(str_detect(data_id_or_acc_nr, "10.5061/dryad.")) |>
   filter(!str_starts(data_id_or_acc_nr, "10.5061/dryad."))
 
-save_cr(dryad_not_std, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dryad_not_std.RData")) # save
+save_cr(dryad_not_std, file = file.path(here("data", "inputs_for_quick_render", "dryad_not_std.RData"))) # save
 
 # Save 3rd DCC wrangling step
-save_cr(DCC_corpus_3_std_gen_rep, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_3_std_gen_rep.RData"))
+save_cr(DCC_corpus_3_std_gen_rep, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_3_std_gen_rep.RData")))
 ```
 
-```{r DCC: Removing version information, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Removing version information}
 
 # Remove version information from data_id_or_acc_nr and doi columns
 
@@ -250,13 +245,13 @@ DCC_corpus_4_rm_v_info <- DCC_corpus_3_std_gen_rep |>
 ver_info <- DCC_corpus_4_rm_v_info |> 
   filter(str_detect(data_id_or_acc_nr, "\\.(v|t|p)\\d+$"))
 
-save_cr(ver_info, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "ver_info.RData")) # save
+save_cr(ver_info, file = file.path(here("data", "inputs_for_quick_render", "ver_info.RData"))) # save
 
 # Save 4th DCC wrangling step
-save_cr(DCC_corpus_4_rm_v_info, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_4_rm_v_info.RData"))
+save_cr(DCC_corpus_4_rm_v_info, file = file.path(here("data", "wrangling_steps", "dcc",  "DCC_corpus_4_rm_v_info.RData")))
 ```
 
-```{r DCC: Removing excess characters, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Removing excess characters}
 
 # Cleaning records end with dots or "/" or has commas in DCC and Charite's lists
 
@@ -275,7 +270,7 @@ DCC_corpus_5_ex_chr_rm <- DCC_corpus_4_rm_v_info |>
   )
 
 # Save 5th DCC wrangling step
-save_cr(DCC_corpus_5_ex_chr_rm, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_5_ex_chr_rm.RData"))
+save_cr(DCC_corpus_5_ex_chr_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_5_ex_chr_rm.RData")))
 ```
 
 ```{r Standardized data sets' DOIs}
@@ -303,25 +298,25 @@ DCC_corpus_6_doi_pref_rm  |>
   View()   # Check for paper's dois as well: looks ok.
 
 # Save omitted prefixes
-save_cr(distinct_doi_prefixes, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "distinct_doi_prefixes.RData"))
+save_cr(distinct_doi_prefixes, file = file.path(here("data", "inputs_for_quick_render", "distinct_doi_prefixes.RData")))
 
 # Save 6th DCC wrangling step
-save_cr(DCC_corpus_6_doi_pref_rm, file = file.path(root_dir, "Data Wrangling", "DCC Wrangling Steps", "DCC_corpus_6_doi_pref_rm.RData"))
+save_cr(DCC_corpus_6_doi_pref_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_6_doi_pref_rm.RData")))
 ```
 
-```{r DCC: Get cases where doi is the same as id, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC: Get cases where doi is the same as id}
 
 # Get cases where paper's doi = dataset's id (after removing excess characters)
 
 doi_is_id <- DCC_corpus_6_doi_pref_rm |>
   filter(doi == data_id_or_acc_nr)
 
-save_cr(doi_is_id, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "doi_is_id.RData")) # save
+save_cr(doi_is_id, file = file.path(here("data", "inputs_for_quick_render", "doi_is_id.RData"))) # save
 
 # Create a sample for rendering
 doi_is_id_sampled <- doi_is_id |> sample_n(100)
 
-save_cr(doi_is_id_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "doi_is_id_sampled.RData")) # save
+save_cr(doi_is_id_sampled, file = file.path(here("data", "inputs_for_quick_render", "doi_is_id_sampled.RData"))) # save
 ```
 
 <br>
@@ -394,12 +389,12 @@ The earliest and latest publication dates were examined for validity, as shown i
 
 # Load dates of original DCC
 
-load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_c.RData"))
-load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_c.RData"))
-load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_u.RData"))
-load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_u.RData"))
-load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "min_p.RData"))
-load(file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "max_p.RData"))
+load(file.path(here("data", "inputs_for_quick_render", "min_c.RData")))
+load(file.path(here("data", "inputs_for_quick_render", "max_c.RData")))
+load(file.path(here("data", "inputs_for_quick_render", "min_u.RData")))
+load(file.path(here("data", "inputs_for_quick_render", "max_u.RData")))
+load(file.path(here("data", "inputs_for_quick_render", "min_p.RData")))
+load(file.path(here("data", "inputs_for_quick_render", "max_p.RData")))
 
 # Create earliest and latest dates table
 dcc_dates <- tibble(
@@ -427,19 +422,19 @@ datatable(
   )
 ```
 
-```{r DCC extreme publication dates, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC extreme publication dates}
 
 # Get earliest publication date
 dcc_earliest_paper <- DCC_corpus_1_dates |>
   filter(publishedDate == min(publishedDate, na.rm = TRUE))
 
-save_cr(dcc_earliest_paper, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_earliest_paper.RData")) # save
+save_cr(dcc_earliest_paper, file = file.path(here("data", "inputs_for_quick_render", "dcc_earliest_paper.RData"))) # save
 
 # Get latest publication date
 dcc_papers_after_2025 <- DCC_corpus_1_dates |>
   filter(year(publishedDate) > 2025)
 
-save_cr(dcc_papers_after_2024, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_papers_after_2025.RData")) # save
+save_cr(dcc_papers_after_2024, file = file.path(here("data", "inputs_for_quick_render", "dcc_papers_after_2025.RData"))) # save
 
 rm(DCC_corpus_1_dates) # clean up
 ```
@@ -487,7 +482,7 @@ datatable(
 
 <br>
 
-```{r DCC NAs, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC NAs}
 
 # Create NAs, NULLs and blanks table 
 
@@ -497,7 +492,7 @@ dcc_na_null_blank <- tibble(
     blank_count = summarise_all(DCC_corpus, function(x) sum(x == "", na.rm = TRUE))
 )
 
-save_cr(dcc_na_null_blank, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_na_null_blank.RData")) # save
+save_cr(dcc_na_null_blank, file = file.path(here("data", "inputs_for_quick_render", "dcc_na_null_blank.RData"))) # save
 
 # Create reduced table for rendering
 
@@ -521,7 +516,7 @@ dcc_na_null_blank_reduced <- dcc_na_null_blank |>
     .default = count_type))
 
 
-save_cr(dcc_na_null_blank_reduced, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_na_null_blank_reduced.RData")) # save
+save_cr(dcc_na_null_blank_reduced, file = file.path(here("data", "inputs_for_quick_render", "dcc_na_null_blank_reduced.RData"))) # save
 
 rm(DCC_corpus) # clean up
 
@@ -556,7 +551,7 @@ For the purpose of matching data sets identifiers in the corpus with another ide
 
 <br>
 
-```{r Proportion of general repositories in DCC, eval = if (params$execute_falses) TRUE else FALSE}
+```{r Proportion of general repositories in DCC}
 
 # Get total count if generak repositories (to use later in percentages calcaultion)
 
@@ -583,10 +578,10 @@ gen_rep_dcc <- DCC_corpus_5_ex_chr_rm |>
     )
   )
 
-save_cr(gen_rep_dcc, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "gen_rep_dcc.RData")) # save
+save_cr(gen_rep_dcc, file = file.path(here("data", "inputs_for_quick_render", "gen_rep_dcc.RData"))) # save
 ```
 
-```{r DCC general repositories nonstandardized, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC general repositories nonstandardized}
 
 # Create tables of general repositories cases that needed standardizing
 
@@ -624,10 +619,10 @@ dryad_tibble <- DCC_corpus_2_renamed_clean |>
 
 # Save tables
 
-save_cr(zenodo_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",   "zenodo_tibble.RData"))
-save_cr(osf_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",      "osf_tibble.RData"))
-save_cr(figshare_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "figshare_tibble.RData"))
-save_cr(dryad_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",    "dryad_tibble.RData"))
+save_cr(zenodo_tibble, file = file.path(here("data", "inputs_for_quick_render",   "zenodo_tibble.RData")))
+save_cr(osf_tibble, file = file.path(here("data", "inputs_for_quick_render",      "osf_tibble.RData")))
+save_cr(figshare_tibble, file = file.path(here("data", "inputs_for_quick_render", "figshare_tibble.RData")))
+save_cr(dryad_tibble, file = file.path(here("data", "inputs_for_quick_render",    "dryad_tibble.RData")))
 
 # Get counts
 
@@ -638,10 +633,10 @@ d_tib_c <- dryad_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # d
 
 # Save counts
 
-save_cr(z_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "z_tib_c.RData"))
-save_cr(o_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "o_tib_c.RData"))
-save_cr(f_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "f_tib_c.RData"))
-save_cr(d_tib_c, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "d_tib_c.RData"))
+save_cr(z_tib_c, file = file.path(here("data", "inputs_for_quick_render", "z_tib_c.RData")))
+save_cr(o_tib_c, file = file.path(here("data", "inputs_for_quick_render", "o_tib_c.RData")))
+save_cr(f_tib_c, file = file.path(here("data", "inputs_for_quick_render", "f_tib_c.RData")))
+save_cr(d_tib_c, file = file.path(here("data", "inputs_for_quick_render", "d_tib_c.RData")))
 
 # Create sample tables for rendering
 
@@ -652,10 +647,10 @@ dryad_tibble_sampled <- dryad_tibble |> sample_n(100)
 
 # Save sample tables
 
-save_cr(zenodo_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",   "zenodo_tibble_sampled.RData"))
-save_cr(osf_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",      "osf_tibble_sampled.RData"))
-save_cr(figshare_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "figshare_tibble_sampled.RData"))
-save_cr(dryad_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render",    "dryad_tibble_sampled.RData"))
+save_cr(zenodo_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render",   "zenodo_tibble_sampled.RData")))
+save_cr(osf_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render",      "osf_tibble_sampled.RData")))
+save_cr(figshare_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render", "figshare_tibble_sampled.RData")))
+save_cr(dryad_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render",    "dryad_tibble_sampled.RData")))
 
 rm(DCC_corpus_2_renamed_clean) # clean up
 ```
@@ -853,7 +848,7 @@ Version information was removed from DOIs and dataset identifiers. **Table 7.** 
 
 <br>
 
-```{r DCC ids with version info, eval = if (params$execute_falses) TRUE else FALSE}
+```{r DCC ids with version info}
 
 # Create a table of cases with version trails: ends with ".v" followed by an integer / ".t" and any number / ".p" and any number
 
@@ -863,19 +858,19 @@ trail_cases_tibble <- DCC_corpus_3_std_gen_rep |>
     str_detect(doi, "\\.v\\d+(/t\\d+)?(\\.p\\d+)?$")
   )
 
-save_cr(trail_cases_tibble, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "trail_cases_tibble.RData")) # save
+save_cr(trail_cases_tibble, file = file.path(here("data", "inputs_for_quick_render", "trail_cases_tibble.RData"))) # save
 
 # Get counts
 
 no_of_cases_with_v_info <- nrow(trail_cases_tibble)
 
-save_cr(no_of_cases_with_v_info, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "no_of_cases_with_v_info.RData")) # save
+save_cr(no_of_cases_with_v_info, file = file.path(here("data", "inputs_for_quick_render", "no_of_cases_with_v_info.RData"))) # save
 
 # Create a sample table
 
 trail_cases_tibble_sampled <- trail_cases_tibble |> sample_n(100)
 
-save_cr(trail_cases_tibble_sampled, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "trail_cases_tibble_sampled.RData")) # save
+save_cr(trail_cases_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render", "trail_cases_tibble_sampled.RData"))) # save
 
 rm(DCC_corpus_3_std_gen_rep) # clean up
 ```
@@ -912,7 +907,7 @@ Cases where either the DOI or the dataset columns ended with "/" or ".", or cont
 
 **Table 8.** below shows how many cases of each were present in the original DCC ("Before Standardization"), after standardization of general repositories and data set version information removal ("After Standardization") and after the additional excess characters removal (last column in Table 8.). <br>
 
-```{r count excess characthers in DCC, eval = if (params$execute_falses) TRUE else FALSE}
+```{r count excess characthers in DCC}
 
 # Create table of cases ending with dots or slashes, or ones that have commas in them
 
@@ -989,8 +984,8 @@ count_exc_characters_post <- tibble(
 )
 
 # Save
-save_cr(count_exc_characters_pre, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "count_exc_characters_pre.RData"))
-save_cr(count_exc_characters_post, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "count_exc_characters_post.RData"))
+save_cr(count_exc_characters_pre, file = file.path(here("data", "inputs_for_quick_render", "count_exc_characters_pre.RData")))
+save_cr(count_exc_characters_post, file = file.path(here("data", "inputs_for_quick_render", "count_exc_characters_post.RData")))
 
 # Prepare tables for rendering
 
@@ -1040,7 +1035,7 @@ count_exc_characters_summary <- count_exc_characters_pre_renamed |>
   full_join(count_exc_characters_post_renamed, by = "Category") |> 
   bind_cols((tibble(`After excess characters removal` = rep(0, nrow(count_exc_characters_post_renamed)))))
 
-save_cr(count_exc_characters_summary, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "count_exc_characters_summary.RData")) # save
+save_cr(count_exc_characters_summary, file = file.path(here("data", "inputs_for_quick_render", "count_exc_characters_summary.RData"))) # save
 
 rm(DCC_corpus_4_rm_v_info) # clean up
 ```
@@ -1097,7 +1092,7 @@ datatable(
   )
 ```
 
-```{r remove vars from env, eval = if (params$execute_falses) TRUE else FALSE}
+```{r remove vars from env}
 
 # Clean up
 

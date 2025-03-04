@@ -446,3 +446,48 @@ geom_text(
 # 
 # plot_Sankey(links_all, sinksRight = FALSE, fontSize = 16) # call the plotting function
 ```
+
+# Datasets and Citing Papers Publication Years
+
+```{r Datasets and Citing Papers Publication Years}
+
+#| label: fig-datasets-and-papers-years
+#| fig-cap: Datasets and Citing Papers Publication Years
+#| fig-format: png
+
+# Create table
+
+dif_for_plot <- dcc_charite_joined_final |>
+  select(doi_charite, doi_dcc, year_dcc, dataset_publication_year) |> 
+  distinct() |> 
+  mutate(dif = year_dcc - dataset_publication_year) |>
+  group_by(dif) |> 
+  summarise(n = n())
+
+# Plot
+
+dif_for_plot |>
+  filter(dif >= 0) |> 
+  ggplot(aes(x = n)) +
+  geom_histogram(
+    bins = 10,                  # Adjust bins to log-scaled data
+    color = "black", fill = NA
+  ) +
+  stat_bin(
+    bins = 10,                  # Same binning as histograms
+    geom = "text",
+    aes(label = ..count..),
+    vjust = -0.3,               # Position labels above bars
+    size = 5                    # Font size of labels
+  ) +
+  # scale_x_log10(
+  #   breaks = c(1, 3, 10, 40, 100),  # Custom breaks for the x-axis
+  #   labels = c(1, 3, 10, 40, 100)   # Labels for x-axis
+  # ) +
+  labs(
+    x = "Count",
+    y = "Nunmber of Years between Dataset and Citing Paper Publications"
+  ) +
+  theme_classic()
+
+```

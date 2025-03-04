@@ -1,0 +1,17 @@
+doi: charite's (i.e. originating) article's doi
+
+identifier: dataset identifyier as typed in Numbat
+
+charite_data_id_or_acc_nr: identifier / accession number as automatically extracted (and for general repositories also manually corrected)
+
+charite_data_id_or_acc_nr_v: identifier / accession number as manually corrected
+
+charite_data_id_or_acc_nr_merged: final identifiers column (derived either from "charite_data_id_or_acc_nr" or from "charite_data_id_or_acc_nr_v").
+
+valid: TRUE = identifier / accession number. FALSE = urls without any accession number / id in them
+
+type: possible values: doi, url, acc_nr (accession number). urls are by definition not valid!
+
+comments: noting if "charite_data_id_or_acc_nr" was manually corrected or if "identifier" has no identifier or accession number in it. 
+
+validated: internal column to monitor which cases were manually examined. Eventually all cases were examined and therefore all are validated (as valid or unvalid).

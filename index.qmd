@@ -42,6 +42,6 @@ Your text goes here.
 
 @fig-ref-by-year
 
-@fig-datasets-properties
+@fig-datasets-properties (Sankey plot - not available yet, waiting for final data about covid)
 
 # Avihay
