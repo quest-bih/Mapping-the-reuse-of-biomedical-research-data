@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 /.quarto/
+/_output/
 data/raw/dcc/
 data/wrangling_steps/dcc/
 data/processed/dcc
