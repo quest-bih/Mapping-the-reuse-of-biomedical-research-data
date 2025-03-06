@@ -44,7 +44,7 @@ dcc_charite_joined <- charite_dois_and_ids_clean_manually_validated |>
   select(everything())
 
 # Save
-save_cr(dcc_charite_joined, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_charite_joined.RData")))
+save_cr(dcc_charite_joined, file = file.path(here("data", "processed","dcc_charite_joined", "dcc_charite_joined.RData")))
 
 rm(DCC_corpus_8_preprint_rm) # clean up
 ```
@@ -110,8 +110,13 @@ The exclusion steps are illustrated in **Figure 1.** below, followed by the clea
 
 # 1. Initial cleaning and exclusion
 
+# Check if there are still any relevant columns with upper case
+dcc_charite_joined_1_rn |> summarise(across(everything(), ~ any(str_detect(as.character(.), "[A-Z]")))) |> View()
+# "publisher" is still uppercased
+
 dcc_charite_joined_1_rn <- dcc_charite_joined |> 
-  select(-c(
+    # select relevant columns and 
+    select(-c(
     identifier,
     charite_data_id_or_acc_nr,
     charite_data_id_or_acc_nr_v,
@@ -119,100 +124,70 @@ dcc_charite_joined_1_rn <- dcc_charite_joined |>
     type,
     comments,
     validated
-  )) |> 
-  rename(charite_data_id_or_acc_nr = charite_data_id_or_acc_nr_merged) # select relevant columns and rename identifier column
+  )) |>
+  # rename identifier column
+  rename(charite_data_id_or_acc_nr = charite_data_id_or_acc_nr_merged) |> 
+  # tolower publisher column
+  mutate(publisher = str_to_lower(publisher))
 
 # save
 save_cr(dcc_charite_joined_1_rn, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                   "dcc_charite_joined_1_rn.RData")))
 
-# Helper function to extract the last part of the string after the last '/' (used in the next wrangling step)
-extract_ending <- function(x) {
-  str_extract(x, "[^/]+$")
-}
-
-dcc_charite_joined_2_rm_doi_ids <- dcc_charite_joined_1_rn |>
-  mutate(
-    charite_data_id_or_acc_nr = tolower(charite_data_id_or_acc_nr),
-    doi_dcc = tolower(doi_dcc)) |>
-  mutate(
-    col1_ending = extract_ending(charite_data_id_or_acc_nr),
-    col2_ending = extract_ending(doi_dcc)
-  ) |>
-  filter(charite_data_id_or_acc_nr != doi_dcc
-         | col1_ending != col2_ending) |>
-  filter(col1_ending != col2_ending) |> 
-  select(-col1_ending, -col2_ending) # remove cases with doi = data_id or last part of each other are the same
-  # It's enough to remove similar endings, because they indicate all doi = data_id cases , even when doi / data_id are in different formats
+dcc_charite_joined_2_rm_self <- dcc_charite_joined_1_rn |> 
+  dplyr::filter(doi_charite != doi_dcc) # remove self-citations
 
 # save
-save_cr(dcc_charite_joined_2_rm_doi_ids, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                          "dcc_charite_joined_2_rm_doi_ids.RData")))
+save_cr(dcc_charite_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "dcc_charite_joined_2_rm_self.RData")))
 
-dcc_charite_joined_3_rm_self <- dcc_charite_joined_2_rm_doi_ids |> 
-  mutate(doi_dcc = tolower(doi_dcc)) |> 
-  filter(doi_charite != doi_dcc) # remove self-citations
+dcc_charite_joined_3_dist <- dcc_charite_joined_2_rm_self |> distinct() # deduplicate
 
 # save
-save_cr(dcc_charite_joined_3_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                       "dcc_charite_joined_3_rm_self.RData")))
-
-dcc_charite_joined_4_dist <- dcc_charite_joined_3_rm_self |>
-  distinct() # deduplicate
-
-# save
-save_cr(dcc_charite_joined_4_dist, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                    "dcc_charite_joined_4_dist.RData")))
-
-    # 11.10.2024 Ana changed 2 values in dois_from_Ana_orig file, but they're both not included in the dashboard join anyway.
-    # 
-    # Here's my validation:
-    # 
-    # dois_from_Ana_orig_changed <- read.csv(
-    #   file.path(here( "Raw files", "Charite DOIs List", "master_od_screening_manual_check_2020_2022_unsure_corrected.csv"),
-    #   header = TRUE,
-    #   sep = ";") # read corrected csv
-    # 
-    # diff <- setdiff(dois_from_Ana_orig, dois_from_Ana_orig_changed) # get cases that are different between the two csv files
-    # 
-    # dois_from_Ana_orig |> select(article, doi, data_access, own_or_reuse_data, identifier, data_identifier, assessment, open_data_assessment) |>
-    #   filter(article %in% diff$article) |> 
-    #   View() # view different cases in original file
-    #
-    # dois_from_Ana_orig_changed |> select(article, doi, data_access, own_or_reuse_data, identifier, data_identifier, assessment, open_data_assessment) |>     #   filter(article %in% diff$article) |> 
-    #   View() # view different cases in corrected file
+save_cr(dcc_charite_joined_3_dist, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                    "dcc_charite_joined_3_dist.RData")))
 
 # 2. Excluding authors overlap:
 
 # Create doi lists for charite and dcc to extract info for
 
-charite_dois_for_au_and_year_info <- dcc_charite_joined_4_dist |> 
+# Charite
+
+charite_dois_for_au_and_year_info <- dcc_charite_joined_3_dist |> 
   select(doi_charite) |>
   rename(doi = doi_charite) |> 
   distinct()
   
-write_csv_cr(charite_dois_for_au_and_year_info,
-        file = file.path(here(
-                         "Data Inputs",
-                         "Meta data for joined dcc-charite list",
-                         "DOIs to get info of",
-                         "charite_dois_for_au_and_year_info.csv"),
-        row.names = FALSE))
+write_csv_cr(
+  charite_dois_for_au_and_year_info,
+  file = here("data",
+               "results_verification",
+               "meta data for dcc-charite list",
+               "dois to get info of",
+               "charite_dois_for_au_and_year_info.csv"),
+          row.names = FALSE)
 
-dcc_dois_for_au_and_year_info <- dcc_charite_joined_4_dist |> 
+# DCC
+
+dcc_dois_for_au_and_year_info <- dcc_charite_joined_3_dist |> 
   select(doi_dcc) |>
   rename(doi = doi_dcc) |> 
   distinct()
   
-write_csv_cr(dcc_dois_for_au_and_year_info,
-        file = file.path(here(
-                         "Data Inputs",
-                         "Meta data for joined dcc-charite list",
-                         "DOIs to get info of",
-                         "dcc_dois_for_au_and_year_info.csv"),
-        row.names = FALSE))
+write_csv_cr(
+  dcc_dois_for_au_and_year_info,
+  file = here("data",
+               "results_verification",
+               "meta data for dcc-charite list",
+               "dois to get info of",
+               "dcc_dois_for_au_and_year_info.csv"),
+          row.names = FALSE)
 
 # Get authors and years info:
+
+
+
+######
 
 load(file.path(here( "Data Inputs", "Meta data for joined dcc-charite list", "authors info", "full_authors_info.RData"))) # get full authors info
 
@@ -253,11 +228,13 @@ authors_info_charite <- authors_info_charite_old |>
   distinct() |> # bind with newly extracted Cahrite authors info (from the latest iteration of the matching process)
   group_by(doi) |> slice(1) |> ungroup() # keep only the 1st doi in a group where there might be slight changes in authors names (manually validated)
 
+######
+
 # Rename both authors lists before joining
 authors_info_charite <- authors_info_charite |> rename(doi_charite = doi)
 authors_info_dcc <- authors_info_dcc |> rename(doi_dcc = doi)
 
-dcc_charite_joined_5_au_info <- dcc_charite_joined_4_dist |>
+dcc_charite_joined_4_au_info <- dcc_charite_joined_3_dist |>
   left_join(authors_info_dcc, by = "doi_dcc") |>
   left_join(authors_info_charite, by = "doi_charite") # join author info into _4
 
@@ -272,9 +249,16 @@ dcc_charite_joined_5_au_info <- dcc_charite_joined_4_dist |>
   # Verify that there are no NAs left
   # dcc_charite_joined_5_au_info |> filter(is.na(authors_charite) | is.na(authors_dcc)) |> select(doi_dcc) |> distinct() |> View() 
 
+
+
+
+
 # Save
 save_cr(dcc_charite_joined_5_au_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                        "dcc_charite_joined_5_au_info.RData")))
+
+
+
 
 # Filter to a new "joined" (6) by no common authors:
 
