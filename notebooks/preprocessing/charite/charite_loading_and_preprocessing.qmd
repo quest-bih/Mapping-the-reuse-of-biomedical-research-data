@@ -337,12 +337,11 @@ manual_validation_done <- latest_file_to_load
 
 # Group cases
 manually_validated_summary <- manual_validation_done |> 
-  group_by(valid, type, comments) |> 
+  group_by(type, comments) |> 
   summarise(n = n())
 
 # Get relevant cases for matching
 charite_dois_and_ids_clean_manually_validated <- manual_validation_done |> 
-  dplyr::filter(valid == TRUE | is.na(valid)) |> 
   mutate(charite_data_id_or_acc_nr_merged = charite_data_id_or_acc_nr_merged |>
            str_remove_all("[/\\.]+$") # Remove all trailing slashes and dots (no further cleaning needed)
   )

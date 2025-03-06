@@ -1,19 +1,45 @@
 ---
 title: "dcc_charite_analysis"
+date: "today"
 author: "Avihay Cohen"
+format:
+  html:
+    self-contained: true
+editor: visual
+execute: # local chunk options will override the defaults below
+  cache: false
+  freeze: false # everything will re-run every time
+  warning: false # supress warning messages
+  message: false # supress messages
+  echo: false # do not show code unless specified otherwise
+  eval: true
 ---
 
-# 4. Matching DCC and Charite Lists by Dataset Identifiers
+# Matching DCC and Charite Lists by Dataset Identifiers
 
 <br>
 
-The matching was done by joining the two lists by the **identifier** columns. The result can be seen in **Table 13.** below:
+The matching was done by joining the two lists by the **identifier** columns. The result can be seen in **Table 1.** below:
 
 ```{r Matching manually validated Charite list with DCC, eval = if (params$execute_falses) TRUE else FALSE}
 
+# Load charite_dois_and_ids_manually_valditaed.RData
+
+Charite_for_joining <- load(here("data",
+          "wrangling_steps",
+          "dcc",
+          "DCC_corpus_8_preprint_rm.RData"))
+
+# Load DCC_corpus_8_preprint_rm.RData
+
+DCC_for_joining <- load(here("data",
+          "processed",
+          "charite",
+          "charite_dois_and_ids_clean_manually_validated.RData"))
+
 # Perform the join using the id columns (keep all columns)
 dcc_charite_joined <- charite_dois_and_ids_clean_manually_validated |>
-  inner_join(DCC_corpus_6_doi_pref_rm, by = c("charite_data_id_or_acc_nr_merged" = "data_id_or_acc_nr"),
+  inner_join(DCC_for_joining, by = c("charite_data_id_or_acc_nr_merged" = "data_id_or_acc_nr"),
              suffix = c("_charite", "_dcc")) |>
   select(everything())
 
@@ -25,7 +51,7 @@ rm(DCC_corpus_6_doi_pref_rm) # clean up
 
 <br>
 
-#### Table 13. Matched DCC-Charite List
+#### Table 1. Matched DCC-Charite List
 
 <br>
 
@@ -551,7 +577,6 @@ datatable(
   extensions = 'Buttons'
   )
 ```
-
 
 ```{r distinct dcc papers and ids}
 

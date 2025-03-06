@@ -5,3 +5,4 @@
 /.quarto/
 data/raw/dcc/
 data/wrangling_steps/dcc/
+data/processed/dcc

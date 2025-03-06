@@ -1,78 +1,45 @@
-# This script takes the RData object "charite_dois_and_ids_clean" with automatically extracted accession numbers, and:
+# This script takes the RData object "2_charite_dois_and_ids_clean.RData" (loaded as "charite_dois_and_ids_clean")
+# with automatically extracted accession numbers, and:
 # 1. Validates extraction of accession numbers with common prefixes
 # 2. Validates and Standardizes identifiers of general repositories (zenodo, osf, figshare, dryad)
 # 3. Creates a csv for manual validation of the rest of the accession numbers
 
-# 1. Set up ---------------------------------------------------------------
 
-rm(list=ls())
+# 1. Load latest manual validation ----------------------------------------
 
-Sys.setenv(LANG = "EN") # make sure system environment is in English
+# Since there are always cases added, we will first get only the cases that were not manually validated until now.
 
-if (!require(pacman)) install.packages("pacman")
-library(pacman)
-pacman::p_load(tidyverse,
-               DT,
-               patchwork,
-               RColorBrewer,
-               rstudioapi,
-               here,
-               tcltk) # load libraries
-
-# Wrapper for save() with automatic directory creation
-save_cr <- function(..., file) {
-  dir_path <- dirname(file)
-  if (!dir.exists(dir_path)) {
-    dir.create(dir_path, recursive = TRUE)
-  }
-  save(..., file = file)
-}
-
-# Wrapper for write.csv() with automatic directory creation
-write_csv_cr <- function(x, file, ...) {
-  dir_path <- dirname(file)
-  if (!dir.exists(dir_path)) {
-    dir.create(dir_path, recursive = TRUE)
-  }
-  write.csv(x, file = file, ...)
-}
+# Locate manual validation folder
+files <- list.files(here("data",
+                         "results_verification",
+                         "Manual validation of accession numbers extraction function for charite papers"),
+  pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE)
 
 
-# 2. Load file ------------------------------------------------------------
-
-# Load Charite's doi and ids list (after automatic accession number extraction)
-
-root_dir <- dirname(rstudioapi::getSourceEditorContext()$path) # get current directory
-relative_path <- normalizePath(file.path(root_dir, "../..", "Data Wrangling", "Charite wrangling steps", "2_charite_dois_and_ids_clean.RData"), 
-                               winslash = "/", mustWork = FALSE) # get location of file to load
-load(relative_path) # load file
-
-# Get only cases that were not verified until now
-# (there was a previous manual validation that was being done on a subset of the data)
-
-# Locate dir
-files <- list.files(root_dir,
-                    pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE)
-
-# Identify the latest file based on modification time
+# Identify the latest manual validation file based on modification time
 latest_file_name <- files[which.max(file.info(files)$mtime)]
 
-# Load the file into the global environment
-latest_file_to_load <- read_csv(latest_file_name) # this is the latest "manual_validation_done"
+# Load the latest manual validation file into the global environment
+latest_validation <- read_csv(latest_file_name) # this is the latest "manual_validation_done"
 
-charite_dois_and_ids_clean$identifier <- tolower(charite_dois_and_ids_clean$identifier)
+# Verify that identifiers in this file and in charite_dois_and_ids_clean are lower cased
+any(str_detect(charite_dois_and_ids_clean$identifier, "[A-Z]"))
+any(str_detect(latest_file_to_load$identifier, "[A-Z]"))
 
-manual_validation_20022025 <- charite_dois_and_ids_clean |> 
-  filter(!identifier %in% tolower(latest_file_to_load$identifier)) # get only added cases (after automatic cleaning)
+# Get only added cases after auto-cleaning
+added_cases <- charite_dois_and_ids_clean |> 
+  dplyr::filter(!identifier %in% latest_validation$identifier)
 
-# bind them to existing manual validation latest file
-manual_validation_20022025 <- latest_file_to_load |> 
-  bind_rows(manual_validation_20022025) # now cases where "validated = NA" are the added ones
+# bind them to existing manual validation latest file:
+
+### Note! change the "manual_validation_xxxxxxxx" variable name to today's date all over of the script!
+manual_validation_0603025 <- added_cases |> 
+  bind_rows(latest_validation) # now cases where "validated = NA" are the added ones!
 
 # get how many cases were added (validated = NA)
-manual_validation_20022025 |> group_by(validated) |> summarise(n = n())
+manual_validation_0603025 |> group_by(validated) |> summarise(n = n())
 
-# 3. Common accession numbers prefixed ---------------------------------------
+# 2. Common accession numbers prefixed ---------------------------------------
 
 # In this step, I manually created a list of common accession numbers prefixes
 # in order to label accession numbers in the Charite list that the were
@@ -128,72 +95,21 @@ prefixes <- c("//github.com",
 
 # Mark cases with the prefixes above as validated (validated = TRUE)
 
-manual_validation_20022025 <- manual_validation_20022025 |> 
+manual_validation_0603025 <- manual_validation_0603025 |> 
   mutate(validated = case_when(
-    map_lgl(charite_data_id_or_acc_nr, ~ any(str_starts(.x, prefixes))) # these prefixes existence mean that the function handled these cases well
+    is.na(validated)
+    & map_lgl(charite_data_id_or_acc_nr, ~ any(str_starts(.x, prefixes))) # these prefixes existence mean that the function handled these cases well
     ~ TRUE,
     .default = validated))
 
-# get how many casesare left after labeling cases with prefixes (validated = NA)
-manual_validation_20022025 |> group_by(validated) |> summarise(n = n())
-
-# # 4. Standardizing general repositories identifiers -----------------------
-# 
-# # zenodo (std to: 10.5281/zenodo.xxxxx)
-# 
-# # manual_validation_03122024 |> filter(str_detect(charite_data_id_or_acc_nr, "zenodo")) |> View()
-# 
-# # Detect "zenodo" that isn't standardized and append ""10.5281/" to it (as a prefix)
-# manual_validation_03122024 <- manual_validation_03122024 |> 
-#   mutate(charite_data_id_or_acc_nr = case_when(
-#     str_detect(charite_data_id_or_acc_nr, "zenodo") & 
-#       !str_detect(charite_data_id_or_acc_nr, "^10\\.5281/zenodo\\.\\d+$") ~ 
-#       paste0("10.5281/", charite_data_id_or_acc_nr), 
-#     .default = charite_data_id_or_acc_nr
-#   ))
-# 
-# # osf (std to: //osf.io/xxxxx)
-# 
-# # manual_validation_03122024 |> filter(str_detect(charite_data_id_or_acc_nr, "osf")) |> View()
-# 
-# # Only one case to standardize (remove "/files" trail)
-# manual_validation_03122024 <- manual_validation_03122024 |> 
-#   mutate(charite_data_id_or_acc_nr = str_remove(charite_data_id_or_acc_nr, "/files$"))
-# 
-# # figshare (std to: 10.6084/m9.figshare.xxxxx)
-# 
-# # manual_validation_03122024 |> filter(str_detect(charite_data_id_or_acc_nr, "figshare")) |> View()
-# 
-# # Only one case to standardize (add "10.6084/" before value)
-# manual_validation_03122024 <- manual_validation_03122024 |> 
-#   mutate(charite_data_id_or_acc_nr = case_when(
-#     str_detect(charite_data_id_or_acc_nr, "figshare") & 
-#       !str_starts(charite_data_id_or_acc_nr, "10.6084") ~ 
-#       paste0("10.6084/", charite_data_id_or_acc_nr),
-#     .default = charite_data_id_or_acc_nr
-#   ))
-# 
-# # dryad
-# 
-# # manual_validation_03122024 |> filter(str_detect(charite_data_id_or_acc_nr, "dryad")) |> View() # already std'd
-# 
-# # Mark all general repositories as validated:
-# 
-# manual_validation_03122024 <- manual_validation_03122024 |> 
-#   mutate(validated = case_when(
-#     str_detect(charite_data_id_or_acc_nr, "zenodo")
-#     | str_detect(charite_data_id_or_acc_nr, "osf")
-#     | str_detect(charite_data_id_or_acc_nr, "figshare")
-#     | str_detect(charite_data_id_or_acc_nr, "dryad")
-#     ~ T,
-#     .default = validated
-#   ))
-
-# 5. Final clean up before manual validation ------------------------------
+# 3. Final clean up before manual validation ------------------------------
 
 # 1. Remove version information from id (".v...")
-manual_validation_20022025$charite_data_id_or_acc_nr <- 
-  sub("\\.v[0-9]+.*$", "", manual_validation_20022025$charite_data_id_or_acc_nr)
+
+manual_validation_0603025 <- manual_validation_0603025 |>
+  mutate(charite_data_id_or_acc_nr = case_when(
+    is.na(validated) ~ sub("\\.v[0-9]+.*$", "", charite_data_id_or_acc_nr),
+    .default = charite_data_id_or_acc_nr)) # remove version information
 
 # 2. Replace "," with ".", and remove:
 
@@ -202,8 +118,8 @@ manual_validation_20022025$charite_data_id_or_acc_nr <-
   # "," at the beginning / end
 
 # View
-manual_validation_20022025 |>
-  filter(
+manual_validation_0603025 |>
+  dplyr::filter(
     str_detect(charite_data_id_or_acc_nr, "^,|,$") | # ","
       str_detect(charite_data_id_or_acc_nr, "^\\.|\\.$") | # "."
       str_detect(charite_data_id_or_acc_nr, "\\s") | # " " anywhere
@@ -211,59 +127,95 @@ manual_validation_20022025 |>
   ) |> View()
 
 # Remove
-manual_validation_20022025 <- manual_validation_20022025 |> 
+manual_validation_0603025 <- manual_validation_0603025 |> 
   mutate(charite_data_id_or_acc_nr = case_when(
-    str_detect(charite_data_id_or_acc_nr, "^,|,$") ~ 
-      str_remove_all(charite_data_id_or_acc_nr, "^,|,$"), # ","
+    is.na(validated)
+    & str_detect(charite_data_id_or_acc_nr, "^,|,$")
+    ~ str_remove_all(charite_data_id_or_acc_nr, "^,|,$"), # ","
     
-    str_detect(charite_data_id_or_acc_nr, "^\\.|\\.$") ~ 
-      str_remove_all(charite_data_id_or_acc_nr, "^\\.|\\.$"), # "."
+    is.na(validated)
+    & str_detect(charite_data_id_or_acc_nr, "^\\.|\\.$")
+    ~ str_remove_all(charite_data_id_or_acc_nr, "^\\.|\\.$"), # "."
     
-    str_detect(charite_data_id_or_acc_nr, "^\\s|\\s$") ~ 
-      str_trim(charite_data_id_or_acc_nr), # " " anywhere
+    is.na(validated)
+    & str_detect(charite_data_id_or_acc_nr, "^\\s|\\s$")
+    ~ str_trim(charite_data_id_or_acc_nr), # " " anywhere
     
-    str_detect(charite_data_id_or_acc_nr, "\\s") ~ 
-      str_replace_all(charite_data_id_or_acc_nr, "\\s", ""), # " " at the beginning / end
+    is.na(validated)
+    & str_detect(charite_data_id_or_acc_nr, "\\s")
+    ~ str_replace_all(charite_data_id_or_acc_nr, "\\s", ""), # " " at the beginning / end
     
     # Keep all other cases unchanged
     .default = charite_data_id_or_acc_nr
   ))
 
-# # 3. Mark cases starting with "10." as validated
-# 
-# # I Manually looked over the remaining cases that start with "10.".
-# # They looked valid, so I will change them to "validated = T"
-# 
-# manual_validation_03122024 <- manual_validation_03122024 |> 
-#   mutate(validated = case_when(
-#     str_detect(charite_data_id_or_acc_nr, "^10\\.") ~ TRUE,
-#     .default = validated
-#   ))
+# View cases left unhandled
 
-# Write a csv for manual validation of the rest of the identifiers
+manual_validation_0603025 |> dplyr::filter(is.na(validated)) |> View()
 
-write_csv_cr(manual_validation_20022025,
-             file = file.path(root_dir,
-                              "manual_validation_20022025.csv"),
-             row.names = FALSE)
-          
-# Next, save "manual_validation_20022025.csv" as "manual_validation_20022025_done.csv" ana manually validate it!
+# (Write a chunk to handle 10. if needed)
 
-##### ARCHIVE:
+# Write a csv for manual validation as documentation
 
-# Notes for manual validation:
-# https://www.ncbi.nlm.nih.gov/nuccore/2085340607 leads to acc_nr MW718881.1
-# https://www.deciphergenomics.org/patient/427511/overview/general no acc_nr
-# http://csg.sph.umich.edu/willer/public/glgc-lipids2021/ no acc_nr
+write_csv_cr(
+  manual_validation_0603025,
+  file = here("data",
+              "results_verification",
+              "Manual validation of accession numbers extraction function for charite papers",
+              "manual_validation_0603025.csv"),
+  row.names = FALSE
+)
 
-# Not accessible (error):
-# https://www.ncbi.nlm.nih.gov/traces/wgs/jaiezw01?display=contigs
-# https://www.ebi.ac.uk/empiar/empiar-10822/
-# https://massive.ucsd.edu/proteosafe/dataset.jsp?task=2ae5c0457a3f4e9196365f9448657b59
-# https://massive.ucsd.edu/proteosafe/dataset.jsp?task=1a42c18056484609afafe07519049ad9
-# https://ddbj.nig.ac.jp/public/ddbj_database/dra/fastq/dra010/dra010491/
-# https://data.4dnucleome.org/files-processed/4dnfijrx16ek/#file-overview
-# https://data.4dnucleome.org/files-fastq/4dnfi1f6zlao/
-# https://flowrepository.org/id/fr-fcm-z3g7 
+# Write a copy of it with the suffix _in_progress - this is the file you should work on!
 
-###
+write_csv_cr(
+  manual_validation_0603025,
+  file = here("data",
+              "results_verification",
+              "Manual validation of accession numbers extraction function for charite papers",
+              "manual_validation_0603025_in_progress.csv"),
+  row.names = FALSE
+)
+
+# 4. Finalizing the validation --------------------------------------------
+
+# After finishing working on the _in_progress.csv, here we'll make sure that the best identifier
+# (out of the columns: "identifier"
+#                      "charite_data_id_or_acc_nr",
+#                       "charite_data_id_or_acc_nr_v"
+#                      "charite_data_id_or_acc_nr_merged")
+# is listed under "_merged"!
+
+# Load _in_progress that you've just finished working on:
+
+new_files <- list.files(here("data",
+                         "results_verification",
+                         "Manual validation of accession numbers extraction function for charite papers"),
+                    pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE) # get updated files list
+
+new_latest_file_name <- new_files[which.max(file.info(new_files)$mtime)] # get updated last modified file
+
+manual_validation_in_progress <- read_csv(new_latest_file_name) # load _in_progress
+
+manual_validation_0603025_done <- manual_validation_in_progress |> 
+  mutate(charite_data_id_or_acc_nr_merged =
+           if_else(
+             # if "merged" is NA
+             is.na(charite_data_id_or_acc_nr_merged),
+             # then get _v
+             coalesce(charite_data_id_or_acc_nr_v,
+                      # if _v is also NA, get the automatically extracted ("charite_data_id_or_acc_nr")
+                      charite_data_id_or_acc_nr),
+             # and put either in _merged
+             charite_data_id_or_acc_nr_merged))
+
+# Write a csv for the finished manual validation: This file will be loaded in charite_loading_and_preprocessing.qmd!
+
+write_csv_cr(
+  manual_validation_0603025_done,
+  file = here("data",
+              "results_verification",
+              "Manual validation of accession numbers extraction function for charite papers",
+              "manual_validation_0603025_done.csv"),
+  row.names = FALSE
+)
