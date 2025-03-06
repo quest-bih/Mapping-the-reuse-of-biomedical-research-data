@@ -21,32 +21,32 @@ execute: # local chunk options will override the defaults below
 
 The matching was done by joining the two lists by the **identifier** columns. The result can be seen in **Table 1.** below:
 
-```{r Matching manually validated Charite list with DCC, eval = if (params$execute_falses) TRUE else FALSE}
+```{r Matching manually validated Charite list with DCC}
 
 # Load charite_dois_and_ids_manually_valditaed.RData
 
-Charite_for_joining <- load(here("data",
+load(here("data",
           "wrangling_steps",
           "dcc",
           "DCC_corpus_8_preprint_rm.RData"))
 
 # Load DCC_corpus_8_preprint_rm.RData
 
-DCC_for_joining <- load(here("data",
+load(here("data",
           "processed",
           "charite",
           "charite_dois_and_ids_clean_manually_validated.RData"))
 
 # Perform the join using the id columns (keep all columns)
 dcc_charite_joined <- charite_dois_and_ids_clean_manually_validated |>
-  inner_join(DCC_for_joining, by = c("charite_data_id_or_acc_nr_merged" = "data_id_or_acc_nr"),
+  inner_join(DCC_corpus_8_preprint_rm, by = c("charite_data_id_or_acc_nr_merged" = "data_id_or_acc_nr"),
              suffix = c("_charite", "_dcc")) |>
   select(everything())
 
 # Save
-save_cr(dcc_charite_joined, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_charite_joined.RData"))
+save_cr(dcc_charite_joined, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_charite_joined.RData")))
 
-rm(DCC_corpus_6_doi_pref_rm) # clean up
+rm(DCC_corpus_8_preprint_rm) # clean up
 ```
 
 <br>
@@ -106,7 +106,7 @@ The matched list was cleaned as follows:
 
 The exclusion steps are illustrated in **Figure 1.** below, followed by the cleaned matched list resulted from it (seen in **Table 13.**).
 
-```{r Cleaning dcc-charite joined, eval = if (params$execute_falses) TRUE else FALSE}
+```{r Cleaning dcc-charite joined}
 
 # 1. Initial cleaning and exclusion
 
@@ -123,10 +123,8 @@ dcc_charite_joined_1_rn <- dcc_charite_joined |>
   rename(charite_data_id_or_acc_nr = charite_data_id_or_acc_nr_merged) # select relevant columns and rename identifier column
 
 # save
-save_cr(dcc_charite_joined_1_rn, file = file.path(root_dir,
-                                                  "Data Wrangling",
-                                                  "DCC-Charite Joined List Wrangling Steps",
-                                                  "dcc_charite_joined_1_rn.RData"))
+save_cr(dcc_charite_joined_1_rn, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                  "dcc_charite_joined_1_rn.RData")))
 
 # Helper function to extract the last part of the string after the last '/' (used in the next wrangling step)
 extract_ending <- function(x) {
@@ -148,36 +146,30 @@ dcc_charite_joined_2_rm_doi_ids <- dcc_charite_joined_1_rn |>
   # It's enough to remove similar endings, because they indicate all doi = data_id cases , even when doi / data_id are in different formats
 
 # save
-save_cr(dcc_charite_joined_2_rm_doi_ids, file = file.path(root_dir,
-                                                          "Data Wrangling",
-                                                          "DCC-Charite Joined List Wrangling Steps",
-                                                          "dcc_charite_joined_2_rm_doi_ids.RData"))
+save_cr(dcc_charite_joined_2_rm_doi_ids, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                          "dcc_charite_joined_2_rm_doi_ids.RData")))
 
 dcc_charite_joined_3_rm_self <- dcc_charite_joined_2_rm_doi_ids |> 
   mutate(doi_dcc = tolower(doi_dcc)) |> 
   filter(doi_charite != doi_dcc) # remove self-citations
 
 # save
-save_cr(dcc_charite_joined_3_rm_self, file = file.path(root_dir,
-                                                       "Data Wrangling",
-                                                       "DCC-Charite Joined List Wrangling Steps",
-                                                       "dcc_charite_joined_3_rm_self.RData"))
+save_cr(dcc_charite_joined_3_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "dcc_charite_joined_3_rm_self.RData")))
 
 dcc_charite_joined_4_dist <- dcc_charite_joined_3_rm_self |>
   distinct() # deduplicate
 
 # save
-save_cr(dcc_charite_joined_4_dist, file = file.path(root_dir,
-                                                    "Data Wrangling",
-                                                    "DCC-Charite Joined List Wrangling Steps",
-                                                    "dcc_charite_joined_4_dist.RData"))
+save_cr(dcc_charite_joined_4_dist, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                    "dcc_charite_joined_4_dist.RData")))
 
     # 11.10.2024 Ana changed 2 values in dois_from_Ana_orig file, but they're both not included in the dashboard join anyway.
     # 
     # Here's my validation:
     # 
     # dois_from_Ana_orig_changed <- read.csv(
-    #   file.path(root_dir, "Raw files", "Charite DOIs List", "master_od_screening_manual_check_2020_2022_unsure_corrected.csv"),
+    #   file.path(here( "Raw files", "Charite DOIs List", "master_od_screening_manual_check_2020_2022_unsure_corrected.csv"),
     #   header = TRUE,
     #   sep = ";") # read corrected csv
     # 
@@ -200,12 +192,12 @@ charite_dois_for_au_and_year_info <- dcc_charite_joined_4_dist |>
   distinct()
   
 write_csv_cr(charite_dois_for_au_and_year_info,
-        file = file.path(root_dir,
+        file = file.path(here(
                          "Data Inputs",
                          "Meta data for joined dcc-charite list",
                          "DOIs to get info of",
                          "charite_dois_for_au_and_year_info.csv"),
-        row.names = FALSE)
+        row.names = FALSE))
 
 dcc_dois_for_au_and_year_info <- dcc_charite_joined_4_dist |> 
   select(doi_dcc) |>
@@ -213,16 +205,16 @@ dcc_dois_for_au_and_year_info <- dcc_charite_joined_4_dist |>
   distinct()
   
 write_csv_cr(dcc_dois_for_au_and_year_info,
-        file = file.path(root_dir,
+        file = file.path(here(
                          "Data Inputs",
                          "Meta data for joined dcc-charite list",
                          "DOIs to get info of",
                          "dcc_dois_for_au_and_year_info.csv"),
-        row.names = FALSE)
+        row.names = FALSE))
 
 # Get authors and years info:
 
-load(file.path(root_dir, "Data Inputs", "Meta data for joined dcc-charite list", "authors info", "full_authors_info.RData")) # get full authors info
+load(file.path(here( "Data Inputs", "Meta data for joined dcc-charite list", "authors info", "full_authors_info.RData"))) # get full authors info
 
 # For DCC
 
@@ -231,10 +223,10 @@ authors_info_dcc_old <- full_authors_info |>
   distinct() # get previously extracted dcc authors info (from a previous iteration of the matching process)
 
 added_authors_info_dcc <- read.csv(
-  file.path(root_dir, "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "dcc_new_doi_authors_and_years.csv"),
+  file.path(here( "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "dcc_new_doi_authors_and_years.csv"),
   header = TRUE,
   sep = ","
-)
+))
   
 authors_info_dcc <- authors_info_dcc_old |>
   rename(doi = doi_dcc) |> 
@@ -250,10 +242,10 @@ authors_info_charite_old <- full_authors_info |>
   distinct() # get previously extracted Charite authors info (from a previous iteration of the matching process)
 
 added_authors_info_charite <- read.csv(
-  file.path(root_dir, "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "charite_dois_for_au_and_year_info.csv"),
+  file.path(here( "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "charite_dois_for_au_and_year_info.csv"),
   header = TRUE,
   sep = ","
-)
+))
 
 authors_info_charite <- authors_info_charite_old |>
   rename(doi = doi_charite) |> 
@@ -281,10 +273,8 @@ dcc_charite_joined_5_au_info <- dcc_charite_joined_4_dist |>
   # dcc_charite_joined_5_au_info |> filter(is.na(authors_charite) | is.na(authors_dcc)) |> select(doi_dcc) |> distinct() |> View() 
 
 # Save
-save_cr(dcc_charite_joined_5_au_info, file = file.path(root_dir,
-                                                       "Data Wrangling",
-                                                       "DCC-Charite Joined List Wrangling Steps",
-                                                       "dcc_charite_joined_5_au_info.RData"))
+save_cr(dcc_charite_joined_5_au_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "dcc_charite_joined_5_au_info.RData")))
 
 # Filter to a new "joined" (6) by no common authors:
 
@@ -301,26 +291,24 @@ dcc_charite_joined_6_rm_au_ov <- dcc_charite_joined_5_au_info  |>
   distinct(doi_charite, charite_data_id_or_acc_nr, id, doi_dcc, .keep_all = TRUE)
 
 # Save
-save_cr(dcc_charite_joined_6_rm_au_ov, file = file.path(root_dir,
-                                                        "Data Wrangling",
-                                                        "DCC-Charite Joined List Wrangling Steps",
-                                                        "dcc_charite_joined_6_rm_au_ov.RData"))
+save_cr(dcc_charite_joined_6_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                        "dcc_charite_joined_6_rm_au_ov.RData")))
 
 # 3. Complete missing journals and paper publication years:
 
 # Get years info (newest 2023 batch was already loaded earlier as "added_authors_info_dcc / _charite")
 
-load(file.path(root_dir,
+load(file.path(here(
                "Data Inputs",
                "Meta data for joined dcc-charite list",
                "publication years info",
-               "df_charite_results.RData")) # get charite years
+               "df_charite_results.RData"))) # get charite years
 
-load(file.path(root_dir,
+load(file.path(here(
                "Data Inputs",
                "Meta data for joined dcc-charite list",
                "publication years info",
-               "df_dcc_results.RData")) # get DCC years
+               "df_dcc_results.RData"))) # get DCC years
 
 # Prepare dfs for joining (make sure dois are standardized, select relevant columns, rename doi columns)
 
@@ -369,13 +357,11 @@ dcc_charite_joined_7_years_info <- dcc_charite_joined_7_years_info |>
 # dcc_charite_joined_7_years_info |> filter(is.na(year_dcc)) |> select(doi_dcc) |> distinct() |> View() # check
 
 # Save
-save_cr(dcc_charite_joined_7_years_info, file = file.path(root_dir,
-                                                          "Data Wrangling",
-                                                          "DCC-Charite Joined List Wrangling Steps",
-                                                          "dcc_charite_joined_7_years_info.RData"))
+save_cr(dcc_charite_joined_7_years_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                          "dcc_charite_joined_7_years_info.RData")))
 ```
 
-```{r manually extract datasets years, eval = FALSE}
+```{r manually extract datasets years}
 
 # 4. Add publication years of data sets
 
@@ -387,24 +373,24 @@ identifiers <- dcc_charite_joined_5_au_info |>
 
 # Save
 write_csv_cr(identifiers,
-          file = file.path(root_dir,
+          file = file.path(here(
                            "Results Verification",
                            "Datasets years",
                            "datasets_years.csv"),
-          row.names = FALSE)
+          row.names = FALSE))
 
 # Information about data sets publication years was then manually added, verified and saved under "datasets_years_filled_after_EB_verification.csv".
 ```
 
-```{r load and add datasets years info, eval = if (params$execute_falses) TRUE else FALSE}
+```{r load and add datasets years info}
 
 # Load information about data sets publication years
 
 full_ds_years_info <- read.csv(
-  file.path(root_dir, "Results Verification", "Datasets years", "datasets_years_filled_after_EB_verification.csv"),
+  file.path(here( "Results Verification", "Datasets years", "datasets_years_filled_after_EB_verification.csv"),
   header = TRUE,
   sep = ","
-)
+))
 
 # Prepare for joining
 
@@ -419,10 +405,8 @@ dcc_charite_joined_8_ds_years_info <- dcc_charite_joined_7_years_info |>
   rename(dataset_publication_year = charite_id_year)
 
 # Save
-save_cr(dcc_charite_joined_8_ds_years_info, file = file.path(root_dir,
-                                                             "Data Wrangling",
-                                                             "DCC-Charite Joined List Wrangling Steps",
-                                                             "dcc_charite_joined_8_ds_years_info.RData"))
+save_cr(dcc_charite_joined_8_ds_years_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                             "dcc_charite_joined_8_ds_years_info.RData")))
 
 # 5. Manually add Journals info where it was still missing
 
@@ -454,10 +438,8 @@ dcc_charite_joined_9_jr_info <- dcc_charite_joined_8_ds_years_info |>
 # dcc_charite_joined_9_jr_info |> filter(journal == "") |> select(doi_dcc) |> distinct() |> View() # check after adding
 
 # Save
-save_cr(dcc_charite_joined_9_jr_info, file = file.path(root_dir,
-                                                       "Data Wrangling",
-                                                       "DCC-Charite Joined List Wrangling Steps",
-                                                       "dcc_charite_joined_9_jr_info.RData"))
+save_cr(dcc_charite_joined_9_jr_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "dcc_charite_joined_9_jr_info.RData")))
 
 # 6. Create tables for verification:
 
@@ -473,12 +455,11 @@ save_cr(dcc_charite_joined_9_jr_info, file = file.path(root_dir,
     
     # Save
     write_csv_cr(year_2016_and_earlier,
-              file = file.path(root_dir,
+              file = file.path(here(
                                "Results Verification",
                                "Year lag",
                                "year_2016_and_earlier.csv"),
-              row.names = FALSE)
-
+              row.names = FALSE))
 
     # Cases where DCC paper publication year is stated as earlier than Charite paper publication year
 
@@ -494,11 +475,11 @@ save_cr(dcc_charite_joined_9_jr_info, file = file.path(root_dir,
   
     # Save
     write_csv_cr(dcc_earlier_than_charite,
-              file = file.path(root_dir,
+              file = file.path(here(
                                "Results Verification",
                                "Year lag",
                                "dcc_earlier_than_charite.csv"),
-              row.names = FALSE)
+              row.names = FALSE))
 
 # 7. Check if there are any cases that are invalid and need removal, according to results of section (6) abouve
     
@@ -518,11 +499,11 @@ save_cr(dcc_charite_joined_9_jr_info, file = file.path(root_dir,
     
     # Save
     write_csv_cr(same_data_id_with_different_charite_papers,
-              file = file.path(root_dir,
+              file = file.path(here(
                                "Results Verification",
                                "Different charite papers with the same id",
                                "same_data_id_with_different_charite_papers.csv"),
-              row.names = F)
+              row.names = F))
     
     # Evgeny approved these cases as valid.
 ```
@@ -540,27 +521,6 @@ save_cr(dcc_charite_joined_9_jr_info, file = file.path(root_dir,
 <br>
 
 ```{r dcc-charite joined list after cleaning table}
-
-# Load the most recent .RData file from the "dcc-charite joined wrangling steps" directory and assign it to "dcc_charite_joined_final"
-
-# locate dir
-files <- list.files(file.path(root_dir,
-                              "Data Wrangling",
-                              "DCC-Charite Joined List Wrangling Steps"), 
-                    pattern = "\\.RData$", full.names = TRUE, ignore.case = TRUE)
-
-# Identify the latest file based on modification time
-latest_file <- files[which.max(file.info(files)$mtime)]
-
-# Load the file into the global environment
-loaded_objects <- load(latest_file)
-
-# Assign the loaded object to a new variable name
-dcc_charite_joined_final <- get(loaded_objects, envir = .GlobalEnv)
-rm(loaded_objects) # clean up
-
-  # make sure there's no missing data (besides the missing data in the original DCC which is not relevant)
-  # dcc_charite_joined_final |> summarise(across(everything(), ~ any(is.na(.) | . == ""))) |> View()
 
 # Render table
 
@@ -585,6 +545,6 @@ datatable(
 # dcc_id_distinct <- DCC_corpus_5_ex_chr_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
 # 
 # # save
-# save_cr(dcc_doi_distinct, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_doi_distinct.RData"))
-# save_cr(dcc_id_distinct, file = file.path(root_dir, "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData"))
+# save_cr(dcc_doi_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_doi_distinct.RData")))
+# save_cr(dcc_id_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData")))
 ```

@@ -536,13 +536,6 @@ dryad_tibble <- DCC_corpus_2_renamed_clean |>
     !str_detect(data_id_or_acc_nr, "^10\\.5061/dryad\\.\\d+$")
   )
 
-# Save tables
-
-save_cr(zenodo_tibble, file = file.path(here("data", "inputs_for_quick_render",   "zenodo_tibble.RData")))
-save_cr(osf_tibble, file = file.path(here("data", "inputs_for_quick_render",      "osf_tibble.RData")))
-save_cr(figshare_tibble, file = file.path(here("data", "inputs_for_quick_render", "figshare_tibble.RData")))
-save_cr(dryad_tibble, file = file.path(here("data", "inputs_for_quick_render",    "dryad_tibble.RData")))
-
 # Get counts
 
 z_tib_c <- zenodo_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # zenodo
