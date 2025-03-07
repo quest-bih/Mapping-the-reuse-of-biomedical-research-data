@@ -6,27 +6,28 @@ format:
   html:
     self-contained: true
 editor: visual
-execute: # local chunk options will override the defaults below
-  cache: false
-  freeze: false # everything will re-run every time
-  warning: false # supress warning messages
-  message: false # supress messages
-  echo: false # do not show code unless specified otherwise
-  eval: true
+execute: 
+  freeze: true
+  warning: false
+  message: false
+  echo: false
+  eval: false
 ---
 
-```{r setup}
-rm(list=ls())  # Clear environment
+```{r setup, echo=FALSE}
 
-Sys.setenv(LANG = "EN")  # Set environment language to English
+knitr::opts_chunk$set(
+  cache = FALSE,
+  autodep = TRUE,
+  fig.path = here("notebooks", "plots", "plots_files", "figure-html")
+)
 
-if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
-library(pacman)
-pacman::p_load(tidyverse, patchwork, RColorBrewer, here, networkD3)
-
-knitr::opts_chunk$set(cache = FALSE,
-                      autodep = TRUE,
-                      fig.path = here("_output", "index_files", "figure-html"))
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  message = FALSE,
+  eval = TRUE
+  )
 
 # Load _5 for counting with author overlap:
 
@@ -51,6 +52,7 @@ loaded_objects <- load(latest_file)
 dcc_charite_joined_final <- get(loaded_objects, envir = .GlobalEnv)
 rm(loaded_objects) # clean up
 
+print("sucess")
 
 ```
 
@@ -62,7 +64,7 @@ rm(loaded_objects) # clean up
 
 <!-- \*\* recreate it with code! \*\* -->
 
-```{r Exclusion process of cases from the matched list}
+```{r Exclusion process of cases from the matched list, echo=FALSE}
 
 ```
 
@@ -72,13 +74,10 @@ rm(loaded_objects) # clean up
 
 <br>
 
-```{r Distinct Number of Papers and Datasets in Found in the DCC}
+```{r Distinct Number of Papers and Datasets in Found in the DCC, echo=FALSE}
 #| label: fig-distinct-numbers
 #| fig-cap: Distinct Number of Papers and Datasets in Found in the DCC
 #| fig-format: png
-
-print("Running setup chunk")
-
 
 # 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)
 
@@ -97,7 +96,7 @@ counts_final <- tibble(
 # So I'll first create a table with the cases suspected of being preprint-publication cases and check them for author overlap:
 
 dcc_charite_blank_journals <- dcc_charite_joined_5_au_info |> # get all cases from the step before "author overlap exclusion" step
-  filter(journal == "") |> # get only cases where there's no journal information, because most of them are preprint cases
+  dplyr::filter(journal == "") |> # get only cases where there's no journal information, because most of them are preprint cases
   rowwise()  |> 
   mutate(
     common_au = {
@@ -115,8 +114,8 @@ dcc_charite_blank_journals <- dcc_charite_joined_5_au_info |> # get all cases fr
   # # Get partial overlap cases
   #
   # dcc_charite_blank_journals |>
-  #   filter(!is.na(common_au)) |> # remove cases where there's no overlap at all (they are irrelevant for this table in any case)
-  #   filter(authors_dcc != common_au) |> # remove cases where there's a full overlap
+  #   dplyr::filter(!is.na(common_au)) |> # remove cases where there's no overlap at all (they are irrelevant for this table in any case)
+  #   dplyr::filter(authors_dcc != common_au) |> # remove cases where there's a full overlap
   #   ungroup() |>
   #   View()
   #
@@ -125,7 +124,7 @@ dcc_charite_blank_journals <- dcc_charite_joined_5_au_info |> # get all cases fr
 # Now I'll manually check the full (exact) overlap cases - these are suspected to be preprints:
 
 dcc_charite_blank_journals_exact_overlap <- dcc_charite_blank_journals |>
-  filter(authors_dcc == common_au) |> # get cases with full overlap out of journal == ""
+  dplyr::filter(authors_dcc == common_au) |> # get cases with full overlap out of journal == ""
   select(doi_charite, doi_dcc) |>
   distinct()
 
@@ -135,7 +134,7 @@ dcc_charite_blank_journals_exact_overlap <- dcc_charite_blank_journals |>
 # Now I'll look for author overlap cases in general:
 
 dcc_charite_all_exact_overlap <- dcc_charite_joined_5_au_info |> # get all cases from the step before "author overlap exclusion" step
-  filter(authors_dcc == authors_charite) |> 
+  dplyr::filter(authors_dcc == authors_charite) |> 
   select(doi_charite, doi_dcc) |> 
   distinct()
 
@@ -201,7 +200,7 @@ combined_count_tibbles |>
 
 # Distribution Frequency of Datasets References
 
-```{r Distribution Frequency of Datasets References}
+```{r Distribution Frequency of Datasets References, echo=FALSE}
 
 #| label: fig-datasets-freq-dist
 #| fig-cap: Distribution Frequency of Datasets References
@@ -236,7 +235,7 @@ dcc_charite_joined_final |>
 
 # Distribution of References Across Repositories
 
-```{r Distribution of References Across Repositories}
+```{r Distribution of References Across Repositories, echo=FALSE}
 
 #| label: fig-repo-dist
 #| fig-cap: Distribution of References Across Repositories
@@ -282,7 +281,7 @@ geom_text(aes(y = n + 2, label = n),
 
 # Datasets References by Year
 
-```{r Datasets References by Year}
+```{r Datasets References by Year, echo=FALSE}
 
 #| label: fig-ref-by-year
 #| fig-cap: Datasets References by Year
@@ -305,7 +304,7 @@ year_dcc_dt_all_for_plot_agg <- year_dcc_dt_all_for_plot |>
     .default = charite_data_id_or_acc_nr)) |> 
   group_by(charite_data_id_or_acc_nr, year_dcc) |> 
   summarise(count = n(), .groups = "drop") |> 
-  filter(year_dcc != "2023")
+  dplyr::filter(year_dcc != "2023")
 
 ggplot(year_dcc_dt_all_for_plot_agg, aes(x = factor(year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
   geom_bar(stat = "identity",
@@ -314,7 +313,7 @@ ggplot(year_dcc_dt_all_for_plot_agg, aes(x = factor(year_dcc), fill = factor(cha
 geom_text(
   data = year_dcc_dt_all_for_plot_agg |>
     group_by(year_dcc) |>
-    filter(!(year_dcc %in% c(2012, 2013, 2015, 2017) & count == min(count))),  # Exclude only in specific years
+    dplyr::filter(!(year_dcc %in% c(2012, 2013, 2015, 2017) & count == min(count))),  # Exclude only in specific years
   aes(y = count, label = count),
   position = position_stack(vjust = 0.5)) +
   labs(
@@ -339,7 +338,7 @@ geom_text(
 
 # Datasets Access, Repositories and Covid-relationship
 
-```{r Datasets Access, Repositories and Covid-relationship}
+```{r Datasets Access, Repositories and Covid-relationship, echo=FALSE}
 
 #| label: fig-datasets-properties
 #| fig-cap: Datasets Access, Repositories and Covid-relationship
@@ -347,11 +346,11 @@ geom_text(
 
 # restricted_info <- manual_validation_done |> 
 #   left_join(charite_dois_and_ids_with_access_info, by = "identifier") |> 
-#   filter(charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_final$charite_data_id_or_acc_nr) |>
+#   dplyr::filter(charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_final$charite_data_id_or_acc_nr) |>
 #   select(charite_data_id_or_acc_nr_merged, data_access) |>
 #   distinct() |> 
 #   group_by(charite_data_id_or_acc_nr_merged) |> 
-#   filter(!(is.na(data_access) & n() > 1)) |> 
+#   dplyr::filter(!(is.na(data_access) & n() > 1)) |> 
 #   ungroup() |> 
 #   rename(charite_data_id_or_acc_nr = charite_data_id_or_acc_nr_merged)
 # 
@@ -449,7 +448,7 @@ geom_text(
 
 # Datasets and Citing Papers Publication Years
 
-```{r Datasets and Citing Papers Publication Years}
+```{r Datasets and Citing Papers Publication Years, echo=FALSE}
 
 #| label: fig-datasets-and-papers-years
 #| fig-cap: Datasets and Citing Papers Publication Years
@@ -467,7 +466,7 @@ dif_for_plot <- dcc_charite_joined_final |>
 # Plot
 
 dif_for_plot |>
-  filter(dif >= 0) |> 
+  dplyr::filter(dif >= 0) |> 
   ggplot(aes(x = n)) +
   geom_histogram(
     bins = 10,                  # Adjust bins to log-scaled data
@@ -489,5 +488,33 @@ dif_for_plot |>
     y = "Nunmber of Years between Dataset and Citing Paper Publications"
   ) +
   theme_classic()
+
+```
+
+```{r test, echo=FALSE}
+
+#| label: fig-test
+#| fig-cap: test
+#| fig-format: png
+
+# Generate random x and y values
+random_data <- tibble(
+  x = c(rnorm(1), rnorm(1)),  # Two random x values
+  y = c(rnorm(1), rnorm(1))   # Two random y values
+)
+
+# Convert x-values to a factor for discrete bars
+random_data <- random_data |> 
+  mutate(x = factor(round(x, 2)),  # Round x-values for better labels
+         y = round(y, 2))          # Round y-values for clear display
+
+# Create the bar plot
+ggplot(random_data, aes(x = x, y = y)) +
+  geom_bar(stat = "identity", fill = "steelblue", color = "black") +  # Solid fill (no gradient)
+  geom_text(aes(label = paste0("(", x, ", ", y, ")")), vjust = -0.5, size = 5) +  # Labels
+  theme_minimal() +
+  labs(x = "Random X Values", y = "Random Y Values", title = "Random Bar Plot with Labels")
+
+
 
 ```

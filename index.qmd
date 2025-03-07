@@ -6,42 +6,6 @@ authors:
     roles: "writing"
     corresponding: true
     orcid: "000"
-
-execute:
-  freeze: false
-  cache: false
-  eval: true
-  always: true
 ---
 
-# Evgeny
-
 Your text goes here.
-
-# 
-
-# Plots Presentation:
-
-{{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
-
-{{< embed notebooks/plots/plots.qmd#fig-distinct-numbers >}}
-
-{{< embed notebooks/plots/plots.qmd#fig-repo-dist >}}
-
-{{< embed notebooks/plots/plots.qmd#fig-ref-by-year >}}
-
-{{< embed notebooks/plots/plots.qmd#fig-datasets-properties >}}
-
-# Plots Cross-referencing:
-
-@fig-datasets-freq-dist
-
-@fig-distinct-numbers
-
-@fig-repo-dist
-
-@fig-ref-by-year
-
-@fig-datasets-properties (Sankey plot - not available yet, waiting for final data about covid)
-
-# Avihay

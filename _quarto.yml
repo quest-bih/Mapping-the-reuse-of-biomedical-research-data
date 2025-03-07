@@ -4,10 +4,17 @@ project:
 
 manuscript:
   article: index.qmd
-  notebooks:
-    - notebook: notebooks/plots/plots.qmd  # plots
-#    - notebook: notebooks/preprocessing/charite/charite_loading_and_preprocessing.qmd # charite preprocessing
-#    - notebook: notebooks/preprocessing/dcc/dcc_loading_and_preprocessing.qmd.qmd # dcc preprocessing
+  notebooks: 
+    - notebook: notebooks/quick_run.qmd
+#  - notebook: notebooks/plots/plots.qmd  # plots
+#  - notebook: notebooks/preprocessing/charite/charite_loading_and_preprocessing.qmd # charite preprocessing
+#  - notebook: notebooks/preprocessing/dcc/dcc_loading_and_preprocessing.qmd # dcc preprocessing
+
+execute:
+  freeze: false
+  echo: false  # Hide ALL code chunks
+  cache: false
+  keep-figures: true  # Ensure figures persist
 
 format:
   html:
@@ -16,11 +23,6 @@ format:
   docx: default
   pdf: default
   jats: default
-
-execute:
-  freeze: false
-  cache: false
-  always: true
 
 editor: visual
 

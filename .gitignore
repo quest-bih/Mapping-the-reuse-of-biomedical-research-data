@@ -5,6 +5,7 @@
 /.quarto/
 /_output/
 notebooks/plots/plots.embed_files
+notebooks/plots/C-
 data/raw/dcc/
 data/wrangling_steps/dcc/
 data/processed/dcc

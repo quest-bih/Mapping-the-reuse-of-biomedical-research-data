@@ -6,13 +6,9 @@ format:
   html:
     self-contained: true
 editor: visual
+freeze: true
 execute: # local chunk options will override the defaults below
-  cache: false
-  freeze: false # everything will re-run every time
-  warning: false # supress warning messages
-  message: false # supress messages
-  echo: false # do not show code unless specified otherwise
-  eval: true
+  eval: false
 ---
 
 # Matching DCC and Charite Lists by Dataset Identifiers
