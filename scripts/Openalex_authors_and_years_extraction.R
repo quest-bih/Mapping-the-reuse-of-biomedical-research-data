@@ -1,13 +1,3 @@
-# This script gets a csv with a "doi" column in it, and it sends Openalex API requests to extract metadata about them.
-
-# Note: run the first section separately first ("1. Set up, file selection and Openalex API requests").
-# If for some reason not all dois are processed, the script will let you try again with the remaining that caused the error.
-
-# When you're satisfied with the number of dois processed, run the rest of the script.
-# The output will be saved as an Rdata object and as a csv file in the location of the original input file.
-
-# 1. Set up, file selection and Openalex API requests ---------------------
-
 if (!require(pacman)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse,
@@ -19,18 +9,6 @@ selected_file <- tclvalue(tkgetOpenFile(title = "Please select a CSV file a \"do
 
 # Load the selected file into a data frame
 df <- read.csv(selected_file)
-
-df1 <- df |> slice(1:150) # done
-df2 <- df |> slice(151:300) # done
-df3 <- df |> slice(301:450) # done
-df4 <- df |> slice(451:600) # done
-df5 <- df |> slice(601:750) # done
-df6 <- df |> slice(751:900) # done
-df7 <- df |> slice(901:1050) # done
-df8 <- df |> slice(1051:1200) # done
-df9 <- df |> slice(1201:1322) # done
-
-
 
 # Function to extract OpenAlex metadata
 openalex_extract <- function(df) {
@@ -114,114 +92,68 @@ UnnestDataFrame <- function(x, pid) {
   df.x
 }
 
-# Call the function
-results <- openalex_extract(df1) # done
-
-results <- openalex_extract(df2) # done
-
-results <- openalex_extract(df3) # done
-
-results <- openalex_extract(df4) # done
-
-results <- openalex_extract(df5) # done
-
-results <- openalex_extract(df6) # done
-
-results <- openalex_extract(df7) # done
-
-  df_8_1 <- df8 |> slice(1:35)
+# Define a function to process each dataframe
+process_dataframe <- function(df) {
+  # Extract results
+  results <- openalex_extract(df)
   
-  results <- openalex_extract(df_8_1) # done
+  # Unnest results
+  results_unnested <- UnnestDataFrame(results, names(results))
+  results_extracted_authors <- UnnestDataFrame(results_unnested$author, results_unnested$doi)
   
-  df_8_1_1 <- df8 |> slice(36:40)
-  
-  results <- openalex_extract(df_8_1_1) # done
-  
-  df_8_1_1_2 <- df8 |> slice(41:46)
-  
-  results <- openalex_extract(df_8_1_1_2) # done
-  
-  df_8_1_1_3 <- df8 |> slice(47:48)
-  
-  results <- openalex_extract(df_8_1_1_3) # done
-  
-  df_8_1_1_4 <- df8 |> slice(50:50)
-  
-  results <- openalex_extract(df_8_1_1_4) # done
-  
-  df_8_1_2 <- df8 |> slice(51:70)
-  
-  results <- openalex_extract(df_8_1_2) # done
-  
-  df_8_2 <- df8 |> slice(71:150)
-  
-  results <- openalex_extract(df_8_2) # done
+  # Process the data
+  results_extracted_authors |> 
+    rename(doi = PID,
+           authors = au_display_name) |> 
+    group_by(doi) |> 
+    summarise(authors = str_c(authors, collapse = ";"), .groups = "drop") |> 
+    full_join(results_unnested, by = "doi") |> 
+    select(doi, publication_year, authors)
+}
 
-df_8_all_but_49 <- df8 |> slice(-49) 
+# # For DCC:
+# 
+# # List of dataframes
+# 
+# df1 <- df |> slice(1:150)
+# df2 <- df |> slice(151:300)
+# df3 <- df |> slice(301:450)
+# df4 <- df |> slice(451:600)
+# df5 <- df |> slice(601:750)
+# df6 <- df |> slice(751:900)
+# df7 <- df |> slice(901:1050)
+# df8 <- df |> slice(1051:1200)
+# df8_1 <- df8 |> slice(-49)
+# df9 <- df |> slice(1201:1322)
+# 
+# dfs <- list(df1, df2, df3, df4, df5, df6, df7, df8_1, df9)
+# 
+# # Apply function to each dataframe and bind results together
+# final_results <- map_dfr(dfs, process_dataframe)
+# 
+# # Save
+# save_path <- file.path(here("data",
+#                             "results_verification", 
+#                             "meta data for dcc-charite list", 
+#                             "dois info", 
+#                             "dcc_dois_metadata.RData"))
+# 
+# save(final_results, file = save_path)
 
-results <- openalex_extract(df_8_all_but_49) # done
+# For Charite:
 
-results <- openalex_extract(df9) # done
+# List of dataframes
 
+dfs <- list(df)
 
-# 2. Get authors and publication years ------------------------------------
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
 
-results_unnested <- UnnestDataFrame(results, names(results))
+# Save
+save_path <- file.path(here("data",
+                            "results_verification",
+                            "meta data for dcc-charite list",
+                            "dois info",
+                            "charite_dois_metadata.RData"))
 
-results_extracted_authors <- UnnestDataFrame(results_unnested$author, results_unnested$doi)
-  
-doi_authors_and_years <- results_extracted_authors |> 
-  rename(doi = PID,
-         authors = au_display_name) |> 
-  group_by(doi) |> 
-  summarise(authors = str_c(authors, collapse = ";"), .groups = "drop") |> 
-  full_join(results_unnested, by = "doi") |> 
-  select(doi, publication_year, authors)
-
-
-re_1 <- doi_authors_and_years # done
-
-re_2 <- doi_authors_and_years # done
-
-re_3 <- doi_authors_and_years # done
-
-re_4 <- doi_authors_and_years # done
-
-re_5 <- doi_authors_and_years # done
-
-re_6 <- doi_authors_and_years # done
-
-re_7 <- doi_authors_and_years # done
-
-  re_8_1 <- doi_authors_and_years # done
-  
-  re_8_1_1 <- doi_authors_and_years # done
-  
-  re_8_1_1_2 <- doi_authors_and_years # done
-  
-  re_8_1_1_3 <- doi_authors_and_years # done
-  
-  re_8_1_1_4 <- doi_authors_and_years # done
-  
-  re_8_1_2 <- doi_authors_and_years # done
-  
-  re_8_2 <- doi_authors_and_years # done
-
-re_8_all_but_49 <- doi_authors_and_years
-
-re_9 <- doi_authors_and_years # done
-
-dcc_doi_authors_and_years <- re_1 |> 
-  bind_rows(
-    re_2,
-    re_3,
-    re_4,
-    re_5,
-    re_6,
-    re_7,
-    re_8_all_but_49,
-    re_9)
-
-# Save results
-  
-write.csv(dcc_doi_authors_and_years, "dcc_doi_authors_and_years.csv", row.names = FALSE)
+save(final_results, file = save_path)

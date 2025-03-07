@@ -181,82 +181,73 @@ write_csv_cr(
 
 # Get authors and years info:
 
+load(here("data",
+          "results_verification",
+          "meta data for dcc-charite list",
+          "dois info",
+          "charite_dois_metadata.RData")) # load charite
 
+charite_dois_metadata <- final_results # assign
 
-######
+load(here("data",
+          "results_verification",
+          "meta data for dcc-charite list",
+          "dois info",
+          "dcc_dois_metadata.RData")) # load dcc
 
-load(file.path(here( "Data Inputs", "Meta data for joined dcc-charite list", "authors info", "full_authors_info.RData"))) # get full authors info
+dcc_dois_metadata <- final_results # assign
 
-# For DCC
+rm(final_results) # clean up
 
-authors_info_dcc_old <- full_authors_info |> 
-  select(doi_dcc, authors_dcc) |> 
-  distinct() # get previously extracted dcc authors info (from a previous iteration of the matching process)
+# Prepare both metadata lists before joining
 
-added_authors_info_dcc <- read.csv(
-  file.path(here( "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "dcc_new_doi_authors_and_years.csv"),
-  header = TRUE,
-  sep = ","
-))
+charite_dois_metadata <- charite_dois_metadata |>
+  rename(doi_charite = doi) |> # rename column
+  mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/"))
   
-authors_info_dcc <- authors_info_dcc_old |>
-  rename(doi = doi_dcc) |> 
-  bind_rows(added_authors_info_dcc |>
-              select(-publication_year) |> 
-              rename(authors_dcc = authors)) |> 
-  distinct() # bind with newly extracted dcc authors info (from the latest iteration of the matching process)
+dcc_dois_metadata <- dcc_dois_metadata |> 
+  rename(doi_dcc = doi) |> # rename column
+  mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/"))
 
-# For Charite
+# Join info into dcc-charite list
 
-authors_info_charite_old <- full_authors_info |> 
-  select(doi_charite, authors_charite) |> 
-  distinct() # get previously extracted Charite authors info (from a previous iteration of the matching process)
+dcc_charite_joined_4_au_info <- dcc_charite_joined_3_dist |> 
+  left_join(charite_dois_metadata, by = "doi_charite", suffix = c("", "_charite")) |> 
+  left_join(dcc_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
+  rename(publication_year_charite = publication_year,
+         authors_charite = authors)
 
-added_authors_info_charite <- read.csv(
-  file.path(here( "Data Inputs", "Meta data for joined dcc-charite list", "DOIs to get info of", "charite_dois_for_au_and_year_info.csv"),
-  header = TRUE,
-  sep = ","
-))
+# Check for NAs
 
-authors_info_charite <- authors_info_charite_old |>
-  rename(doi = doi_charite) |> 
-  bind_rows(added_authors_info_charite) |> 
-  distinct() |> # bind with newly extracted Cahrite authors info (from the latest iteration of the matching process)
-  group_by(doi) |> slice(1) |> ungroup() # keep only the 1st doi in a group where there might be slight changes in authors names (manually validated)
+dcc_charite_joined_4_au_info |> dplyr::filter(is.na(publication_year_charite)
+                                              | is.na(authors_charite)
+                                              | is.na(publication_year_dcc)
+                                              | is.na(authors_dcc)) |>
+  View()
 
-######
+# All 5 NAs were checked manually and they were with authors overlap. So I'll remove them:
 
-# Rename both authors lists before joining
-authors_info_charite <- authors_info_charite |> rename(doi_charite = doi)
-authors_info_dcc <- authors_info_dcc |> rename(doi_dcc = doi)
+dcc_charite_joined_4_au_info <- dcc_charite_joined_4_au_info |> 
+  dplyr::filter(!is.na(publication_year_dcc)
+                & !is.na(authors_dcc))
 
-dcc_charite_joined_4_au_info <- dcc_charite_joined_3_dist |>
-  left_join(authors_info_dcc, by = "doi_dcc") |>
-  left_join(authors_info_charite, by = "doi_charite") # join author info into _4
+# Check that if doi_dcc == doi_charite then authors_dcc == authors_charite, and verify the same for "!="
+dcc_charite_joined_4_au_info |>
+  dplyr::filter((doi_dcc == doi_charite & authors_dcc != authors_charite) |      # Case 1: DOIs match but authors differ
+           (doi_dcc != doi_charite & authors_dcc == authors_charite)) |>  # Case 2: DOIs differ but authors are the same
+  View()
 
-  # Verify that if doi_dcc == doi_charite then authors_dcc == authors_charite, and verify the same for "!="
-  # dcc_charite_joined_5_au_info |> 
-  #   filter((doi_dcc == doi_charite & authors_dcc != authors_charite) |      # Case 1: DOIs match but authors differ
-  #            (doi_dcc != doi_charite & authors_dcc == authors_charite)) |>  # Case 2: DOIs differ but authors are the same
-  #   View()
-  
-  # All cases are preprints or actual articles (so different dois) with same authors and same paper
-  
-  # Verify that there are no NAs left
-  # dcc_charite_joined_5_au_info |> filter(is.na(authors_charite) | is.na(authors_dcc)) |> select(doi_dcc) |> distinct() |> View() 
+# All cases are preprints or actual articles (so different dois) with same authors and same paper. So I'll remove them:
 
-
-
-
+dcc_charite_joined_4_au_info <- dcc_charite_joined_4_au_info |>
+  dplyr::filter(!( (doi_dcc == doi_charite & authors_dcc != authors_charite) |  # Negate Case 1
+                    (doi_dcc != doi_charite & authors_dcc == authors_charite) )) # Negate Case 2
 
 # Save
-save_cr(dcc_charite_joined_5_au_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                       "dcc_charite_joined_5_au_info.RData")))
+save_cr(dcc_charite_joined_4_au_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "dcc_charite_joined_4_au_info.RData")))
 
-
-
-
-# Filter to a new "joined" (6) by no common authors:
+# Filter to a new "joined" (5) by no common authors:
 
 # Function to check if there are no common elements between two semicolon-separated strings
 no_common_element <- function(x, y) {
@@ -266,13 +257,15 @@ no_common_element <- function(x, y) {
 }
 
 # Apply the filter using the function to create a matched list with no "Author Overlap"
-dcc_charite_joined_6_rm_au_ov <- dcc_charite_joined_5_au_info  |> 
-  filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
+dcc_charite_joined_5_rm_au_ov <- dcc_charite_joined_4_au_info  |> 
+  dplyr::filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
   distinct(doi_charite, charite_data_id_or_acc_nr, id, doi_dcc, .keep_all = TRUE)
 
 # Save
-save_cr(dcc_charite_joined_6_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                        "dcc_charite_joined_6_rm_au_ov.RData")))
+save_cr(dcc_charite_joined_5_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                        "dcc_charite_joined_5_rm_au_ov.RData")))
+
+##### FINISHED UNTIL HERE 07032025
 
 # 3. Complete missing journals and paper publication years:
 
