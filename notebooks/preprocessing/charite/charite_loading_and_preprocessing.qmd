@@ -340,7 +340,12 @@ manually_validated_summary <- manual_validation_done |>
 charite_dois_and_ids_clean_manually_validated <- manual_validation_done |> 
   mutate(charite_data_id_or_acc_nr_merged = charite_data_id_or_acc_nr_merged |>
            str_remove_all("[/\\.]+$") # Remove all trailing slashes and dots (no further cleaning needed)
-  )
+  ) |> 
+  dplyr::filter(!is.na(category)) |> # exclude non-categorized cases (for now)
+  dplyr::filter(is.na(valid) | valid == "TRUE") |> # exclude non-valid cases
+  mutate(charite_data_id_or_acc_nr_merged = case_when(
+    category == "url" ~ str_remove(charite_data_id_or_acc_nr_merged, "^//"),  # Remove "//" only if category is "url"
+    .default = charite_data_id_or_acc_nr_merged))
 
 rm(latest_file_to_load) # clean up
 ```
@@ -375,64 +380,5 @@ manually_validated_for_table <- manually_validated_summary |>
     "No identifier"
   ))) |>
   select(`Number of Cases`, Comments = category)
-
-```
-
-<br>
-
-```{r Examining cases with no identifiers}
-
-# I want to understand how come there are cases with no identifiers when the Charite cases are supposed to be only 1 of these 3 criteria:
-  # access = yes, own = unsure / own, assessment = open data
-  # access = unsure, own = own, assessment = open data
-  # access = restricted, own = unsure / own / NULL, assessment = NULL
-
-# So first, I'll get all the "no identifier" values that were left after manual validation
-manually_validated_no_id <- manual_validation_done |> 
- dplyr::filter(comments == "no identifier") |> 
-  select(doi, identifier) |> 
-  arrange(doi, identifier)
-
-# Then I'll check where do they come from in the original files with steps backwards:
-
-# so just before Vladi's function (meaning all cases until 2023)
-no_id_in_anas_list_before_std_func <- charite_dois_and_ids|>
-  inner_join(manually_validated_no_id,
-             by = c("doi" ,"identifier")) |> 
-    arrange(doi, identifier) # they are here
-
-# So they are in the list before Vladi's function. Let's see their origin a step backwards:
-
-# 2022
-no_id_in_charite_2022 <- charite_dois_and_ids_until_2022 |>
-  mutate(doi = tolower(doi),
-         identifier = tolower(identifier)) |> 
-  inner_join(manually_validated_no_id, by = c("doi" ,"identifier")) # nothing is from until_2022
-
-no_id_in_orig_id_2022 <- dois_from_Ana_until_2022_orig |> 
-   mutate(doi = tolower(doi),
-          identifier = tolower(identifier),
-          article = tolower(article),
-          data_identifier = tolower(iconv(data_identifier, from = "", to = "UTF-8"))) |> 
-  inner_join(manually_validated_no_id, by = c("doi" ,"identifier")) # nothing in original file as well (id col)
-
-no_id_in_orig_d_id_2022 <- dois_from_Ana_until_2022_orig |> 
-   mutate(doi = tolower(doi),
-          identifier = tolower(identifier),
-          article = tolower(article),
-          data_identifier = tolower(iconv(data_identifier, from = "", to = "UTF-8"))) |> 
-  inner_join(manually_validated_no_id, by = c("article" = "doi" ,"data_identifier" = "identifier")) # nothing in original file as well (id col)
-
-# So none of the "no identifier" cases are originating from "_until_2022".
-
-# 2023
-no_id_in_charite_2023 <- dois_from_Ana_for_matching_2023 |>
-  mutate(doi = tolower(doi),
-         identifier = tolower(identifier)) |> 
-  inner_join(manually_validated_no_id, by = c("doi" ,"identifier"))
-
-# So all of the 32 cases of "no identifier" originated from 2023. Let's see how and why did they pass the "open data" criteria filter.
-
-# Conclusion: they are general data repositories without accession numbers that were included because of data_access = restricted / approved by Ana.
 
 ```

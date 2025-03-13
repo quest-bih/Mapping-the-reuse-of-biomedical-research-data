@@ -724,9 +724,34 @@ biorxiv and nmrxiv were found in the DCC as repositories and were removed from i
 DCC_corpus_8_preprint_rm <- DCC_corpus_7_doi_as_id_rm |> 
   dplyr::filter(!str_detect(repository, "rxiv"))
 
-# Save 7th DCC wrangling step
+# Save 8th DCC wrangling step
 save_cr(DCC_corpus_8_preprint_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_8_preprint_rm.RData")))
 
+```
+
+# removing additional version information
+
+```{r}
+
+# Ids starting with "nm_" sometimes still have a version information. So I'll remove them here.
+
+# First I'll explore these cases:
+
+nm_counts <- DCC_corpus_8_preprint_rm |> 
+  dplyr::filter(startsWith(data_id_or_acc_nr, "nm_") & grepl("\\.", data_id_or_acc_nr)) |>  # Check if "." exists
+  mutate(digits_after_dot = sapply(strsplit(data_id_or_acc_nr, "\\."), function(x) ifelse(length(x) > 1, nchar(x[2]), 0))) 
+
+# Modify col1 by removing "." and everything after it using case_when()
+DCC_corpus_9_nm_v_rm <- DCC_corpus_8_preprint_rm |> 
+  mutate(data_id_or_acc_nr = case_when(
+    startsWith(data_id_or_acc_nr, "nm_")
+    & grepl("\\.", data_id_or_acc_nr)
+    ~ sapply(strsplit(data_id_or_acc_nr, "\\."), function(x) x[1]),  # Keep only the part before "."
+    .default = data_id_or_acc_nr  # Keep unchanged if it doesn't match
+  ))
+
+# Save 9th DCC wrangling step
+save_cr(DCC_corpus_9_nm_v_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_9_nm_v_rm.RData")))
 ```
 
 <br>
@@ -763,11 +788,11 @@ datatable(
 
 # Get total count if general repositories (to use later in percentages calcaultion)
 
-dcc_id_dist <- DCC_corpus_7_doi_as_id_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
+dcc_id_dist <- DCC_corpus_8_preprint_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
 
 # Create general repositories counts and percentages table
 
-gen_rep_dcc <- DCC_corpus_7_doi_as_id_rm |> 
+gen_rep_dcc <- DCC_corpus_8_preprint_rm |> 
   summarize(
     osf = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, "osf")]),
     zenodo = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, "zenodo")]),
