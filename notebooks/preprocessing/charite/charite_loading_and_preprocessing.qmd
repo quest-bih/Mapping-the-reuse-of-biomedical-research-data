@@ -41,7 +41,7 @@ dois_from_Ana_until_2022_orig <- read.csv(
   #   identifier != "https://www.ncbi.nlm.nih.gov/sra/?term=SRR8454256") # remove case from original list, as it hasn't been found in the actual paper during data validation
 
 dois_from_Ana_2023_orig <- read.csv(
-  file.path(here("data", "raw", "charite", "od_lom_result_2023_dataset_level_v3.csv")),
+  file.path(here("data", "raw", "charite", "od_lom_result_2023_dataset_level_v4.csv")),
   header = TRUE,
     sep = ";") # 2023
 
@@ -125,12 +125,13 @@ dois_from_Ana_until_2022 <- dois_from_Ana_until_2022_orig |>
 
 # 2. Explore which cases to include
 
-cases_of_ids <- dois_from_Ana_until_2022 |>
+cases_of_ids_until_2022 <- dois_from_Ana_until_2022 |>
   group_by(open_data_assessment, own_or_reuse_data, data_access) |>
   summarise(n = n()) |>
   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
 
-# write_csv_cr(cases_of_ids, file = file.path(root_dir, "Results Verification", "identifiers to include - DCC.csv"), row.names = F) # sent to Evgeny and Ana
+write_csv_cr(cases_of_ids_2022, file = file.path(here("data","results_verification", "inclusion_criteria_until_2022.csv")),
+             row.names = FALSE)
 
 # Evgeny and Ana replied that each of the 3 cases below should be included:
 # access = yes, own = unsure / own, assessment = open data
@@ -169,6 +170,17 @@ dois_from_Ana_2023 <- dois_from_Ana_2023_orig |>
   mutate(doi = tolower(doi)) |> 
   # rename identifer column
   rename(identifier = data_identifier)
+
+# Explore which cases to include
+
+cases_of_ids_2023 <- dois_from_Ana_2023 |>
+  group_by(open_data_assessment, own_or_reuse_data, data_access, restricted_authorship) |>
+  summarise(n = n()) |>
+  arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
+
+write_csv_cr(cases_of_ids_2023, file = file.path(here("data","results_verification", "inclusion_criteria_v4.csv")),
+             row.names = FALSE)
+
 
 # 6. Again, filter to get only relevant cases
 

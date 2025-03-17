@@ -452,7 +452,10 @@ dcc_paper_earlier_than_charite_paper_full <- dcc_charite_joined_6_ds_years_info 
   dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
   mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
     select(doi_charite,
-         publication_year_charite) |> 
+         publication_year_charite,
+         doi_dcc,
+         publication_year_dcc,
+         lag) |> 
   distinct()
 
 write_csv_cr(dcc_paper_earlier_than_charite_paper_full,
@@ -538,8 +541,6 @@ write_csv_cr(same_data_id_with_different_charite_papers,
 <br>
 
 **Figure 1.** above shows the exclusion steps that were made on the matched DCC-Charite list and their effect on the remaining number of citing papers and cited identifiers. The gray numbers indicate how many papers / identifiers were removed in each step.
-
-
 
 ```{r sample check}
 
