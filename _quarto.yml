@@ -5,7 +5,7 @@ project:
 manuscript:
   article: index.qmd
   notebooks: 
-    - notebook: notebooks/quick_run.qmd
+#    - notebook: notebooks/quick_run.qmd
     - notebook: notebooks/plots/plots.qmd  # plots
 #  - notebook: notebooks/preprocessing/charite/charite_loading_and_preprocessing.qmd # charite preprocessing
 #  - notebook: notebooks/preprocessing/dcc/dcc_loading_and_preprocessing.qmd # dcc preprocessing

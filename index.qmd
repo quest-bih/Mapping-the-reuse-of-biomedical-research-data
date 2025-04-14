@@ -9,3 +9,7 @@ authors:
 ---
 
 Your text goes here.
+
+{{< embed notebooks/test-plots/test-plots.qmd#fig-datasets-freq-dist >}}
+
+{{< embed notebooks/test-plots/test-plots.qmd#fig-test >}}
