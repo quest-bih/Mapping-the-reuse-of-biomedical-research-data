@@ -10,43 +10,35 @@ editor: visual
 
 ```{r setup, echo=FALSE}
 
-knitr::opts_chunk$set(
-  cache = FALSE,
-  autodep = TRUE,
-  fig.path = here("notebooks", "plots", "plots_files", "figure-html")
-)
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+library(pacman)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3)
 
-knitr::opts_chunk$set(
-  echo = FALSE, 
-  warning = FALSE, 
-  message = FALSE,
-  eval = TRUE
-  )
+# knitr::opts_chunk$set(
+#   cache = FALSE,
+#   autodep = TRUE,
+#   fig.path = here("notebooks", "plots", "plots_files", "figure-html")
+# )
+# 
+# knitr::opts_chunk$set(
+#   echo = FALSE, 
+#   warning = FALSE, 
+#   message = FALSE,
+#   eval = TRUE
+#   )
 
 # Load _5 for counting with author overlap:
 
-load(here("data", "processed", "dcc_charite_joined_5_au_info.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_4_au_info.RData"))
 
 # Load the most recent .RData file from the data\processed directory and assign it to "dcc_charite_joined_final"
 
-# Locate dir
-files <- list.files(here("data",
-                         "processed"), 
-                    pattern = "\\.RData$", 
-                    full.names = TRUE, 
-                    ignore.case = TRUE)
-
-# Identify the latest file based on modification time
-latest_file <- files[which.max(file.info(files)$mtime)]
-
-# Load the file into the global environment
-loaded_objects <- load(latest_file)
-
 # Assign the loaded object to a new variable name
-dcc_charite_joined_final <- get(loaded_objects, envir = .GlobalEnv)
-rm(loaded_objects) # clean up
 
-print("sucess")
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_6_ds_years_info.RData"))
+
+dcc_charite_joined_final <- dcc_charite_joined_6_ds_years_info
+rm(dcc_charite_joined_6_ds_years_info)
 
 ```
 
@@ -83,13 +75,13 @@ counts_final <- tibble(
 
 # 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
 
-# I'll use dcc_charite_joined_5_au_info to count, since it is one step before excluding author overlap cases.
+# I'll use dcc_charite_joined_4_au_info to count, since it is one step before excluding author overlap cases.
 
 # However, I need to *exclude* cases where the author overlap is a result of the same paper that is present once as a preprint (as "doi_charite") and once as a publication (as "doi_dcc").
 
 # So I'll first create a table with the cases suspected of being preprint-publication cases and check them for author overlap:
 
-dcc_charite_blank_journals <- dcc_charite_joined_5_au_info |> # get all cases from the step before "author overlap exclusion" step
+dcc_charite_blank_journals <- dcc_charite_joined_4_au_info |> # get all cases from the step before "author overlap exclusion" step
   dplyr::filter(journal == "") |> # get only cases where there's no journal information, because most of them are preprint cases
   rowwise()  |> 
   mutate(
@@ -127,7 +119,7 @@ dcc_charite_blank_journals_exact_overlap <- dcc_charite_blank_journals |>
 
 # Now I'll look for author overlap cases in general:
 
-dcc_charite_all_exact_overlap <- dcc_charite_joined_5_au_info |> # get all cases from the step before "author overlap exclusion" step
+dcc_charite_all_exact_overlap <- dcc_charite_joined_4_au_info |> # get all cases from the step before "author overlap exclusion" step
   dplyr::filter(authors_dcc == authors_charite) |> 
   select(doi_charite, doi_dcc) |> 
   distinct()
@@ -142,7 +134,7 @@ cases_to_remove <- dcc_charite_blank_journals_exact_overlap |>
 
 # Remove those preprint-publication cases
 
-dcc_charite_joined_w_au_ov <- dcc_charite_joined_5_au_info |> 
+dcc_charite_joined_w_au_ov <- dcc_charite_joined_4_au_info |> 
   anti_join(cases_to_remove, by = c("doi_charite", "doi_dcc")) 
 
 # Get counts
@@ -285,7 +277,7 @@ geom_text(aes(y = n + 2, label = n),
 # Create table
 
 year_dcc_dt_all <- dcc_charite_joined_final |>
-  select(doi_dcc, charite_data_id_or_acc_nr, year_dcc) |> 
+  select(doi_dcc, charite_data_id_or_acc_nr, publication_year_dcc) |> 
   distinct() |> 
   count(charite_data_id_or_acc_nr, sort = TRUE)
 
@@ -296,18 +288,18 @@ year_dcc_dt_all_for_plot_agg <- year_dcc_dt_all_for_plot |>
   mutate(charite_data_id_or_acc_nr = case_when(
     !charite_data_id_or_acc_nr %in% c("6y2e", "gse14764", "gse148729", "gse55235") ~ "Others",
     .default = charite_data_id_or_acc_nr)) |> 
-  group_by(charite_data_id_or_acc_nr, year_dcc) |> 
+  group_by(charite_data_id_or_acc_nr, publication_year_dcc) |> 
   summarise(count = n(), .groups = "drop") |> 
-  dplyr::filter(year_dcc != "2023")
+  dplyr::filter(publication_year_dcc != "2023")
 
-ggplot(year_dcc_dt_all_for_plot_agg, aes(x = factor(year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
+ggplot(year_dcc_dt_all_for_plot_agg, aes(x = factor(publication_year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
   geom_bar(stat = "identity",
            position = "stack",
            aes(y = count)) +
 geom_text(
   data = year_dcc_dt_all_for_plot_agg |>
-    group_by(year_dcc) |>
-    dplyr::filter(!(year_dcc %in% c(2012, 2013, 2015, 2017) & count == min(count))),  # Exclude only in specific years
+    group_by(publication_year_dcc) |>
+    dplyr::filter(!(publication_year_dcc %in% c(2012, 2013, 2015, 2017) & count == min(count))),  # Exclude only in specific years
   aes(y = count, label = count),
   position = position_stack(vjust = 0.5)) +
   labs(
@@ -451,9 +443,9 @@ geom_text(
 # Create table
 
 dif_for_plot <- dcc_charite_joined_final |>
-  select(doi_charite, doi_dcc, year_dcc, dataset_publication_year) |> 
+  select(doi_charite, doi_dcc, publication_year_dcc, dataset_publication_year) |> 
   distinct() |> 
-  mutate(dif = year_dcc - dataset_publication_year) |>
+  mutate(dif = publication_year_dcc - dataset_publication_year) |>
   group_by(dif) |> 
   summarise(n = n())
 
@@ -504,7 +496,7 @@ random_data <- random_data |>
 
 # Create the bar plot
 ggplot(random_data, aes(x = x, y = y)) +
-  geom_bar(stat = "identity", fill = "steelblue", color = "black") +  # Solid fill (no gradient)
+  geom_bar(stat = "identity", fill = "green", color = "black") +  # Solid fill (no gradient)
   geom_text(aes(label = paste0("(", x, ", ", y, ")")), vjust = -0.5, size = 5) +  # Labels
   theme_minimal() +
   labs(x = "Random X Values", y = "Random Y Values", title = "Random Bar Plot with Labels")
