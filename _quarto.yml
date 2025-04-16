@@ -7,8 +7,9 @@ manuscript:
   notebooks: 
 #    - notebook: notebooks/quick_run.qmd
     - notebook: notebooks/plots/plots.qmd  # plots
-#  - notebook: notebooks/preprocessing/charite/charite_loading_and_preprocessing.qmd # charite preprocessing
-#  - notebook: notebooks/preprocessing/dcc/dcc_loading_and_preprocessing.qmd # dcc preprocessing
+#    - notebook: notebooks/preprocessing/charite/charite_loading_and_preprocessing.qmd # charite preprocessing
+#    - notebook: notebooks/preprocessing/dcc/dcc_loading_and_preprocessing.qmd # dcc preprocessing
+#    - notebook: notebooks/analysis/dcc_charite_analysis.qmd # dcc_charite preprocessing
 
 execute:
   echo: false

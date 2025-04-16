@@ -6,10 +6,33 @@ format:
   html:
     self-contained: true
 editor: visual
-freeze: true
-execute: # local chunk options will override the defaults below
-  eval: false
 ---
+
+```{r setup, echo=FALSE}
+
+Sys.setenv(LANG = "EN")  # Set environment language to English
+
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+library(pacman)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3)
+
+save_cr <- function(..., file) {
+  dir_path <- dirname(file)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+  save(..., file = file)
+} # wrapper for save() with automatic directory creation
+
+write_csv_cr <- function(x, file, ...) {
+  dir_path <- dirname(file)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+  write.csv(x, file = file, ...)
+} # wrapper for write.csv() with automatic directory creation
+
+```
 
 # Matching DCC and Charite Lists by Dataset Identifiers
 
@@ -349,8 +372,6 @@ write_csv_cr(no_year,
                  "no_year.csv")),
             row.names = FALSE)
 
-##### 10032025 RAN UNTIL HERE
-
 # The completed info from Evgeny was added to  "AC_v3" and was saved as "datasets_years_filled_after_EB_verification_v3.csv".
 
 # Load information about data sets publication years - manually validated
@@ -505,6 +526,8 @@ write_csv_cr(dcc_paper_earlier_than_dataset_full,
                            "dates verification",
                            "dcc_paper_earlier_than_dataset_full.csv")),
           row.names = FALSE)
+
+##### 14.04.2025 AFTER RECIEVING VERIFICATION FROM EVGENY, CORRECT AND RUN THIS BELOW UNTIL THE END
 
 # 5. Check if there are any cases that are invalid and need removal, according to results of section (4) above
     
