@@ -12,33 +12,25 @@ Your text goes here.
 
 # Methods
 
-Identifiers and accession codes of open an restricted datasets found in articles by Charité's authors between the years 2020 and 2023 (henceforth referred to as Charité's datasets) were collected as part of a separate data sharing monitoring process. Articles were defined as written by Charité's authors if at least one author had an affiliation to Charité. (Another criteria?) 
+Identifiers and accession codes of open an restricted datasets that were found in articles by Charité's authors between the years 2020 and 2023 (henceforth referred to as the datasets) were collected as part of a separate data sharing monitoring process. Articles were defined as written by Charité's authors if at least one author had an affiliation to Charité.
 
-Prior to looking for mentions of Charités datasets in the DCC, the datasets were standardized into a format that would maximize the chance to find them in the DCC. This was done by an automatic standardization function that... (explain what it did) followed up by a manual verification to ensure that all datasets are indeed in the correcrt format, meaning either a DOI or an accession code, with the version information removed from it.
+Prior to looking for mentions of Charités datasets in the DCC, the datasets were standardized into a format that would maximize their chance to be found in the DCC. This was done by an automatic standardization function that extracted the accession number from each given URL of a dataset, and standardized any DOI to a uniform format. The output of that function was verified manualy in order to ensure that all datasets are indeed in the correct format (i.e. either a DOI or an accession code), with the version information removed from it.
 
-The DCC required several preprocessing and cleaning steps before we could look for the datasets mentions within it.
-Exploration:
-1. Make sure that there are no NAs in relevant fields
-2. Make sure that the dates are correct
-3. Exploring distributions of repositories and publication years
+We applied several preprocessing and cleaning steps to the DCC as well.
+xploration: 1. Make sure that there are no NAs in relevant fields 2. Make sure that the dates are correct 3. Exploring distributions of repositories and publication years
 
-Datasets DOIs of General repositories (i.e. Zenodo, Figshare, Dryad and OSF) were found to be not in one format in the DCC. They were therefore each standardized into one DOI format. In addition, the datasets' version information in the DOI was removed from them as well.
-On the next step, excess characters were removed from the datasets and from the papers' DOIs, namely leading and trailing slashes and dots, leading and trailing spaces, and any other space found within the string value. In addition, commas were replaced with dots. DOIs of papers were also standardized to a format of a DOI.
+DOIs of datasets deposited in general repositories (i.e., Zenodo, Figshare, Dryad, and OSF) were found to appear in multiple formats within the DCC. To ensure consistency, all DOIs were standardized to a uniform format. As with the Charité datasets, version information was removed from all entries. Subsequently, excess characters were stripped from both the dataset and the articles' DOIs. This included leading and trailing slashes, dots and spaces, together with any other space found within the string value of the dataset or the article's DOI. Additionally, commas were replaced with dots. DOIs of articles were likewise standardized to a uniform DOI format.
 
-The DCC had also cases where the same DOI was listed in the "mentioning paper" field and the "mentioned dataset" field. There were cases where this was discovered only after standardizing both fields. All such cases were removed from the DCC.
-We have also decided to not include preprints in the analysis, and therefore all cases where the repository was listed as a preprint service were removed as well.
+The DCC had also cases where the same DOI was listed both in the "mentioning article" field and the "mentioned dataset" field. There were cases where this was discovered only after standardizing both fields. All such cases were removed from the DCC. We have also decided to not include preprints in the analysis, and therefore all cases where the repository was listed as a preprint service were removed as well.
 
-Following all the steps above, we looked for Charité's datasets mentions in the DCC. This step created a list with cases from the DCC which were a match to the Charité datasets list.From this matched list, cases where the mentioning paper and the paper with the mentioned dataset had at least one author in common were excluded. For this step, meta data of each paper was extracted using Openalex.
+Following all the steps above, we looked for Charité's datasets mentions in the DCC. This step resulted in a list with cases from the DCC which had a matching dataset identifier to the ones in the Charité datasets list. From this results list, cases where the mentioning article and the article with the mentioned dataset had at least one author in common were excluded. For this step, meta data regarding the authors of each article was extracted using Openalex. Publication years of Charité's papers and of their datasets were incorporated into the results list as meta data as well. 
 
 Lastly, a sample of the remaining cases was taken in order to manualy verify that the results make sense, namely for these cases:
-1. Mentioning paper published before 2016
-2. Mentioning paper is listed as published before the publication of the dataset
-3. Publication year of mentioning paper is listed as earlier than publication year of the Charité paper.
-
-
+<br> 1. Mentioning article published before 2016
+<br> 2. Mentioning article is listed as published before the publication of the dataset
+<br> 3. Publication year of mentioning article is listed as earlier than publication year of the Charité article.
 
 # Results
-
 
 {{< embed notebooks/plots/plots.qmd#fig-distinct-numbers >}}
 
@@ -53,7 +45,3 @@ Lastly, a sample of the remaining cases was taken in order to manualy verify tha
 {{< embed notebooks/plots/plots.qmd#fig-datasets-and-papers-years >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-test >}}
-
-
-
-

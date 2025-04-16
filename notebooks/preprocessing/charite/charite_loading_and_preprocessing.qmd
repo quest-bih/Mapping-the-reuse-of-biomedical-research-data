@@ -79,6 +79,9 @@ dashboard_dois <- read.csv(
 
 dashboard_dois_dedup <- dashboard_dois |> group_by(doi) |> slice(1) |> ungroup() # deduplicate dois
 
+##### use this chunk to replace the loading of separate files:
+# load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v1.rda"))
+
 rm(dashboard_dois) # clean up
 ```
 
