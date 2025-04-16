@@ -182,7 +182,7 @@ dois_from_Ana_for_matching_until_2022 <- dois_from_Ana_until_2022 |>
 
 charite_dois_and_ids_until_2022 <- dois_from_Ana_for_matching_until_2022 |> 
   inner_join(dashboard_dois_dedup, by = "doi") |> 
-  select(doi, identifier) # Notice I'm not deduplicating dois because I want to get the dataset (identifier) level
+  select(doi, identifier, data_access) # Notice I'm not deduplicating dois because I want to get the dataset (identifier) level
 
 # 5. Wrangle Charite's dois from Ana (2023): Less wrangling needed here due to a cleaner source file.
 
@@ -219,7 +219,8 @@ dois_from_Ana_for_matching_2023 <- dois_from_Ana_2023 |>
        & own_or_reuse_data %in% c("unsure",
                                   "own_open_data",
                                   "NULL")
-       & open_data_assessment == "NULL")
+       & open_data_assessment == "NULL"
+       & restricted_authorship == "own_restricted")
   )
 
 # Note: the dashboard doesn't contain dois from 2023 anyway, so there's no need to join with the dashboard again.
@@ -229,22 +230,10 @@ dois_from_Ana_for_matching_2023 <- dois_from_Ana_2023 |>
 charite_dois_and_ids <- charite_dois_and_ids_until_2022 |> 
   bind_rows(
     dois_from_Ana_for_matching_2023 |>
-      select(doi, identifier)) |> 
+      select(doi, identifier, data_access)) |> # data access is selected for a later analysis
   mutate(identifier = tolower(identifier))
 
 save_cr(charite_dois_and_ids, file = file.path(here("data", "wrangling_steps", "charite", "1_charite_dois_and_ids.RData")))
-
-# Get the same list but with data access information for Sankey plot:
-
-charite_ids_until_2022_with_access_info <- dois_from_Ana_for_matching_until_2022 |> 
-  inner_join(dashboard_dois_dedup, by = "doi") |> 
-  select(identifier, data_access) # Notice I'm not deduplicating dois because I want to get the dataset (identifier) level
-
-charite_dois_and_ids_with_access_info <- charite_ids_until_2022_with_access_info |> 
-  bind_rows(
-    dois_from_Ana_for_matching_2023 |>
-      select(identifier, data_access)) |> 
-  mutate(identifier = tolower(identifier))
 
 save_cr(charite_dois_and_ids_with_access_info, file = file.path(here("data", "processed", "charite", "charite_dois_and_ids_with_access_info.RData")))
 ```
