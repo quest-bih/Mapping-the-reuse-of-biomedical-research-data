@@ -100,7 +100,7 @@ save_cr(DCC_corpus_orig, file = file.path(here(
   "data",
   "raw",
   "dcc",
-  "DCC_corpus_v2_orig.RData")))
+  "DCC_corpus_v3_orig.RData")))
 
 DCC_corpus <- DCC_corpus_orig # assign _orig to a new variable
 
@@ -198,12 +198,27 @@ dcc_na_null_blank_reduced <- dcc_na_null_blank |>
     count_type == "blank_count_repository" ~ "Repository column: no value",
     count_type == "blank_count_publisher" ~ "Publisher column: no value",
     count_type == "blank_count_journal" ~ "Journal column: no value",
-    count_type == "blank_count_title" ~ "Paper titel column: no value",
+    count_type == "blank_count_title" ~ "Paper title column: no value",
     count_type == "blank_count_subjects" ~ "Subject column: no value",
     count_type == "blank_count_affiliations" ~ "Affiliation column: no value",
     count_type == "blank_count_funders" ~ "Funder column: no value",
-    .default = count_type))
-
+    .default = count_type)) |> 
+  mutate(
+    type = case_when(
+      str_detect(count_type, "blank_count") ~ "blank",
+      str_detect(count_type, "no value") ~ "no value",
+      str_detect(count_type, "na_count") ~ "blank",  # treating NA counts as blanks
+      TRUE ~ NA_character_
+    ),
+    column_name = case_when(
+      type == "blank" ~ str_remove(count_type, "blank_count_") |> 
+        str_remove("na_count_"),
+      type == "no value" ~ str_remove(count_type, " column: no value"),
+      TRUE ~ NA_character_
+    )
+  ) |> 
+  select(column_name, type, percentage_of_corpus) |> 
+  arrange(type, column_name)
 
 save_cr(dcc_na_null_blank_reduced, file = file.path(here("data", "inputs_for_quick_render", "dcc_na_null_blank_reduced.RData"))) # save
 
