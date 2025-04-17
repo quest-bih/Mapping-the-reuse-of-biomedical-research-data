@@ -463,31 +463,3 @@ dif_for_plot |>
   theme_classic()
 
 ```
-
-```{r test, echo=FALSE}
-
-#| label: fig-test
-#| fig-cap: test
-#| fig-format: png
-
-# Generate random x and y values
-random_data <- tibble(
-  x = c(rnorm(1), rnorm(1)),  # Two random x values
-  y = c(rnorm(1), rnorm(1))   # Two random y values
-)
-
-# Convert x-values to a factor for discrete bars
-random_data <- random_data |> 
-  mutate(x = factor(round(x, 2)),  # Round x-values for better labels
-         y = round(y, 2))          # Round y-values for clear display
-
-# Create the bar plot
-ggplot(random_data, aes(x = x, y = y)) +
-  geom_bar(stat = "identity", fill = "green", color = "black") +  # Solid fill (no gradient)
-  geom_text(aes(label = paste0("(", x, ", ", y, ")")), vjust = -0.5, size = 5) +  # Labels
-  theme_minimal() +
-  labs(x = "Random X Values", y = "Random Y Values", title = "Random Bar Plot with Labels")
-
-
-
-```

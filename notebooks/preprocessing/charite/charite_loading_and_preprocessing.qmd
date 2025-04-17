@@ -45,30 +45,17 @@ The Charite dois and identifiers list ("Charite's list") input was derived from 
 ```{r Loading Raw Inputs of Charites list}
 # 2.  Loading and cleaning Charite's list ------------------------------------------------------
 
-# Here we're loading two outputs of a separate datasets extraction process:
-  # one table of DOIs and datasets identifiers for 2020-2022
-  # one table of DOIs and datasets for 2023
+# Here we're loading the output of a separate datasets extraction process as our input: master_2020_2023
+ 
+# First we'll wrangle and clean the the table.
+# Then we'll inner_join the clean table with a table containing DOIs that are present in the open-data dashboard, to make sure that our table has papers that are only from Charite.
+# Lastly, we'll exclude DOIs that are not affilieted with Charité according to a second criterion.
 
-# First we'll wrangle and clean the 2020-2022 table.
-# We'll then inner_join this table with a table containing DOIs that are present in the open-data dahboard, to make sure that our table has papers that are only from Charite.
+# Load Charite raw data file (Numbat output for 2020-2023)
 
-# Load Charite's lists
+load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v1.rda"))
 
-dois_from_Ana_until_2022_orig <- read.csv(
-  file.path(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2022_unsure_corrected.csv")),
-  header = TRUE,
-  sep = ";") # 2020-2022
-
-# remove the next row if the case is already not there:
-  # |> dplyr::filter(
-  #   identifier != "https://www.ncbi.nlm.nih.gov/sra/?term=SRR8454256") # remove case from original list, as it hasn't been found in the actual paper during data validation
-
-dois_from_Ana_2023_orig <- read.csv(
-  file.path(here("data", "raw", "charite", "od_lom_result_2023_dataset_level_v4.csv")),
-  header = TRUE,
-    sep = ";") # 2023
-
-# Load dashboard's dois
+# Load dashboard's DOIs
 
 dashboard_dois <- read.csv(
   file.path(here("data", "raw", "charite", "dashboard_metrics.csv")),
@@ -78,9 +65,6 @@ dashboard_dois <- read.csv(
   mutate(doi = tolower(doi))
 
 dashboard_dois_dedup <- dashboard_dois |> group_by(doi) |> slice(1) |> ungroup() # deduplicate dois
-
-##### use this chunk to replace the loading of separate files:
-# load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v1.rda"))
 
 rm(dashboard_dois) # clean up
 ```
@@ -95,150 +79,101 @@ After the initial inspection, the Charite lists were wrangled and cleaned furthe
 
 2.  Removed **".txt"** trail from doi.
 
-3.  Removed cases where doi and article were both **NA**.
+3.  Removed **NAs and duplicates**.
 
-4.  **Merged** "doi" and "article" columns into "doi".
+4. Verified that all dois are indeed **Charite** dois.
 
-5.  **Merged** "identifier" and "data_identifier" columns into "identifier".
-
-6.  **Merged** "open_data_assessment" and "assessment" columns into "open_data_assessment".
-
-7.  Removed cases where identifier and data_identifier were both **NA**.
-
-8.  Removed cases where identifier / data_identifier were **clearly not identifiers**.
-
-9.  Removed **NAs and duplicates**.
-
-10. Verifying that all dois are indeed **Charite** dois.
-
-11. Merging into one Charite list.
+5. Merging into one Charite list.
 
 <br>
 
 ```{r Cleaning Steps}
 
-# Wrangling the Charite lists and binding them into one list
+# 1. Wrangling the Charite list
 
-# 1. Charite's dois from Ana (2020-2022)
-
-dois_from_Ana_until_2022 <- dois_from_Ana_until_2022_orig |> 
+charite_2020_2023 <- master_2020_2023 |>
   # "tolower" and replace + with /
   mutate(doi = gsub("\\+", "/", doi)) |>
-  mutate(doi = tolower(doi)) |> 
-  mutate(article = gsub("\\+", "/", article)) |> 
-  mutate(article = tolower(article)) |>
+  mutate(doi = tolower(doi)) |>
   # replace "na" with true NA
-  mutate(across(c(article, doi), ~ na_if(., "na"))) |> 
+  mutate(doi = na_if(doi, "na")) |> 
   # dplyr::filter out cases where both doi and article are NA
-  dplyr::filter(!(is.na(doi) & is.na(article))) |>
+  dplyr::filter(!(is.na(doi))) |> 
   # remove ".txt" from strings
-  mutate(article = str_remove(article, fixed(".txt"))) |>
-  mutate(doi = str_remove(doi, fixed(".txt"))) |>
-  # merge doi and article columns: replace "doi" with "article" where "doi" is NA
-  mutate(doi = case_when(is.na(doi) ~ article, .default = doi)) |> 
-  # merge identifier and data_identifier columns
-  mutate(identifier = case_when(is.na(identifier) ~ data_identifier, .default = identifier)) |>
-  select(-c(article, data_identifier)) |> 
-  # merge open_data_assessment and assessment columns
-  mutate(open_data_assessment = case_when(is.na(open_data_assessment) ~ assessment, .default = open_data_assessment)) |>
-  select(-assessment) |> 
-  # rewrite "own_open-data" as "own_open_data"
-  mutate(own_or_reuse_data = case_when(
-    own_or_reuse_data == "own_open-data"
-    ~ "own_open_data",
-    .default = own_or_reuse_data
-  ))
+  mutate(doi = str_remove(doi, fixed(".txt")))
 
-# 2. Explore which cases to include
+# 2. Explore which cases to include (2020-2022)
 
-cases_of_ids_until_2022 <- dois_from_Ana_until_2022 |>
+cases_of_ids_until_2022 <- charite_2020_2023 |>
+  dplyr::filter(year != 2023) |> 
   group_by(open_data_assessment, own_or_reuse_data, data_access) |>
   summarise(n = n()) |>
   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
 
-write_csv_cr(cases_of_ids_2022, file = file.path(here("data","results_verification", "inclusion_criteria_until_2022.csv")),
+write_csv_cr(cases_of_ids_until_2022, file = file.path(here("data","results_verification", "inclusion_criteria_until_2022_v4.csv")),
              row.names = FALSE)
-
-# Evgeny and Ana replied that each of the 3 cases below should be included:
+ 
+# Evgeny and Ana replied that each of the 3 cases below should be included for cases between 2020 and 2022:
 # access = yes, own = unsure / own, assessment = open data
 # access = unsure, own = own, assessment = open data
 # access = restricted, own = unsure / own / NULL, assessment = NULL
-
-# 3. Filter to get only relevant cases
-
-dois_from_Ana_for_matching_until_2022 <- dois_from_Ana_until_2022 |> 
-  dplyr::filter(
-    (open_data_assessment == "open_data"
-    & own_or_reuse_data %in% c("own_open_data",
-                               "unsure")
-    & data_access %in% c("yes",
-                         "unsure")
-    )
-    | (data_access == "restricted"
-       & own_or_reuse_data %in% c("unsure",
-                                  "own_open_data",
-                                  "NULL")
-       & open_data_assessment == "NULL")
-  )
-
-# 4. Filter out dois that are not in the Charite dashboard
-
-charite_dois_and_ids_until_2022 <- dois_from_Ana_for_matching_until_2022 |> 
-  inner_join(dashboard_dois_dedup, by = "doi") |> 
-  select(doi, identifier, data_access) # Notice I'm not deduplicating dois because I want to get the dataset (identifier) level
-
-# 5. Wrangle Charite's dois from Ana (2023): Less wrangling needed here due to a cleaner source file.
-
-dois_from_Ana_2023 <- dois_from_Ana_2023_orig |> 
-  # "tolower"
-  mutate(doi = gsub("\\+", "/", doi)) |>
-  # replace + with /
-  mutate(doi = tolower(doi)) |> 
-  # rename identifer column
-  rename(identifier = data_identifier)
-
-# Explore which cases to include
-
-cases_of_ids_2023 <- dois_from_Ana_2023 |>
+ 
+# 3. Explore which cases to include (2023)
+ 
+cases_of_ids_2023 <- charite_2020_2023 |>
+  dplyr::filter(year == 2023) |> 
   group_by(open_data_assessment, own_or_reuse_data, data_access, restricted_authorship) |>
   summarise(n = n()) |>
   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
 
-write_csv_cr(cases_of_ids_2023, file = file.path(here("data","results_verification", "inclusion_criteria_v4.csv")),
+write_csv_cr(cases_of_ids_2023, file = file.path(here("data","results_verification", "inclusion_criteria_2023_v4.csv")),
              row.names = FALSE)
 
+# 4. Filter to get only relevant cases (open / restricted data)
 
-# 6. Again, filter to get only relevant cases
-
-dois_from_Ana_for_matching_2023 <- dois_from_Ana_2023 |> 
+charite_2020_2023_od_and_rest <- charite_2020_2023 |>
   dplyr::filter(
-    (open_data_assessment == "open_data"
-    & own_or_reuse_data %in% c("own_open_data",
-                               "unsure")
-    & data_access %in% c("yes",
-                         "unsure")
-    )
-    | (data_access == "restricted"
-       & own_or_reuse_data %in% c("unsure",
-                                  "own_open_data",
-                                  "NULL")
-       & open_data_assessment == "NULL"
-       & restricted_authorship == "own_restricted")
+    # open / restricted by 2020-2022 criteria
+    (year %in% 2020:2022 &
+     open_data_assessment == "open_data" &
+     own_or_reuse_data %in% c("own_open_data", "unsure") &
+     data_access %in% c("yes", "unsure")) |
+
+    # open / restricted by 2023 criteria
+    (year == 2023 &
+     data_access == "restricted" &
+     own_or_reuse_data %in% c("unsure", "own_open_data", "NULL") &
+     open_data_assessment == "NULL" &
+     restricted_authorship == "own_restricted")
   )
 
-# Note: the dashboard doesn't contain dois from 2023 anyway, so there's no need to join with the dashboard again.
+# 5. Filter out dois that are not in the Charite dashboard
 
-# 7. Bind 2020-2022 and 2023 tables into one table
+charite_2020_2023_od_and_rest_no_db <- charite_2020_2023_od_and_rest |>
+  dplyr::filter(
+    year == 2023 |
+    (year %in% 2020:2022 & doi %in% dashboard_dois_dedup$doi)
+  ) |> 
+  select(doi, data_identifier, data_access)
 
-charite_dois_and_ids <- charite_dois_and_ids_until_2022 |> 
-  bind_rows(
-    dois_from_Ana_for_matching_2023 |>
-      select(doi, identifier, data_access)) |> # data access is selected for a later analysis
-  mutate(identifier = tolower(identifier))
+# 6. Exclude any DOI that has no affiliation to Charité, according to a second source ("Publikationsdatensatz Charité_2023_241119VN.xlsx in S Drive)
 
-save_cr(charite_dois_and_ids, file = file.path(here("data", "wrangling_steps", "charite", "1_charite_dois_and_ids.RData")))
+# Load list of DOIs to exclude
 
-save_cr(charite_dois_and_ids_with_access_info, file = file.path(here("data", "processed", "charite", "charite_dois_and_ids_with_access_info.RData")))
+dois_to_exclude <- read.csv(
+  file.path(here("data", "results_verification", "DOIs_to_exclude_from_charite_list.csv")),
+  header = TRUE,
+  sep = ",") |> 
+  rename(doi = DOI) |> 
+  mutate(doi = tolower(doi))
+
+# Exclude by the list
+
+charite_dois_and_ids <- charite_2020_2023_od_and_rest_no_db |> 
+  dplyr::filter(!doi %in% dois_to_exclude$doi)
+
+save_cr(charite_dois_and_ids, file = file.path(here("data", "processed", "charite", "1_charite_dois_and_ids.RData")))
+
 ```
 
 <br>
