@@ -12,7 +12,7 @@
 # Locate manual validation folder
 files <- list.files(here("data",
                          "results_verification",
-                         "Manual validation of accession numbers extraction function for charite papers"),
+                         "m_val"),
   pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE)
 
 
@@ -23,21 +23,21 @@ latest_file_name <- files[which.max(file.info(files)$mtime)]
 latest_validation <- read_csv(latest_file_name) # this is the latest "manual_validation_done"
 
 # Verify that identifiers in this file and in charite_dois_and_ids_clean are lower cased
-any(str_detect(charite_dois_and_ids_clean$identifier, "[A-Z]"))
-any(str_detect(latest_file_to_load$identifier, "[A-Z]"))
+any(str_detect(charite_dois_and_ids_clean$data_identifier, "[A-Z]"))
+any(str_detect(latest_validation$identifier, "[A-Z]"))
 
-# Get only added cases after auto-cleaning
-added_cases <- charite_dois_and_ids_clean |> 
-  dplyr::filter(!identifier %in% latest_validation$identifier)
+# "tolower" data_identifier
+charite_dois_and_ids_clean <- charite_dois_and_ids_clean |>
+  mutate(data_identifier = tolower(data_identifier))
 
-# bind them to existing manual validation latest file:
-
-### Note! change the "manual_validation_xxxxxxxx" variable name to today's date all over of the script!
-manual_validation_0603025 <- added_cases |> 
-  bind_rows(latest_validation) # now cases where "validated = NA" are the added ones!
-
-# get how many cases were added (validated = NA)
-manual_validation_0603025 |> group_by(validated) |> summarise(n = n())
+# Add auto_cleaned cases to previously manually validated list
+manual_validation_22042025 <- charite_dois_and_ids_clean |> 
+  left_join(
+    latest_validation |> 
+      distinct(identifier, .keep_all = TRUE),
+    by = c("data_identifier" = "identifier"),
+    suffix = c("_auto_current", "_auto_previous")
+    )
 
 # 2. Common accession numbers prefixed ---------------------------------------
 
@@ -95,10 +95,10 @@ prefixes <- c("//github.com",
 
 # Mark cases with the prefixes above as validated (validated = TRUE)
 
-manual_validation_0603025 <- manual_validation_0603025 |> 
+manual_validation_22042025_in_progress <- manual_validation_22042025 |> 
   mutate(validated = case_when(
     is.na(validated)
-    & map_lgl(charite_data_id_or_acc_nr, ~ any(str_starts(.x, prefixes))) # these prefixes existence mean that the function handled these cases well
+    & map_lgl(charite_data_id_or_acc_nr_auto_current, ~ any(str_starts(.x, prefixes))) # these prefixes existence mean that the function handled these cases well
     ~ TRUE,
     .default = validated))
 
@@ -106,10 +106,10 @@ manual_validation_0603025 <- manual_validation_0603025 |>
 
 # 1. Remove version information from id (".v...")
 
-manual_validation_0603025 <- manual_validation_0603025 |>
-  mutate(charite_data_id_or_acc_nr = case_when(
-    is.na(validated) ~ sub("\\.v[0-9]+.*$", "", charite_data_id_or_acc_nr),
-    .default = charite_data_id_or_acc_nr)) # remove version information
+manual_validation_22042025_in_progress <- manual_validation_22042025_in_progress |>
+  mutate(charite_data_id_or_acc_nr_auto_current = case_when(
+    is.na(validated) ~ sub("\\.v[0-9]+.*$", "", charite_data_id_or_acc_nr_auto_current),
+    .default = charite_data_id_or_acc_nr_auto_current)) # remove version information
 
 # 2. Replace "," with ".", and remove:
 
@@ -118,71 +118,59 @@ manual_validation_0603025 <- manual_validation_0603025 |>
   # "," at the beginning / end
 
 # View
-manual_validation_0603025 |>
+manual_validation_22042025_in_progress |>
   dplyr::filter(
-    str_detect(charite_data_id_or_acc_nr, "^,|,$") | # ","
-      str_detect(charite_data_id_or_acc_nr, "^\\.|\\.$") | # "."
-      str_detect(charite_data_id_or_acc_nr, "\\s") | # " " anywhere
-      str_detect(charite_data_id_or_acc_nr, "^\\s|\\s$") # " " at the beginning / end
+    is.na(validated) &
+    (str_detect(charite_data_id_or_acc_nr_auto_current, "^,|,$") | # ","
+      str_detect(charite_data_id_or_acc_nr_auto_current, "^\\.|\\.$") | # "."
+      str_detect(charite_data_id_or_acc_nr_auto_current, "\\s") | # " " anywhere
+      str_detect(charite_data_id_or_acc_nr_auto_current, "^\\s|\\s$")) # " " at the beginning / end
   ) |> View()
 
 # Remove
-manual_validation_0603025 <- manual_validation_0603025 |> 
-  mutate(charite_data_id_or_acc_nr = case_when(
+manual_validation_22042025_in_progress <- manual_validation_22042025_in_progress |> 
+  mutate(charite_data_id_or_acc_nr_auto_current = case_when(
     is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr, "^,|,$")
-    ~ str_remove_all(charite_data_id_or_acc_nr, "^,|,$"), # ","
+    & str_detect(charite_data_id_or_acc_nr_auto_current, "^,|,$")
+    ~ str_remove_all(charite_data_id_or_acc_nr_auto_current, "^,|,$"), # ","
     
     is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr, "^\\.|\\.$")
-    ~ str_remove_all(charite_data_id_or_acc_nr, "^\\.|\\.$"), # "."
+    & str_detect(charite_data_id_or_acc_nr_auto_current, "^\\.|\\.$")
+    ~ str_remove_all(charite_data_id_or_acc_nr_auto_current, "^\\.|\\.$"), # "."
     
     is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr, "^\\s|\\s$")
-    ~ str_trim(charite_data_id_or_acc_nr), # " " anywhere
+    & str_detect(charite_data_id_or_acc_nr_auto_current, "^\\s|\\s$")
+    ~ str_trim(charite_data_id_or_acc_nr_auto_current), # " " anywhere
     
     is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr, "\\s")
-    ~ str_replace_all(charite_data_id_or_acc_nr, "\\s", ""), # " " at the beginning / end
+    & str_detect(charite_data_id_or_acc_nr_auto_current, "\\s")
+    ~ str_replace_all(charite_data_id_or_acc_nr_auto_current, "\\s", ""), # " " at the beginning / end
     
     # Keep all other cases unchanged
-    .default = charite_data_id_or_acc_nr
+    .default = charite_data_id_or_acc_nr_auto_current
   ))
 
 # View cases left unhandled
 
-manual_validation_0603025 |> dplyr::filter(is.na(validated)) |> View()
-
-# (Write a chunk to handle 10. if needed)
-
-# Write a csv for manual validation as documentation
-
-write_csv_cr(
-  manual_validation_0603025,
-  file = here("data",
-              "results_verification",
-              "Manual validation of accession numbers extraction function for charite papers",
-              "manual_validation_0603025.csv"),
-  row.names = FALSE
-)
+manual_validation_22042025_in_progress |> dplyr::filter(is.na(validated)) |> View()
 
 # Write a copy of it with the suffix _in_progress - this is the file you should work on!
 
 write_csv_cr(
-  manual_validation_0603025,
+  manual_validation_22042025_in_progress,
   file = here("data",
               "results_verification",
-              "Manual validation of accession numbers extraction function for charite papers",
-              "manual_validation_0603025_in_progress.csv"),
+              "m_val",
+              "manual_validation_22042025_in_progress_for_work.csv"),
   row.names = FALSE
 )
 
 # 4. Finalizing the validation --------------------------------------------
 
 # After finishing working on the _in_progress.csv, here we'll make sure that the best identifier
-# (out of the columns: "identifier"
-#                      "charite_data_id_or_acc_nr",
-#                       "charite_data_id_or_acc_nr_v"
+# (out of the columns: "data_identifier"
+#                      "charite_data_id_or_acc_nr_auto_current",
+#                      "charite_data_id_or_acc_nr_v"
 #                      "charite_data_id_or_acc_nr_merged")
 # is listed under "_merged"!
 
@@ -190,32 +178,32 @@ write_csv_cr(
 
 new_files <- list.files(here("data",
                          "results_verification",
-                         "Manual validation of accession numbers extraction function for charite papers"),
+                         "m_val"),
                     pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE) # get updated files list
 
 new_latest_file_name <- new_files[which.max(file.info(new_files)$mtime)] # get updated last modified file
 
-manual_validation_in_progress <- read_csv(new_latest_file_name) # load _in_progress
+manual_validation_in_progress_all_validated <- read_csv(new_latest_file_name) # load _in_progress
 
-manual_validation_0603025_done <- manual_validation_in_progress |> 
+manual_validation_22042025_done <- manual_validation_in_progress_all_validated |> 
   mutate(charite_data_id_or_acc_nr_merged =
            if_else(
              # if "merged" is NA
              is.na(charite_data_id_or_acc_nr_merged),
              # then get _v
              coalesce(charite_data_id_or_acc_nr_v,
-                      # if _v is also NA, get the automatically extracted ("charite_data_id_or_acc_nr")
-                      charite_data_id_or_acc_nr),
-             # and put either in _merged
+                      # if _v is also NA, get the automatically extracted ("charite_data_id_or_acc_nr_auto_current")
+                      charite_data_id_or_acc_nr_auto_current),
+             # and put either of them in _merged
              charite_data_id_or_acc_nr_merged))
 
 # Write a csv for the finished manual validation: This file will be loaded in charite_loading_and_preprocessing.qmd!
 
 write_csv_cr(
-  manual_validation_0603025_done,
+  manual_validation_22042025_done,
   file = here("data",
               "results_verification",
-              "Manual validation of accession numbers extraction function for charite papers",
+              "m_val",
               "manual_validation_0603025_done.csv"),
   row.names = FALSE
 )

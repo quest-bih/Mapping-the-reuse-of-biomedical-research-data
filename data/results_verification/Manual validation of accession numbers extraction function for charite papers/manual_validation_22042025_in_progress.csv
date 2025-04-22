@@ -97,7 +97,7 @@
 "10.1016/j.celrep.2023.112926","https://doi.org/10.2210/pdb7xzh/pdb","yes","10.2210/pdb7xzh/pdb","10.1016/j.celrep.2023.112926","10.2210/pdb7xzh/pdb",NA,"10.2210/pdb7xzh/pdb",NA,NA,NA,TRUE,"doi"
 "10.1016/j.celrep.2023.112926","https://www.ebi.ac.uk/emdb/emd-33527","yes","emd-33527","10.1016/j.celrep.2023.112926","emd-33527",NA,"emd-33527",NA,NA,NA,TRUE,"acc_nr"
 "10.1158/1078-0432.ccr-22-3790","https://www.ebi.ac.uk/biostudies/arrayexpress/studies/e-mtab-12431","yes","e-mtab-12431","10.1158/1078-0432.ccr-22-3790","e-mtab-12431",NA,"e-mtab-12431",NA,NA,NA,TRUE,"acc_nr"
-"10.1038/s41598-023-40803-4","https://doi.org/10.17605/osf.io/eyr7t","yes","//osf.io/eyr7t",NA,NA,NA,"//osf.io/eyr7t",NA,NA,NA,TRUE,NA
+"10.1038/s41598-023-40803-4"," https://doi.org/10.17605/osf.io/eyr7t","yes","//osf.io/eyr7t",NA,NA,NA,NA,NA,NA,NA,TRUE,NA
 "10.1016/j.ebiom.2023.104583","https://ega-archive.org/datasets/egad00001007035","restricted","egad00001007035","10.1016/j.ebiom.2023.104583","egad00001007035",NA,"egad00001007035",NA,NA,NA,TRUE,"acc_nr"
 "10.1016/j.gim.2023.100950","https://zenodo.org/doi/10.5281/zenodo.7766790","yes","10.5281/zenodo.7766790","10.1016/j.gim.2023.100950","10.5281/zenodo.7766790",NA,"10.5281/zenodo.7766790",NA,NA,NA,TRUE,"doi"
 "10.1016/j.immuni.2023.05.017","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse166875","yes","gse166875","10.1016/j.immuni.2023.05.017","gse166875",NA,"gse166875",NA,NA,NA,TRUE,"acc_nr"
@@ -195,7 +195,7 @@
 "10.1126/science.abq5202","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse226946","yes","gse226946","10.1126/science.abq5202","gse226946",NA,"gse226946",NA,NA,NA,TRUE,"acc_nr"
 "10.1126/science.abq5202","https://doi.org/10.5061/dryad.3ffbg79pp","yes","10.5061/dryad.3ffbg79pp","10.1126/science.abq5202","10.5061/dryad.3ffbg79pp",NA,"10.5061/dryad.3ffbg79pp",NA,NA,NA,TRUE,"doi"
 "10.1016/j.clinph.2023.05.012","10.5281/zenodo.8005115","yes","zenodo.8005115","10.1016/j.clinph.2023.05.012","10.5281/zenodo.8005115",NA,"10.5281/zenodo.8005115",NA,NA,NA,TRUE,"doi"
-"10.1007/s10237-022-01682-2","https://doi.org/10.25375/uct.17620877","yes","10.25375/uct.17620877",NA,NA,NA,"10.25375/uct.17620877",NA,NA,NA,TRUE,NA
+"10.1007/s10237-022-01682-2","https://doi.org/10.25375/uct.17620877 ","yes","10.25375/uct.17620877",NA,NA,NA,NA,NA,NA,NA,NA,NA
 "10.1126/sciimmunol.ade7953","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse199684","yes","gse199684","10.1126/sciimmunol.ade7953","gse199684",NA,"gse199684",NA,NA,NA,TRUE,"acc_nr"
 "10.1126/sciimmunol.ade7953","https://doi.org/10.5281/zenodo.7198935","yes","10.5281/zenodo.7198935","10.1126/sciimmunol.ade7953","10.5281/zenodo.7198935",NA,"10.5281/zenodo.7198935",NA,NA,NA,TRUE,"doi"
 "10.1126/sciimmunol.ade7953","https://www.ebi.ac.uk/biostudies/arrayexpress/studies/e-mtab-12352","yes","e-mtab-12352","10.1126/sciimmunol.ade7953","e-mtab-12352",NA,"e-mtab-12352",NA,NA,NA,TRUE,"acc_nr"
@@ -389,7 +389,7 @@
 "10.1038/s41591-023-02397-2","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse192838","yes","gse192838","10.1038/s41591-023-02397-2","gse192838",NA,"gse192838",NA,NA,NA,TRUE,"acc_nr"
 "10.1038/s41597-023-02377-8","https://www.scidb.cn/en/detail?datasetid=c81f0e90a51b4cfca348ce4da6ca734e","restricted","c81f0e90a51b4cfca348ce4da6ca734e","10.1038/s41597-023-02377-8","c81f0e90a51b4cfca348ce4da6ca734e",NA,"c81f0e90a51b4cfca348ce4da6ca734e",TRUE,"acc_nr",NA,TRUE,"acc_nr"
 "10.1182/blood.2022017230","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse126595","yes","gse126595","10.1182/blood.2022017230","gse126595",NA,"gse126595",NA,NA,NA,TRUE,"acc_nr"
-"10.1182/blood.2022017230","https://www.ebi.ac.uk/pride/archive/projects/pxd030773","yes","pxd030773",NA,NA,NA,"pxd030773",NA,NA,NA,TRUE,NA
+"10.1182/blood.2022017230"," https://www.ebi.ac.uk/pride/archive/projects/pxd030773","yes","pxd030773",NA,NA,NA,NA,NA,NA,NA,TRUE,NA
 "10.1182/blood.2022017230","https://chorusproject.org/pages/index.html","restricted","index.html","10.1182/blood.2022017230","index.html","https://chorusproject.org/pages/index.html","https://chorusproject.org/pages/index.html",FALSE,"url","no identifier",TRUE,NA
 "10.7717/peerj.15499","10.17605/osf.io/4p8hz","yes","//osf.io/4p8hz","10.7717/peerj.15499","//osf.io/4p8hz",NA,"//osf.io/4p8hz",NA,NA,NA,TRUE,"doi"
 "10.7717/peerj.14671","10.5281/zenodo.7534926","restricted","zenodo.7534926","10.7717/peerj.14671","zenodo.7534926","10.5281/zenodo.7534926","10.5281/zenodo.7534926",TRUE,"doi","manually corrected",TRUE,"doi"
@@ -472,7 +472,7 @@
 "10.1186/s13073-022-01148-1","https://www.ebi.ac.uk/ena/browser/view/prjeb51635","yes","prjeb51635","10.1186/s13073-022-01148-1","prjeb51635",NA,"prjeb51635",NA,NA,NA,TRUE,"acc_nr"
 "10.1186/s13073-022-01148-1","https://doi.org/10.15454/flanup","yes","10.15454/flanup","10.1186/s13073-022-01148-1","10.15454/flanup",NA,"10.15454/flanup",NA,NA,NA,TRUE,"doi"
 "10.1371/journal.pone.0289203","doi.org/10.17605/osf.io/2smz5","yes","//osf.io/2smz5","10.1371/journal.pone.0289203","//osf.io/2smz5",NA,"//osf.io/2smz5",NA,NA,NA,TRUE,"doi"
-"10.3389/fimmu.2023.1320414","https://www.ncbi.nlm.nih.gov/prjna833766","yes","prjna833766",NA,NA,NA,"prjna833766",NA,NA,NA,TRUE,NA
+"10.3389/fimmu.2023.1320414","https://www.ncbi.nlm.nih.gov/prjna833766 ","yes","prjna833766 ",NA,NA,NA,NA,NA,NA,NA,TRUE,NA
 "10.3389/fnagi.2023.1204134","https://doi.org/10.5281/zenodo.8113922","restricted","10.5281/zenodo.8113922","10.3389/fnagi.2023.1204134","10.5281/zenodo.8113922",NA,"10.5281/zenodo.8113922",NA,NA,NA,TRUE,"doi"
 "10.3758/s13428-023-02134-0","https://doi.org/10.18452/24667","yes","10.18452/24667","10.3758/s13428-023-02134-0","10.18452/24667",NA,"10.18452/24667",NA,NA,NA,TRUE,"doi"
 "10.7554/elife.87860.3","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse224836","yes","gse224836","10.7554/elife.87860.3","gse224836",NA,"gse224836",NA,NA,NA,TRUE,"acc_nr"
@@ -607,8 +607,8 @@
 "10.1038/s41598-023-47532-8","https://doi.org/10.6084/m9.figshare.21919428","yes","10.6084/m9.figshare.21919428","10.1038/s41598-023-47532-8","10.6084/m9.figshare.21919428",NA,"10.6084/m9.figshare.21919428",NA,"doi",NA,TRUE,"doi"
 "10.1021/acs.jmedchem.3c00851","https://doi.org/10.2210/pdb8ou3/pdb","yes","10.2210/pdb8ou3/pdb","10.1021/acs.jmedchem.3c00851","10.2210/pdb8ou3/pdb",NA,"10.2210/pdb8ou3/pdb",NA,NA,NA,TRUE,"doi"
 "10.3390/ijms242015117","https://doi.org/10.5281/zenodo.8305579","yes","10.5281/zenodo.8305579","10.3390/ijms242015117","10.5281/zenodo.8305579",NA,"10.5281/zenodo.8305579",NA,"doi",NA,TRUE,"doi"
-"10.1371/journal.ppat.1011657","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse239588","yes","gse239588",NA,NA,NA,"gse239588",NA,NA,NA,TRUE,NA
-"10.1038/s42003-023-05553-z","https://doi.org/10.5281/zenodo.10054902","yes","10.5281/zenodo.10054902",NA,NA,NA,"10.5281/zenodo.10054902",NA,NA,NA,TRUE,NA
+"10.1371/journal.ppat.1011657","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse239588","yes","gse239588",NA,NA,NA,NA,NA,NA,NA,TRUE,NA
+"10.1038/s42003-023-05553-z","https://doi.org/10.5281/zenodo.10054902","yes","10.5281/zenodo.10054902",NA,NA,NA,NA,NA,NA,NA,NA,NA
 "10.3390/jcm12134359","https://www.ncbi.nlm.nih.gov/sra/srx20770027[accn]","yes","srx20770027[accn]","10.3390/jcm12134359","srx20770027[accn]",NA,"srx20770027",NA,NA,NA,TRUE,"acc_nr"
 "10.1111/bjhp.12670","https://doi.org/10.23668/psycharchives.8137","restricted","10.23668/psycharchives.8137","10.1111/bjhp.12670","10.23668/psycharchives.8137",NA,"10.23668/psycharchives.8137",NA,NA,NA,TRUE,"doi"
 "10.1128/msphere.00488-22","https://www.ncbi.nlm.nih.gov/nuccore/oq122118","yes","oq122118","10.1128/msphere.00488-22","oq122118",NA,"oq122118",NA,NA,NA,TRUE,"acc_nr"
@@ -665,7 +665,7 @@
 "10.1098/rsos.210155","https://osf.io/ftb9c/","yes","//osf.io/ftb9c","10.1098/rsos.210155","//osf.io/ftb9c",NA,"//osf.io/ftb9c",NA,NA,NA,TRUE,"doi"
 "10.1098/rspb.2021.0328","https://doi.org/10.5061/dryad.66t1g1k27","yes","10.5061/dryad.66t1g1k27","10.1098/rspb.2021.0328","10.5061/dryad.66t1g1k27",NA,"10.5061/dryad.66t1g1k27",NA,NA,NA,TRUE,"doi"
 "10.1098/rspb.2021.0328","https://trace.ncbi.nlm.nih.gov/traces/sra/?run=srr12059634","yes","srr12059634","10.1098/rspb.2021.0328","srr12059634",NA,"srr12059634",NA,NA,NA,TRUE,"acc_nr"
-"10.1098/rsta.2020.0202","https://oar.ptb.de/resources/show/10.7795/710.20201113","yes","710.2020111","10.1098/rsta.2020.0202","710.2020111",NA,"10.7795/710.20201113",NA,NA,NA,TRUE,"doi"
+"10.1098/rsta.2020.0202","https://oar.ptb.de/resources/show/10.7795/710.20201113","yes","710.20201113","10.1098/rsta.2020.0202","710.2020111",NA,"10.7795/710.20201113",NA,NA,NA,TRUE,"doi"
 "10.1101/gr.269233.120","https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse159907","yes","gse159907","10.1101/gr.269233.120","gse159907",NA,"gse159907",NA,NA,NA,TRUE,"acc_nr"
 "10.1111/cge.13977","https://www.ncbi.nlm.nih.gov/nuccore/nm_013275.6?report=fasta&to=9301","yes","nm_013275","10.1111/cge.13977","nm_013275",NA,"nm_013275",NA,NA,NA,TRUE,"acc_nr"
 "10.1111/medu.14596","https://osf.io/92swt/?view_only=faec41999e4848ef9535139dfe982c1c","yes","//osf.io/92swt","10.1111/medu.14596","//osf.io/92swt",NA,"//osf.io/92swt",NA,NA,NA,TRUE,"doi"
@@ -1397,7 +1397,7 @@
 "10.1016/j.cell.2020.08.001","https://data.mendeley.com/datasets/hwxhw2sxys/1","yes","hwxhw2sxys","10.1016/j.cell.2020.08.001","hwxhw2sxys",NA,"hwxhw2sxys",NA,NA,NA,TRUE,"acc_nr"
 "10.1038/s41587-020-00796-1","https://ega-archive.org/datasets/egas00001004772","restricted","egas00001004772","10.1038/s41587-020-00796-1","egas00001004772",NA,"egas00001004772",NA,NA,NA,TRUE,"acc_nr"
 "10.1371/journal.pone.0237944","https://doi.org/10.1371/journal.pone.0237944.s001","yes","10.1371/journal.pone.0237944.s001","10.1371/journal.pone.0237944","10.1371/journal.pone.0237944.s001",NA,"10.1371/journal.pone.0237944.s001",NA,NA,NA,TRUE,"doi"
-"10.1038/s41597-020-0495-6","https://physionet.org/content/ptb-xl/1.0.1/","yes","1","10.1038/s41597-020-0495-6","1",NA,"//physionet.org/content/ptb-xl/1.0.1/",NA,NA,NA,TRUE,"url"
+"10.1038/s41597-020-0495-6","https://physionet.org/content/ptb-xl/1.0.1/","yes","1.0","10.1038/s41597-020-0495-6","1",NA,"//physionet.org/content/ptb-xl/1.0.1/",NA,NA,NA,TRUE,"url"
 "10.1186/s12866-020-01741-7","10.6084/m9.figshare.12127476.v1","yes","m9.figshare.12127476","10.1186/s12866-020-01741-7","10.6084/m9.figshare.12127476",NA,"10.6084/m9.figshare.12127476",NA,NA,NA,TRUE,"doi"
 "10.1038/s41598-020-65744-0","https://www.ncbi.nlm.nih.gov/sra/?term=prjna521529","yes","prjna521529","10.1038/s41598-020-65744-0","prjna521529",NA,"prjna521529",NA,NA,NA,TRUE,"acc_nr"
 "10.1038/s41556-020-0488-x","http://proteomecentral.proteomexchange.org/cgi/getdataset?id=pxd010084","yes","pxd010084","10.1038/s41556-020-0488-x","pxd010084",NA,"pxd010084",NA,NA,NA,TRUE,"acc_nr"

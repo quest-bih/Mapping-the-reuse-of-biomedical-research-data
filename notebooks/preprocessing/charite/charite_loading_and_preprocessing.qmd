@@ -182,7 +182,16 @@ dois_to_exclude <- read.csv(
 charite_dois_and_ids <- charite_2020_2023_od_and_rest_no_db |> 
   dplyr::filter(!doi %in% dois_to_exclude$doi)
 
-save_cr(charite_dois_and_ids, file = file.path(here("data", "processed", "charite", "1_charite_dois_and_ids.RData")))
+save_cr(charite_dois_and_ids, file = file.path(here("data", "wrangling_steps", "charite", "1_charite_dois_and_ids.RData")))
+
+rm(cases_of_ids_2023,
+   cases_of_ids_until_2022,
+   charite_2020_2023,
+   charite_2020_2023_od_and_rest,
+   charite_2020_2023_od_and_rest_no_db,
+   dashboard_dois_dedup,
+   dois_to_exclude,
+   master_2020_2023) # clean up
 
 ```
 
@@ -266,14 +275,14 @@ pattern <- "(acc(?!ess)|accession|ccdcid|studyid|id|run|term|acc)\\=" # we build
 
 # Applying the function to clean accession numbers
 charite_dois_and_ids_clean <- charite_dois_and_ids |>
-  mutate(charite_data_id_or_acc_nr = map_chr(identifier, \(x) extract_acc_nr(x, pattern)))
+  mutate(charite_data_id_or_acc_nr = map_chr(data_identifier, \(x) extract_acc_nr(x, pattern)))
 
 # Save
 save_cr(charite_dois_and_ids_clean, file = file.path(here(
   "data",
   "wrangling_steps",
   "charite",
-  "2_charite_dois_and_ids_clean.RData")))
+  "2_charite_dois_and_ids_auto_cleaned.RData")))
 ```
 
 ```{r Load manual validation of accession numbers extraction}
@@ -289,7 +298,7 @@ save_cr(charite_dois_and_ids_clean, file = file.path(here(
 files <- list.files(file.path(here(
   "data",
   "results_verification",
-  "Manual validation of accession numbers extraction function for charite papers")),
+  "m_val")),
                     pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE)
 
 # Identify the latest file based on modification time
@@ -313,10 +322,9 @@ charite_dois_and_ids_clean_manually_validated <- manual_validation_done |>
   mutate(charite_data_id_or_acc_nr_merged = charite_data_id_or_acc_nr_merged |>
            str_remove_all("[/\\.]+$") # Remove all trailing slashes and dots (no further cleaning needed)
   ) |> 
-  dplyr::filter(!is.na(category)) |> # exclude non-categorized cases (for now)
   dplyr::filter(is.na(valid) | valid == "TRUE") |> # exclude non-valid cases
   mutate(charite_data_id_or_acc_nr_merged = case_when(
-    category == "url" ~ str_remove(charite_data_id_or_acc_nr_merged, "^//"),  # Remove "//" only if category is "url"
+    type == "url" ~ str_remove(charite_data_id_or_acc_nr_merged, "^//"),  # Remove "//" only if type is "url"
     .default = charite_data_id_or_acc_nr_merged))
 
 rm(latest_file_to_load) # clean up
