@@ -22,10 +22,10 @@ load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_4_au_inf
 
 # Assign the loaded object to a new variable name
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_6_ds_years_info.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_7_covid_info.RData"))
 
-dcc_charite_joined_final <- dcc_charite_joined_6_ds_years_info
-rm(dcc_charite_joined_6_ds_years_info)
+dcc_charite_joined_final <- dcc_charite_joined_7_covid_info
+rm(dcc_charite_joined_7_covid_info)
 
 ```
 
@@ -317,106 +317,114 @@ geom_text(
 #| fig-cap: Datasets Access, Repositories and Covid-relationship
 #| fig-format: png
 
-# restricted_info <- manual_validation_done |> 
-#   left_join(charite_dois_and_ids_with_access_info, by = "identifier") |> 
-#   dplyr::filter(charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_final$charite_data_id_or_acc_nr) |>
-#   select(charite_data_id_or_acc_nr_merged, data_access) |>
-#   distinct() |> 
-#   group_by(charite_data_id_or_acc_nr_merged) |> 
-#   dplyr::filter(!(is.na(data_access) & n() > 1)) |> 
-#   ungroup() |> 
-#   rename(charite_data_id_or_acc_nr = charite_data_id_or_acc_nr_merged)
-# 
-# dcc_charite_for_sankey <- dcc_charite_joined_final |> 
-#   select(charite_data_id_or_acc_nr, repository) |>
-#   distinct() |> 
-#   mutate(acc_nr_or_doi = case_when(str_starts(charite_data_id_or_acc_nr, "10.") ~ "DOI", .default = "Accession Number")) |> 
-#   left_join(restricted_info, by = "charite_data_id_or_acc_nr")
-# 
-# dcc_charite_for_sankey_dummy <- dcc_charite_for_sankey |> 
-#   mutate(covid_dummy = sample(c("TRUE", "FALSE"), n(), replace = TRUE))
-# 
-# # Create a function for verifying the links df structure, extracting its entities and finally plotting it:
-# 
-# plot_Sankey <- function(links_df, ...) {
-#   
-#   # 1. Verify that all necessary col names exist
-#   stopifnot(all(c("source", "target", "value") %in% names(links_df))) 
-#   
-#   # 2. Create data frame with unique values ("entities") from "source" and "target" cols
-#   nodes <- data.frame(
-#     name = c(as.character(links_df$source),
-#              as.character(links_df$target))  |> 
-#       unique() 
-#   )
-#   
-#   # 3. sankeyNetwork require indexing (0-based, hence the "-1") the nodes' source and target names:
-#   links_df$IDsource <- match(links_df$source, nodes$name) - 1
-#   links_df$IDtarget <- match(links_df$target, nodes$name) - 1
-#   
-#   # 4. Now we can insert all of our parameters into the sankeyNetwork arguments:
-#   sankeyNetwork(Links = links_df,
-#                 Nodes = nodes,
-#                 Source = "IDsource",
-#                 Target = "IDtarget",
-#                 Value = "value",
-#                 NodeID = "name",
-#                 ...)
-#   
-# }
-# 
-# # Create links data frame: accession number - data access - repository - covid
-# 
-# links_ac_access <- dcc_charite_for_sankey_dummy |>
-#   mutate(source = case_when(acc_nr_or_doi == "Accession Number" ~ "Accession Number",
-#                             .default = "DOI"),
-#          target = case_when(data_access == "yes" ~ "Full Access",
-#                             data_access == "restricted" ~ "Restricted Access",
-#                             .default = "No Access")) |>
-#   count(source, target) |>
-#   rename(value = n) |>
-#   as.data.frame()
-# 
-# links_access_rep <- dcc_charite_for_sankey_dummy |>
-#   mutate(source = case_when(data_access == "yes" ~ "Full Access",
-#                             data_access == "restricted" ~ "Restricted Access",
-#                             .default = "No Access"),
-#          target = case_when(
-#     repository == "NCBI dbGaP (DataBase of Genotypes And Phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
-#     repository == "figshare" ~ "Figshare",
-#     repository == "The European Genome-phenome Archive(EGA)" ~ "EGA",
-#     repository == "Gene Expression Omnibus (GEO)" ~ "GEO",
-#     repository == "PRIDE Proteomics Identification Database" ~ "PRIDE",
-#     repository == "NCBI Reference Sequence Database" ~ "NCBI RefSeq",
-#     repository == "European Nucleotide Archive" ~ "ENA",
-#     repository == "The Protein Data Bank" ~ "PDB",
-#     .default = repository # shorten rep names for a nicer appearance
-#   )) |>
-#   count(source, target) |>
-#   rename(value = n) |>
-#   as.data.frame()
-# 
-# links_rep_covid <- dcc_charite_for_sankey_dummy |>
-#   mutate(source = case_when(
-#     repository == "NCBI dbGaP (DataBase of Genotypes And Phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
-#     repository == "figshare" ~ "Figshare",
-#     repository == "The European Genome-phenome Archive(EGA)" ~ "EGA",
-#     repository == "Gene Expression Omnibus (GEO)" ~ "GEO",
-#     repository == "PRIDE Proteomics Identification Database" ~ "PRIDE",
-#     repository == "NCBI Reference Sequence Database" ~ "NCBI RefSeq",
-#     repository == "European Nucleotide Archive" ~ "ENA",
-#     repository == "The Protein Data Bank" ~ "PDB",
-#     .default = repository # shorten rep names for a nicer appearance
-#   ),
-#          target = case_when(covid_dummy == "TRUE" ~ "Covid Related",
-#                             .default = "Not Covid Related")) |>
-#   count(source, target) |>
-#   rename(value = n) |>
-#   as.data.frame()
-# 
-# links_all <- links_ac_access |> bind_rows(links_access_rep) |> bind_rows(links_rep_covid)
-# 
-# plot_Sankey(links_all, sinksRight = FALSE, fontSize = 16) # call the plotting function
+### temp from here! just to add data access info! delete after matching dcc and charite!
+
+temp_access_info <- charite_dois_and_ids_clean_manually_validated |> 
+  select(charite_data_id_or_acc_nr_merged, data_access) |> 
+  distinct()
+
+temp_final_with_access_info <- dcc_charite_joined_final |> 
+  left_join(temp_access_info,
+            by = c("charite_data_id_or_acc_nr" = "charite_data_id_or_acc_nr_merged"))
+  
+### end of temp! 
+
+# Prepare table for sankey:
+
+dcc_charite_for_sankey <- temp_final_with_access_info |>
+  select(charite_data_id_or_acc_nr, data_access, covid_related, repository) |>
+  distinct() |>
+  mutate(acc_nr_or_doi = case_when(str_starts(charite_data_id_or_acc_nr, "10.") ~ "DOI", .default = "Accession Number"))
+
+
+##### TO DO: add Blanka's datasets to the dcc_charite_for_sankey
+
+
+#####
+
+# Create a function for verifying the links df structure, extracting its entities and finally plotting it:
+
+plot_Sankey <- function(links_df, ...) {
+
+  # 1. Verify that all necessary col names exist
+  stopifnot(all(c("source", "target", "value") %in% names(links_df)))
+
+  # 2. Create data frame with unique values ("entities") from "source" and "target" cols
+  nodes <- data.frame(
+    name = c(as.character(links_df$source),
+             as.character(links_df$target))  |>
+      unique()
+  )
+
+  # 3. sankeyNetwork require indexing (0-based, hence the "-1") the nodes' source and target names:
+  links_df$IDsource <- match(links_df$source, nodes$name) - 1
+  links_df$IDtarget <- match(links_df$target, nodes$name) - 1
+
+  # 4. Now we can insert all of our parameters into the sankeyNetwork arguments:
+  sankeyNetwork(Links = links_df,
+                Nodes = nodes,
+                Source = "IDsource",
+                Target = "IDtarget",
+                Value = "value",
+                NodeID = "name",
+                ...)
+
+}
+
+# Create links data frame: accession number - data access - repository - covid
+
+links_ac_access <- dcc_charite_for_sankey |>
+  mutate(source = case_when(acc_nr_or_doi == "Accession Number" ~ "Accession Number",
+                            .default = "DOI"),
+         target = case_when(data_access == "yes" ~ "Full Access",
+                            data_access == "restricted" ~ "Restricted Access",
+                            .default = "access not checked yet")) |>
+  count(source, target) |>
+  rename(value = n) |>
+  as.data.frame()
+
+links_access_rep <- dcc_charite_for_sankey |>
+  mutate(source = case_when(data_access == "yes" ~ "Full Access",
+                            data_access == "restricted" ~ "Restricted Access",
+                            .default = "access not checked yet"),
+         target = case_when(
+    repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+    repository == "figshare" ~ "figshare",
+    repository == "the european genome-phenome archive(ega)" ~ "EGA",
+    repository == "gene expression omnibus (gwo)" ~ "GEO",
+    repository == "pride proteomics identification database" ~ "PRIDE",
+    repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+    repository == "european nucleotide archive" ~ "ENA",
+    repository == "the protein data bank" ~ "PDB",
+
+    .default = repository # shorten rep names for a nicer appearance
+  )) |>
+  count(source, target) |>
+  rename(value = n) |>
+  as.data.frame()
+
+links_rep_covid <- dcc_charite_for_sankey |>
+  mutate(source = case_when(
+    repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+    repository == "figshare" ~ "figshare",
+    repository == "the european genome-phenome archive(ega)" ~ "EGA",
+    repository == "gene expression omnibus (gwo)" ~ "GEO",
+    repository == "pride proteomics identification database" ~ "PRIDE",
+    repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+    repository == "european nucleotide archive" ~ "ENA",
+    repository == "the protein data bank" ~ "PDB",
+    .default = repository # shorten rep names for a nicer appearance
+  ),
+         target = case_when(covid_related == 1 ~ "Covid Related",
+                            covid_related == 0 ~ "Not Covid Related",
+                            .default = "covid not checked yet")) |>
+  count(source, target) |>
+  rename(value = n) |>
+  as.data.frame()
+
+links_all <- links_ac_access |> bind_rows(links_access_rep) |> bind_rows(links_rep_covid)
+
+plot_Sankey(links_all, sinksRight = FALSE, fontSize = 16) # call the plotting function
 ```
 
 # Datasets and Citing Papers Publication Years

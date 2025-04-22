@@ -623,3 +623,25 @@ datatable(
 # save_cr(dcc_doi_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_doi_distinct.RData")))
 # save_cr(dcc_id_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData")))
 ```
+
+
+```{r add covid related label}
+
+covid_info <- read.csv(
+  file.path(here("data",
+                 "results_verification",
+                 "distinct_id_list - covid or not.csv")),
+  header = TRUE) |> 
+  as_tibble() |> 
+  rename(covid_related = 2) |> 
+  select(1:2)
+
+
+dcc_charite_joined_7_covid_info <- dcc_charite_joined_6_ds_years_info |> 
+  left_join(covid_info, by = "charite_data_id_or_acc_nr")
+
+# Save
+save_cr(dcc_charite_joined_7_covid_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                             "dcc_charite_joined_7_covid_info.RData")))
+
+```
