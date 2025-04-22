@@ -81,9 +81,9 @@ After the initial inspection, the Charite lists were wrangled and cleaned furthe
 
 3.  Removed **NAs and duplicates**.
 
-4. Verified that all dois are indeed **Charite** dois.
+4.  Verified that all dois are indeed **Charite** dois.
 
-5. Merging into one Charite list.
+5.  Merging into one Charite list.
 
 <br>
 
@@ -92,20 +92,17 @@ After the initial inspection, the Charite lists were wrangled and cleaned furthe
 # 1. Wrangling the Charite list
 
 charite_2020_2023 <- master_2020_2023 |>
-  # "tolower" and replace + with /
-  mutate(doi = gsub("\\+", "/", doi)) |>
+  # tolower
   mutate(doi = tolower(doi)) |>
   # replace "na" with true NA
   mutate(doi = na_if(doi, "na")) |> 
-  # dplyr::filter out cases where both doi and article are NA
-  dplyr::filter(!(is.na(doi))) |> 
-  # remove ".txt" from strings
-  mutate(doi = str_remove(doi, fixed(".txt")))
+  # dplyr::filter out cases where doi is NA
+  dplyr::filter(!(is.na(doi)))
 
 # 2. Explore which cases to include (2020-2022)
 
 cases_of_ids_until_2022 <- charite_2020_2023 |>
-  dplyr::filter(year != 2023) |> 
+  dplyr::filter(year %in% 2020:2022) |> 
   group_by(open_data_assessment, own_or_reuse_data, data_access) |>
   summarise(n = n()) |>
   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
@@ -134,18 +131,31 @@ write_csv_cr(cases_of_ids_2023, file = file.path(here("data","results_verificati
 charite_2020_2023_od_and_rest <- charite_2020_2023 |>
   dplyr::filter(
     # open / restricted by 2020-2022 criteria
-    (year %in% 2020:2022 &
-     open_data_assessment == "open_data" &
-     own_or_reuse_data %in% c("own_open_data", "unsure") &
-     data_access %in% c("yes", "unsure")) |
-
-    # open / restricted by 2023 criteria
-    (year == 2023 &
-     data_access == "restricted" &
-     own_or_reuse_data %in% c("unsure", "own_open_data", "NULL") &
-     open_data_assessment == "NULL" &
-     restricted_authorship == "own_restricted")
-  )
+    (year %in% 2020:2022
+     & open_data_assessment == "open_data"
+     & own_or_reuse_data %in% c("own_open_data", "unsure")
+     & data_access %in% c("yes", "unsure"))
+    
+    |
+      (year %in% 2020:2022
+       & open_data_assessment == "NULL"
+       & own_or_reuse_data %in% c("own_open_data", "unsure", "NULL")
+       & data_access =="restricted")
+  
+    |
+      # open / restricted by 2023 criteria
+      (year == 2023
+       & open_data_assessment == "open_data"
+       & own_or_reuse_data == "own_open_data"
+       & data_access %in% c("yes", "unsure"))
+    
+    |
+      (year == 2023
+       & open_data_assessment == "NULL"
+       & own_or_reuse_data == "NULL"
+       & data_access == "restricted"
+       & restricted_authorship == "own_restricted")
+    )
 
 # 5. Filter out dois that are not in the Charite dashboard
 
