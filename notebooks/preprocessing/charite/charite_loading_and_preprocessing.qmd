@@ -304,28 +304,30 @@ files <- list.files(file.path(here(
 # Identify the latest file based on modification time
 latest_file_name <- files[which.max(file.info(files)$mtime)]
 
-# Load the file into the global environment
-latest_file_to_load <- read_csv(latest_file_name)
-
-# Assign the loaded object to a new variable name
-manual_validation_done <- latest_file_to_load
+# Load the file into the global environment and assign it to a variable
+manual_validation_done <- read_csv(latest_file_name)
 
 # 2. Wrangle to show validation process
 
-# Group cases
-manually_validated_summary <- manual_validation_done |> 
-  group_by(type, comments) |> 
-  summarise(n = n())
+# # Group cases
+# manually_validated_summary <- manual_validation_done |> 
+#   group_by(type, comments) |> 
+#   summarise(n = n())
 
 # Get relevant cases for matching
 charite_dois_and_ids_clean_manually_validated <- manual_validation_done |> 
+  # Remove all trailing slashes and dots (no further cleaning needed)
   mutate(charite_data_id_or_acc_nr_merged = charite_data_id_or_acc_nr_merged |>
-           str_remove_all("[/\\.]+$") # Remove all trailing slashes and dots (no further cleaning needed)
+           str_remove_all("[/\\.]+$")
   ) |> 
-  dplyr::filter(is.na(valid) | valid == "TRUE") |> # exclude non-valid cases
+  # exclude non-valid cases
+  dplyr::filter(is.na(valid) | valid == "TRUE") |>
+  # Remove "//" only if type is "url"
   mutate(charite_data_id_or_acc_nr_merged = case_when(
-    type == "url" ~ str_remove(charite_data_id_or_acc_nr_merged, "^//"),  # Remove "//" only if type is "url"
-    .default = charite_data_id_or_acc_nr_merged))
+    type == "url" ~ str_remove(charite_data_id_or_acc_nr_merged, "^//"),
+    .default = charite_data_id_or_acc_nr_merged)) |> 
+  # Remove any "clinvar" identifiers, as they are not datasets, but rather databases
+  dplyr::filter(!str_detect(data_identifier, "clinvar")) 
 
 rm(latest_file_to_load) # clean up
 ```
@@ -342,23 +344,23 @@ save_cr(charite_dois_and_ids_clean_manually_validated, file = file.path(here(
 
 ```{r manual validation process table}
 
-# Get counts for manual validation process
-
-manually_validated_for_table <- manually_validated_summary |> 
- mutate(category = case_when(
-    is.na(type) & is.na(comments) ~ "Extracted automatically using prefixes",
-    type == "acc_nr" & is.na(comments) ~ "Validated as extracted correctly",
-    comments == "manually corrected" ~ "Manually corrected",
-    comments == "no identifier" ~ "No identifier"
-  )) |>
-  group_by(category) |>
-  summarise(`Number of Cases` = sum(n, na.rm = TRUE), .groups = "drop") |>
-  arrange(match(category, c(
-    "Extracted automatically using prefixes",
-    "No prefixes; Validated as extracted correctly",
-    "Manually corrected following the automatic extraction",
-    "No identifier"
-  ))) |>
-  select(`Number of Cases`, Comments = category)
+# # Get counts for manual validation process
+# 
+# manually_validated_for_table <- manually_validated_summary |> 
+#  mutate(category = case_when(
+#     is.na(type) & is.na(comments) ~ "Extracted automatically using prefixes",
+#     type == "acc_nr" & is.na(comments) ~ "Validated as extracted correctly",
+#     comments == "manually corrected" ~ "Manually corrected",
+#     comments == "no identifier" ~ "No identifier"
+#   )) |>
+#   group_by(category) |>
+#   summarise(`Number of Cases` = sum(n, na.rm = TRUE), .groups = "drop") |>
+#   arrange(match(category, c(
+#     "Extracted automatically using prefixes",
+#     "No prefixes; Validated as extracted correctly",
+#     "Manually corrected following the automatic extraction",
+#     "No identifier"
+#   ))) |>
+#   select(`Number of Cases`, Comments = category)
 
 ```
