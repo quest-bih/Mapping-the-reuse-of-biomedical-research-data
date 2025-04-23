@@ -421,10 +421,10 @@ DCC_corpus_3_rm_prefix <- DCC_corpus_2_renamed_clean |>
     .default = data_id_or_acc_nr
   ))
 
-DCC_corpus_3_rm_prefix |>
-  dplyr::filter(str_detect(data_id_or_acc_nr, "10\\.")
-                & !str_starts(data_id_or_acc_nr, "10\\.")) |>
-  View()
+# DCC_corpus_3_rm_prefix |>
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "10\\.")
+#                 & !str_starts(data_id_or_acc_nr, "10\\.")) |>
+#   View()
 
 # Save 3rd wrangling step
 save_cr(DCC_corpus_3_rm_prefix, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_3_rm_prefix.RData")))
@@ -513,7 +513,7 @@ save_cr(figshare_not_std, file = file.path(here("data", "inputs_for_quick_render
 
 # # Exploring & standardizing the general repositories values (dryad): std to: 10.5061/dryad/xxxxx
 
-DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "dryad")) |> View() # not standardized in DCC
+# DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "dryad")) |> View() # not standardized in DCC
 
 # Standardize identifiers that have "10.5061/dryad." in them but don't start with "10.5061/dryad."
 DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |>
@@ -858,41 +858,41 @@ The table below shows a sample of the general repositories identifiers before th
 
 ```{r nonstandardized general repositories table}
 
-# Prepare table
-
-sample_gen_rep <- zenodo_tibble_sampled |> 
-  select(data_id_or_acc_nr) |> 
-  sample_n(1) |> 
-  bind_rows(
-    figshare_tibble_sampled |>
-      select(data_id_or_acc_nr) |>
-      sample_n(1)
-    ) |> 
-    bind_rows(
-    dryad_tibble_sampled |>
-      select(data_id_or_acc_nr) |>
-      sample_n(1)
-    ) |>
-    bind_rows(
-    osf_tibble_sampled |>
-      select(data_id_or_acc_nr) |>
-      sample_n(1)
-    )
-
-# Render table
-
-datatable(
-  sample_gen_rep,
-  options = list(
-    pageLength = -1,
-    scrollY = "200px",
-    scrollX = TRUE,
-    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
-    dom = 'Bfrtip',
-    buttons = c('csv')
-    ),
-  extensions = 'Buttons'
-  )
+# # Prepare table
+# 
+# sample_gen_rep <- zenodo_tibble_sampled |> 
+#   select(data_id_or_acc_nr) |> 
+#   sample_n(1) |> 
+#   bind_rows(
+#     figshare_tibble_sampled |>
+#       select(data_id_or_acc_nr) |>
+#       sample_n(1)
+#     ) |> 
+#     bind_rows(
+#     dryad_tibble_sampled |>
+#       select(data_id_or_acc_nr) |>
+#       sample_n(1)
+#     ) |>
+#     bind_rows(
+#     osf_tibble_sampled |>
+#       select(data_id_or_acc_nr) |>
+#       sample_n(1)
+#     )
+# 
+# # Render table
+# 
+# datatable(
+#   sample_gen_rep,
+#   options = list(
+#     pageLength = -1,
+#     scrollY = "200px",
+#     scrollX = TRUE,
+#     lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
+#     dom = 'Bfrtip',
+#     buttons = c('csv')
+#     ),
+#   extensions = 'Buttons'
+#   )
 ```
 
 <br>

@@ -111,36 +111,37 @@ process_dataframe <- function(df) {
     select(doi, publication_year, authors)
 }
 
-# # For DCC:
-# 
-# # List of dataframes
-# 
-# df1 <- df |> slice(1:150)
-# df2 <- df |> slice(151:300)
-# df3 <- df |> slice(301:450)
-# df4 <- df |> slice(451:600)
-# df5 <- df |> slice(601:750)
-# df6 <- df |> slice(751:900)
-# df7 <- df |> slice(901:1050)
-# df8 <- df |> slice(1051:1200)
-# df8_1 <- df8 |> slice(-49)
-# df9 <- df |> slice(1201:1322)
-# 
-# dfs <- list(df1, df2, df3, df4, df5, df6, df7, df8_1, df9)
-# 
-# # Apply function to each dataframe and bind results together
-# final_results <- map_dfr(dfs, process_dataframe)
-# 
-# # Save
-# save_path <- file.path(here("data",
-#                             "results_verification", 
-#                             "meta data for dcc-charite list", 
-#                             "dois info", 
-#                             "dcc_dois_metadata.RData"))
-# 
-# save(final_results, file = save_path)
 
-# For Charite:
+# DCC ---------------------------------------------------------------------
+
+# List of dataframes
+
+df1 <- df |> slice(1:150)
+df2 <- df |> slice(151:300)
+df3 <- df |> slice(301:450)
+df4 <- df |> slice(451:600)
+df5 <- df |> slice(601:750)
+df6 <- df |> slice(751:900)
+df7 <- df |> slice(901:1050)
+df8 <- df |> slice(1051:1200)
+df8_1 <- df8 |> slice(-49)
+df9 <- df |> slice(1201:1322)
+
+dfs <- list(df1, df2, df3, df4, df5, df6, df7, df8_1, df9)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "results_verification",
+                            "meta data for dcc-charite list",
+                            "dois info",
+                            "dcc_dois_metadata.RData"))
+
+save(final_results, file = save_path)
+
+# Charite -----------------------------------------------------------------
 
 # List of dataframes
 
@@ -155,5 +156,23 @@ save_path <- file.path(here("data",
                             "meta data for dcc-charite list",
                             "dois info",
                             "charite_dois_metadata.RData"))
+
+save(final_results, file = save_path)
+
+
+
+# Data Articles -----------------------------------------------------------
+
+
+dfs <- list(df)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "results_verification",
+                            "data_articles",
+                            "data_articles_metadata.RData"))
 
 save(final_results, file = save_path)
