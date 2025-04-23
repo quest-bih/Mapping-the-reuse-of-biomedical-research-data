@@ -624,7 +624,6 @@ datatable(
 # save_cr(dcc_id_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData")))
 ```
 
-
 ```{r add covid related label}
 
 covid_info <- read.csv(

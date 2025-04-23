@@ -8,7 +8,8 @@ pacman::p_load(tidyverse,
 selected_file <- tclvalue(tkgetOpenFile(title = "Please select a CSV file a \"doi\" column"))
 
 # Load the selected file into a data frame
-df <- read.csv(selected_file)
+df <- read.csv(selected_file) |> 
+  rename(doi = 1) # rename column to doi if necessary 
 
 # Function to extract OpenAlex metadata
 openalex_extract <- function(df) {
@@ -163,6 +164,7 @@ save(final_results, file = save_path)
 
 # Data Articles -----------------------------------------------------------
 
+# Charite's DOIs
 
 dfs <- list(df)
 
@@ -172,7 +174,22 @@ final_results <- map_dfr(dfs, process_dataframe)
 # Save
 save_path <- file.path(here("data",
                             "results_verification",
-                            "data_articles",
-                            "data_articles_metadata.RData"))
+                            "meta data for data articles dois",
+                            "data_articles_charite_metadata.RData"))
+
+save(final_results, file = save_path)
+
+# Reusing Papers
+
+dfs <- list(df)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "results_verification",
+                            "meta data for data articles dois",
+                            "data_articles_reusing_metadata.RData"))
 
 save(final_results, file = save_path)
