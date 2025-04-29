@@ -1,0 +1,7 @@
+Standardization notes:
+
+URLs start with //
+osf structure: //osf.io/xxxxx
+
+
+DOIs structure: 10.xxxxx

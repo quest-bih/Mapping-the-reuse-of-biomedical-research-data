@@ -18,13 +18,17 @@ pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3)
 
 load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_4_au_info.RData"))
 
+# Load _5 for counting without author overlap:
+
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_5_rm_au_ov.RData"))
+
 # Load the most recent .RData file from the data\processed directory and assign it to "dcc_charite_joined_final"
 
 # Assign the loaded object to a new variable name
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_7_covid_info.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_5_rm_au_ov.RData"))
 
-dcc_charite_joined_final <- dcc_charite_joined_7_covid_info
+dcc_charite_joined_final <- dcc_charite_joined_5_rm_au_ov
 rm(dcc_charite_joined_7_covid_info)
 
 ```
@@ -55,9 +59,9 @@ rm(dcc_charite_joined_7_covid_info)
 # 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)
 
 counts_final <- tibble(
-  `Citing papers` = dcc_charite_joined_final |> select(doi_dcc) |> distinct() |> nrow(),
-  `Cited papers` = dcc_charite_joined_final |> select(doi_charite) |> distinct() |> nrow(),
-  `Datasets` = dcc_charite_joined_final |> select(charite_data_id_or_acc_nr) |> distinct() |> nrow()
+  `Mentioning Articles` = dcc_charite_joined_final |> select(doi_dcc) |> distinct() |> nrow(),
+  `Charité Articles` = dcc_charite_joined_final |> select(doi_charite) |> distinct() |> nrow(),
+  `Mentioned Datasets` = dcc_charite_joined_final |> select(charite_data_id_or_acc_nr) |> distinct() |> nrow()
 )
 
 # 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
@@ -127,9 +131,9 @@ dcc_charite_joined_w_au_ov <- dcc_charite_joined_4_au_info |>
 # Get counts
 
 counts_w_au_ov <- tibble(
-  `Citing papers` = dcc_charite_joined_w_au_ov |> select(doi_dcc) |> distinct() |> nrow(),
-  `Cited papers` = dcc_charite_joined_w_au_ov |> select(doi_charite) |> distinct() |> nrow(),
-  `Datasets` = dcc_charite_joined_w_au_ov |> select(charite_data_id_or_acc_nr) |> distinct() |> nrow()
+  `Mentioning Articles` = dcc_charite_joined_w_au_ov |> select(doi_dcc) |> distinct() |> nrow(),
+  `Charité Articles` = dcc_charite_joined_w_au_ov |> select(doi_charite) |> distinct() |> nrow(),
+  `Mentioned Datasets` = dcc_charite_joined_w_au_ov |> select(charite_data_id_or_acc_nr) |> distinct() |> nrow()
 )
 
 # Prepare count tibbles (with and without author overlap cases) for plotting
@@ -137,7 +141,7 @@ counts_w_au_ov <- tibble(
 combined_count_tibbles <- counts_final |>
   bind_rows(counts_w_au_ov,
             .id = "tibble_source") |>
-  select(-`Cited papers`) |> 
+  select(-`Charité Articles`) |> 
   mutate(tibble_source = recode(tibble_source,
                                 "1" = "No Author Overlap",
                                 "2" = "Inc. Author Overlap")) |> 
@@ -156,17 +160,21 @@ combined_count_tibbles |>
            alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +  # Shadow
   geom_text(aes(label = value), 
             vjust = -0.5,  # Adjust text position above the bars
-            size = 4, 
+            size = 8, 
             color = "black") + # Text color
   facet_wrap(~variable, scales = "free") +
   scale_fill_manual(values = c(
-    "Citing papers" = "#80CBC4",  # Custom color for variable1
-    "Datasets" = "#C1E8E1"  # Custom color for variable2
+    "Mentioning Articles" = "#80CBC4",  # Custom color for variable1
+    "Mentioned Datasets" = "#C1E8E1"  # Custom color for variable2
   )) +
   theme_classic() +  # Use classic theme
   theme(axis.title.x = element_blank(),
         legend.position = "none",
-        panel.spacing = unit(5, "lines")) + # Remove x-axis title
+        panel.spacing = unit(5, "lines"),
+        axis.text.x = element_text(size = 16),
+        axis.text.y = element_text(size = 16),
+        strip.text = element_text(size = 20),
+        axis.title.y = element_text(size = 18)) +
   labs(
     y = "Count")
 ```
@@ -199,10 +207,13 @@ dcc_charite_joined_final |>
     labels = c(1, 3, 10, 40, 100)   # Labels for x-axis
   ) +
   labs(
-    x = "Number of Citations (log scale)",
-    y = "Number of Data Identifiers (log scale)"
+    x = "Number of mentions (log scale)",
+    y = "Number of Datasets (log scale)"
   ) +
-  theme_classic()
+  theme_classic() +
+    theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14))
 
 ```
 
@@ -247,8 +258,13 @@ geom_text(aes(y = n + 2, label = n),
             size = 5, color = "black") + # text next to bars
   scale_y_continuous(expand = expansion(mult = c(0.15, 0.15))) + # Adds 5% padding on both sides of the y-axis
   coord_flip() +
-  labs(x = "Repository", y = "Number of Citing Papers") +
-  theme_classic()
+  labs(x = "Repository", y = "Number of Mentions") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18))
 
 ```
 
@@ -295,18 +311,15 @@ geom_text(
     fill = "Accession Number"
   ) +
   scale_fill_manual(values = c("#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
-  theme_classic() #+
-  # theme(
-  #   axis.text = element_text(size = 20, color = "black"),                
-  #   axis.title = element_text(size = 26, face = "bold"),
-  #   axis.title.x = element_text(margin = margin(t = 40)), 
-  #   axis.title.y = element_text(margin = margin(r = 40)),
-  #   legend.text = element_text(size = 24),
-  #   legend.title = element_text(size = 26, face = "bold", margin = margin(b = 20)),
-  #   legend.key.height = unit(40, "pt")
-  #   )
-
-
+  theme_classic() +
+   theme(
+     axis.text = element_text(size = 20, color = "black"),
+     axis.title = element_text(size = 26, face = "bold"),
+     axis.title.x = element_text(margin = margin(t = 40)),
+     axis.title.y = element_text(margin = margin(r = 40)),
+     legend.text = element_text(size = 24),
+     legend.title = element_text(size = 26, face = "bold", margin = margin(b = 20)),
+     legend.key.height = unit(40, "pt"))
 ```
 
 # Datasets Access, Repositories and Covid-relationship
