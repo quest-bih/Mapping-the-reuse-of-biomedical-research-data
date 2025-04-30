@@ -12,7 +12,7 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets)
 
 # Load _4 for counting with author overlap:
 
@@ -26,10 +26,10 @@ load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_5_rm_au_
 
 # Assign the loaded object to a new variable name
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_5_rm_au_ov.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_6_covid_info.RData"))
 
-dcc_charite_joined_final <- dcc_charite_joined_5_rm_au_ov
-rm(dcc_charite_joined_7_covid_info)
+dcc_charite_joined_final <- dcc_charite_joined_6_covid_info
+rm(dcc_charite_joined_6_covid_info)
 
 ```
 
@@ -447,37 +447,18 @@ geom_text(
 # Datasets Access, Repositories and Covid-relationship - rep are in gray
 
 ```{r Datasets Access, Repositories and Covid-relationship gray rep, echo=FALSE}
-# 
-# #| label: fig-datasets-properties-gray
-# #| fig-cap: Datasets Access, Repositories and Covid-relationship gray
-# #| fig-format: png
-# 
-# ### temp from here! just to add data access info! delete after matching dcc and charite!
-# load(here("data", "processed", "charite", "charite_dois_and_ids_clean_manually_validated.RData"))
-# 
-# 
-# temp_access_info <- charite_dois_and_ids_clean_manually_validated |> 
-#   select(charite_data_id_or_acc_nr_merged, data_access) |> 
-#   distinct()
-# 
-# temp_final_with_access_info <- dcc_charite_joined_final |> 
-#   left_join(temp_access_info,
-#             by = c("charite_data_id_or_acc_nr" = "charite_data_id_or_acc_nr_merged"))
-#   
-# ### end of temp! 
-# 
+
+#| label: fig-datasets-properties-gray
+#| fig-cap: Datasets Access, Repositories and Covid-relationship gray
+#| fig-format: png
+
 # # Prepare table for sankey:
 # 
-# dcc_charite_for_sankey <- temp_final_with_access_info |>
+# dcc_charite_for_sankey <- dcc_charite_joined_final |>
 #   select(charite_data_id_or_acc_nr, data_access, covid_related, repository) |>
 #   distinct() |>
 #   mutate(acc_nr_or_doi = case_when(str_starts(charite_data_id_or_acc_nr, "10.") ~ "DOI", .default = "Accession Number"))
 # 
-# 
-# ##### TO DO: add Blanka's datasets to the dcc_charite_for_sankey
-# 
-# 
-# #####
 # 
 # # Create a function for verifying the links df structure, extracting its entities and finally plotting it:
 # 
@@ -520,7 +501,7 @@ geom_text(
 #   "covid not checked yet" = "#c49c94"
 # )
 # 
-#   
+# 
 #   # 4. Add indexing columns to links
 #   links_df$IDsource <- match(links_df$source, nodes$name) - 1
 #   links_df$IDtarget <- match(links_df$target, nodes$name) - 1
@@ -603,7 +584,13 @@ geom_text(
 # links_all <- bind_rows(links_ac_access, links_access_rep, links_rep_covid)
 # 
 # # Plot
-# plot_Sankey(links_all, sinksRight = FALSE, fontSize = 16)
+# plot_Sankey(links_all, sinksRight = FALSE, fontSize = 26)
+# 
+# s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 20)
+# 
+# saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sankey_interactive_plot.html"), selfcontained = TRUE)
+
+
 ```
 
 # Datasets and Citing Papers Publication Years

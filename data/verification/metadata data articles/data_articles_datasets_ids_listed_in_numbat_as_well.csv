@@ -1,0 +1,36 @@
+﻿charite_doi,identifier_from_data_article_analysis,listed_in_numbat_output,Comments,repository,year of dataset publication,license,open or restricted,covid_related,human_data,
+10.1038/s41597-019-0129-z,10.18112/openneuro.ds001875.v1.0.3,FALSE,,OpenNEURO,2019,CC0,open,0,0,
+10.1038/s41597-019-0129-z,https://doi.org/10.5281/zenodo.1471588,FALSE,,Zenodo,2018,CC-BY,open,0,0,
+10.1038/s41597-019-0161-z,srp136594,FALSE,,Sequence Read Archive,2019,none,open,0,0,
+10.1038/s41597-019-0161-z,srma00000000,FALSE,,NCBI Nucleotide,2019,none,open,0,0,
+10.1038/s41597-019-0161-z,ghnv00000000,FALSE,,GenBank,2019,none,open,0,0,
+10.1038/s41597-019-0161-z,10.6084/m9.figshare.c.4437488,FALSE,,Figshare,2019,CC0,open,0,0,
+10.1038/s41597-019-0254-8,10.5061/dryad.119f80q,FALSE,,Dryad,2019,CC0,open,0,1,
+10.1038/s41597-019-0254-8,10.18112/openneuro.ds002179.v1.1.0,FALSE,,OpenNEURO,2019,CC0,open,0,1,
+10.1038/s41597-020-00597-w,10.6084/m9.figshare.c.4869732,TRUE,,Figshare,2020,CC0,open,0,1,
+10.1038/s41597-020-00597-w,http://www.vocaltractlab.de/dvtd.zip,FALSE,,n/a,2020,none,open,0,1,not a repository
+10.1038/s41597-020-00773-y,https://zenodo.org/records/4059716,FALSE,,Zenodo,2020,CC-BY,open,1,1,
+10.1038/s41597-020-0487-6,pxd016782,TRUE,,Proteomics Identification Database (PRIDE),2020,CC0,open,0,1,
+10.1038/s41597-020-0487-6,10.17632/nr7cs764rc.1,FALSE,,Mendeley,2020,CC-BY,open,0,1,
+10.1038/s41597-020-0495-6,https://physionet.org/content/ptb-xl/1.0.3/,FALSE,,PhysioNet,2020,CC-BY,open,0,1,
+10.1016/j.dib.2021.107011,10.17632/fzcmhhjs76.3,TRUE,,Mendeley,2020,CC-BY,open,0,1,
+10.1016/j.dib.2021.107320,gse173610,TRUE,,Gene Expression Omnibus,2021,none,open,0,1,
+10.1016/j.dib.2021.107604,10.17632/mtd59df24s.2,TRUE,,Mendeley,2020,CC-BY,open,1,1,
+10.1038/s41597-021-00913-y,https://doi.org/10.6084/m9.figshare.c.5222051,FALSE,,Figshare,2021,CC-BY,open,0,0,
+10.1016/j.dib.2022.108347,10.17632/wrhr5862cb.1,TRUE,https://doi.org/10.17632/wrhr5862cb.4,Mendeley,2022,CC-BY,open,0,1,
+10.1016/j.dib.2022.108399,10.17605/osf.io/d34y5,TRUE,,OSF,2021,CC-BY,open,0,1,
+10.1016/j.dib.2022.108542,https://github.com/emilywavery/radiomics-data-sharing,FALSE,,GitHub,2022,AGPL-3.0 license ,open,0,1,Github does not count as open data
+10.1016/j.dib.2022.108649,10.17632/vfpxcbk5bx.4,TRUE,in master file: https://data.mendeley.com/datasets/vfpxcbk5bx,Mendeley,2022,CC-BY,open,0,1,
+10.1016/j.dib.2022.108739,10.5281/zenodo.6481140,FALSE,,Zenodo,2022,none,open,0,1,
+10.1038/s41597-022-01401-7,10.3886/icpsr36684.v4,FALSE,,ICPSR,2017,bespoke data use agreement,restricted,0,1,
+10.1038/s41597-022-01401-7,https://github.com/npnl/atlas/,FALSE,,GitHub,2021,none,open,0,1,
+10.1038/s41597-022-01532-x,10.6019/chembl4495565,TRUE,,ChEMBL,undetermined,none,open,1,1,
+10.1038/s41597-022-01532-x,https://doi.org/10.6084/m9.figshare.19316219.v1,FALSE,,Figshare,2022,CC-BY,open,1,1,another figshare dataset listed in Numbat
+10.1038/s41597-022-01532-x,https://doi.org/10.6084/m9.figshare.19298807.v2,TRUE,,Figshare,2022,CC-BY,open,1,1,
+10.1038/s41597-022-01532-x,https://doi.org/10.6084/m9.figshare.19255067.v3,FALSE,,Figshare,2022,CC-BY,open,1,1,another figshare dataset listed in Numbat
+10.1038/s41597-022-01669-9,https://napkon.de/,FALSE,,NAPKON,no dataset to be downloaded,n/a,restricted,1,1,
+10.1038/s41597-022-01669-9,10.5281/zenodo.6576176,FALSE,,Zenodo,2022,CC-BY,open,1,1,
+10.1038/s41597-022-01806-4,https://openneuro.org/datasets/ds001226,TRUE,"https://doi.org/10.18112/openneuro.ds001226.v5.0.0""",OpenNEURO,2018,CC0,open,0,1,
+10.1038/s41597-022-01806-4,https://openneuro.org/datasets/ds002080,FALSE,,OpenNEURO,2019,CC0,open,0,1,another OpenNeuro dataset listed in Numbat
+10.1038/s41597-022-01822-4,10.17605/osf.io/8mbru,TRUE,,OSF,2017,CC0,open,0,1,
+10.1038/s41597-022-01822-4,https://alteredstatesdb.org/,FALSE,,n/a,no dataset to be downloaded,none,n/a,n/a,n/a,no dataset deposited; dataset is on OSF

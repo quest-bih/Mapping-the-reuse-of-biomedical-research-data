@@ -61,6 +61,8 @@ load(here("data",
 charite_dois_and_ids_clean_manually_validated <- charite_dois_and_ids_clean_manually_validated |>
   dplyr::filter(charite_data_id_or_acc_nr_merged != "phs000424")
 
+### Load data articles...###
+
 # Join
 dcc_charite_joined <- charite_dois_and_ids_clean_manually_validated |>
   inner_join(DCC_corpus_9_nm_v_rm, by = c("charite_data_id_or_acc_nr_merged" = "data_id_or_acc_nr"),
@@ -208,7 +210,7 @@ charite_dois_for_au_and_year_info <- dcc_charite_joined_3_dist |>
 write_csv_cr(
   charite_dois_for_au_and_year_info,
   file = here("data",
-               "results_verification",
+               "verification",
                "meta data for dcc-charite list",
                "dois to get info of",
                "charite_dois_for_au_and_year_info_29042025.csv"),
@@ -224,7 +226,7 @@ dcc_dois_for_au_and_year_info <- dcc_charite_joined_3_dist |>
 write_csv_cr(
   dcc_dois_for_au_and_year_info,
   file = here("data",
-               "results_verification",
+               "verification",
                "meta data for dcc-charite list",
                "dois to get info of",
                "dcc_dois_for_au_and_year_info_29042025.csv"),
@@ -235,7 +237,7 @@ write_csv_cr(
 # Get authors and years info:
 
 load(here("data",
-          "results_verification",
+          "verification",
           "meta data for dcc-charite list",
           "dois_info",
           "charite_dois_metadata_29042025.RData")) # load charite
@@ -243,7 +245,7 @@ load(here("data",
 charite_dois_metadata <- final_results # assign
 
 load(here("data",
-          "results_verification",
+          "verification",
           "meta data for dcc-charite list",
           "dois_info",
           "dcc_dois_metadata_29042025.RData")) # load dcc
@@ -298,7 +300,7 @@ dcc_dois_to_complete_metadata_2nd_round <- dcc_charite_joined_4_au_info |>
 # save
 write_csv_cr(dcc_dois_to_complete_metadata_2nd_round,
         file = file.path(here("data",
-                              "results_verification",
+                              "verification",
                               "meta data for dcc-charite list",
                               "dois to get info of",
                               "dcc_dois_to_complete_metadata_2nd_round.RData")))
@@ -307,7 +309,7 @@ write_csv_cr(dcc_dois_to_complete_metadata_2nd_round,
 write_csv_cr(
   dcc_dois_to_complete_metadata_2nd_round,
   file = here("data",
-              "results_verification",
+              "verification",
               "meta data for dcc-charite list",
               "dois to get info of",
               "dcc_dois_to_complete_metadata_2nd_round.csv"),
@@ -318,7 +320,7 @@ write_csv_cr(
 # now I can get author info for dcc (2nd round):
 
 load(here("data",
-          "results_verification",
+          "verification",
           "meta data for dcc-charite list",
           "dois_info",
           "dcc_dois_metadata_29042025_2nd_round.RData")) # load dcc
@@ -404,13 +406,59 @@ dcc_charite_joined_5_rm_au_ov[dcc_charite_joined_5_rm_au_ov$repository == "", "r
 save_cr(dcc_charite_joined_5_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                         "dcc_charite_joined_5_rm_au_ov.RData")))
 
-# 3. Add publication years of data sets
+```
+
+# adding covid-related info
+
+```{r add covid related label}
+
+# load info of matched datasets from Numbat
+
+covid_info_numbat <- read.csv(
+  file.path(here("data",
+                 "verification",
+                 "covid",
+                 "distinct_id_list - covid or not.csv")),
+  header = TRUE) |> 
+  as_tibble() |> 
+  rename(covid_related = 2) |> 
+  select(1:2)
+
+# Join into _joined
+
+dcc_charite_joined_6_covid_info <- dcc_charite_joined_5_rm_au_ov |> 
+  left_join(covid_info_numbat, by = "charite_data_id_or_acc_nr")
+
+# Save
+save_cr(dcc_charite_joined_6_covid_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                             "dcc_charite_joined_6_covid_info.RData")))
+
+
+# # for data articles analysis later: load info of matched datasets from data articles list (all metadata)
+# 
+# metadata_da <- read.csv(
+#   file.path(here("data",
+#                  "verification",
+#                  "metadata data articles",
+#                  "data_articles_datasets_ids_listed_in_numbat_as_well.csv")),
+#   header = TRUE) |> 
+#   as_tibble()
+# 
+# dcc_charite_joined_6_covid_info <- dcc_charite_joined_5_rm_au_ov |> 
+#   left_join(covid_info, by = "charite_data_id_or_acc_nr")
+
+
+```
+
+# Adding publication years of data sets
+
+```{r}
 
 # Load current information about data sets publication years (from previous analysis)
 
 previous_ds_years_info <- read.csv(
   file.path(here("data",
-                 "results_verification",
+                 "verification",
                  "datasets years",
                  "datasets_years_filled_after_EB_verification_v2.csv")),
             header = TRUE,
@@ -419,7 +467,7 @@ previous_ds_years_info <- read.csv(
 
 # Get identifiers that their years info should still be completed
 
-ids_to_complete <- dcc_charite_joined_5_rm_au_ov |> 
+ids_to_complete <- dcc_charite_joined_6_covid_info |> 
   select(doi_charite, charite_data_id_or_acc_nr) |> 
   dplyr::filter(!charite_data_id_or_acc_nr %in% previous_ds_years_info$charite_data_id_or_acc_nr) |> 
   distinct()
@@ -429,7 +477,7 @@ ids_to_complete <- dcc_charite_joined_5_rm_au_ov |>
 write_csv_cr(
   ids_to_complete,
   file = here("data",
-              "results_verification",
+              "verification",
               "datasets years",
               "datasets_with_no_years_info.csv"),
           row.names = FALSE)
@@ -450,7 +498,7 @@ write_csv_cr(
 
 no_year <- read.csv(
   file.path(here("data",
-                 "results_verification",
+                 "verification",
                  "datasets years",
                  "datasets_years_filled_AC_v3.csv")),
             header = TRUE,
@@ -460,7 +508,7 @@ no_year <- read.csv(
 # Save
 write_csv_cr(no_year,
   file.path(here("data",
-                 "results_verification",
+                 "verification",
                  "datasets years",
                  "no_year.csv")),
             row.names = FALSE)
@@ -471,7 +519,7 @@ write_csv_cr(no_year,
 
 full_ds_years_info <- read.csv(
   file.path(here("data",
-                 "results_verification",
+                 "verification",
                  "datasets years",
                  "datasets_years_filled_after_EB_verification_v3.csv")),
             header = TRUE,
@@ -485,13 +533,13 @@ full_ds_years_info_for_joining <- full_ds_years_info |>
 
 # Join
 
-dcc_charite_joined_6_ds_years_info <- dcc_charite_joined_5_rm_au_ov |> 
+dcc_charite_joined_7_ds_years_info <- dcc_charite_joined_6_covid_info |> 
   left_join(full_ds_years_info_for_joining, by = "charite_data_id_or_acc_nr") |> 
   rename(dataset_publication_year = charite_id_year)
 
 # Save
-save_cr(dcc_charite_joined_6_ds_years_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                             "dcc_charite_joined_6_ds_years_info.RData")))
+save_cr(dcc_charite_joined_7_ds_years_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                             "dcc_charite_joined_7_ds_years_info.RData")))
 
 # 4. Create tables for verification:
 
@@ -499,7 +547,7 @@ save_cr(dcc_charite_joined_6_ds_years_info, file = file.path(here("data", "wrang
 
 # Only Charite's papers:
 
-dcc_paper_2016_and_earlier <- dcc_charite_joined_6_ds_years_info |> 
+dcc_paper_2016_and_earlier <- dcc_charite_joined_7_ds_years_info |> 
   dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
   select(doi_charite,
          publication_year_charite,
@@ -511,7 +559,7 @@ dcc_paper_2016_and_earlier <- dcc_charite_joined_6_ds_years_info |>
 write_csv_cr(dcc_paper_2016_and_earlier,
           file = file.path(here(
                            "data",
-                           "results_verification",
+                           "verification",
                            "dates verification",
                            "dcc_paper_2016_and_earlier.csv")),
           row.names = FALSE)
@@ -520,7 +568,7 @@ write_csv_cr(dcc_paper_2016_and_earlier,
 
 # Full info:
 
-dcc_paper_2016_and_earlier_full <- dcc_charite_joined_6_ds_years_info |> 
+dcc_paper_2016_and_earlier_full <- dcc_charite_joined_7_ds_years_info |> 
   dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
   select(doi_dcc,
          doi_charite,
@@ -534,7 +582,7 @@ dcc_paper_2016_and_earlier_full <- dcc_charite_joined_6_ds_years_info |>
 write_csv_cr(dcc_paper_2016_and_earlier_full,
           file = file.path(here(
                            "data",
-                           "results_verification",
+                           "verification",
                            "dates verification",
                            "dcc_paper_2016_and_earlier_full.csv")),
           row.names = FALSE)
@@ -544,7 +592,7 @@ write_csv_cr(dcc_paper_2016_and_earlier_full,
 
 # Only Charite's paper:
 
-dcc_paper_earlier_than_charite_paper <- dcc_charite_joined_6_ds_years_info |> 
+dcc_paper_earlier_than_charite_paper <- dcc_charite_joined_7_ds_years_info |> 
   dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
   mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
     select(doi_charite,
@@ -554,7 +602,7 @@ dcc_paper_earlier_than_charite_paper <- dcc_charite_joined_6_ds_years_info |>
 write_csv_cr(dcc_paper_earlier_than_charite_paper,
           file = file.path(here(
                            "data",
-                           "results_verification",
+                           "verification",
                            "dates verification",
                            "dcc_paper_earlier_than_charite_paper.csv")),
           row.names = FALSE)
@@ -562,7 +610,7 @@ write_csv_cr(dcc_paper_earlier_than_charite_paper,
 
 # Full info:
 
-dcc_paper_earlier_than_charite_paper_full <- dcc_charite_joined_6_ds_years_info |> 
+dcc_paper_earlier_than_charite_paper_full <- dcc_charite_joined_7_ds_years_info |> 
   dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
   mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
     select(doi_charite,
@@ -575,7 +623,7 @@ dcc_paper_earlier_than_charite_paper_full <- dcc_charite_joined_6_ds_years_info 
 write_csv_cr(dcc_paper_earlier_than_charite_paper_full,
           file = file.path(here(
                            "data",
-                           "results_verification",
+                           "verification",
                            "dates verification",
                            "dcc_paper_earlier_than_charite_paper_full.csv")),
           row.names = FALSE)
@@ -585,7 +633,7 @@ write_csv_cr(dcc_paper_earlier_than_charite_paper_full,
 
 # Only datasets
 
-dcc_paper_earlier_than_dataset <- dcc_charite_joined_6_ds_years_info |> 
+dcc_paper_earlier_than_dataset <- dcc_charite_joined_7_ds_years_info |> 
   dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
   mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
     select(charite_data_id_or_acc_nr,
@@ -595,14 +643,14 @@ dcc_paper_earlier_than_dataset <- dcc_charite_joined_6_ds_years_info |>
 write_csv_cr(dcc_paper_earlier_than_dataset,
           file = file.path(here(
                            "data",
-                           "results_verification",
+                           "verification",
                            "dates verification",
                            "dcc_paper_earlier_than_dataset.csv")),
           row.names = FALSE)
 
 # Full info
 
-dcc_paper_earlier_than_dataset_full <- dcc_charite_joined_6_ds_years_info |> 
+dcc_paper_earlier_than_dataset_full <- dcc_charite_joined_7_ds_years_info |> 
   dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
   mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
     select(doi_dcc,
@@ -615,7 +663,7 @@ dcc_paper_earlier_than_dataset_full <- dcc_charite_joined_6_ds_years_info |>
 write_csv_cr(dcc_paper_earlier_than_dataset_full,
           file = file.path(here(
                            "data",
-                           "results_verification",
+                           "verification",
                            "dates verification",
                            "dcc_paper_earlier_than_dataset_full.csv")),
           row.names = FALSE)
@@ -631,7 +679,7 @@ write_csv_cr(dcc_paper_earlier_than_dataset_full,
     
 # Create table for verification
 
-same_data_id_with_different_charite_papers <- dcc_charite_joined_6_ds_years_info |>
+same_data_id_with_different_charite_papers <- dcc_charite_joined_7_ds_years_info |>
   select(doi_charite, charite_data_id_or_acc_nr) |> 
   group_by(charite_data_id_or_acc_nr) |>
   dplyr::filter(n() > 1 & (n_distinct(doi_charite) > 1)) |>
@@ -642,7 +690,7 @@ same_data_id_with_different_charite_papers <- dcc_charite_joined_6_ds_years_info
 write_csv_cr(same_data_id_with_different_charite_papers,
           file = file.path(here(
                        "data",
-                       "results_verification",
+                       "verification",
                        "datasets with different charite papers",
                        "same_data_id_with_different_charite_papers.csv")),
       row.names = FALSE)
@@ -661,14 +709,14 @@ write_csv_cr(same_data_id_with_different_charite_papers,
 ```{r sample check}
 
 # Get top 20 most frequent identifiers
-top_identifiers <- dcc_charite_joined_5_rm_au_ov |>
+top_identifiers <- dcc_charite_joined_7_ds_years_info |>
   dplyr::filter(charite_data_id_or_acc_nr != "phs000424") |> 
   count(charite_data_id_or_acc_nr, sort = TRUE) |>    # Count occurrences
   slice_head(n = 20) |>                 # Select top 3 identifiers
   pull(charite_data_id_or_acc_nr)                      # Extract values
 
 # Filter original df for top identifiers and select one random row per group
-sample_top_ids <- dcc_charite_joined_5_rm_au_ov |>
+sample_top_ids <- dcc_charite_joined_7_ds_years_info |>
   dplyr::filter(charite_data_id_or_acc_nr %in% top_identifiers) |>
   group_by(charite_data_id_or_acc_nr) |>
   slice_sample(n = 1) |>                # Select one random row per identifier
@@ -678,7 +726,7 @@ sample_top_ids <- dcc_charite_joined_5_rm_au_ov |>
 write_csv_cr(sample_top_ids,
           file = file.path(here(
                            "data",
-                           "results_verification",
+                           "verification",
                            "verification of sample",
                            "sample_top_ids.csv")),
           row.names = F)
@@ -693,7 +741,7 @@ write_csv_cr(sample_top_ids,
 # Render table
 
 datatable(
-  dcc_charite_joined_6_ds_years_info,
+  dcc_charite_joined_7_ds_years_info,
   options = list(
     pageLength = -1,  
     scrollY = "200px", 
@@ -715,25 +763,4 @@ datatable(
 # # save
 # save_cr(dcc_doi_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_doi_distinct.RData")))
 # save_cr(dcc_id_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData")))
-```
-
-```{r add covid related label}
-
-covid_info <- read.csv(
-  file.path(here("data",
-                 "results_verification",
-                 "distinct_id_list - covid or not.csv")),
-  header = TRUE) |> 
-  as_tibble() |> 
-  rename(covid_related = 2) |> 
-  select(1:2)
-
-
-dcc_charite_joined_7_covid_info <- dcc_charite_joined_6_ds_years_info |> 
-  left_join(covid_info, by = "charite_data_id_or_acc_nr")
-
-# Save
-save_cr(dcc_charite_joined_7_covid_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                             "dcc_charite_joined_7_covid_info.RData")))
-
 ```
