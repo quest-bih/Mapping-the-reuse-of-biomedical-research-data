@@ -261,6 +261,6 @@ For steps to ensure the validity of data, see the methods section.
 
 {{< embed notebooks/plots/plots.qmd#fig-ref-by-year >}}
 
-{{< embed notebooks/plots/plots.qmd#fig-datasets-properties >}}
+# {{< embed notebooks/plots/plots.qmd#fig-datasets-properties >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-datasets-and-papers-years >}}
