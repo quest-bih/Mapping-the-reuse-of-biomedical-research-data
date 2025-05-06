@@ -732,6 +732,43 @@ write_csv_cr(sample_top_ids,
           row.names = F)
 ```
 
+Check datasets that weren't a match:
+First let's randomally sample 30 of them.
+Blanka will extract their metadata, and if it doesn't take too long, I'll get all datasets for her to extract.
+
+```{r sample check of datasets that weren't mentioned}
+
+sampled_df <- df |> sample_n(30)
+
+# load "dcc_charite_joined_6_covid_info"
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_6_covid_info.RData"))
+
+# load "charite_dois_and_ids_clean_manually_validated"
+load(here("data", "processed", "charite", "charite_dois_and_ids_clean_manually_validated.RData"))
+
+
+sample_30_ids_no_citation <- charite_dois_and_ids_clean_manually_validated  |>
+  select(doi_auto_current, charite_data_id_or_acc_nr_merged) |> 
+  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_6_covid_info$charite_data_id_or_acc_nr) |> 
+  sample_n(30)
+
+  # replace one non-valid dataset manually (since I sampled from everything, not just from the valid ones):
+  sample_30_ids_no_citation[
+    sample_30_ids_no_citation$doi_auto_current == "10.1016/j.immuni.2021.09.002" &
+    sample_30_ids_no_citation$charite_data_id_or_acc_nr_merged == "datasets",
+    c("doi_auto_current", "charite_data_id_or_acc_nr_merged")
+  ] <- list("10.1093/gigascience/giad024", "10.5281/zenodo.1197578")
+
+# save
+write_csv_cr(sample_30_ids_no_citation,
+          file = file.path(here(
+                           "data",
+                           "verification",
+                           "verification of sample",
+                           "sample_30_ids_no_citation.csv")),
+          row.names = F)
+```
+
 #### Table 14. Cleaned Matched DCC-Charite List
 
 <br>

@@ -81,26 +81,26 @@ NestedDataFrameSize <- function(x) {
 
 # UnnestDataFrame <- function(x, pid) {
 #   valid_x <- x[!is.na(x) & sapply(x, is.data.frame)]
-#   
+# 
 #   if (length(valid_x) == 0) {
 #     return(data.frame())
 #   }
-#   
+# 
 #   df.x <- bind_rows(valid_x)
 #   tcx <- NestedDataFrameSize(valid_x)
 #   df.x$PID <- rep(pid, times = tcx)
-#   
+# 
 #   df.x
 # }
 
 UnnestDataFrame <- function(x, pid) {
   valid_x <- x[!is.na(x) & sapply(x, is.data.frame)]
   valid_pid <- pid[!is.na(x) & sapply(x, is.data.frame)] # <-- Filter pid too
-  
+
   if (length(valid_x) == 0) {
     return(data.frame())
   }
-  
+
   df.x <- bind_rows(valid_x)
   tcx <- NestedDataFrameSize(valid_x)
   df.x$PID <- rep(valid_pid, times = tcx) # <-- Use filtered pid

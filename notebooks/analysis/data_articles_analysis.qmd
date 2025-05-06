@@ -14,7 +14,7 @@ Sys.setenv(LANG = "EN")  # Set environment language to English
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl)
 
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
@@ -36,88 +36,80 @@ write_csv_cr <- function(x, file, ...) {
 
 # 1. Loading files
 
-1.  Load DOIs list for openalex authors extraction script
-2.  Load identifiers list to add to Sankey plot later
+## 1.1 Load DOIs list for openalex authors extraction script
 
-```{r loading files}
+```{r loading files dois}
 
 # 1. DOIs
 
-# Load DOI list
+# Load raw xlsx into a csv
 
-data_articles_dois <- read.csv(
-  file.path(here("data",
-                 "raw",
-                 "data_articles",
-                 "datajournal_articles - analysis of citations v5 - dois.csv")),
-            header = TRUE,
-            sep = ",") |> 
-  rename(charite_doi = Charité.article.DOI,
-         reusing_paper_doi = DOIs.links.of.articles.that.reused.data) |> 
-  mutate(across(everything(), tolower))
+# Read sheet "datasets_reuses" from Excel file
+data_articles_dois <- read_excel(file.path(here("data",
+                                                "raw",
+                                                "data_articles"), "datajournal_articles - analysis of citations v7.xlsx"),
+                                 sheet = "datasets_reuses") |> # load relevant sheet from xlsx
+  rename(charite_doi = `Charité article DOI`,
+         reusing_paper_doi = `DOIs/links of articles that reused data`) |>  # rename columns
+  mutate(across(everything(), tolower)) |> # tolower
+  select(charite_doi, reusing_paper_doi) # get only relevant columns: charite paper and reusing paper
 
+# Write to csv
+write.csv(data_articles_dois, file.path(here("data",
+                                             "raw",
+                                             "data_articles",
+                                             "data_articles_dois.csv")),
+          row.names = FALSE)
 
-# save
-save_cr(data_articles_dois, file = file.path(here("data", "wrangling_steps", "data_articles",
+# save as RData
+save_cr(data_articles_dois, file = file.path(here("data",
+                                                  "wrangling_steps",
+                                                  "data_articles",
                                                   "1_data_articles_dois.RData")))
+```
+
+## 1.2 Load identifiers list to add to Sankey plot later
+
+```{r loading files identifiers}
+
 
 # 2. Identifiers
 
-# Load identifiers list to add to Sankey plot later
 
-data_articles_dois_and_ids_orig <- read.csv(
-  file.path(here("data",
-                 "raw",
-                 "data_articles",
-                 "datajournal_articles - analysis of citations v5 - ids.csv")),
-            header = TRUE) |>
-  mutate(across(everything(), tolower))
+# Load raw xlsx into a csv
 
+# Read sheet "datasets_repos" from Excel file
+data_articles_ids <- read_excel(file.path(here("data",
+                                                "raw",
+                                                "data_articles"), "datajournal_articles - analysis of citations v7.xlsx"),
+                                 sheet = "datasets_repos") |> # load relevant sheet from xlsx
+  rename(doi_charite = `Charité article DOI`,
+         identifier = `dataset DOI, accession code, or link`) |>  # rename columns
+  mutate(across(everything(), tolower)) |> # tolower
+  select(doi_charite, identifier) |> # get only relevant columns: charite paper and reusing paper
+  dplyr::filter(!identifier == "n/a") # remove NAs
 
-# Verify that the identifiers list has the same entries as the final list I got from Evgeny:
+# Write to csv
+write.csv(data_articles_ids, file.path(here("data",
+                                            "raw",
+                                            "data_articles"),
+                                       "data_articles_ids.csv"),
+          row.names = FALSE)
 
-# Load
-
-final_list_of_ids <- read.csv(
-  file.path(here("data",
-                 "raw",
-                 "data_articles",
-                 "All datasets from data articles.csv")),
-            header = TRUE) |> 
-  mutate(across(everything(), tolower))
-
-
-# Compare: get cases in identifier_from_data_article_analysis col of data_articles_dois_and_ids
-# that are not listed in col identifier_from_final_list of final_list_of_ids
-
-anti_join(data_articles_dois_and_ids_orig, final_list_of_ids, by = c("identifier_from_data_article_analysis" = "identifier_from_final_list")) |> View() # everything is there (only missing "n/a"s)
-
-# Join dois with final ids
-
-data_articles_dois_and_ids <- data_articles_dois_and_ids_orig |> 
-  inner_join(final_list_of_ids, by = c("identifier_from_data_article_analysis" = "identifier_from_final_list"))
-
-# Verify that there aren't any DOIs in _orig that were omitted during the join
-anti_join(final_list_of_ids, data_articles_dois_and_ids, by = c("identifier_from_final_list" =
-                                                                  "identifier_from_data_article_analysis")) |> View()
-# There were 2, but they have been verified as non-valid (database entries and not datasets)
-
-# save
-save_cr(data_articles_dois_and_ids, file = file.path(here("data", "wrangling_steps", "data_articles",
-                                                  "1_data_articles_dois_and_ids.RData")))
-
+# save as RData
+save_cr(data_articles_ids, file = file.path(here("data",
+                                                  "wrangling_steps",
+                                                  "data_articles",
+                                                  "1_data_articles_ids.RData")))
 ```
 
-# 2. Cleaning
+# 2. DOIS
 
-1.  Prepare DOIs list for openalex authors extraction script (Non-DOIs will be checked manually later in this script)
-2.  Standardize identifiers list for adding to Sankey plot
+## 2.1 Prepare DOIs list for openalex authors extraction script (Non-DOIs will be checked manually later in this script)
 
-```{r cleaning}
+```{r cleaning dois}
 
-# 1. DOIs
-
-# openalex: output 2 csvs - 1 for each doi column (into "data\results_verification\meta data for data articles dois")
+# for openalex i need 2 csvs as outputs - 1 for each doi column (into "data\results_verification\meta data for data articles dois")
 
 # Get (distinct) charite_DOIs list
 
@@ -131,8 +123,8 @@ charite_dois_for_openalex <- data_articles_dois |>
 write_csv_cr(
   charite_dois_for_openalex,
   file = here("data",
-              "results_verification",
-              "meta data for data articles dois",
+              "verification",
+              "metadata data articles",
               "charite_dois_for_openalex.csv"),
   row.names = FALSE)
 
@@ -152,8 +144,8 @@ reusing_paper_dois_for_openalex <- data_articles_dois |>
 write_csv_cr(
   reusing_paper_dois_for_openalex,
   file = here("data",
-              "results_verification",
-              "meta data for data articles dois",
+              "verification",
+              "metadata data articles",
               "reusing_paper_dois_for_openalex.csv"),
   row.names = FALSE)
 
@@ -169,12 +161,158 @@ non_dois <- data_articles_dois |>
 write_csv_cr(
   non_dois,
   file = here("data",
-              "results_verification",
-              "meta data for data articles dois",
+              "verification",
+              "metadata data articles",
               "non_dois.csv"),
   row.names = FALSE)
+```
 
-# 2. Identifiers
+## 2.2 Exclude authors-overlap from DOIs list and save new list
+
+Since the openalex script couldn't handle most of the added DOIs,
+and since there were only a few of them, I:
+1. Loaded previously added metadata
+2. Left joined it with the current DOIs list
+3. Manually labeled "not a doi" / "non valid"
+4. Manually extracted authors for new DOIs (only for valid DOIs)
+5. Labeled author overlap (only for valid DOIs)
+
+Commented out chunks below were assuming that OpenAlex would work.
+
+```{r output dois}
+
+# Load metadata of previous openalex run (in order to run openalex script again only on added cases)
+
+load(here("data",
+          "verification",
+          "metadata data articles",
+          "data_articles_charite_metadata.RData")) # charite's data articles
+
+
+data_articles_charite_metadata <- final_results # assign
+
+load(here("data",
+          "verification",
+          "metadata data articles",
+          "data_articles_reusing_metadata.RData")) # reusing data articles
+
+data_articles_reusing_metadata <- final_results # assign
+
+rm(final_results) # clean up
+
+# Preparing to join with new DOIs list: Standardization and column renaming
+
+# charite DOIs
+data_articles_charite_metadata <- data_articles_charite_metadata |>
+  rename(charite_doi = doi) |> # rename column
+  mutate(charite_doi = str_remove(charite_doi, "^https://doi.org/"))
+
+# reusing DOIs
+data_articles_reusing_metadata <- data_articles_reusing_metadata |>
+  rename(reusing_paper_doi = doi) |> # rename column
+  mutate(reusing_paper_doi = str_remove(reusing_paper_doi, "^https://doi.org/"))
+
+# original list with both charite and reusing DOIs
+data_articles_dois <- data_articles_dois |> 
+    mutate(reusing_paper_doi = str_remove(reusing_paper_doi, "^https://doi.org/"))
+
+# Join the existing metadata into the new DOIs list
+
+data_articles_dois_1_with_metadata <- data_articles_dois |> 
+  left_join(data_articles_charite_metadata, by = "charite_doi", suffix = c("", "_charite")) |> 
+  left_join(data_articles_reusing_metadata, by = "reusing_paper_doi", suffix = c("", "_reusing")) 
+
+# Complete the added ones manually:
+
+# Write a csv for documentation before completing the metadata manually 
+
+write_csv_cr(
+  data_articles_dois_1_with_metadata,
+  file = here("data",
+              "verification",
+              "metadata data articles",
+              "manual completion",
+              "data_articles_dois_1_with_metadata.csv"),
+  row.names = FALSE)
+
+# Write a csv to actually work on manually and complete
+
+write_csv_cr(
+  data_articles_dois_1_with_metadata,
+  file = here("data",
+              "verification",
+              "metadata data articles",
+              "manual completion",
+              "data_articles_dois_2_with_metadata_completed.csv"),
+  row.names = FALSE)
+
+
+# Load and assign the full csv after manually completing metadata
+
+data_articles_dois_2_with_metadata_completed <- read.csv(
+  file.path(here("data",
+                 "verification",
+                 "metadata data articles",
+                 "manual completion",
+                 "data_articles_dois_2_with_metadata_completed.csv")),
+            header = TRUE)
+
+# Save it as RData object
+
+save_cr(data_articles_dois_2_with_metadata_completed,
+        file = file.path(here("data",
+                              "verification",
+                              "metadata data articles",
+                              "manual completion",
+                              "data_articles_dois_2_with_metadata_completed.RData")))
+
+
+# # Check that if charite_doi == reusing_paper_doi then authors == authors_reusing, and verify the same for "!="
+# 
+# data_articles_dois_2_with_metadata_completed |>
+#   dplyr::filter((charite_doi == reusing_paper_doi & authors != authors_reusing) |      # Case 1: DOIs match but authors differ
+#            (charite_doi != reusing_paper_doi & authors == authors_reusing)) |>  # Case 2: DOIs differ but authors are the same
+#   View() # no such cases
+
+# Remove author overlap:
+
+# Function to check if there are no common elements between two semicolon-separated strings
+no_common_element <- function(x, y) {
+  x_split <- str_split(x, ";")[[1]] # Split column x by semicolons
+  y_split <- str_split(y, ";")[[1]] # Split column y by semicolons
+  length(intersect(x_split, y_split)) == 0 # TRUE if no common elements
+}
+
+# Apply the function in order to label each case with "no_author_overlap" (TRUE / FALSE)
+
+data_articles_dois_3_au_ov_info <- data_articles_dois_2_with_metadata_completed |> 
+  dplyr::filter(doi_validity == "TRUE") |> 
+  mutate(no_author_overlap = map2_lgl(authors, authors_reusing, no_common_element)) |> 
+  bind_rows(data_articles_dois_2_with_metadata_completed |>
+              dplyr::filter(doi_validity == "FALSE"))
+
+# save
+save_cr(data_articles_dois_3_au_ov_info,
+        file = file.path(here("data",
+                                "wrangling_steps",
+                                "data_articles",
+                                "data_articles_dois_3_au_ov_info.RData")))
+# Export as csv
+
+write_csv_cr(
+  data_articles_dois_3_au_ov_info,
+  file = here("data",
+              "wrangling_steps",
+              "data_articles",
+              "data_articles_dois_3_au_ov_info.csv"),
+          row.names = FALSE) # authors overlap
+```
+
+# 3. Identifiers
+
+## 3.1 Standardize identifiers list for adding to Sankey plot
+
+```{r cleaning identifiers}
 
 # automatic + manual validation for id list
 
@@ -256,154 +394,9 @@ write_csv_cr(
   row.names = FALSE)
 ```
 
-# 3. Output
+## 3.2 Save identifiers list as an RData to load in plots.qmd (with a label that they came from this analysis)
 
-1.  Exclude authors-overlap from DOIs list and save new list (openalex script ran separately)
-2.  Save identifiers list as an RData to load in plots.qmd (with a label that they came from this analysis)
-
-```{r output}
-
-# 1. DOIs
-
-# Load metadata
-
-load(here("data",
-          "results_verification",
-          "meta data for data articles dois",
-          "data_articles_charite_metadata.RData")) # charite's data articles
-
-
-data_articles_charite_metadata <- final_results # assign
-
-load(here("data",
-          "results_verification",
-          "meta data for data articles dois",
-          "data_articles_reusing_metadata.RData")) # reusing data articles
-
-data_articles_reusing_metadata <- final_results # assign
-
-rm(final_results) # clean up
-
-# Prepare both metadata lists before joining
-
-data_articles_charite_metadata <- data_articles_charite_metadata |>
-  rename(charite_doi = doi) |> # rename column
-  mutate(charite_doi = str_remove(charite_doi, "^https://doi.org/"))
-  
-data_articles_reusing_metadata <- data_articles_reusing_metadata |> 
-  rename(reusing_paper_doi = doi) |> # rename column
-  mutate(reusing_paper_doi = str_remove(reusing_paper_doi, "^https://doi.org/"))
-
-# Prepare list to join to
-
-data_articles_dois_no_prefix<- data_articles_dois |> 
-    mutate(reusing_paper_doi = str_remove(reusing_paper_doi, "^https://doi.org/"))
-
-# Join info into dcc-charite list
-
-data_articles_dois_1_with_metadata <- data_articles_dois_no_prefix |> 
-  left_join(data_articles_charite_metadata, by = "charite_doi", suffix = c("", "_charite")) |> 
-  left_join(data_articles_reusing_metadata_no_prefix, by = "reusing_paper_doi", suffix = c("", "_reusing"))
-
-
-# Complete NAs (cases which openalex didn't handle well)
-
-# save file for completing NAs
-write_csv_cr(
-  data_articles_dois_1_with_metadata,
-  file = here("data",
-              "results_verification",
-              "meta data for data articles dois",
-              "manual completion of metadata",
-              "data_articles_dois_1_with_metadata.csv"),
-  row.names = FALSE)
-
-# I then manually completed NA cases.
-
-# Load manually completed version
-
-data_articles_dois_2_with_metadata_completed <- read.csv(
-  file.path(here("data",
-                 "results_verification",
-                 "meta data for data articles dois",
-                 "manual completion of metadata",
-                 "data_articles_dois_2_with_metadata_completed.csv")),
-            header = TRUE)
-
-# # Check that if charite_doi == reusing_paper_doi then authors == authors_reusing, and verify the same for "!="
-# 
-# data_articles_dois_2_with_metadata_completed |>
-#   dplyr::filter((charite_doi == reusing_paper_doi & authors != authors_reusing) |      # Case 1: DOIs match but authors differ
-#            (charite_doi != reusing_paper_doi & authors == authors_reusing)) |>  # Case 2: DOIs differ but authors are the same
-#   View() # no such cases
-
-# save
-save_cr(data_articles_dois_2_with_metadata_completed,
-        file = file.path(here("data",
-                                "wrangling_steps",
-                                "data_articles",
-                                "2_data_articles_dois_metadata_completed.RData")))
-
-# Remove author overlap:
-
-# Function to check if there are no common elements between two semicolon-separated strings
-no_common_element <- function(x, y) {
-  x_split <- str_split(x, ";")[[1]] # Split column x by semicolons
-  y_split <- str_split(y, ";")[[1]] # Split column y by semicolons
-  length(intersect(x_split, y_split)) == 0 # TRUE if no common elements
-}
-
-# Apply the filter using the function to create a matched list with no "Author Overlap"
-data_articles_dois_3_no_author_overlap <- data_articles_dois_2_with_metadata_completed  |> 
-  dplyr::filter(map2_lgl(authors, authors_reusing, no_common_element))
-
-# save
-save_cr(data_articles_dois_3_no_author_overlap,
-        file = file.path(here("data",
-                                "wrangling_steps",
-                                "data_articles",
-                                "3_data_articles_dois_no_author_overlap.RData")))
-
-# Get only author overlap cases
-author_overlap <- anti_join(data_articles_dois_2_with_metadata_completed, data_articles_dois_3_no_author_overlap)
-
-# save
-save_cr(author_overlap,
-        file = file.path(here("data",
-                                "wrangling_steps",
-                                "data_articles",
-                                "data_articles_only_author_overlap_cases.RData")))
-
-# Get only cases with non-valid reusing DOIs
-data_articles_only_nas <- data_articles_dois_2_with_metadata_completed |> 
-  dplyr::filter(is.na(authors_reusing))
-
-# save
-save_cr(data_articles_only_nas,
-        file = file.path(here("data",
-                                "wrangling_steps",
-                                "data_articles",
-                                "data_articles_only_nas.RData")))
-
-# Export as csv
-
-write_csv_cr(
-  author_overlap,
-  file = here("data",
-              "wrangling_steps",
-              "data_articles",
-              "data_articles_only_author_overlap_cases.csv"),
-          row.names = FALSE) # authors overlap
-
-write_csv_cr(
-  data_articles_only_nas,
-  file = here("data",
-              "wrangling_steps",
-              "data_articles",
-              "data_articles_only_nas.csv"),
-          row.names = FALSE) # NA cases
-
-# 2. Identifiers
+```{r output identifiers}
 
 # Load data_articles_dois_and_ids_23042025_done.csv
 
@@ -421,6 +414,5 @@ save_cr(data_articles_dois_and_ids_23042025_done,
                               "results_verification",
                               "data articles id manual validation",
                               "data_articles_dois_and_ids_23042025_done.RData")))
-
 
 ```
