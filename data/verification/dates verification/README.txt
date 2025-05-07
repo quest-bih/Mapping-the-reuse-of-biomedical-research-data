@@ -10,6 +10,10 @@ dcc_paper_earlier_than_dataset:
 	datasets identifiers that the papers that mentioned them wer published before 	them.
 	(_full includes papers and publications dois and years info as well)
 
+
+dcc_paper_earlier_than_dataset_full_final:
+	Evgeny's validation of datasets that appeared to be listed as published "earlier" than dcc papers
+
 Data dictionary:
 
 doi_dcc: doi of paper that mentioned the dataset

@@ -452,250 +452,251 @@ save_cr(dcc_charite_joined_6_covid_info, file = file.path(here("data", "wranglin
 
 # Adding publication years of data sets
 
-```{r}
+```{r datasets publication years}
 
-# Load current information about data sets publication years (from previous analysis)
+# Process of manually extracting datasets years, verifying with Evgeny and creating a final dataset years filled file:
 
-previous_ds_years_info <- read.csv(
+# #  I first saved a copy of the latest full info file (datasets_years_filled_after_EB_verification_v2.csv) as   
+# #  "datasets_years_filled_AC_v3.csv".
+# 
+# #  manually added the datasets in "datasets_with_no_years_info.csv" to "_AC_v3"
+# 
+# #  updated the added datasets' years info, marking them as bold.
+# 
+# # I then sent Evgeny the cases where I couldn't find the dataset / year of it:
+# 
+# # Get datasets I couldn't find their years:
+# 
+# no_year <- read.csv(
+#   file.path(here("data",
+#                  "verification",
+#                  "datasets years",
+#                  "datasets_years_filled_AC_v3.csv")),
+#             header = TRUE,
+#             sep = ",") |> 
+#   dplyr::filter(is.na(charite_id_year))
+# 
+# # Save
+# write_csv_cr(no_year,
+#   file.path(here("data",
+#                  "verification",
+#                  "datasets years",
+#                  "no_year.csv")),
+#             row.names = FALSE)
+# 
+# # The completed info from Evgeny was added to  "AC_v3" and was saved as "datasets_years_filled_after_EB_verification_v3.csv".
+# 
+# # Load information about data sets publication years - manually validated
+# 
+# full_ds_years_info <- read.csv(
+#   file.path(here("data",
+#                  "verification",
+#                  "datasets years",
+#                  "datasets_years_filled_after_EB_verification_v3.csv")),
+#             header = TRUE,
+#             sep = ",")
+#
+# # After EB verification, I've created a file to use as the metadata file for datasets: datasets_years_filled_AC_v4.csv
+
+# Load metadata about datasets publication years: current version: _v4
+
+ds_years_info <- read.csv(
   file.path(here("data",
                  "verification",
                  "datasets years",
-                 "datasets_years_filled_after_EB_verification_v2.csv")),
+                 "datasets_years_filled_AC_v4.csv")),
             header = TRUE,
             sep = ",")
 
+save_cr(ds_years_info, file = file.path(here("data",
+                                             "inputs_for_quick_render",
+                                             "ds_years_info.RData")))
+# prepare for joining
 
-# Get identifiers that their years info should still be completed
-
-ids_to_complete <- dcc_charite_joined_6_covid_info |> 
-  select(doi_charite, charite_data_id_or_acc_nr) |> 
-  dplyr::filter(!charite_data_id_or_acc_nr %in% previous_ds_years_info$charite_data_id_or_acc_nr) |> 
-  distinct()
-
-# Save
-
-write_csv_cr(
-  ids_to_complete,
-  file = here("data",
-              "verification",
-              "datasets years",
-              "datasets_with_no_years_info.csv"),
-          row.names = FALSE)
-
-
-# After saving, I've:
-
-#  saved a copy of the latest full info file (datasets_years_filled_after_EB_verification_v2.csv) as   
-#  "datasets_years_filled_AC_v3.csv".
-
-#  manually added the datasets in "datasets_with_no_years_info.csv" to "_AC_v3"
-
-#  updated the added datasets' years info, marking them as bold.
-
-# I then sent Evgeny the cases where I couldn't find the dataset / year of it:
-
-# Get datasets I couldn't find their years:
-
-no_year <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "datasets years",
-                 "datasets_years_filled_AC_v3.csv")),
-            header = TRUE,
-            sep = ",") |> 
-  dplyr::filter(is.na(charite_id_year))
-
-# Save
-write_csv_cr(no_year,
-  file.path(here("data",
-                 "verification",
-                 "datasets years",
-                 "no_year.csv")),
-            row.names = FALSE)
-
-# The completed info from Evgeny was added to  "AC_v3" and was saved as "datasets_years_filled_after_EB_verification_v3.csv".
-
-# Load information about data sets publication years - manually validated
-
-full_ds_years_info <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "datasets years",
-                 "datasets_years_filled_after_EB_verification_v3.csv")),
-            header = TRUE,
-            sep = ",")
-
-# Prepare for joining
-
-full_ds_years_info_for_joining <- full_ds_years_info |> 
-  select(charite_data_id_or_acc_nr, charite_id_year) |> 
+ds_years_info_for_join <- ds_years_info |> 
+  select(charite_data_id_or_acc_nr, charite_id_year) |> # get only dataset identifiers and publication years
+  dplyr::filter(!is.na(charite_id_year)) |> # remove NAs
   distinct()
 
 # Join
 
 dcc_charite_joined_7_ds_years_info <- dcc_charite_joined_6_covid_info |> 
-  left_join(full_ds_years_info_for_joining, by = "charite_data_id_or_acc_nr") |> 
+  left_join(ds_years_info_for_join, by = "charite_data_id_or_acc_nr") |> 
   rename(dataset_publication_year = charite_id_year)
 
 # Save
 save_cr(dcc_charite_joined_7_ds_years_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                              "dcc_charite_joined_7_ds_years_info.RData")))
 
-# 4. Create tables for verification:
+# # 4. Create tables for verification:
+# 
+# # Cases where DCC paper publication year is stated as earlier than 2017
+# 
+# # Only Charite's papers:
+# 
+# dcc_paper_2016_and_earlier <- dcc_charite_joined_7_ds_years_info |> 
+#   dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
+#   select(doi_charite,
+#          publication_year_charite,
+#          charite_data_id_or_acc_nr,
+#          dataset_publication_year) |> 
+#   distinct()
+# 
+# # Save
+# write_csv_cr(dcc_paper_2016_and_earlier,
+#           file = file.path(here(
+#                            "data",
+#                            "verification",
+#                            "dates verification",
+#                            "dcc_paper_2016_and_earlier.csv")),
+#           row.names = FALSE)
+# 
+# 
+# 
+# # Full info:
+# 
+# dcc_paper_2016_and_earlier_full <- dcc_charite_joined_7_ds_years_info |> 
+#   dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
+#   select(doi_dcc,
+#          doi_charite,
+#          publication_year_dcc,
+#          publication_year_charite,
+#          charite_data_id_or_acc_nr,
+#          dataset_publication_year) |> 
+#   distinct()
+# 
+# # Save
+# write_csv_cr(dcc_paper_2016_and_earlier_full,
+#           file = file.path(here(
+#                            "data",
+#                            "verification",
+#                            "dates verification",
+#                            "dcc_paper_2016_and_earlier_full.csv")),
+#           row.names = FALSE)
+# 
+# 
+# # Cases where DCC paper publication year is stated as earlier than Charite paper publication year
+# 
+# # Only Charite's paper:
+# 
+# dcc_paper_earlier_than_charite_paper <- dcc_charite_joined_7_ds_years_info |> 
+#   dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
+#   mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
+#     select(doi_charite,
+#          publication_year_charite) |> 
+#   distinct()
+# 
+# write_csv_cr(dcc_paper_earlier_than_charite_paper,
+#           file = file.path(here(
+#                            "data",
+#                            "verification",
+#                            "dates verification",
+#                            "dcc_paper_earlier_than_charite_paper.csv")),
+#           row.names = FALSE)
+# 
+# 
+# # Full info:
+# 
+# dcc_paper_earlier_than_charite_paper_full <- dcc_charite_joined_7_ds_years_info |> 
+#   dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
+#   mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
+#     select(doi_charite,
+#          publication_year_charite,
+#          doi_dcc,
+#          publication_year_dcc,
+#          lag) |> 
+#   distinct()
+# 
+# write_csv_cr(dcc_paper_earlier_than_charite_paper_full,
+#           file = file.path(here(
+#                            "data",
+#                            "verification",
+#                            "dates verification",
+#                            "dcc_paper_earlier_than_charite_paper_full.csv")),
+#           row.names = FALSE)
+# 
+# # Cases where DCC paper publication year is stated as earlier than dataset publication year
+# 
+# 
+# # Only datasets
+# 
+# dcc_paper_earlier_than_dataset <- dcc_charite_joined_7_ds_years_info |> 
+#   dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
+#   mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
+#     select(charite_data_id_or_acc_nr,
+#          dataset_publication_year,) |> 
+#   distinct()
+# 
+# write_csv_cr(dcc_paper_earlier_than_dataset,
+#           file = file.path(here(
+#                            "data",
+#                            "verification",
+#                            "dates verification",
+#                            "dcc_paper_earlier_than_dataset.csv")),
+#           row.names = FALSE)
+# 
+# # Full info
+# 
+# dcc_paper_earlier_than_dataset_full <- dcc_charite_joined_7_ds_years_info |> 
+#   dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
+#   mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
+#     select(doi_dcc,
+#          charite_data_id_or_acc_nr,
+#          publication_year_dcc,
+#          dataset_publication_year,
+#          lag) |> 
+#   distinct()
+# 
+# write_csv_cr(dcc_paper_earlier_than_dataset_full,
+#           file = file.path(here(
+#                            "data",
+#                            "verification",
+#                            "dates verification",
+#                            "dcc_paper_earlier_than_dataset_full.csv")),
+#           row.names = FALSE)
+# 
+# # 5. Check if there are any cases that are invalid and need removal, according to results of section (4) above
+#     
+#   # There was actually nothing to exclude. See Evgeny's message after a sample check:
+#   # https://teams.microsoft.com/l/message/19:ad68b3fd-e590-4981-92ff-3ae78e877fd9_cba60d9f-88ed-4fe4-ac8c-0c0e5477dfee@unq.gbl.spaces/1729246170305?context=%7B%22contextType%22%3A%22chat%22%7D
+# 
+# # 6. Create a table with cases where there are different Charite paper dois for the same accession number
+#     
+# # Create table for verification
+# 
+# same_data_id_with_different_charite_papers <- dcc_charite_joined_7_ds_years_info |>
+#   select(doi_charite, charite_data_id_or_acc_nr) |> 
+#   group_by(charite_data_id_or_acc_nr) |>
+#   dplyr::filter(n() > 1 & (n_distinct(doi_charite) > 1)) |>
+#   distinct() |>
+#   ungroup()
+# 
+# # Save
+# write_csv_cr(same_data_id_with_different_charite_papers,
+#           file = file.path(here(
+#                        "data",
+#                        "verification",
+#                        "datasets with different charite papers",
+#                        "same_data_id_with_different_charite_papers.csv")),
+#       row.names = FALSE)
+# 
+# # Evgeny approved these cases as valid.
+```
 
-# Cases where DCC paper publication year is stated as earlier than 2017
+# Remove clinvar datasets from joined list
 
-# Only Charite's papers:
+```{r remove clinvar datasets}
 
-dcc_paper_2016_and_earlier <- dcc_charite_joined_7_ds_years_info |> 
-  dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
-  select(doi_charite,
-         publication_year_charite,
-         charite_data_id_or_acc_nr,
-         dataset_publication_year) |> 
-  distinct()
+# As dbGaP does not document publicly when a certain version was released, we cannot use clinvar (datasets that start with "nm_")
+# in our analysis, and these have to be excluded:
 
+dcc_charite_joined_8_rm_clinvar <- dcc_charite_joined_7_ds_years_info |> 
+  dplyr::filter(!str_starts(charite_data_id_or_acc_nr, "nm_"))
+  
 # Save
-write_csv_cr(dcc_paper_2016_and_earlier,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "dates verification",
-                           "dcc_paper_2016_and_earlier.csv")),
-          row.names = FALSE)
+save_cr(dcc_charite_joined_8_rm_clinvar, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                             "dcc_charite_joined_8_rm_clinvar.RData")))
 
-
-
-# Full info:
-
-dcc_paper_2016_and_earlier_full <- dcc_charite_joined_7_ds_years_info |> 
-  dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
-  select(doi_dcc,
-         doi_charite,
-         publication_year_dcc,
-         publication_year_charite,
-         charite_data_id_or_acc_nr,
-         dataset_publication_year) |> 
-  distinct()
-
-# Save
-write_csv_cr(dcc_paper_2016_and_earlier_full,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "dates verification",
-                           "dcc_paper_2016_and_earlier_full.csv")),
-          row.names = FALSE)
-
-
-# Cases where DCC paper publication year is stated as earlier than Charite paper publication year
-
-# Only Charite's paper:
-
-dcc_paper_earlier_than_charite_paper <- dcc_charite_joined_7_ds_years_info |> 
-  dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
-  mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
-    select(doi_charite,
-         publication_year_charite) |> 
-  distinct()
-
-write_csv_cr(dcc_paper_earlier_than_charite_paper,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "dates verification",
-                           "dcc_paper_earlier_than_charite_paper.csv")),
-          row.names = FALSE)
-
-
-# Full info:
-
-dcc_paper_earlier_than_charite_paper_full <- dcc_charite_joined_7_ds_years_info |> 
-  dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
-  mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
-    select(doi_charite,
-         publication_year_charite,
-         doi_dcc,
-         publication_year_dcc,
-         lag) |> 
-  distinct()
-
-write_csv_cr(dcc_paper_earlier_than_charite_paper_full,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "dates verification",
-                           "dcc_paper_earlier_than_charite_paper_full.csv")),
-          row.names = FALSE)
-
-# Cases where DCC paper publication year is stated as earlier than dataset publication year
-
-
-# Only datasets
-
-dcc_paper_earlier_than_dataset <- dcc_charite_joined_7_ds_years_info |> 
-  dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
-  mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
-    select(charite_data_id_or_acc_nr,
-         dataset_publication_year,) |> 
-  distinct()
-
-write_csv_cr(dcc_paper_earlier_than_dataset,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "dates verification",
-                           "dcc_paper_earlier_than_dataset.csv")),
-          row.names = FALSE)
-
-# Full info
-
-dcc_paper_earlier_than_dataset_full <- dcc_charite_joined_7_ds_years_info |> 
-  dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
-  mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
-    select(doi_dcc,
-         charite_data_id_or_acc_nr,
-         publication_year_dcc,
-         dataset_publication_year,
-         lag) |> 
-  distinct()
-
-write_csv_cr(dcc_paper_earlier_than_dataset_full,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "dates verification",
-                           "dcc_paper_earlier_than_dataset_full.csv")),
-          row.names = FALSE)
-
-##### 14.04.2025 AFTER RECIEVING VERIFICATION FROM EVGENY, CORRECT AND RUN THIS BELOW UNTIL THE END
-
-# 5. Check if there are any cases that are invalid and need removal, according to results of section (4) above
-    
-  # There was actually nothing to exclude. See Evgeny's message after a sample check:
-  # https://teams.microsoft.com/l/message/19:ad68b3fd-e590-4981-92ff-3ae78e877fd9_cba60d9f-88ed-4fe4-ac8c-0c0e5477dfee@unq.gbl.spaces/1729246170305?context=%7B%22contextType%22%3A%22chat%22%7D
-
-# 6. Create a table with cases where there are different Charite paper dois for the same accession number
-    
-# Create table for verification
-
-same_data_id_with_different_charite_papers <- dcc_charite_joined_7_ds_years_info |>
-  select(doi_charite, charite_data_id_or_acc_nr) |> 
-  group_by(charite_data_id_or_acc_nr) |>
-  dplyr::filter(n() > 1 & (n_distinct(doi_charite) > 1)) |>
-  distinct() |>
-  ungroup()
-
-# Save
-write_csv_cr(same_data_id_with_different_charite_papers,
-          file = file.path(here(
-                       "data",
-                       "verification",
-                       "datasets with different charite papers",
-                       "same_data_id_with_different_charite_papers.csv")),
-      row.names = FALSE)
-
-# Evgeny approved these cases as valid.
 ```
 
 <br>
@@ -732,16 +733,14 @@ write_csv_cr(sample_top_ids,
           row.names = F)
 ```
 
-Check datasets that weren't a match:
-First let's randomally sample 30 of them.
-Blanka will extract their metadata, and if it doesn't take too long, I'll get all datasets for her to extract.
+Check datasets that weren't a match: First let's randomally sample 30 of them. Blanka will extract their metadata, and if it doesn't take too long, I'll get all datasets for her to extract.
 
 ```{r sample check of datasets that weren't mentioned}
 
 sampled_df <- df |> sample_n(30)
 
-# load "dcc_charite_joined_6_covid_info"
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_6_covid_info.RData"))
+# load "dcc_charite_joined_7_ds_years_info"
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_7_ds_years_info.RData"))
 
 # load "charite_dois_and_ids_clean_manually_validated"
 load(here("data", "processed", "charite", "charite_dois_and_ids_clean_manually_validated.RData"))
@@ -749,7 +748,7 @@ load(here("data", "processed", "charite", "charite_dois_and_ids_clean_manually_v
 
 sample_30_ids_no_citation <- charite_dois_and_ids_clean_manually_validated  |>
   select(doi_auto_current, charite_data_id_or_acc_nr_merged) |> 
-  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_6_covid_info$charite_data_id_or_acc_nr) |> 
+  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_7_ds_years_info$charite_data_id_or_acc_nr) |> 
   sample_n(30)
 
   # replace one non-valid dataset manually (since I sampled from everything, not just from the valid ones):
