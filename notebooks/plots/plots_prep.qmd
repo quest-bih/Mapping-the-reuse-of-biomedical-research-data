@@ -29,18 +29,6 @@ rm(dcc_charite_joined_8_rm_clinvar)
 
 ```
 
-# Exclusion process of cases from the matched list
-
-<!-- <br> -->
-
-<!-- ![](Data%20Inputs/Plot/Exclusion_steps.PNG) -->
-
-<!-- \*\* recreate it with code! \*\* -->
-
-```{r Exclusion process of cases from the matched list, echo=FALSE}
-
-```
-
 <br>
 
 # Distinct Number of Papers and Datasets Found in the DCC - prep
@@ -220,6 +208,58 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 
 ```{r fig-datasets-properties-prep}
 
+# Create a function for verifying the links df structure, extracting its entities and finally plotting it:
+
+get_nodes_from_links <- function(links) {
+  stopifnot(all(c("source", "target", "value") %in% names(links)))
+  data.frame(
+    name = unique(c(as.character(links$source), as.character(links$target)))
+  )
+}
+
+plot_Sankey <- function(links, ...) {
+  nodes <- get_nodes_from_links(links)
+
+  # Assign group labels to nodes
+  # Map directly to colors
+  highlight_colors <- list(
+    "Accession Number" = "blue",
+    "DOI" = "red",
+    "Full Access" = "yellow",
+    "Restricted Access" = "green",
+    "Not Covid Related" = "purple",
+    "Covid Related" = "pink",
+    "covid not checked yet" = "white"
+  )
+
+  # Assign group (color name) to each node, default to gray
+  nodes$group <- sapply(nodes$name, function(n) {
+    if (!is.null(highlight_colors[[n]])) highlight_colors[[n]] else "gray"
+  })
+
+  links$IDsource <- match(links$source, nodes$name) - 1
+  links$IDtarget <- match(links$target, nodes$name) - 1
+
+  # Color scale: domain = unique group values (colors), range = same
+  color_domain <- unique(nodes$group)
+  domain_str <- paste0('"', color_domain, '"', collapse = ", ")
+  range_str <- paste0('"', color_domain, '"', collapse = ", ")
+  my_color <- paste0(
+    "d3.scaleOrdinal()",
+    ".domain([", domain_str, "])",
+    ".range([", range_str, "])"
+  )
+
+  sankeyNetwork(
+    Links = links, Nodes = nodes,
+    Source = "IDsource", Target = "IDtarget",
+    Value = "value", NodeID = "name",
+    NodeGroup = "group",  # ← now using color group directly
+    colourScale = my_color,
+    ...
+  )
+}
+
 # Prepare table for sankey:
 
 dcc_charite_for_sankey <- dcc_charite_joined_final |>
@@ -227,80 +267,7 @@ dcc_charite_for_sankey <- dcc_charite_joined_final |>
   distinct() |>
   mutate(acc_nr_or_doi = case_when(str_starts(charite_data_id_or_acc_nr, "10.") ~ "DOI", .default = "Accession Number"))
 
-
-# Create a function for verifying the links df structure, extracting its entities and finally plotting it:
-
-plot_Sankey <- function(links_df, ...) {
-
-  # 1. Verify required columns
-  stopifnot(all(c("source", "target", "value") %in% names(links_df)))
-
-  # 2. Unique nodes
-  nodes <- data.frame(
-    name = c(as.character(links_df$source), as.character(links_df$target)) |> unique()
-  )
-
-  # 3. Add repository-level detection logic
-  repository_nodes <- intersect(links_access_rep$target, links_rep_covid$source)
-# Filter: repository-level nodes ONLY
-repository_nodes_clean <- setdiff(repository_nodes, c("DOI", "Accession Number"))
-
-
-nodes$group <- ifelse(nodes$name %in% repository_nodes_clean, "repository", nodes$name)
-
-  # Manually define colors per node or group
-color_map <- c(
-  "repository" = "#888888",         # shared gray for all repositories
-  "Accession Number" = "#1f77b4",
-  "DOI" = "#ff7f0e",
-  "Full Access" = "#2ca02c",
-  "Restricted Access" = "#d62728",
-  "access not checked yet" = "#9467bd",
-  "NCBI dbGaP" = "#8c564b",
-  "figshare" = "#e377c2",
-  "EGA" = "#7f7f7f",
-  "GEO" = "#bcbd22",
-  "PRIDE" = "#17becf",
-  "NCBI RefSeq" = "#aec7e8",
-  "ENA" = "#ffbb78",
-  "PDB" = "#98df8a",
-  "Covid Related" = "#c5b0d5",
-  "Not Covid Related" = "#f7b6d2",
-  "covid not checked yet" = "#c49c94"
-)
-
-  # 4. Add indexing columns to links
-  links_df$IDsource <- match(links_df$source, nodes$name) - 1
-  links_df$IDtarget <- match(links_df$target, nodes$name) - 1
-
-  # # 5. Build custom colour scale string
-  # unique_groups <- unique(nodes$group)
-  # palette <- c("#888888", brewer.pal(n = length(unique_groups) - 1, name = "Set3"))
-  # color_map <- setNames(palette, unique_groups)
-
-  colourScale_str <- paste0(
-    "d3.scaleOrdinal().domain([",
-    paste0("'", names(color_map), "'", collapse = ", "),
-    "]).range([",
-    paste0("'", color_map, "'", collapse = ", "),
-    "])")
-
-  # 6. Sankey plot
-  sankeyNetwork(
-    Links = links_df,
-    Nodes = nodes,
-    Source = "IDsource",
-    Target = "IDtarget",
-    Value = "value",
-    NodeID = "name",
-    NodeGroup = "group",
-    colourScale = JS(colourScale_str),
-    ...
-  )
-}
-
-# Combine all links
-dcc_charite_for_sankey <- dcc_charite_for_sankey  # in case it's not in scope yet
+# Create links
 
 links_ac_access <- dcc_charite_for_sankey |>
   mutate(source = case_when(acc_nr_or_doi == "Accession Number" ~ "Accession Number",
@@ -365,9 +332,6 @@ dif_for_plot <- dcc_charite_joined_final |>
   select(publication_year_dcc, dataset_publication_year) |>
   distinct() |>
   mutate(dif = publication_year_dcc - dataset_publication_year) |>
-  
-  # group_by(dif) |>
-  # summarise(n = n()) |> 
   dplyr::filter(dif >= 0 & !is.na(dif)) |> 
   dplyr::filter(dif < 24)
 
