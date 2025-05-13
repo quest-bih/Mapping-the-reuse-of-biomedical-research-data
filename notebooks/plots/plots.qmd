@@ -44,39 +44,51 @@ load(here("data", "tables_for_plots", "dif_for_plot.RData")) # fig-datasets-and-
 #| label: fig-distinct-numbers
 #| fig-cap: Distinct Number of Papers and Datasets in Found in the DCC
 #| fig-format: png
-
+#| fig.height: 8
+#| fig.width: 10
 
 combined_count_tibbles |>
   ggplot(aes(x = tibble_source, y = value, fill = variable)) +
   geom_bar(stat = "identity",
            position = "dodge",
-           #fill = "#80CBC4",  # Light green fill
-           color = "black") + # Black border for bars
+           color = "black") +
   geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +  # Shadow
+           alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
   geom_text(aes(label = value), 
-            vjust = -0.5,  # Adjust text position above the bars
-            size = 4, 
-            color = "black") + # Text color
+            vjust = -0.5, 
+            size = 6, 
+            color = "black") +
   facet_wrap(~variable, scales = "free") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   scale_fill_manual(values = c(
-    "Mentioning Articles" = "#80CBC4",  # Custom color for variable1
-    "Mentioned Datasets" = "#C1E8E1"  # Custom color for variable2
+    "Mentioning Articles" = "#80CBC4",
+    "Mentioned Datasets" = "#C1E8E1"
   )) +
-  theme_classic() +  # Use classic theme
-  theme(legend.position = "none") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16, margin = margin(r = 20)),  # space between y title and axis
+    axis.text.x = element_text(size = 16, angle = 45, hjust = 1),     # diagonal x labels
+    axis.text.y = element_text(size = 14),
+    strip.text = element_text(size = 16, margin = margin(b = 10), vjust = -0.5)
+  ) +
   labs(
-    y = "Count")
+    x = "",
+    y = "Count"
+  )
+
+
 ```
 
 # Distribution Frequency of Datasets References
 
-```{r Distribution Frequency of Datasets References}
-
+```{r}
 #| label: fig-datasets-freq-dist
 #| fig-cap: Distribution Frequency of Datasets References
 #| fig-format: png
-
+#| fig.height: 6
+#| fig.width: 8
 
 ds_freq |> 
   ggplot(aes(x = n)) +
@@ -89,7 +101,7 @@ ds_freq |>
     geom = "text",
     aes(label = ..count..),
     vjust = -0.3,               # Position labels above bars
-    size = 5                    # Font size of labels
+    size = 6                    # Font size of labels
   ) +
   scale_x_log10(
     breaks = c(1, 3, 10, 40, 100),  # Custom breaks for the x-axis
@@ -99,18 +111,26 @@ ds_freq |>
     x = "Number of mentions (log scale)",
     y = "Number of Datasets (log scale)"
   ) +
-  theme_classic()
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(size = 16, margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 16, margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 14),
+    axis.text.x = element_text(size = 14)
+    )
 
 ```
 
 # Distribution of References Across Repositories
 
-```{r Distribution of References Across Repositories}
-
+```{r}
 #| label: fig-repo-dist
 #| fig-cap: Distribution of References Across Repositories
 #| fig-format: png
-
+#| fig.height: 14
+#| fig.width: 32
+#| fig-allign: center
 
 rep_dt |>
   ggplot(aes(x = reorder(repository, n), y = n)) +
@@ -123,22 +143,29 @@ rep_dt |>
 geom_text(aes(y = n + 2, label = n),
             vjust = 0.5,
             hjust = 0,
-            size = 5, color = "black") + # text next to bars
+            size = 16, color = "black") + # text next to bars
   scale_y_continuous(expand = expansion(mult = c(0.15, 0.15))) + # Adds 5% padding on both sides of the y-axis
   coord_flip() +
   labs(x = "Repository", y = "Number of Mentions") +
-  theme_classic()
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(size = 32, margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 32, margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 40, color = "black"),
+    axis.text.x = element_text(size = 36, color = "black")
+    )
 
 ```
 
 # Datasets References by Year
 
-```{r Datasets References by Year}
-
+```{r}
 #| label: fig-ref-by-year
 #| fig-cap: Datasets References by Year
 #| fig-format: png
-
+#| fig.height: 8
+#| fig.width: 12
 
 year_dcc_dt_all_for_plot_agg |> 
   ggplot(aes(x = factor(publication_year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
@@ -150,24 +177,32 @@ geom_text(
     group_by(publication_year_dcc) |>
     dplyr::filter(!(publication_year_dcc %in% c(2012, 2013, 2015, 2017) & count == min(count))),  # Exclude only in specific years
   aes(y = count, label = count),
-  position = position_stack(vjust = 0.5)) +
+  position = position_stack(vjust = 0.5),
+  size = 6) +
   labs(
     x = "Year",
     y = "Count",
     fill = "Accession Number"
   ) +
   scale_fill_manual(values = c("#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
-  theme_classic()
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(size = 24, margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 18, color = "black"),
+    axis.text.x = element_text(size = 18, color = "black")
+    )
 ```
 
 # Datasets Access, Repositories and Covid-relationship
 
-```{r Datasets Access, Repositories and Covid-relationship}
-
+```{r}
 #| label: fig-datasets-properties
 #| fig-cap: Datasets Access, Repositories and Covid-relationship gray
 #| fig-format: png
-
+#| fig.height: 8
+#| fig.width: 12
 
 # Create a function for verifying the links df structure, extracting its entities and finally plotting it:
 
@@ -234,12 +269,12 @@ saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sanke
 
 # Datasets and Citing Papers Publication Years
 
-```{r Datasets and Citing Papers Publication Years}
-
+```{r}
 #| label: fig-datasets-and-papers-years
 #| fig-cap: Datasets and Citing Papers Publication Years
 #| fig-format: png
-
+#| fig.height: 7
+#| fig.width: 10
 
 dif_for_plot |> 
   ggplot(aes(x = dif)) +
@@ -254,17 +289,20 @@ dif_for_plot |>
     geom = "text",
     aes(label = ..count..),
     vjust = -0.3,
-    size = 5
+    size = 7
   ) +
-  scale_x_continuous(breaks = 0:15) +
+  scale_x_continuous(breaks = 0:14) +
   scale_y_continuous(breaks = 1:9) +
   labs(
     x = "Years Between Dataset and Article Publication",
     y = "Number of Datasets"
   ) +
     theme_classic() +
-    theme(
-      axis.title.x = element_text(margin = margin(t = 10)),
-      axis.title.y = element_text(margin = margin(r = 10))
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(size = 20, margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 20, margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 18, color = "black"),
+    axis.text.x = element_text(size = 18, color = "black")
     )
 ```
