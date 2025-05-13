@@ -19,6 +19,7 @@ execute:
 
 format:
   html:
+    fig-path: _output/notebooks/plots
     comments:
       hypothesis: true
   docx: default

@@ -53,7 +53,7 @@ The Charite dois and identifiers list ("Charite's list") input was derived from 
 
 # Load Charite raw data file (Numbat output for 2020-2023)
 
-load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v1.rda"))
+load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v2.rda"))
 
 # Load dashboard's DOIs
 
@@ -65,6 +65,10 @@ dashboard_dois <- read.csv(
   mutate(doi = tolower(doi))
 
 dashboard_dois_dedup <- dashboard_dois |> group_by(doi) |> slice(1) |> ungroup() # deduplicate dois
+
+# Load data articles IDs list
+
+load(here("data", "verification", "data articles id m_val", "v_23042025_done.RData"))
 
 rm(dashboard_dois) # clean up
 ```

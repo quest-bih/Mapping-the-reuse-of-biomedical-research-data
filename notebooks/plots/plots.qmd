@@ -8,7 +8,7 @@ format:
 editor: visual
 ---
 
-```{r setup, echo=FALSE}
+```{r setup}
 
 # Load libraties
 
@@ -30,17 +30,7 @@ load(here("data", "tables_for_plots", "links_all.RData")) # fig-datasets-propert
 
 load(here("data", "tables_for_plots", "combined_count_tibbles.RData")) # fig-distinct-numbers
 
-```
-
-# Exclusion process of cases from the matched list
-
-<!-- <br> -->
-
-<!-- ![](Data%20Inputs/Plot/Exclusion_steps.PNG) -->
-
-<!-- \*\* recreate it with code! \*\* -->
-
-```{r Exclusion process of cases from the matched list, echo=FALSE}
+load(here("data", "tables_for_plots", "dif_for_plot.RData")) # fig-datasets-and-papers-years
 
 ```
 
@@ -50,10 +40,11 @@ load(here("data", "tables_for_plots", "combined_count_tibbles.RData")) # fig-dis
 
 <br>
 
-```{r, echo=FALSE}
+```{r}
 #| label: fig-distinct-numbers
 #| fig-cap: Distinct Number of Papers and Datasets in Found in the DCC
 #| fig-format: png
+
 
 combined_count_tibbles |>
   ggplot(aes(x = tibble_source, y = value, fill = variable)) +
@@ -80,11 +71,12 @@ combined_count_tibbles |>
 
 # Distribution Frequency of Datasets References
 
-```{r Distribution Frequency of Datasets References, echo=FALSE}
+```{r Distribution Frequency of Datasets References}
 
 #| label: fig-datasets-freq-dist
 #| fig-cap: Distribution Frequency of Datasets References
 #| fig-format: png
+
 
 ds_freq |> 
   ggplot(aes(x = n)) +
@@ -113,11 +105,12 @@ ds_freq |>
 
 # Distribution of References Across Repositories
 
-```{r Distribution of References Across Repositories, echo=FALSE}
+```{r Distribution of References Across Repositories}
 
 #| label: fig-repo-dist
 #| fig-cap: Distribution of References Across Repositories
 #| fig-format: png
+
 
 rep_dt |>
   ggplot(aes(x = reorder(repository, n), y = n)) +
@@ -140,11 +133,12 @@ geom_text(aes(y = n + 2, label = n),
 
 # Datasets References by Year
 
-```{r Datasets References by Year, echo=FALSE}
+```{r Datasets References by Year}
 
 #| label: fig-ref-by-year
 #| fig-cap: Datasets References by Year
 #| fig-format: png
+
 
 year_dcc_dt_all_for_plot_agg |> 
   ggplot(aes(x = factor(publication_year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
@@ -168,11 +162,66 @@ geom_text(
 
 # Datasets Access, Repositories and Covid-relationship
 
-```{r Datasets Access, Repositories and Covid-relationship, echo=FALSE}
+```{r Datasets Access, Repositories and Covid-relationship}
 
 #| label: fig-datasets-properties
 #| fig-cap: Datasets Access, Repositories and Covid-relationship gray
 #| fig-format: png
+
+
+# Create a function for verifying the links df structure, extracting its entities and finally plotting it:
+
+get_nodes_from_links <- function(links) {
+  stopifnot(all(c("source", "target", "value") %in% names(links)))
+  data.frame(
+    name = unique(c(as.character(links$source), as.character(links$target)))
+  )
+}
+
+plot_Sankey <- function(links, ...) {
+  nodes <- get_nodes_from_links(links)
+
+  # Assign group labels to nodes
+  # Map directly to colors
+  highlight_colors <- list(
+    "Accession Number" = "blue",
+    "DOI" = "red",
+    "Full Access" = "yellow",
+    "Restricted Access" = "green",
+    "Not Covid Related" = "purple",
+    "Covid Related" = "pink",
+    "covid not checked yet" = "white"
+  )
+
+  # Assign group (color name) to each node, default to gray
+  nodes$group <- sapply(nodes$name, function(n) {
+    if (!is.null(highlight_colors[[n]])) highlight_colors[[n]] else "gray"
+  })
+
+  links$IDsource <- match(links$source, nodes$name) - 1
+  links$IDtarget <- match(links$target, nodes$name) - 1
+
+  # Color scale: domain = unique group values (colors), range = same
+  color_domain <- unique(nodes$group)
+  domain_str <- paste0('"', color_domain, '"', collapse = ", ")
+  range_str <- paste0('"', color_domain, '"', collapse = ", ")
+  my_color <- paste0(
+    "d3.scaleOrdinal()",
+    ".domain([", domain_str, "])",
+    ".range([", range_str, "])"
+  )
+
+  sankeyNetwork(
+    Links = links, Nodes = nodes,
+    Source = "IDsource", Target = "IDtarget",
+    Value = "value", NodeID = "name",
+    NodeGroup = "group",  # ← now using color group directly
+    colourScale = my_color,
+    ...
+  )
+}
+
+# Plot
 
 plot_Sankey(links_all, sinksRight = FALSE, fontSize = 20)
 
@@ -185,11 +234,12 @@ saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sanke
 
 # Datasets and Citing Papers Publication Years
 
-```{r Datasets and Citing Papers Publication Years, echo=FALSE}
+```{r Datasets and Citing Papers Publication Years}
 
 #| label: fig-datasets-and-papers-years
 #| fig-cap: Datasets and Citing Papers Publication Years
 #| fig-format: png
+
 
 dif_for_plot |> 
   ggplot(aes(x = dif)) +
