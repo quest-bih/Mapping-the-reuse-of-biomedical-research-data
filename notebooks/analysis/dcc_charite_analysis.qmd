@@ -687,6 +687,8 @@ save_cr(dcc_charite_joined_7_ds_years_info, file = file.path(here("data", "wrang
 
 ```{r remove clinvar datasets}
 
+
+##### REMOVE THIS PART! ALREADY REMOVED FROM CHARITE DATASETS!!!
 # As dbGaP does not document publicly when a certain version was released, we cannot use clinvar (datasets that start with "nm_")
 # in our analysis, and these have to be excluded:
 
@@ -766,6 +768,78 @@ write_csv_cr(sample_30_ids_no_citation,
                            "verification of sample",
                            "sample_30_ids_no_citation.csv")),
           row.names = F)
+
+# sample 70 more:
+
+
+sampled_df <- df |> sample_n(70)
+
+# load "dcc_charite_joined_7_ds_years_info"
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_7_ds_years_info.RData"))
+
+# load "charite_dois_and_ids_clean_manually_validated"
+load(here("data", "processed", "charite", "charite_dois_and_ids_clean_manually_validated.RData"))
+
+# load previous 30 sampled to make sure that I sample from the rest
+sample_30_ids_no_citation <- read.csv(
+  file.path(here("data",
+                 "verification",
+                 "verification of sample",
+                 "sample_30_ids_no_citation.csv")),
+  header = TRUE)
+
+
+sample_70_ids_no_citation <- charite_dois_and_ids_clean_manually_validated  |>
+  select(doi_auto_current, charite_data_id_or_acc_nr_merged, data_identifier) |> 
+  left_join(
+    master_2020_2023 |> select(doi, data_identifier, data_availability_statement), 
+    by = c("doi_auto_current" = "doi", 
+           "data_identifier" = "data_identifier")) |>
+  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_7_ds_years_info$charite_data_id_or_acc_nr) |>
+  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% sample_30_ids_no_citation$charite_data_id_or_acc_nr_merged) |>
+  sample_n(70) |> 
+  select(-data_identifier)
+
+sample_30_ids_no_citation |> inner_join(sample_70_ids_no_citation) |> View() # check: None of them are in the 70!
+
+  # replace 2 non-valid datasets manually (since I sampled from everything, not just from the valid ones):
+  sample_70_ids_no_citation[
+    sample_70_ids_no_citation$doi_auto_current == "10.1038/s41467-020-17359-2" &
+    sample_70_ids_no_citation$charite_data_id_or_acc_nr_merged == "consensus_snv_indel",
+    c("doi_auto_current", "charite_data_id_or_acc_nr_merged")
+  ] <- list("10.15252/emmm.202216225", "srx18724982")
+
+    sample_70_ids_no_citation[
+    sample_70_ids_no_citation$doi_auto_current == "10.1152/jn.00615.2019" &
+    sample_70_ids_no_citation$charite_data_id_or_acc_nr_merged == "efish_locking",
+    c("doi_auto_current", "charite_data_id_or_acc_nr_merged")
+  ] <- list("10.3390/vetsci10050314", "prjna945807")
+
+# add DAS from master:
+    
+sample_70_ids_no_citation_w_das <- sample_70_ids_no_citation |> 
+  left_join(
+    master_2020_2023 |> select(doi, data_identifier, data_availability_statement), 
+    by = c("doi_auto_current" = "doi", 
+           "charite_data_id_or_acc_nr" = "data_identifier")
+  )
+
+
+left_join(df1, select(df2, id, status), by = "id")
+
+
+# save
+write_csv_cr(sample_70_ids_no_citation,
+          file = file.path(here(
+                           "data",
+                           "verification",
+                           "verification of sample",
+                           "sample_70_ids_no_citation.csv")),
+          row.names = F)
+
+
+
+
 ```
 
 #### Table 14. Cleaned Matched DCC-Charite List
