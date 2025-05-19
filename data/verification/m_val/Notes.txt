@@ -1,7 +1,32 @@
-Standardization notes:
+Manual standardization notes:
 
-URLs start with //
+URLs were verified to start with //
+
 osf structure: //osf.io/xxxxx
 
+dryad: 10.5061/dryad.xxxxx
 
-DOIs structure: 10.xxxxx
+zenodo: 10.5281/zenodo.xxxxx
+
+figshare: 10.6084/m9.figshare.xxxxx
+
+mendeley: 10.17632/xxxxx
+
+[accn] were removed from ending of acccesion numbers
+
+double versioning of "phs" was removed
+
+DOI was reconstructed where it was wrongly auto_cleaned
+
+general purpose repos were verified as having a DOI format with no version information
+
+doi_no_ver_info was completed where it was NA
+
+pxd DOIs were converted to pxdXXXXX
+
+openneuro was constructed as a DOI, as this is whe structure found in the DCC
+
+ok210796-ok210933 case: was converted to ok210796
+
+
+Categorized each value: supplement / doi / acc_nr / article / url

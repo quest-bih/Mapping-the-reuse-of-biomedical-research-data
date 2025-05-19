@@ -279,11 +279,24 @@ save_cr(charite_dois_and_ids, file = file.path(here("data", "wrangling_steps", "
 
 # 7. Remove clinvar datasets
 
-charite_dois_and_ids_1_no_clinvar <- charite_dois_and_ids |> 
-  dplyr::filter(!str_detect(data_id, "clinvar")) # but also _nm? I asked Evgeny.
+charite_dois_and_ids_1_no_clinvar <- charite_dois_and_ids |>
+  dplyr::filter(
+    str_detect(data_id, "clinvar") |
+    str_starts(data_id, "vcv") |
+    str_starts(data_id, "scv") |
+    str_starts(data_id, "rcv")
+    )
 
 # save
 save_cr(charite_dois_and_ids_1_no_clinvar, file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_1_no_clinvar.RData")))
+
+# 8. Exclude DOIs that are not in the dashboard
+
+charite_dois_and_ids_2_no_db <- charite_dois_and_ids_1_no_clinvar |> 
+  dplyr::filter(in_dashboard == "TRUE")
+
+# save
+save_cr(charite_dois_and_ids_2_no_db, file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_2_no_db.RData")))
 
 rm(
   charite_dois_and_ids,
@@ -379,16 +392,20 @@ extract_acc_nr <- function(url_string, pattern) {
 
 pattern <- "(acc(?!ess)|accession|ccdcid|studyid|id|run|term|acc)\\=" # we build this pattern when looking for url keyvalue pairs
 
-# Applying the function to clean accession numbers
-charite_dois_and_ids_2_autocleaned <- charite_dois_and_ids |>
-  mutate(data_id_clean = map_chr(data_id, \(x) extract_acc_nr(x, pattern)))
+# Applying the function to extract accession numbers automatically
 
-# Save
-save_cr(charite_dois_and_ids_2_autocleaned, file = file.path(here(
+charite_dois_and_ids_3_auto_cleaned <- charite_dois_and_ids_2_no_db |>
+  mutate(data_id_auto_cleaned = map_chr(data_id, \(x) extract_acc_nr(x, pattern))) |> # apply function
+  relocate(data_id_auto_cleaned, .after = data_id) |> # relocate new auto_cleaned column
+  mutate(data_id_m_val = "") |> # create a column for manual validation
+  relocate(data_id_m_val, .after = data_id_auto_cleaned) # relocate m_val
+
+# save
+save_cr(charite_dois_and_ids_3_auto_cleaned, file = file.path(here(
   "data",
   "wrangling_steps",
   "charite",
-  "charite_dois_and_ids_2_autocleaned.RData")))
+  "charite_dois_and_ids_3_auto_cleaned.RData")))
 ```
 
 # 4. Load Manually Validated Identifiers
@@ -400,75 +417,73 @@ save_cr(charite_dois_and_ids_2_autocleaned, file = file.path(here(
 
 # So in this chunk we will load the most recent .csv file from the manual validation directory and assign it to "charite_dois_and_ids_clean_manually_validated", and then wrangle it to show the manual validation process.
 
-# 1. Loading the most recent .csv file and assigning it to "charite_dois_and_ids_clean_manually_validated"
+# 1. Load "charite_dois_and_ids_6_m_val_done.csv"
 
-# Locate dir
-files <- list.files(file.path(here(
-  "data",
-  "results_verification",
-  "m_val")),
-                    pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE)
+charite_dois_and_ids_6_m_val_done <- read.csv(
+  file.path(here("data", "verification", "m_val", "charite_dois_and_ids_6_m_val_done.csv")),
+  header = TRUE,
+  sep = ",")
 
-# Identify the latest file based on modification time
-latest_file_name <- files[which.max(file.info(files)$mtime)]
+# save as RData
+save_cr(charite_dois_and_ids_6_m_val_done,
+        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_6_m_val_done.RData")))
 
-# Load the file into the global environment and assign it to a variable
-manual_validation_done <- read_csv(latest_file_name)
+# 2. Get only relevant cases to match with DCC
 
-# 2. Wrangle to show validation process
+# create a column with the most standardized data_id
+charite_dois_and_ids_7_id_merged <- charite_dois_and_ids_6_m_val_done |> 
+  mutate(data_id_merged =
+           coalesce(na_if(data_id_m_val, ""), data_id_no_ex_chr)) |> 
+  relocate(data_id_merged, .after = data_id_m_val)
 
-# # Group cases
-# manually_validated_summary <- manual_validation_done |> 
-#   group_by(type, comments) |> 
-#   summarise(n = n())
+save_cr(charite_dois_and_ids_7_id_merged,
+        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_7_id_merged.RData"))) # as RData
 
-# Get relevant cases for matching
-charite_dois_and_ids_clean_manually_validated <- manual_validation_done |> 
-  # Remove all trailing slashes and dots (no further cleaning needed)
-  mutate(charite_data_id_or_acc_nr_merged = charite_data_id_or_acc_nr_merged |>
-           str_remove_all("[/\\.]+$")
-  ) |> 
-  # exclude non-valid cases
-  dplyr::filter(is.na(valid) | valid == "TRUE") |>
-  # Remove "//" only if type is "url"
-  mutate(charite_data_id_or_acc_nr_merged = case_when(
-    type == "url" ~ str_remove(charite_data_id_or_acc_nr_merged, "^//"),
-    .default = charite_data_id_or_acc_nr_merged)) |> 
-  # Remove any "clinvar" identifiers, as they are not datasets, but rather databases
-  dplyr::filter(!str_detect(data_identifier, "clinvar")) 
+# get only relevant cases: doi, acc_nr, gen_rep
+charite_dois_and_ids_8_for_matching <- charite_dois_and_ids_7_id_merged |>
+  dplyr::filter(Category %in% c("acc_nr", "doi", "gen_rep")) 
 
-rm(latest_file_to_load) # clean up
-```
+# Save: This file will be loaded in charite_loading_and_preprocessing.qmd!
 
-```{r Save charite_dois_and_ids_clean_manually_validated}
-save_cr(charite_dois_and_ids_clean_manually_validated, file = file.path(here(
-  "data",
-  "processed",
-  "charite",
-  "charite_dois_and_ids_clean_manually_validated.RData")))
+save_cr(charite_dois_and_ids_8_for_matching,
+        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_8_for_matching.RData"))) # as RData
+
+write_csv_cr(
+  charite_dois_and_ids_8_for_matching,
+  file = here("data",
+              "results_verification",
+              "m_val",
+              "charite_dois_and_ids_8_for_matching.csv"),
+  row.names = FALSE
+) # as csv
 ```
 
 <br>
 
 ```{r manual validation process table}
 
-# # Get counts for manual validation process
-# 
-# manually_validated_for_table <- manually_validated_summary |> 
-#  mutate(category = case_when(
-#     is.na(type) & is.na(comments) ~ "Extracted automatically using prefixes",
-#     type == "acc_nr" & is.na(comments) ~ "Validated as extracted correctly",
-#     comments == "manually corrected" ~ "Manually corrected",
-#     comments == "no identifier" ~ "No identifier"
-#   )) |>
-#   group_by(category) |>
-#   summarise(`Number of Cases` = sum(n, na.rm = TRUE), .groups = "drop") |>
-#   arrange(match(category, c(
-#     "Extracted automatically using prefixes",
-#     "No prefixes; Validated as extracted correctly",
-#     "Manually corrected following the automatic extraction",
-#     "No identifier"
-#   ))) |>
-#   select(`Number of Cases`, Comments = category)
+# Check which categories are there (_7 still has all of the categories)
+charite_dois_and_ids_7_id_merged |> 
+  group_by(Category) |> 
+  summarise(n = n()) |> 
+  View()
+
+# Get counts for manual validation process
+
+charite_dois_and_ids_7_id_merged_cat_sum <- charite_dois_and_ids_7_id_merged |>
+ mutate(category = case_when(
+    Category == "acc_nr" ~ "Accession Number",
+    Category == "doi" ~ "Dataset DOI",
+    Category == "url" ~ "General URL Address",
+    Category == "gen_rep" ~ "General Repository",
+    Category == "supplement" ~ "Article Supplement",
+    Category == "non-valid" ~ "Original Numbat Entry is Not Valid",
+    Category == "github" ~ "Github URL Address")) |> 
+  group_by(category) |>
+  summarise(`Number of Cases` = n())
+
+# save
+save_cr(charite_dois_and_ids_7_id_merged_cat_sum,
+        file = file.path(here("data", "inputs_for_quick_render", "charite_dois_and_ids_7_id_merged_cat_sum.RData")))
 
 ```

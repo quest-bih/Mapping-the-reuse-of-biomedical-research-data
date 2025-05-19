@@ -1,52 +1,62 @@
-# This script takes the RData object "2_charite_dois_and_ids_clean.RData" (loaded as "charite_dois_and_ids_clean")
-# with automatically extracted accession numbers, and:
+# This script takes the RData object "charite_dois_and_ids_3_auto_cleaned.RData".
+# This file has automatically extracted accession numbers. So this script:
 # 1. Validates extraction of accession numbers with common prefixes
 # 2. Validates and Standardizes identifiers of general repositories (zenodo, osf, figshare, dryad)
 # 3. Creates a csv for manual validation of the rest of the accession numbers
 
+# 1. Load charite_dois_and_ids_3_auto_cleaned.RData -----------------------
 
-# 1. Load latest manual validation ----------------------------------------
+load(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_3_auto_cleaned.RData"))
 
-# Since there are always cases added, we will first get only the cases that were not manually validated until now.
+# 2. Remove excess characters ---------------------------------------------
 
-# Locate manual validation folder
-files <- list.files(here("data",
-                         "verification",
-                         "m_val"),
-  pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE)
+# # Verify that DOIs and IDs columns are all in lower case
+# 
+# charite_dois_and_ids_3_auto_cleaned |>
+#   dplyr::filter(
+#     dplyr::if_any(c(doi, doi_no_ver_info, data_id, data_id_auto_cleaned), ~ stringr::str_detect(.x, "[A-Z]"))
+#   ) |> View()
 
+# Replace "," with ".", and remove:
 
-# Identify the latest manual validation file based on modification time
-latest_file_name <- files[which.max(file.info(files)$mtime)]
+# "." at the beginning / end
+# " " anywhere
+# "," at the beginning / end
 
-# Load the latest manual validation file into the global environment
-latest_validation <- read_csv(latest_file_name) # this is the latest "manual_validation_done"
+# View
+charite_dois_and_ids_3_auto_cleaned |>
+  dplyr::filter(
+    str_detect(data_id_auto_cleaned, "^,|,$") | # ","
+      str_detect(data_id_auto_cleaned, "^\\.|\\.$") | # "."
+      str_detect(data_id_auto_cleaned, "\\s") | # " " anywhere
+      str_detect(data_id_auto_cleaned, "^\\s|\\s$") # " " at the beginning / end
+  ) |> View()
 
-# Verify that identifiers in this file and in charite_dois_and_ids_clean are lower cased
-any(str_detect(charite_dois_and_ids_clean$data_identifier, "[A-Z]"))
-any(str_detect(latest_validation$data_identifier, "[A-Z]"))
+# Remove (mutate "data_id_auto_cleaned" into "data_id_no_ex_chr")
+charite_dois_and_ids_4_m_val_in_prog_ex <- charite_dois_and_ids_3_auto_cleaned |> 
+  mutate(data_id_no_ex_chr = case_when(
+    str_detect(data_id_auto_cleaned, "^,|,$")
+    ~ str_remove_all(data_id_auto_cleaned, "^,|,$"), # ","
+    
+    str_detect(data_id_auto_cleaned, "^\\.|\\.$")
+    ~ str_remove_all(data_id_auto_cleaned, "^\\.|\\.$"), # "."
+    
+    str_detect(data_id_auto_cleaned, "^\\s|\\s$")
+    ~ str_trim(data_id_auto_cleaned), # " " anywhere
+    
+    str_detect(data_id_auto_cleaned, "\\s")
+    ~ str_replace_all(data_id_auto_cleaned, "\\s", ""), # " " at the beginning / end
+    
+    # Keep all other cases unchanged
+    .default = data_id_auto_cleaned
+  )) |> 
+  relocate(data_id_no_ex_chr, .after = data_id_auto_cleaned)
 
-# "tolower" data_identifier
-charite_dois_and_ids_clean <- charite_dois_and_ids_clean |>
-  mutate(data_identifier = tolower(data_identifier))
+# save
+save_cr(charite_dois_and_ids_4_m_val_in_prog_ex,
+        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_4_m_val_in_prog_ex.RData")))
 
-
-# Create a folder for current manual validation (with today's date in the folder name)
-
-today_folder <- paste0("m_val_", format(Sys.Date(), "%d%m%Y")) # create folder name with today’s date
-full_path <- here("data", "verification", "m_val", today_folder) # get its full path
-if (!dir.exists(full_path)) {dir.create(full_path, recursive = TRUE)} # create the folder if it doesn't exist
-
-# Add auto_cleaned cases to previously manually validated list
-manual_validation <- charite_dois_and_ids_clean |> 
-  left_join(
-    latest_validation |> 
-      distinct(data_identifier, .keep_all = TRUE),
-    by = c("data_identifier" = "data_identifier"),
-    suffix = c("_auto_current", "_auto_previous")
-    )
-
-# 2. Common accession numbers prefixed ---------------------------------------
+# 3. Common accession numbers prefixed ---------------------------------------
 
 # In this step, I manually created a list of common accession numbers prefixes
 # in order to label accession numbers in the Charite list that the were
@@ -102,119 +112,41 @@ prefixes <- c("//github.com",
 
 # Mark cases with the prefixes above as validated (validated = TRUE)
 
-manual_validation_in_progress <- manual_validation |> 
+charite_dois_and_ids_5_m_val_in_prog_pref_lbl <- charite_dois_and_ids_4_m_val_in_prog_ex |> 
+  mutate(validated = FALSE) |> # create a column to label the validation
   mutate(validated = case_when(
-    is.na(validated)
-    & map_lgl(charite_data_id_or_acc_nr_auto_current, ~ any(str_starts(.x, prefixes))) # these prefixes existence mean that the function handled these cases well
+    map_lgl(data_id_no_ex_chr, ~ any(str_starts(.x, prefixes))) # cases with these prefixes will be considered as validated
     ~ TRUE,
     .default = validated))
 
-# 3. Final clean up before manual validation ------------------------------
+# Note: there will be another manual overview on these "validated" cases!
 
-# Replace "," with ".", and remove:
-
-  # "." at the beginning / end
-  # " " anywhere
-  # "," at the beginning / end
-
-# View
-manual_validation_in_progress |>
-  dplyr::filter(
-    is.na(validated) &
-    (str_detect(charite_data_id_or_acc_nr_auto_current, "^,|,$") | # ","
-      str_detect(charite_data_id_or_acc_nr_auto_current, "^\\.|\\.$") | # "."
-      str_detect(charite_data_id_or_acc_nr_auto_current, "\\s") | # " " anywhere
-      str_detect(charite_data_id_or_acc_nr_auto_current, "^\\s|\\s$")) # " " at the beginning / end
-  ) |> View()
-
-# Remove
-manual_validation_in_progress <- manual_validation_in_progress |> 
-  mutate(charite_data_id_or_acc_nr_auto_current = case_when(
-    is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr_auto_current, "^,|,$")
-    ~ str_remove_all(charite_data_id_or_acc_nr_auto_current, "^,|,$"), # ","
-    
-    is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr_auto_current, "^\\.|\\.$")
-    ~ str_remove_all(charite_data_id_or_acc_nr_auto_current, "^\\.|\\.$"), # "."
-    
-    is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr_auto_current, "^\\s|\\s$")
-    ~ str_trim(charite_data_id_or_acc_nr_auto_current), # " " anywhere
-    
-    is.na(validated)
-    & str_detect(charite_data_id_or_acc_nr_auto_current, "\\s")
-    ~ str_replace_all(charite_data_id_or_acc_nr_auto_current, "\\s", ""), # " " at the beginning / end
-    
-    # Keep all other cases unchanged
-    .default = charite_data_id_or_acc_nr_auto_current
-  ))
+# save
+save_cr(charite_dois_and_ids_5_m_val_in_prog_pref_lbl,
+        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_5_m_val_in_prog_pref_lbl.RData")))
 
 # Write a csv for documentation
 
 write_csv_cr(
-  manual_validation_in_progress,
+  charite_dois_and_ids_5_m_val_in_prog_pref_lbl,
   file = here("data",
               "verification",
               "m_val",
-              today_folder,
-              "manual_validation_in_progress.csv"),
+              "charite_dois_and_ids_5_m_val_in_prog_pref_lbl.csv"),
   row.names = FALSE
 )
 
-# Write a copy of it with the suffix _in_progress - this is the file you should work on!
+# Write another copy of it - this is the file you should work on!
 
 write_csv_cr(
-  manual_validation_in_progress,
+  charite_dois_and_ids_5_m_val_in_prog_pref_lbl,
   file = here("data",
               "verification",
               "m_val",
-              today_folder,
-              "manual_validation_in_progress_for_work.csv"),
+              "charite_dois_and_ids_6_m_val_done.csv"),
   row.names = FALSE
 )
 
-# 4. Finalizing the validation --------------------------------------------
-
-# After finishing working on the _in_progress.csv, here we'll make sure that the best identifier
-# (out of the columns: "data_identifier"
-#                      "charite_data_id_or_acc_nr_auto_current",
-#                      "charite_data_id_or_acc_nr_v"
-#                      "charite_data_id_or_acc_nr_merged")
-# is listed under "_merged"!
-
-# Load _in_progress that you've just finished working on:
-
-new_files <- list.files(here("data",
-                         "results_verification",
-                         "m_val",
-                         today_folder),
-                    pattern = "\\.csv$", full.names = TRUE, ignore.case = TRUE) # get updated files list
-
-new_latest_file_name <- new_files[which.max(file.info(new_files)$mtime)] # get updated last modified file
-
-manual_validation_in_progress_all_validated <- read_csv(new_latest_file_name) # load _in_progress
-
-manual_validation_done <- manual_validation_in_progress_all_validated |> 
-  mutate(charite_data_id_or_acc_nr_merged =
-           if_else(
-             # if "merged" is NA
-             is.na(charite_data_id_or_acc_nr_merged),
-             # then get _v
-             coalesce(charite_data_id_or_acc_nr_v,
-                      # if _v is also NA, get the automatically extracted ("charite_data_id_or_acc_nr_auto_current")
-                      charite_data_id_or_acc_nr_auto_current),
-             # and put either of them in _merged
-             charite_data_id_or_acc_nr_merged))
-
-# Write a csv for the finished manual validation: This file will be loaded in charite_loading_and_preprocessing.qmd!
-
-write_csv_cr(
-  manual_validation_done,
-  file = here("data",
-              "results_verification",
-              "m_val",
-              today_folder,
-              "manual_validation_done.csv"),
-  row.names = FALSE
-)
+# And that's it.
+# From here, return to "charite_loading_and_preprocessing.qmd" to get the relevant cases from
+# "charite_dois_and_ids_6_m_val_done"
