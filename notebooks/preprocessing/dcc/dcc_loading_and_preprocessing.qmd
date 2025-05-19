@@ -792,6 +792,110 @@ DCC_corpus_9_nm_v_rm <- DCC_corpus_8_preprint_rm |>
 save_cr(DCC_corpus_9_nm_v_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_9_nm_v_rm.RData")))
 ```
 
+# Last standardization steps to match the Charité identifiers / DOIs format:
+
+1. convert "pxd" DOIs to "pxdXXXXX" format
+2. standardize "mendeley" datasets (10.17632/xxxxx)
+3. standardize "openneuro" to a DOI
+4. remove all version information from "phs"
+
+```{r last standardization steps}
+
+# Overview
+
+dcc_pxd <- DCC_corpus_9_nm_v_rm |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "10.6019/pxd")) # pxs
+
+dcc_mendeley <- DCC_corpus_9_nm_v_rm |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
+                | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
+
+dcc_openneuro <- DCC_corpus_9_nm_v_rm |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
+                | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
+
+dcc_phs <- DCC_corpus_9_nm_v_rm |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
+
+
+DCC_corpus_10_id_std <- DCC_corpus_9_nm_v_rm |>
+  mutate(
+    data_id_or_acc_nr = case_when(
+
+      # remove version info from "openneuro"
+      str_starts(data_id_or_acc_nr, "10.18112/openneuro.ds")
+      ~ str_replace(data_id_or_acc_nr, "^(10\\.18112/openneuro\\.ds[^.]+)\\..*$", "\\1"),   
+      
+      # remove "DOI" prefix from "pxd"
+      str_starts(data_id_or_acc_nr, "10.6019/pxd")
+      ~ str_replace(data_id_or_acc_nr, "10.6019/", ""),
+      
+      # extract "pxdXXX" from end of strings where there's no DOI prefix
+      !str_detect(data_id_or_acc_nr, "//osf.io")
+      & str_detect(data_id_or_acc_nr, "/pxd[^/]+")
+      ~ str_extract(data_id_or_acc_nr, "pxd[^/]+"), # keep only "pxdXXX" until "/" excluding the "/"
+      
+      # remove everything before "10.17632" and keep the rest only until the next dot ("mendeley")
+      str_detect(data_id_or_acc_nr, "10.17632/")
+      ~ stringr::str_extract(data_id_or_acc_nr, "10\\.17632/[^.]+"),
+      
+      # convert "mendeley" URLs into DOIs
+      str_detect(data_id_or_acc_nr, "data\\.mendeley\\.com")
+      ~ paste0("10.17632/", str_extract(data_id_or_acc_nr, "(?<=datasets/|drafts/)[^/]+")),
+      
+      # extract "phsXXX" from strings where there's no OSF prefix
+      !stringr::str_starts(data_id_or_acc_nr, "//osf.io") # skip OSF
+      & stringr::str_detect(data_id_or_acc_nr, "/phs\\d+") ~ # detect "/phsxxxx" (stop at end / "/" / ".")
+      stringr::str_extract(data_id_or_acc_nr, "(?<=/)(phs\\d+)"), # extract without leading "/"
+      
+      # correct last 3 cases manually ("pxd")
+      data_id_or_acc_nr == "https://www.ebi.ac.uk/pride/archive/projectpxd017645" ~ "pxd017645",
+      data_id_or_acc_nr == "https://www.ebi.ac.uk/pride/profile/reviewer_pxd027363" ~ "pxd027363",
+      data_id_or_acc_nr == "https://www.proteomexchange.org/feeditems/new-proteomexchange-dataset-pxd001200" ~ "pxd001200",
+      
+      # replace "open-neuro" with "openneuro" (one case)
+      data_id_or_acc_nr == "10.18112/open‐neuro.ds000244.v1.0.0"
+      ~ "10.18112/openneuro.ds000244",
+      
+      .default = data_id_or_acc_nr
+    )
+  )
+
+# Check
+
+dcc_pxd_check <- DCC_corpus_10_id_std |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "pxd")) # pxd
+
+dcc_phs_check <- DCC_corpus_10_id_std |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
+
+dcc_mendeley_check <- DCC_corpus_10_id_std |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
+                | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
+
+dcc_openneuro_check <- DCC_corpus_10_id_std |> 
+  select(data_id_or_acc_nr) |> 
+  distinct() |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
+                | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
+
+# Save 9th DCC wrangling step
+save_cr(DCC_corpus_10_id_std, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_10_id_std.RData")))
+```
 <br>
 
 As shown in **Table 6.** below, after removing excess characters and trails from DOIs and data set identifiers, cases where these two values were actually the same were discovered. These cases weren't visible before standardizing and cleaning the DOIs and the data set identifiers, meaning a simple comparison between the DOI and dataset columns resulted in 0 results.
