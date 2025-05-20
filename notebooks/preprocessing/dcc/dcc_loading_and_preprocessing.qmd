@@ -794,12 +794,15 @@ save_cr(DCC_corpus_9_nm_v_rm, file = file.path(here("data", "wrangling_steps", "
 
 # Last standardization steps to match the Charité identifiers / DOIs format:
 
-1. convert "pxd" DOIs to "pxdXXXXX" format
-2. standardize "mendeley" datasets (10.17632/xxxxx)
-3. standardize "openneuro" to a DOI
-4. remove all version information from "phs"
+1.  convert "pxd" DOIs to "pxdXXXXX" format
+2.  standardize "mendeley" datasets (10.17632/xxxxx)
+3.  standardize "openneuro" to a DOI
+4.  remove all version information from "phs"
 
-```{r last standardization steps}
+```{r datasets accession numbers extraction and standardization}
+
+# There were ~10K cases where an accession number weas still a part of a url and had to be extracted.
+# So here we will extract them, and use the step to also standardize last known identifiers.
 
 # Overview
 
@@ -825,6 +828,20 @@ dcc_phs <- DCC_corpus_9_nm_v_rm |>
   distinct() |> 
   dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
 
+
+# define the prefixes (keep the dash if it's part of the prefix)
+new_prefixes <- c(
+  "prjna", "egad", "egas", "prjca", "e-mtab-", 
+  "s-biad", "s-bsst", "emd-", "prjeb"
+)
+
+# build regex group for all prefixes
+prefix_group <- paste(new_prefixes, collapse = "|")
+
+# match: prefix followed by digits, then optional non-digit separator or end
+pattern <- paste0("(", prefix_group, ")\\d+(?=[^0-9]|$)")
+
+# Extracting and Standardizing
 
 DCC_corpus_10_id_std <- DCC_corpus_9_nm_v_rm |>
   mutate(
@@ -865,37 +882,42 @@ DCC_corpus_10_id_std <- DCC_corpus_9_nm_v_rm |>
       data_id_or_acc_nr == "10.18112/open‐neuro.ds000244.v1.0.0"
       ~ "10.18112/openneuro.ds000244",
       
+      # extract any of the above listed prefixes followed by digits and ending with "/" / "." or nothing
+      str_detect(data_id_or_acc_nr, regex(pattern, ignore_case = TRUE))
+      ~ str_extract(data_id_or_acc_nr, regex(pattern, ignore_case = TRUE)),
+      
       .default = data_id_or_acc_nr
     )
   )
 
-# Check
-
-dcc_pxd_check <- DCC_corpus_10_id_std |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "pxd")) # pxd
-
-dcc_phs_check <- DCC_corpus_10_id_std |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
-
-dcc_mendeley_check <- DCC_corpus_10_id_std |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
-                | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
-
-dcc_openneuro_check <- DCC_corpus_10_id_std |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
-                | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
+# # Check
+# 
+# dcc_pxd_check <- DCC_corpus_10_id_std |> 
+#   select(data_id_or_acc_nr) |> 
+#   distinct() |> 
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "pxd")) # pxd
+# 
+# dcc_phs_check <- DCC_corpus_10_id_std |> 
+#   select(data_id_or_acc_nr) |> 
+#   distinct() |> 
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
+# 
+# dcc_mendeley_check <- DCC_corpus_10_id_std |> 
+#   select(data_id_or_acc_nr) |> 
+#   distinct() |> 
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
+#                 | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
+# 
+# dcc_openneuro_check <- DCC_corpus_10_id_std |> 
+#   select(data_id_or_acc_nr) |> 
+#   distinct() |> 
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
+#                 | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
 
 # Save 9th DCC wrangling step
 save_cr(DCC_corpus_10_id_std, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_10_id_std.RData")))
 ```
+
 <br>
 
 As shown in **Table 6.** below, after removing excess characters and trails from DOIs and data set identifiers, cases where these two values were actually the same were discovered. These cases weren't visible before standardizing and cleaning the DOIs and the data set identifiers, meaning a simple comparison between the DOI and dataset columns resulted in 0 results.

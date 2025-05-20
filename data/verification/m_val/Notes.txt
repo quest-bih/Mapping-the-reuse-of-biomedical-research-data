@@ -12,6 +12,8 @@ figshare: 10.6084/m9.figshare.xxxxx
 
 mendeley: 10.17632/xxxxx
 
+openneuro was constructed as a DOI, as this is whe structure found in the DCC: 10.18112/open‐neuro.dsXXXXX
+
 [accn] were removed from ending of acccesion numbers
 
 double versioning of "phs" was removed
@@ -24,9 +26,8 @@ doi_no_ver_info was completed where it was NA
 
 pxd DOIs were converted to pxdXXXXX
 
-openneuro was constructed as a DOI, as this is whe structure found in the DCC
+
 
 ok210796-ok210933 case: was converted to ok210796
-
 
 Categorized each value: supplement / doi / acc_nr / article / url

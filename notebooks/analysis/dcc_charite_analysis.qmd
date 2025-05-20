@@ -683,24 +683,6 @@ save_cr(dcc_charite_joined_7_ds_years_info, file = file.path(here("data", "wrang
 # # Evgeny approved these cases as valid.
 ```
 
-# Remove clinvar datasets from joined list
-
-```{r remove clinvar datasets}
-
-
-##### REMOVE THIS PART! ALREADY REMOVED FROM CHARITE DATASETS!!!
-# As dbGaP does not document publicly when a certain version was released, we cannot use clinvar (datasets that start with "nm_")
-# in our analysis, and these have to be excluded:
-
-dcc_charite_joined_8_rm_clinvar <- dcc_charite_joined_7_ds_years_info |> 
-  dplyr::filter(!str_starts(charite_data_id_or_acc_nr, "nm_"))
-  
-# Save
-save_cr(dcc_charite_joined_8_rm_clinvar, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                             "dcc_charite_joined_8_rm_clinvar.RData")))
-
-```
-
 <br>
 
 **Note:** A data article was discovered in the Charite list (10.1016/j.dib.2021.107320) during a routine manual validation of the code. It was removed automatically during the removal of papers with author(s) overlap step. This means that there could potentially be more data articles in the matched DCC-Charite list.
