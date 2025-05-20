@@ -128,54 +128,6 @@ process_dataframe <- function(df) {
 }
 
 
-# DCC ---------------------------------------------------------------------
-
-# after running once, find problematic according to console output:
-dcc_dois_for_au_and_year_info |> 
-  mutate(row = row_number())  |>
-  dplyr::filter(doi %in% c("10.17605/osf.io/95ayu",
-                           "10.17605/osf.io/e8h3q",
-                           "10.17605/osf.io/gs2t5",
-                           "10.17605/osf.io/gupbf"))  |> 
-  select(row)
-
-# Set a "list of dataframes"
-
-df1 <- df |> slice(1:150) |> slice(-c(34, 121))
-df2 <- df |> slice(151:300)
-df3 <- df |> slice(301:450) |> slice(-c(333-301+1, 334-301+1))
-df4 <- df |> slice(451:600)
-df5 <- df |> slice(601:750)
-df6 <- df |> slice(751:784)
-
-dfs <- list(df1, df2, df3, df4, df5)
-
-# 2nd round
-
-dcc_dois_to_complete_metadata_2nd_round |> 
-  mutate(row = row_number())  |>
-  dplyr::filter(doi %in% c("10.17605/osf.io/95ayu",
-                           "10.17605/osf.io/e8h3q",
-                           "10.17605/osf.io/gs2t5",
-                           "10.17605/osf.io/gupbf"))  |> 
-  select(row)
-
-df1 <- df |> slice(-c(1:4))
-
-dfs <- list(df1)
-
-# Apply function to each dataframe and bind results together
-final_results <- map_dfr(dfs, process_dataframe)
-
-# Save
-save_path <- file.path(here("data",
-                            "results_verification",
-                            "meta data for dcc-charite list",
-                            "dois_info",
-                            "dcc_dois_metadata_29042025_2nd_round.RData"))
-
-save(final_results, file = save_path)
-
 # Charite -----------------------------------------------------------------
 
 # List of dataframes
@@ -187,43 +139,57 @@ final_results <- map_dfr(dfs, process_dataframe)
 
 # Save
 save_path <- file.path(here("data",
-                            "results_verification",
-                            "meta data for dcc-charite list",
-                            "dois_info",
-                            "charite_dois_metadata_29042025.RData"))
+                            "verification",
+                            "metadata matched",
+                            "charite_dois_metadata_20052025.RData"))
 
 save(final_results, file = save_path)
 
+# DCC ---------------------------------------------------------------------
 
+# after running once, I found problematic according to console output:
+df <- df |> 
+  dplyr::filter(!doi %in% c("10.17605/osf.io/95ayu",
+                           "10.17605/osf.io/e8h3q",
+                           "10.17605/osf.io/gs2t5",
+                           "10.17605/osf.io/gupbf",
+                           "10.17605/osf.io/3jk45"))
 
-# Data Articles -----------------------------------------------------------
+# Set a "list of dataframes"
 
-# Charite's DOIs
+df1 <- df |> slice(1:150)
+df2 <- df |> slice(151:300)
+df3 <- df |> slice(301:450)
+df4 <- df |> slice(451:600)
+df5 <- df |> slice(601:750)
+df6 <- df |> slice(751:900)
+df7 <- df |> slice(901:928)
 
-dfs <- list(df)
+dfs <- list(df1, df2, df3, df4, df5, df6, df7)
 
 # Apply function to each dataframe and bind results together
 final_results <- map_dfr(dfs, process_dataframe)
 
 # Save
 save_path <- file.path(here("data",
-                            "results_verification",
-                            "meta data for data articles dois",
-                            "data_articles_charite_metadata.RData"))
+                            "verification",
+                            "metadata matched",
+                            "dcc_dois_metadata_20052025.RData"))
 
 save(final_results, file = save_path)
 
-# Reusing Papers
+#### EXPERIMENTAL: get list of DFs (chunks of 150 obs) into a list:
 
-dfs <- list(df)
-
-# Apply function to each dataframe and bind results together
-final_results <- map_dfr(dfs, process_dataframe)
-
-# Save
-save_path <- file.path(here("data",
-                            "results_verification",
-                            "meta data for data articles dois",
-                            "data_articles_reusing_metadata.RData"))
-
-save(final_results, file = save_path)
+# # Vector of DOIs to remove
+# dois_to_remove <- c(
+#   "10.17605/osf.io/95ayu",
+#   "10.17605/osf.io/e8h3q",
+#   "10.17605/osf.io/gs2t5",
+#   "10.17605/osf.io/gupbf"
+# )
+# 
+# # Filter and split into chunks of 150
+# dfs <- df |>
+#   dplyr::filter(!doi %in% dois_to_remove) |>
+#   dplyr::mutate(chunk = (row_number() - 1) %/% 150 + 1) |>
+#   dplyr::group_split(chunk, .keep = FALSE)
