@@ -168,7 +168,7 @@ geom_text(aes(y = n + 2, label = n),
 #| fig.width: 12
 
 year_dcc_dt_all_for_plot_agg |> 
-  ggplot(aes(x = factor(publication_year_dcc), fill = factor(charite_data_id_or_acc_nr))) +
+  ggplot(aes(x = factor(publication_year_dcc), fill = factor(data_id_merged))) +
   geom_bar(stat = "identity",
            position = "stack",
            aes(y = count)) +

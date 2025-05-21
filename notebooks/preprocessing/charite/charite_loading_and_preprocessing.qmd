@@ -89,23 +89,6 @@ charite_da_dois_and_ids <- read.csv(
   sep = ";") |> 
   dplyr::filter(identifier_from_data_article_analysis != "NULL") # remove NULLs
 
-# I don't need this commented part anymore, but I'm keeping it for loading DOIs from data articles xlsx
-# # Load raw xlsx into a csv
-# 
-# # Read sheet "datasets_repos" from Excel file to get charite data articles and dataset ids
-# 
-# data_articles_ids <- read_excel(file.path(here("data",
-#                                                "raw",
-#                                                "data_articles",
-#                                                "v10"),
-#                                           "datajournal_articles - analysis of citations v10.xlsx"),
-#                                 sheet = "datasets_repos") |> # load relevant sheet from xlsx
-#   rename(doi = `Charité article DOI`,
-#          data_identifier = `dataset DOI, accession code, or link`) |>  # rename columns to meach numbat list later
-#   mutate(across(everything(), tolower)) |> # tolower
-#   select(doi, data_identifier) |> # get only relevant columns: charite data article and dataset id
-#   dplyr::filter(!data_identifier == "n/a") # remove NAs
-
 rm(dashboard_dois) # clean up
 ```
 
@@ -451,7 +434,7 @@ save_cr(charite_dois_and_ids_8_for_matching,
 write_csv_cr(
   charite_dois_and_ids_8_for_matching,
   file = here("data",
-              "results_verification",
+              "verification",
               "m_val",
               "charite_dois_and_ids_8_for_matching.csv"),
   row.names = FALSE

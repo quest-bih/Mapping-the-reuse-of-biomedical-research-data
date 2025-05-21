@@ -22,10 +22,10 @@ load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_4_au_inf
 
 # Assign the loaded object to a new variable name
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_8_rm_clinvar.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_6_covid_and_years.RData"))
 
-dcc_charite_joined_final <- dcc_charite_joined_8_rm_clinvar
-rm(dcc_charite_joined_8_rm_clinvar)
+dcc_charite_joined_final <- dcc_charite_joined_6_covid_and_years
+rm(dcc_charite_joined_6_covid_and_years)
 
 ```
 
@@ -41,7 +41,7 @@ rm(dcc_charite_joined_8_rm_clinvar)
 counts_final <- tibble(
   `Mentioning Articles` = dcc_charite_joined_final |> select(doi_dcc) |> distinct() |> nrow(),
   `Charité Articles` = dcc_charite_joined_final |> select(doi_charite) |> distinct() |> nrow(),
-  `Mentioned Datasets` = dcc_charite_joined_final |> select(charite_data_id_or_acc_nr) |> distinct() |> nrow()
+  `Mentioned Datasets` = dcc_charite_joined_final |> select(data_id_merged) |> distinct() |> nrow()
 )
 
 # 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
@@ -113,7 +113,7 @@ dcc_charite_joined_w_au_ov <- dcc_charite_joined_4_au_info |>
 counts_w_au_ov <- tibble(
   `Mentioning Articles` = dcc_charite_joined_w_au_ov |> select(doi_dcc) |> distinct() |> nrow(),
   `Charité Articles` = dcc_charite_joined_w_au_ov |> select(doi_charite) |> distinct() |> nrow(),
-  `Mentioned Datasets` = dcc_charite_joined_w_au_ov |> select(charite_data_id_or_acc_nr) |> distinct() |> nrow()
+  `Mentioned Datasets` = dcc_charite_joined_w_au_ov |> select(data_id_merged) |> distinct() |> nrow()
 )
 
 # Prepare count tibbles (with and without author overlap cases) for plotting
@@ -141,7 +141,7 @@ save_cr(combined_count_tibbles, file = file.path(here("data",
 ```{r fig-datasets-freq-dist-prep}
 
 ds_freq <- dcc_charite_joined_final |>
-  group_by(charite_data_id_or_acc_nr) |>
+  group_by(data_id_merged) |>
   summarise(n = n())
 
 # save as RData
@@ -182,18 +182,18 @@ save_cr(rep_dt, file = file.path(here("data",
 ```{r fig-ref-by-year-prep}
 
 year_dcc_dt_all <- dcc_charite_joined_final |>
-  select(doi_dcc, charite_data_id_or_acc_nr, publication_year_dcc) |> 
+  select(doi_dcc, data_id_merged, publication_year_dcc) |> 
   distinct() |> 
-  count(charite_data_id_or_acc_nr, sort = TRUE)
+  count(data_id_merged, sort = TRUE)
 
 year_dcc_dt_all_for_plot <- year_dcc_dt_all |>
-  inner_join(dcc_charite_joined_final, by = "charite_data_id_or_acc_nr")
+  inner_join(dcc_charite_joined_final, by = "data_id_merged")
 
 year_dcc_dt_all_for_plot_agg <- year_dcc_dt_all_for_plot |> 
-  mutate(charite_data_id_or_acc_nr = case_when(
-    !charite_data_id_or_acc_nr %in% c("6y2e", "gse14764", "gse148729", "gse55235") ~ "Others",
-    .default = charite_data_id_or_acc_nr)) |> 
-  group_by(charite_data_id_or_acc_nr, publication_year_dcc) |> 
+  mutate(data_id_merged = case_when(
+    !data_id_merged %in% c("6y2e", "gse14764", "gse148729", "gse55235") ~ "Others",
+    .default = data_id_merged)) |> 
+  group_by(data_id_merged, publication_year_dcc) |> 
   summarise(count = n(), .groups = "drop") |> 
   dplyr::filter(publication_year_dcc != "2023")
 
@@ -211,9 +211,9 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 # Prepare table for sankey:
 
 dcc_charite_for_sankey <- dcc_charite_joined_final |>
-  select(charite_data_id_or_acc_nr, data_access, covid_related, repository) |>
+  select(data_id_merged, data_access, covid_related, repository) |>
   distinct() |>
-  mutate(acc_nr_or_doi = case_when(str_starts(charite_data_id_or_acc_nr, "10.") ~ "DOI", .default = "Accession Number"))
+  mutate(acc_nr_or_doi = case_when(str_starts(data_id_merged, "10.") ~ "DOI", .default = "Accession Number"))
 
 # Create links
 
@@ -277,9 +277,9 @@ save_cr(links_all, file = file.path(here("data",
 ```{r Datasets and Citing Papers Publication Years, echo=FALSE}
 
 dif_for_plot <- dcc_charite_joined_final |>
-  select(publication_year_dcc, dataset_publication_year) |>
+  select(publication_year_dcc, charite_id_year) |>
   distinct() |>
-  mutate(dif = publication_year_dcc - dataset_publication_year) |>
+  mutate(dif = publication_year_dcc - charite_id_year) |>
   dplyr::filter(dif >= 0 & !is.na(dif)) |> 
   dplyr::filter(dif < 24)
 
