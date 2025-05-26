@@ -175,16 +175,18 @@ rep_dt <- dcc_charite_joined_final |>
   summarise(n = n()) |> 
   arrange(desc(n)) |> 
   mutate(repository = case_when(
-    repository == "NCBI dbGaP (DataBase of Genotypes And Phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
-    repository == "figshare" ~ "Figshare",
-    repository == "The European Genome-phenome Archive(EGA)" ~ "EGA",
-    repository == "Gene Expression Omnibus (GEO)" ~ "GEO",
-    repository == "PRIDE Proteomics Identification Database" ~ "PRIDE",
-    repository == "NCBI Reference Sequence Database" ~ "NCBI RefSeq",
-    repository == "European Nucleotide Archive" ~ "ENA",
-    repository == "The Protein Data Bank" ~ "PDB",
+    repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "ncbi dbgap",
+    repository == "figshare" ~ "figshare",
+    repository == "the european genome-phenome archive(ega)" ~ "ega",
+    repository == "gene expression omnibus (geo)" ~ "geo",
+    repository == "pride proteomics identification database" ~ "pride",
+    repository == "ncbi reference sequence database" ~ "ncbi refseq",
+    repository == "european nucleotide archive" ~ "ena",
+    repository == "the protein data bank" ~ "pdb",
+    repository == "elsevier data repository" ~ "elsevier",
     .default = repository # shorten rep names for a nicer appearance
   ))
+
 
 # save as RData
 save_cr(rep_dt, file = file.path(here("data",
@@ -211,7 +213,7 @@ year_dcc_dt_all_for_plot_agg <- year_dcc_dt_all_for_plot |>
     .default = data_id_merged)) |> 
   group_by(data_id_merged, publication_year_dcc) |> 
   summarise(count = n(), .groups = "drop") |> 
-  dplyr::filter(publication_year_dcc != "2023")
+  dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
 
 # save as RData
 save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
@@ -238,7 +240,7 @@ links_ac_access <- dcc_charite_for_sankey |>
                             .default = "DOI"),
          target = case_when(data_access == "yes" ~ "Full Access",
                             data_access == "restricted" ~ "Restricted Access",
-                            .default = "access not checked yet")) |>
+                            .default = "not checked yet")) |>
   count(source, target) |>
   rename(value = n) |>
   as.data.frame()
@@ -246,7 +248,7 @@ links_ac_access <- dcc_charite_for_sankey |>
 links_access_rep <- dcc_charite_for_sankey |>
   mutate(source = case_when(data_access == "yes" ~ "Full Access",
                             data_access == "restricted" ~ "Restricted Access",
-                            .default = "access not checked yet"),
+                            .default = "not checked yet"),
          target = case_when(
            repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
            repository == "figshare" ~ "figshare",
@@ -256,6 +258,7 @@ links_access_rep <- dcc_charite_for_sankey |>
            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
            repository == "european nucleotide archive" ~ "ENA",
            repository == "the protein data bank" ~ "PDB",
+           repository == "elsevier data repository" ~ "elsevier",
            .default = repository)) |>
   count(source, target) |>
   rename(value = n) |>
@@ -271,9 +274,10 @@ links_rep_covid <- dcc_charite_for_sankey |>
            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
            repository == "european nucleotide archive" ~ "ENA",
            repository == "the protein data bank" ~ "PDB",
+           repository == "elsevier data repository" ~ "elsevier",
            .default = repository),
-         target = case_when(covid_related == 1 ~ "Covid Related",
-                            covid_related == 0 ~ "Not Covid Related",
+         target = case_when(covid_related == "TRUE" ~ "Covid Related",
+                            covid_related == "FALSE" ~ "Not Covid Related",
                             .default = "covid not checked yet")) |>
   count(source, target) |>
   rename(value = n) |>

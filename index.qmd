@@ -9,6 +9,7 @@ authors:
 format:
   html:
     page-layout: full
+    fontsize: 1.4em
 ---
 
 ## 1. Introduction
@@ -269,5 +270,5 @@ For steps to ensure the validity of data, see the methods section.
 {{< embed notebooks/plots/plots.qmd#fig-datasets-and-papers-years >}}
 
 ::: quarto-figure
-![Figure X: Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){.embedded width="130%" height="400px"}
+![Figure X: Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){.embedded width="100%" height="600px"}
 :::

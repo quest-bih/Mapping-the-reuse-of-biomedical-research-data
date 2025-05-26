@@ -128,33 +128,64 @@ ds_freq |>
 #| label: fig-repo-dist
 #| fig-cap: Distribution of References Across Repositories
 #| fig-format: png
-#| fig.height: 14
-#| fig.width: 32
-#| fig-allign: center
+#| fig.height: 10
+#| fig.width: 10
+
+# rep_dt |>
+#   ggplot(aes(x = reorder(repository, n), y = n)) +
+#   geom_bar(stat = "identity",
+#            position = "dodge",
+#            fill = "#80CBC4",
+#            color = "black") +
+#   geom_bar(stat = "identity", fill = "gray30",
+#            alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
+# geom_text(aes(y = n + 2, label = n),
+#             vjust = 0.5,
+#             hjust = 0,
+#             size = 16, color = "black") + # text next to bars
+#   scale_y_continuous(expand = expansion(mult = c(0.02, 0.15))) + # Adds 5% padding on both sides of the y-axis
+#   coord_flip() +
+#   labs(x = "Repository", y = "Number of Mentions") +
+#   theme_classic() +
+#   theme(
+#     legend.position = "none",
+#     axis.title.y = element_text(size = 32, margin = margin(r = 20)),  # space between y title and axis
+#     axis.title.x = element_text(size = 32, margin = margin(t = 20)),  # space between x title and axis
+#     axis.text.y = element_text(size = 40, color = "black"),
+#     axis.text.x = element_text(size = 36, color = "black")
+#     )
+
+# log scale
 
 rep_dt |>
   ggplot(aes(x = reorder(repository, n), y = n)) +
   geom_bar(stat = "identity",
            position = "dodge",
            fill = "#80CBC4",
-           color = "black") +
+           color = "gray") +
   geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
-geom_text(aes(y = n + 2, label = n),
-            vjust = 0.5,
-            hjust = 0,
-            size = 16, color = "black") + # text next to bars
-  scale_y_continuous(expand = expansion(mult = c(0.15, 0.15))) + # Adds 5% padding on both sides of the y-axis
+           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.015)) +  # Shadow
+  geom_text(aes(y = n, label = n),
+            hjust = -0.2,
+            size = 6, color = "black") +
+  scale_y_log10(
+    breaks = c(1, 3, 10, 40, 100, 400),
+    labels = c(1, 3, 10, 40, 100, 400),
+    expand = expansion(mult = c(0.02, 0.15))
+  ) +
   coord_flip() +
-  labs(x = "Repository", y = "Number of Mentions") +
+  labs(x = "Repository", y = "Number of Mentions (log scale)") +
   theme_classic() +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(size = 32, margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 32, margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 40, color = "black"),
-    axis.text.x = element_text(size = 36, color = "black")
-    )
+    axis.title.y = element_text(size = 24, margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 20, color = "black"),
+    axis.text.x = element_text(size = 20, color = "black")
+  )
+
+
+
 
 ```
 
@@ -260,7 +291,7 @@ plot_Sankey <- function(links, ...) {
 
 plot_Sankey(links_all, sinksRight = FALSE, fontSize = 20)
 
-s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 20)
+s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 22)
 
 saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sankey_interactive_plot.html"), selfcontained = TRUE)
 

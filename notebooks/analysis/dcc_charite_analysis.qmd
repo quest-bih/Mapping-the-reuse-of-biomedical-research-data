@@ -319,28 +319,6 @@ save_cr(dcc_charite_joined_5_rm_au_ov, file = file.path(here("data", "wrangling_
 
 ```
 
-# Add datasets metadata: covid info and datasets years
-
-```{r add datasets metadata}
-
-metadata_to_join <- datasets_metadata_5_dcc_match |>
-  select(data_id_merged, covid_related, charite_id_year) |>
-  distinct() |>
-  dplyr::filter(
-    data_id_merged == "10.18112/openneuro.ds001226"
-    & is.na(covid_related))
-
-dcc_charite_joined_6_covid_and_years <- dcc_charite_joined_5_rm_au_ov |> 
-  left_join(metadata_to_join,
-            by = "data_id_merged")
-
-# save
-save_cr(dcc_charite_joined_6_covid_and_years,
-        file = file.path(here("data", "wrangling_steps","dcc_charite", "dcc_charite_joined_6_covid_and_years.RData")))
-
-
-```
-
 ##### adding covid-related info
 
 ```{r add covid related label}
@@ -365,8 +343,10 @@ covid_info_for_join |>
 # Join into _joined
 
 dcc_charite_joined_6_covid_info <- dcc_charite_joined_5_rm_au_ov |> 
-  left_join(covid_info_for_join,
-            by = "data_id_merged")
+  left_join(
+    covid_info_for_join |>
+      select(data_id_merged, covid_related),
+    by = "data_id_merged")
 
 # Save
 save_cr(dcc_charite_joined_6_covid_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
@@ -452,8 +432,10 @@ years_info_for_join |>
 # Join into _joined
 
 dcc_charite_joined_7_ds_years <- dcc_charite_joined_6_covid_info |> 
-  left_join(years_info_for_join,
-            by = "data_id_merged")
+  left_join(
+  years_info_for_join |>
+    select(data_id_merged, charite_id_year),
+  by = "data_id_merged")
 
 # Save
 save_cr(dcc_charite_joined_7_ds_years, file = file.path(here("data", "wrangling_steps", "dcc_charite",

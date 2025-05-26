@@ -3276,7 +3276,7 @@ vertical-align: -.125em;
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> data_id_merged)) <span class="sc">|&gt;</span> </span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(data_id_merged, publication_year_dcc) <span class="sc">|&gt;</span> </span>
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(publication_year_dcc <span class="sc">!=</span> <span class="st">&quot;2023&quot;</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span>publication_year_dcc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;2023&quot;</span>, <span class="st">&quot;2024&quot;</span>))</span>
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(year_dcc_dt_all_for_plot_agg, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
@@ -3301,7 +3301,7 @@ vertical-align: -.125em;
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">&quot;DOI&quot;</span>),</span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">target =</span> <span class="fu">case_when</span>(data_access <span class="sc">==</span> <span class="st">&quot;yes&quot;</span> <span class="sc">~</span> <span class="st">&quot;Full Access&quot;</span>,</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                            data_access <span class="sc">==</span> <span class="st">&quot;restricted&quot;</span> <span class="sc">~</span> <span class="st">&quot;Restricted Access&quot;</span>,</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">&quot;access not checked yet&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">&quot;not checked yet&quot;</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(source, target) <span class="sc">|&gt;</span></span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">value =</span> n) <span class="sc">|&gt;</span></span>
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
@@ -3309,7 +3309,7 @@ vertical-align: -.125em;
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>links_access_rep <span class="ot">&lt;-</span> dcc_charite_for_sankey <span class="sc">|&gt;</span></span>
 <span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">source =</span> <span class="fu">case_when</span>(data_access <span class="sc">==</span> <span class="st">&quot;yes&quot;</span> <span class="sc">~</span> <span class="st">&quot;Full Access&quot;</span>,</span>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>                            data_access <span class="sc">==</span> <span class="st">&quot;restricted&quot;</span> <span class="sc">~</span> <span class="st">&quot;Restricted Access&quot;</span>,</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">&quot;access not checked yet&quot;</span>),</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">&quot;not checked yet&quot;</span>),</span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">target =</span> <span class="fu">case_when</span>(</span>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI dbGaP&quot;</span>,</span>
 <span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;figshare&quot;</span> <span class="sc">~</span> <span class="st">&quot;figshare&quot;</span>,</span>
@@ -3319,35 +3319,37 @@ vertical-align: -.125em;
 <span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi reference sequence database&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI RefSeq&quot;</span>,</span>
 <span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;european nucleotide archive&quot;</span> <span class="sc">~</span> <span class="st">&quot;ENA&quot;</span>,</span>
 <span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the protein data bank&quot;</span> <span class="sc">~</span> <span class="st">&quot;PDB&quot;</span>,</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>           <span class="at">.default =</span> repository)) <span class="sc">|&gt;</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(source, target) <span class="sc">|&gt;</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">value =</span> n) <span class="sc">|&gt;</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>links_rep_covid <span class="ot">&lt;-</span> dcc_charite_for_sankey <span class="sc">|&gt;</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">source =</span> <span class="fu">case_when</span>(</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI dbGaP&quot;</span>,</span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;figshare&quot;</span> <span class="sc">~</span> <span class="st">&quot;figshare&quot;</span>,</span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the european genome-phenome archive(ega)&quot;</span> <span class="sc">~</span> <span class="st">&quot;EGA&quot;</span>,</span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;gene expression omnibus (geo)&quot;</span> <span class="sc">~</span> <span class="st">&quot;GEO&quot;</span>,</span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;pride proteomics identification database&quot;</span> <span class="sc">~</span> <span class="st">&quot;PRIDE&quot;</span>,</span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi reference sequence database&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI RefSeq&quot;</span>,</span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;european nucleotide archive&quot;</span> <span class="sc">~</span> <span class="st">&quot;ENA&quot;</span>,</span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the protein data bank&quot;</span> <span class="sc">~</span> <span class="st">&quot;PDB&quot;</span>,</span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>           <span class="at">.default =</span> repository),</span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>         <span class="at">target =</span> <span class="fu">case_when</span>(covid_related <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">&quot;Covid Related&quot;</span>,</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>                            covid_related <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="st">&quot;Not Covid Related&quot;</span>,</span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">&quot;covid not checked yet&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(source, target) <span class="sc">|&gt;</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">value =</span> n) <span class="sc">|&gt;</span></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>links_all <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(links_ac_access, links_access_rep, links_rep_covid)</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;elsevier data repository&quot;</span> <span class="sc">~</span> <span class="st">&quot;elsevier&quot;</span>,</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>           <span class="at">.default =</span> repository)) <span class="sc">|&gt;</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(source, target) <span class="sc">|&gt;</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">value =</span> n) <span class="sc">|&gt;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>links_rep_covid <span class="ot">&lt;-</span> dcc_charite_for_sankey <span class="sc">|&gt;</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">source =</span> <span class="fu">case_when</span>(</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI dbGaP&quot;</span>,</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;figshare&quot;</span> <span class="sc">~</span> <span class="st">&quot;figshare&quot;</span>,</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the european genome-phenome archive(ega)&quot;</span> <span class="sc">~</span> <span class="st">&quot;EGA&quot;</span>,</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;gene expression omnibus (geo)&quot;</span> <span class="sc">~</span> <span class="st">&quot;GEO&quot;</span>,</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;pride proteomics identification database&quot;</span> <span class="sc">~</span> <span class="st">&quot;PRIDE&quot;</span>,</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi reference sequence database&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI RefSeq&quot;</span>,</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;european nucleotide archive&quot;</span> <span class="sc">~</span> <span class="st">&quot;ENA&quot;</span>,</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the protein data bank&quot;</span> <span class="sc">~</span> <span class="st">&quot;PDB&quot;</span>,</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;elsevier data repository&quot;</span> <span class="sc">~</span> <span class="st">&quot;elsevier&quot;</span>,</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>           <span class="at">.default =</span> repository),</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>         <span class="at">target =</span> <span class="fu">case_when</span>(covid_related <span class="sc">==</span> <span class="st">&quot;TRUE&quot;</span> <span class="sc">~</span> <span class="st">&quot;Covid Related&quot;</span>,</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>                            covid_related <span class="sc">==</span> <span class="st">&quot;FALSE&quot;</span> <span class="sc">~</span> <span class="st">&quot;Not Covid Related&quot;</span>,</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">&quot;covid not checked yet&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(source, target) <span class="sc">|&gt;</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">value =</span> n) <span class="sc">|&gt;</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
 <span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(links_all, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;tables_for_plots&quot;</span>,</span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;links_all.RData&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>links_all <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(links_ac_access, links_access_rep, links_rep_covid)</span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(links_all, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;tables_for_plots&quot;</span>,</span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;links_all.RData&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="datasets-and-citing-papers-publication-years" class="level1">
