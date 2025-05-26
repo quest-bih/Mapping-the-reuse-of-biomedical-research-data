@@ -319,7 +319,6 @@ save_cr(dcc_charite_joined_5_rm_au_ov, file = file.path(here("data", "wrangling_
 
 ```
 
-
 # Add datasets metadata: covid info and datasets years
 
 ```{r add datasets metadata}
@@ -342,46 +341,36 @@ save_cr(dcc_charite_joined_6_covid_and_years,
 
 ```
 
-
-##### ARCHIVE adding covid-related info
+##### adding covid-related info
 
 ```{r add covid related label}
 
-# load info of matched datasets from Numbat
+# load datasets metadata table
 
-covid_info_numbat <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "covid",
-                 "distinct_id_list - covid or not.csv")),
-  header = TRUE) |> 
-  as_tibble() |> 
-  rename(covid_related = 2) |> 
-  select(1:2)
+load(here("data", "verification", "metadata all", "datasets_metadata_7_lic.RData"))
+
+# prepare for join
+
+covid_info_for_join <- datasets_metadata_7_lic |>
+  select(data_id_merged, covid_related) |>
+  distinct() |>
+  dplyr::filter(!is.na(covid_related)) # deduplicate NA cases
+
+# check NA cases with duplicate data_id values
+covid_info_for_join |>
+  group_by(data_id_merged) |>
+  dplyr::filter(n() > 1, n_distinct(covid_related) > 1) |>
+  ungroup() |> View()
 
 # Join into _joined
 
 dcc_charite_joined_6_covid_info <- dcc_charite_joined_5_rm_au_ov |> 
-  left_join(covid_info_numbat, by = "charite_data_id_or_acc_nr")
+  left_join(covid_info_for_join,
+            by = "data_id_merged")
 
 # Save
 save_cr(dcc_charite_joined_6_covid_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                              "dcc_charite_joined_6_covid_info.RData")))
-
-
-# # for data articles analysis later: load info of matched datasets from data articles list (all metadata)
-# 
-# metadata_da <- read.csv(
-#   file.path(here("data",
-#                  "verification",
-#                  "metadata data articles",
-#                  "data_articles_datasets_ids_listed_in_numbat_as_well.csv")),
-#   header = TRUE) |> 
-#   as_tibble()
-# 
-# dcc_charite_joined_6_covid_info <- dcc_charite_joined_5_rm_au_ov |> 
-#   left_join(covid_info, by = "charite_data_id_or_acc_nr")
-
 
 ```
 
@@ -435,33 +424,40 @@ save_cr(dcc_charite_joined_6_covid_info, file = file.path(here("data", "wranglin
 
 # Load metadata about datasets publication years: current version: _v4
 
-ds_years_info <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "datasets years",
-                 "datasets_years_filled_AC_v4.csv")),
-            header = TRUE,
-            sep = ",")
+# ds_years_info <- read.csv(
+#   file.path(here("data",
+#                  "verification",
+#                  "datasets years",
+#                  "datasets_years_filled_AC_v4.csv")),
+#             header = TRUE,
+#             sep = ",")
+# 
+# save_cr(ds_years_info, file = file.path(here("data",
+#                                              "inputs_for_quick_render",
+#                                              "ds_years_info.RData")))
 
-save_cr(ds_years_info, file = file.path(here("data",
-                                             "inputs_for_quick_render",
-                                             "ds_years_info.RData")))
-# prepare for joining
+# prepare for join
 
-ds_years_info_for_join <- ds_years_info |> 
-  select(charite_data_id_or_acc_nr, charite_id_year) |> # get only dataset identifiers and publication years
-  dplyr::filter(!is.na(charite_id_year)) |> # remove NAs
-  distinct()
+years_info_for_join <- datasets_metadata_7_lic |>
+  select(data_id_merged, charite_id_year) |>
+  distinct() |>
+  dplyr::filter(!is.na(charite_id_year)) # deduplicate NA cases
 
-# Join
+# check NA cases with duplicate data_id values
+years_info_for_join |>
+  group_by(data_id_merged) |>
+  dplyr::filter(n() > 1, n_distinct(charite_id_year) > 1) |>
+  ungroup() |> View()
 
-dcc_charite_joined_7_ds_years_info <- dcc_charite_joined_6_covid_info |> 
-  left_join(ds_years_info_for_join, by = "charite_data_id_or_acc_nr") |> 
-  rename(dataset_publication_year = charite_id_year)
+# Join into _joined
+
+dcc_charite_joined_7_ds_years <- dcc_charite_joined_6_covid_info |> 
+  left_join(years_info_for_join,
+            by = "data_id_merged")
 
 # Save
-save_cr(dcc_charite_joined_7_ds_years_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                             "dcc_charite_joined_7_ds_years_info.RData")))
+save_cr(dcc_charite_joined_7_ds_years, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                             "dcc_charite_joined_7_ds_years.RData")))
 
 # # 4. Create tables for verification:
 # 

@@ -26,33 +26,13 @@ write_csv_cr <- function(x, file, ...) {
   write.csv(x, file = file, ...)
 } # wrapper for write.csv() with automatic directory creation
 
-# Load Charité datasets
+# Load Charité datasets for matching with the DCC
 
 load(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_8_for_matching.RData"))
 
 # 2. Add Metadata ---------------------------------------------------------
 
 # Note: data_access column already exists and filled for Numabt source datasets! So no need to create it here.
-
-# Deal with duplicates that have only one valid value in another column:
-bad_vals <- c("NA", "NULL", "")
-
-# find these values
-cases <- master_for_prep |>
-  group_by(data_identifier) |>
-  dplyr::filter(
-    n_distinct(license_name, na.rm = FALSE) > 1,  # more than one unique value
-    any(is.na(license_name) | license_name %in% bad_vals | is.null(license_name)),  # at least one bad
-    any(!(is.na(license_name) | license_name %in% bad_vals | is.null(license_name)))  # at least one good
-  ) |>
-  ungroup() |> 
-  dplyr::filter(!(data_identifier %in% bad_vals | is.na(data_identifier)))
-
-# filter them
-get_unique_with_no_bad_vals <- df |> 
-  dplyr::filter(!(is.na(col2) | is.null(col2) | col2 %in% bad_vals)) |> 
-  distinct(col1, .keep_all = TRUE)
-
 
 ### Load human/not & covid relatet (yes/no): from distinct_id_list - covid or not.xlsx
 
@@ -77,6 +57,7 @@ covid_and_human_metadata <- read.csv(
       is.na(human_data) ~ ""),
     charite_data_id_or_acc_nr = tolower(charite_data_id_or_acc_nr))
 
+find_duplicates(covid_and_human_metadata, charite_data_id_or_acc_nr, covid_related)
 
 # Add
 
@@ -188,30 +169,119 @@ write_csv_cr(
 
 load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v2.rda"))
 
+
+# check for encoding issues
+
+master_2020_2023_1_unique <- master_2020_2023 |> 
+  mutate(unique_id = row_number()) |> 
+  relocate(unique_id, .before = 1) # add unique id
+
+View(master_2020_2023_1_unique[!stringi::stri_enc_isutf8(master_2020_2023_1_unique$data_identifier), ]) # view issues
+
+# Both cases where there's a doi and id values are not relevant, and will be removed below
+
+charite_2020_2023 <- master_2020_2023_1_unique |>
+  dplyr::filter(!unique_id %in% c(2870, 3184)) |> # remove 2 irrelevant cases with encoding issues
+  select(-unique_id) |>  # remove temporary unique_id column
+  mutate(doi = tolower(doi),
+         data_identifier = tolower(data_identifier)) |> # tolower
+  mutate(doi = na_if(doi, "na")) |> # replace "na" with true NA
+  dplyr::filter(!(is.na(doi))) |> # filter out cases where doi is NA
+  mutate(doi_no_ver_info = str_remove(doi, "\\.[0-9]$")) |> # remove version information from DOIs
+  relocate(doi_no_ver_info, .after = 1) # relocate new column
+
+bad_vals <- c("NA", "NULL", "", "null", "na") # define values to filter out
+
 # get metadata
 
-master_for_prep <- master_2020_2023 |>
-  select(data_identifier, license_name, data_availability_statement)
-
-master_2020_2023 |>
-  #dplyr::filter(!(is.na(data_identifier) | data_identifier == "NULL")) |> 
-  select(doi, data_identifier, license_name, data_availability_statement) |>
-  distinct() |>
-  group_by(data_identifier) |>
+datasets_das <- charite_2020_2023 |> 
+  select(doi, data_identifier, data_availability_statement) |> 
   dplyr::filter(
-    (
-      sum(is.na(license_name) | license_name == "NULL") > 1 &
-        sum(!(is.na(license_name) | license_name == "NULL")) > 0
-    ) |
-      (
-        sum(is.na(data_availability_statement) | data_availability_statement == "NULL") > 1 &
-          sum(!(is.na(data_availability_statement) | data_availability_statement == "NULL")) > 0
-      )
-  ) |>
-  ungroup() |> 
-  View()
+    !(
+      is.na(data_identifier)
+      | is.na(data_availability_statement)
+      | data_identifier %in% bad_vals
+      | data_availability_statement %in% bad_vals
+    )
+    ) |> 
+  distinct()
+
+# add metadata
+
+datasets_metadata_6_das <- datasets_metadata_5_dcc_match |> 
+  left_join(datasets_das,
+            by = c("doi" = "doi", "data_id" = "data_identifier"))
+
+# Find cases with different DAS values for the same DOI+ID combination:
+
+datasets_metadata_6_das |>
+  group_by(unique_id) |>
+  summarise(n = n()) |>
+  dplyr::filter(n > 1)
+
+# filter them out:
+
+datasets_metadata_6_das <- datasets_metadata_6_das |>
+  distinct(unique_id, .keep_all = TRUE)
+
 
 ### license (yes/no): from numbat master 2020-2023 and blanka's data articles file
+
+
+# get metadata
+
+datasets_lic <- charite_2020_2023 |> 
+  select(doi, data_identifier, license_name) |> 
+  dplyr::filter(
+    !(
+      is.na(data_identifier)
+      | is.na(license_name)
+      | data_identifier %in% bad_vals
+      | license_name %in% bad_vals
+    )
+  ) |> 
+  distinct()
+
+# add metadata
+
+datasets_metadata_7_lic <- datasets_metadata_6_das |> 
+  left_join(datasets_lic,
+            by = c("doi" = "doi", "data_id" = "data_identifier"))
+
+
+# # Deal with duplicates that have only one valid value in another column:
+# 
+# bad_vals <- c("NA", "NULL", "")
+# 
+# # find these values if they 
+# cases <- master_2020_2023 |>
+#   dplyr::filter(!(as.character(data_identifier) %in% bad_vals | is.na(data_identifier))) |> select(data_identifier, data_availability_statement) |> 
+#   group_by(data_identifier) |>
+#   dplyr::filter(
+#     n_distinct(data_availability_statement , na.rm = FALSE) > 1,  # more than one unique value
+#     any(is.na(data_availability_statement) | (data_availability_statement) %in% bad_vals),  # at least one bad
+#     any(!(is.na(data_availability_statement) | (data_availability_statement) %in% bad_vals))  # at least one good
+#   ) |>
+#   ungroup() |>
+#   dplyr::filter(!(is.na(data_availability_statement)
+#                   | (data_availability_statement) %in% bad_vals)) |>
+#   distinct()
+# 
+# cases |>
+#   group_by(data_identifier) |>
+#   dplyr::filter(n() > 1, n_distinct(data_availability_statement) > 1) |>
+#   ungroup() |> 
+#   View()
+
+
+# save
+  save_cr(datasets_metadata_7_lic, file = file.path(here(
+    "data",
+    "verification",
+    "metadata all",
+    "datasets_metadata_7_lic.RData")))  
+
+#####
 
 data_articles_ids <- read_excel(file.path(here("data",
                                                "raw",

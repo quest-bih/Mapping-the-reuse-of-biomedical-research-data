@@ -6,6 +6,9 @@ authors:
     roles: "writing"
     corresponding: true
     orcid: "000"
+format:
+  html:
+    page-layout: full
 ---
 
 ## 1. Introduction
