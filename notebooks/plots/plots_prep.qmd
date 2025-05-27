@@ -297,10 +297,9 @@ save_cr(links_all, file = file.path(here("data",
 ```{r Datasets and Citing Papers Publication Years, echo=FALSE}
 
 dif_for_plot <- dcc_charite_joined_final |>
-  select(data_id_merged, publication_year_dcc, charite_id_year) |>
+  select(data_id_merged, charite_id_year) |>
   distinct() |>
-  mutate(dif = publication_year_dcc - charite_id_year) |>
-  dplyr::filter(dif < 24 & dif > 0)
+  mutate(dif = publication_year_dcc - charite_id_year)
 
 # save as RData
 save_cr(dif_for_plot, file = file.path(here("data",

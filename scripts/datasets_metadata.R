@@ -10,6 +10,9 @@ if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi, writexl)
 
+
+# wrappers for save. write.csv() and write_xlsx with automatic directory creation
+
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
   if (!dir.exists(dir_path)) {
@@ -24,7 +27,15 @@ write_csv_cr <- function(x, file, ...) {
     dir.create(dir_path, recursive = TRUE)
   }
   write.csv(x, file = file, ...)
-} # wrapper for write.csv() with automatic directory creation
+} 
+
+write_xlsx_cr <- function(x, file, ...) {
+  dir_path <- dirname(file)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+  writexl::write_xlsx(x, path = file, ...)
+}
 
 # Load Charité datasets for matching with the DCC
 
@@ -143,28 +154,6 @@ datasets_metadata_5_dcc_match <- datasets_metadata_4_year |>
     .default = "FALSE"))
 
 
-##### Break to print a preview for the team:
-
-
-datasets_master_metadata <- datasets_metadata_5_dcc_match |> 
-  select(-c(data_id_auto_cleaned, data_id_no_ex_chr, data_id_m_val))
-
-# save
-save_cr(datasets_master_metadata,
-        file = file.path(here("data", "verification","metadata all", "datasets_master_metadata.RData")))
-
-# write as csv
-write_csv_cr(
-  datasets_master_metadata,
-  file = here("data",
-              "verification",
-              "metadata all",
-              "datasets_master_metadata.csv"),
-  row.names = FALSE
-)
-
-#####
-
 ### is in DAS: from numbat master 2020-2023
 
 load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v2.rda"))
@@ -226,20 +215,38 @@ datasets_metadata_6_das <- datasets_metadata_6_das |>
 
 ### license (yes/no): from numbat master 2020-2023 and blanka's data articles file
 
-
 # get metadata
 
+# Notice:
+# NULL in license name is either no license OR no answer.
+  # (i) "dataset_license" answer "no"? "NULL" in license_name means no license.
+  # (ii) "dataset_license" is anything else? "NULL" in license_name means no answer.
+
+
 datasets_lic <- charite_2020_2023 |> 
-  select(doi, data_identifier, license_name) |> 
+  # select only relevant columns
+  select(doi, data_identifier, dataset_license, license_name) |> 
+  # filter out irrelevant cases (no id or licesne = NA / blank)
   dplyr::filter(
     !(
       is.na(data_identifier)
       | is.na(license_name)
       | data_identifier %in% bad_vals
-      | license_name %in% bad_vals
+      | license_name %in% c("NA", "", " ", "na")
     )
-  ) |> 
-  distinct()
+  ) |>
+  distinct() |> 
+  # create a new "license" column based on the conditions above this chunk
+  mutate(license = case_when(
+    dataset_license == "no"
+    & license_name %in% c("null", "NULL")
+    ~ "no license",
+    .default = license_name)) |> 
+  select(-c(dataset_license, license_name)) |> 
+  distinct() |> 
+  group_by(doi, data_identifier) |>
+  dplyr::filter(!(license == "NULL" & any(license != "NULL"))) |>
+  ungroup()
 
 # add metadata
 
@@ -248,31 +255,6 @@ datasets_metadata_7_lic <- datasets_metadata_6_das |>
             by = c("doi" = "doi", "data_id" = "data_identifier"))
 
 
-# # Deal with duplicates that have only one valid value in another column:
-# 
-# bad_vals <- c("NA", "NULL", "")
-# 
-# # find these values if they 
-# cases <- master_2020_2023 |>
-#   dplyr::filter(!(as.character(data_identifier) %in% bad_vals | is.na(data_identifier))) |> select(data_identifier, data_availability_statement) |> 
-#   group_by(data_identifier) |>
-#   dplyr::filter(
-#     n_distinct(data_availability_statement , na.rm = FALSE) > 1,  # more than one unique value
-#     any(is.na(data_availability_statement) | (data_availability_statement) %in% bad_vals),  # at least one bad
-#     any(!(is.na(data_availability_statement) | (data_availability_statement) %in% bad_vals))  # at least one good
-#   ) |>
-#   ungroup() |>
-#   dplyr::filter(!(is.na(data_availability_statement)
-#                   | (data_availability_statement) %in% bad_vals)) |>
-  #   distinct()
-  # 
-  # cases |>
-  #   group_by(data_identifier) |>
-  #   dplyr::filter(n() > 1, n_distinct(data_availability_statement) > 1) |>
-  #   ungroup() |> 
-  #   View()
-  
-  
 # save
   save_cr(datasets_metadata_7_lic, file = file.path(here(
     "data",
@@ -280,94 +262,39 @@ datasets_metadata_7_lic <- datasets_metadata_6_das |>
     "metadata all",
     "datasets_metadata_7_lic.RData")))
 
-  
-# add more datasets years
-  
-# get years
+# Save "datasets_metadata_7_lic" as the final template to update:
+  # Notice: the updates are taking place in datasets_metadata_updates.R!
 
-datasets_publication_years_added <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "datasets years",
-                 "datasets_years_filled_AC_v5.csv")),
-  header = TRUE) |> 
-  distinct()
-
-# Add
-
-datasets_metadata_8_more_years <- datasets_metadata_7_lic |> 
-  left_join(datasets_publication_years_added,
-            by = "data_id_merged") |> 
-  mutate(charite_id_year = coalesce(charite_id_year.x, charite_id_year.y)) |>
-  select(-c(charite_id_year.x, charite_id_year.y))
+# assign
+datasets_metadata_master_updated_001 <- datasets_metadata_7_lic
 
 # save
-save_cr(datasets_metadata_8_more_years, file = file.path(here(
+save_cr(datasets_metadata_master_updated_001, file = file.path(here(
   "data",
   "verification",
   "metadata all",
-  "datasets_metadata_8_more_years.RData")))
-
-# Add the rest of the data_identifiers from numbat master 2020-2023
-
-# datasets_metadata_final <- datasets_metadata_7_lic |>
-#   bind_rows(
-#     master_2020_2023
-#   )
-  
-# Save xlsx
-
-#write_xlsx(df, here("data", "verification", "metadata all", "datasets_metadata_final.xlsx"))
-  
-
-  
-#####
-
-data_articles_ids <- read_excel(file.path(here("data",
-                                               "raw",
-                                               "data_articles",
-                                               "v10"),
-                                          "datajournal_articles - analysis of citations v10.xlsx"),
-                                sheet = "datasets_repos") |> # load relevant sheet from xlsx
-  rename(doi = `Charité article DOI`,
-         data_identifier = `dataset DOI, accession code, or link`) |>  # rename columns to meach numbat list later
-  mutate(across(everything(), tolower)) |> # tolower
-  select(doi, data_identifier, license) |> # get only relevant columns: charite data article and dataset id
-  dplyr::filter(!data_identifier == "n/a") # remove NAs
+  "datasets_metadata_master_updated",
+  "rda",
+  "datasets_metadata_master_updated_001.RData"))) #rdata
 
 
+write_csv_cr(datasets_metadata_master_updated_001, file = file.path(here(
+  "data",
+  "verification",
+  "metadata all",
+  "datasets_metadata_master_updated",
+  "csv",
+  "datasets_metadata_master_updated_001.csv")),
+  row.names = FALSE) # csv
 
 
-
-# 3. sample 170 non matched -----------------------------------------------
-
-first_30 <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "verification of sample",
-                 "sample_30_ids_no_citation.csv")),
-  header = TRUE)
-
-# Verify that 
-# all(first_30$charite_data_id_or_acc_nr_merged %in% datasets_master_metadata$data_id_merged)
-
-sample_170_ids_no_citation <- datasets_master_metadata |> 
-  dplyr::filter(in_dcc == "FALSE") |> 
-  distinct(data_id_merged, .keep_all = TRUE) |>
-  dplyr::filter(!data_id_merged %in% first_30$charite_data_id_or_acc_nr_merged) |> 
-  slice_sample(n = 170)
-
-# save
-save_cr(sample_170_ids_no_citation,
-        file = file.path(here("data", "verification","verification of sample", "sample_170_ids_no_citation.RData")))
-
-# write as csv
-write_csv_cr(
-  sample_170_ids_no_citation,
-  file = here("data",
-              "verification",
-              "verification of sample",
-              "sample_170_ids_no_citation.csv"),
-  row.names = FALSE
-)
-
+write_xlsx_cr(
+  datasets_metadata_master_updated_001,
+  file = file.path(here(
+    "data",
+    "verification",
+    "metadata all",
+    "datasets_metadata_master_updated",
+    "xlsx",
+    "datasets_metadata_master_updated_001.xlsx"
+  ))) # xlsx
