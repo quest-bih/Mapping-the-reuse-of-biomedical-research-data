@@ -196,7 +196,7 @@ rep_dt |>
 #| fig-cap: Datasets References by Year
 #| fig-format: png
 #| fig.height: 8
-#| fig.width: 12
+#| fig.width: 10
 
 year_dcc_dt_all_for_plot_agg |> 
   ggplot(aes(x = factor(publication_year_dcc), fill = factor(data_id_merged))) +
@@ -221,8 +221,8 @@ geom_text(
     legend.position = "none",
     axis.title.y = element_text(size = 24, margin = margin(r = 20)),  # space between y title and axis
     axis.title.x = element_text(size = 24, margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 18, color = "black"),
-    axis.text.x = element_text(size = 18, color = "black")
+    axis.text.y = element_text(size = 16, color = "black"),
+    axis.text.x = element_text(size = 16, color = "black")
     )
 ```
 
@@ -323,7 +323,9 @@ dif_for_plot |>
     size = 7
   ) +
   scale_x_continuous(breaks = 0:14) +
-  scale_y_continuous(breaks = 1:9) +
+  scale_y_continuous(
+    breaks = c(1, 5, 10, 15, 20, 25, 30),
+    limits = c(0, 30)) +
   labs(
     x = "Years Between Dataset and Article Publication",
     y = "Number of Datasets"

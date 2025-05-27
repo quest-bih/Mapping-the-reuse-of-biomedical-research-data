@@ -300,7 +300,7 @@ dif_for_plot <- dcc_charite_joined_final |>
   select(data_id_merged, publication_year_dcc, charite_id_year) |>
   distinct() |>
   mutate(dif = publication_year_dcc - charite_id_year) |>
-  dplyr::filter(dif < 24 | dif > 0) # removing "dbgap" datasets
+  dplyr::filter(dif < 24 & dif > 0)
 
 # save as RData
 save_cr(dif_for_plot, file = file.path(here("data",
