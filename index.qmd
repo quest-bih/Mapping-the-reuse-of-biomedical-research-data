@@ -8,6 +8,7 @@ authors:
     orcid: "000"
 format:
   html:
+    self-contained: true
     page-layout: full
     fontsize: 1.4em
 ---
