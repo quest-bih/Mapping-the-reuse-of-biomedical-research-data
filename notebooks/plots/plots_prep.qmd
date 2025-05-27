@@ -38,10 +38,10 @@ load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_4_au_inf
 
 # Assign the loaded object to a new variable name
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_7_ds_years.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_8_ds_added_years.RData"))
 
-dcc_charite_joined_final <- dcc_charite_joined_7_ds_years
-rm(dcc_charite_joined_7_ds_years)
+dcc_charite_joined_final <- dcc_charite_joined_8_ds_added_years
+rm(dcc_charite_joined_8_ds_added_years)
 
 ```
 
@@ -297,11 +297,10 @@ save_cr(links_all, file = file.path(here("data",
 ```{r Datasets and Citing Papers Publication Years, echo=FALSE}
 
 dif_for_plot <- dcc_charite_joined_final |>
-  select(publication_year_dcc, charite_id_year) |>
+  select(data_id_merged, publication_year_dcc, charite_id_year) |>
   distinct() |>
   mutate(dif = publication_year_dcc - charite_id_year) |>
-  dplyr::filter(dif >= 0 & !is.na(dif)) |> 
-  dplyr::filter(dif < 24)
+  dplyr::filter(dif < 24 | dif > 0) # removing "dbgap" datasets
 
 # save as RData
 save_cr(dif_for_plot, file = file.path(here("data",

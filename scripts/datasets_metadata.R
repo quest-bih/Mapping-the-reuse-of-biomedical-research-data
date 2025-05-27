@@ -8,7 +8,7 @@ Sys.setenv(LANG = "EN")  # Set environment language to English
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi, writexl)
 
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
@@ -169,7 +169,6 @@ write_csv_cr(
 
 load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v2.rda"))
 
-
 # check for encoding issues
 
 master_2020_2023_1_unique <- master_2020_2023 |> 
@@ -203,7 +202,7 @@ datasets_das <- charite_2020_2023 |>
       | data_identifier %in% bad_vals
       | data_availability_statement %in% bad_vals
     )
-    ) |> 
+  ) |> 
   distinct()
 
 # add metadata
@@ -265,22 +264,63 @@ datasets_metadata_7_lic <- datasets_metadata_6_das |>
 #   ungroup() |>
 #   dplyr::filter(!(is.na(data_availability_statement)
 #                   | (data_availability_statement) %in% bad_vals)) |>
-#   distinct()
-# 
-# cases |>
-#   group_by(data_identifier) |>
-#   dplyr::filter(n() > 1, n_distinct(data_availability_statement) > 1) |>
-#   ungroup() |> 
-#   View()
-
-
+  #   distinct()
+  # 
+  # cases |>
+  #   group_by(data_identifier) |>
+  #   dplyr::filter(n() > 1, n_distinct(data_availability_statement) > 1) |>
+  #   ungroup() |> 
+  #   View()
+  
+  
 # save
   save_cr(datasets_metadata_7_lic, file = file.path(here(
     "data",
     "verification",
     "metadata all",
-    "datasets_metadata_7_lic.RData")))  
+    "datasets_metadata_7_lic.RData")))
 
+  
+# add more datasets years
+  
+# get years
+
+datasets_publication_years_added <- read.csv(
+  file.path(here("data",
+                 "verification",
+                 "datasets years",
+                 "datasets_years_filled_AC_v5.csv")),
+  header = TRUE) |> 
+  distinct()
+
+# Add
+
+datasets_metadata_8_more_years <- datasets_metadata_7_lic |> 
+  left_join(datasets_publication_years_added,
+            by = "data_id_merged") |> 
+  mutate(charite_id_year = coalesce(charite_id_year.x, charite_id_year.y)) |>
+  select(-c(charite_id_year.x, charite_id_year.y))
+
+# save
+save_cr(datasets_metadata_8_more_years, file = file.path(here(
+  "data",
+  "verification",
+  "metadata all",
+  "datasets_metadata_8_more_years.RData")))
+
+# Add the rest of the data_identifiers from numbat master 2020-2023
+
+# datasets_metadata_final <- datasets_metadata_7_lic |>
+#   bind_rows(
+#     master_2020_2023
+#   )
+  
+# Save xlsx
+
+#write_xlsx(df, here("data", "verification", "metadata all", "datasets_metadata_final.xlsx"))
+  
+
+  
 #####
 
 data_articles_ids <- read_excel(file.path(here("data",

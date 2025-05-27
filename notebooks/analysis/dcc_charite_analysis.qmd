@@ -441,7 +441,63 @@ dcc_charite_joined_7_ds_years <- dcc_charite_joined_6_covid_info |>
 save_cr(dcc_charite_joined_7_ds_years, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                              "dcc_charite_joined_7_ds_years.RData")))
 
-# # 4. Create tables for verification:
+# Add more datasets year to _7_ds_years
+
+# get missing years
+missing_matched_ds_years <- dcc_charite_joined_7_ds_years |> 
+  dplyr::filter(is.na(charite_id_year)) |> 
+  select(data_id_merged) |> 
+  distinct()
+
+# save
+write_csv_cr(missing_matched_ds_years,
+          file = file.path(here(
+                           "data",
+                           "verification",
+                           "datasets years",
+                           "datasets_years_filled_AC_v5.csv")),
+          row.names = FALSE)
+
+# I've filled the years )and updated dataset metadata file accordingly), so:
+
+# prepare updated datasets_metadata for joining
+more_years_info_for_join <- datasets_metadata_8_more_years |>
+  select(data_id_merged, charite_id_year) |>
+  distinct() |>
+  dplyr::filter(!is.na(charite_id_year)) # deduplicate NA cases
+
+# Add them back to _joined:
+
+dcc_charite_joined_8_ds_added_years <- dcc_charite_joined_7_ds_years |> 
+  left_join(more_years_info_for_join |>
+              select(data_id_merged, charite_id_year),
+            by = "data_id_merged") |> 
+  mutate(charite_id_year = coalesce(charite_id_year.x, charite_id_year.y)) |>
+  select(-c(charite_id_year.x, charite_id_year.y))
+  
+
+# Save
+save_cr(dcc_charite_joined_8_ds_added_years, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                             "dcc_charite_joined_8_ds_added_years.RData")))
+
+# check if there are any inconsistencies
+
+identifiers_to_verify <- dcc_charite_joined_8_ds_added_years |> 
+  mutate(dif = publication_year_dcc - charite_id_year) |>
+  select(data_id_merged, charite_id_year, dif) |>
+  dplyr::filter(dif < 0) |> 
+  distinct() # negative dif between dataset and dcc paper
+
+
+dcc_earlier_than_charite_p <- dcc_charite_joined_8_ds_added_years |> 
+  mutate(dif = publication_year_dcc - publication_year_charite) |>
+  dplyr::filter(dif < 0) |> 
+  select(doi_charite) |>
+  distinct() # dcc paper - charite paper
+
+
+# dcc paper earlier than 2016...
+
 # 
 # # Cases where DCC paper publication year is stated as earlier than 2017
 # 

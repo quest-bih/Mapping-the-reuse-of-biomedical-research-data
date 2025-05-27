@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Avihay Cohen">
-<meta name="dcterms.date" content="2025-05-26">
+<meta name="dcterms.date" content="2025-05-27">
 
 <title>plots</title>
 <style>
@@ -3106,7 +3106,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 26, 2025</p>
+      <p class="date">May 27, 2025</p>
     </div>
   </div>
   
@@ -3242,21 +3242,23 @@ vertical-align: -.125em;
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span> </span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n)) <span class="sc">|&gt;</span> </span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">repository =</span> <span class="fu">case_when</span>(</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;NCBI dbGaP (DataBase of Genotypes And Phenotypesgenotypes and phenotypes)&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI dbGaP&quot;</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;figshare&quot;</span> <span class="sc">~</span> <span class="st">&quot;Figshare&quot;</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;The European Genome-phenome Archive(EGA)&quot;</span> <span class="sc">~</span> <span class="st">&quot;EGA&quot;</span>,</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;Gene Expression Omnibus (GEO)&quot;</span> <span class="sc">~</span> <span class="st">&quot;GEO&quot;</span>,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;PRIDE Proteomics Identification Database&quot;</span> <span class="sc">~</span> <span class="st">&quot;PRIDE&quot;</span>,</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;NCBI Reference Sequence Database&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI RefSeq&quot;</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;European Nucleotide Archive&quot;</span> <span class="sc">~</span> <span class="st">&quot;ENA&quot;</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;The Protein Data Bank&quot;</span> <span class="sc">~</span> <span class="st">&quot;PDB&quot;</span>,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> repository <span class="co"># shorten rep names for a nicer appearance</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  ))</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(rep_dt, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">&quot;tables_for_plots&quot;</span>,</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">&quot;rep_dt.RData&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)&quot;</span> <span class="sc">~</span> <span class="st">&quot;ncbi dbgap&quot;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;figshare&quot;</span> <span class="sc">~</span> <span class="st">&quot;figshare&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;the european genome-phenome archive(ega)&quot;</span> <span class="sc">~</span> <span class="st">&quot;ega&quot;</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;gene expression omnibus (geo)&quot;</span> <span class="sc">~</span> <span class="st">&quot;geo&quot;</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;pride proteomics identification database&quot;</span> <span class="sc">~</span> <span class="st">&quot;pride&quot;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;ncbi reference sequence database&quot;</span> <span class="sc">~</span> <span class="st">&quot;ncbi refseq&quot;</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;european nucleotide archive&quot;</span> <span class="sc">~</span> <span class="st">&quot;ena&quot;</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;the protein data bank&quot;</span> <span class="sc">~</span> <span class="st">&quot;pdb&quot;</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    repository <span class="sc">==</span> <span class="st">&quot;elsevier data repository&quot;</span> <span class="sc">~</span> <span class="st">&quot;elsevier&quot;</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> repository <span class="co"># shorten rep names for a nicer appearance</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(rep_dt, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">&quot;tables_for_plots&quot;</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">&quot;rep_dt.RData&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="datasets-references-by-year" class="level1">
