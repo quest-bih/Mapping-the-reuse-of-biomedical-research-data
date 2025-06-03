@@ -121,6 +121,157 @@ datasets_metadata_master_updated_002 <- datasets_metadata_master_updated_001 |>
 metadata_update(datasets_metadata_master_updated_002) # call function to save as csv, xlsx, rda
   
 
+# 003: add missing license metadata for data articles -----------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# Prepare a table of missing metadata
+
+in_dcc_to_fill_ac <- datasets_metadata_master_updated_002 |>
+  dplyr::filter(in_dcc == "TRUE") |>
+  select(
+    doi,
+    data_id_merged,
+    covid_related,
+    human_data,
+    data_availability_statement,
+    license,
+    source) |>
+  dplyr::filter(
+    is.na(covid_related)
+    | is.na(human_data)
+    | is.na(data_availability_statement)
+    | is.na(license))
+
+# repository and year had no NAs.
+
+# save
+write_csv_cr(in_dcc_to_fill_ac,
+          file = here("data",
+                      "verification",
+                      "metadata all",
+                      "datasets_metadata_master_updated",
+                      "tables to fill",
+                      "in_dcc_to_fill_ac.csv"),
+          row.names = FALSE)
+    
+
+# While entering the metadata I checked and "10.18112/openneuro.ds001226" appears twice
+# (once as a numbat source and once as data_articles source)
+# which is fine by itself, but the metadata was not coherent for each case, so I fixed that as well.
+# other datasets that appear in numbat and data_articles didn't have that problem
+
+# load back the filled file
+
+in_dcc_to_fill_ac_filled <- read.csv(
+  file.path(here("data",
+                 "verification",
+                 "metadata all",
+                 "datasets_metadata_master_updated",
+                 "tables to fill",
+                 "in_dcc_to_fill_ac_filled.csv")),
+  header = TRUE)
+
+# prepare for joining
+
+for_update_003 <- in_dcc_to_fill_ac_filled |> 
+  dplyr::filter(source == "data_articles") |> 
+  select(data_id_merged, license) |> 
+  distinct()
+
+# add to master (get lastest version number from global environment or from console)
+
+datasets_metadata_master_updated_003 <- datasets_metadata_master_updated_002 |> 
+  left_join(for_update_003 |> select(data_id_merged, license),
+            by = "data_id_merged") |> 
+  mutate(license = coalesce(license.y, license.x)) |> 
+  select(-license.x, -license.y)
+
+# save
+metadata_update(datasets_metadata_master_updated_003) # call function to save as csv, xlsx, rda
+
+
+# 004: add missing metadata from Evgeny -----------------------------------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# prepare a missing values table 
+
+in_dcc_to_fill_eb <- datasets_metadata_master_updated_003 |>
+  dplyr::filter(in_dcc == "TRUE") |>
+  select(
+    doi,
+    data_id_merged,
+    covid_related,
+    human_data,
+    data_availability_statement,
+    license,
+    source) |>
+  dplyr::filter(
+    is.na(covid_related)
+    | is.na(human_data)
+    | is.na(data_availability_statement)
+    | is.na(license))
+
+
+# save
+write_csv_cr(in_dcc_to_fill_eb,
+             file = here("data",
+                         "verification",
+                         "metadata all",
+                         "datasets_metadata_master_updated",
+                         "tables to fill",
+                         "in_dcc_to_fill_eb.csv"),
+             row.names = FALSE)
+
+##### CONTINUE FROM HERE
+
+
+
+
+
+# 00?: add a secondary identifier for EBI repo ----------------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# get EBI (ena) prefixes
+prefixes <- c("prj", "erp", "samea", "ers", "err", "erx", "erz", "cab", "gca", "cm", "erc", "taxon")
+
+# get ids with thie prefixes to understand how many are there
+
+no_secondary_id <- datasets_metadata_master_updated_003 |>
+  dplyr::filter(str_starts(data_id_merged, str_c("^(", str_c(prefixes, collapse = "|"), ")"))) |> 
+  select(data_id_merged) |> 
+  distinct()
+
+# save
+write_csv_cr(no_secondary_id,
+             file = here("data",
+                         "verification",
+                         "metadata all",
+                         "datasets_metadata_master_updated",
+                         "tables to fill",
+                         "no_secondary_id.csv"),
+             row.names = FALSE)
+
+
+sample_170_ids_no_citation |>
+  dplyr::filter(str_starts(data_id_merged, str_c("^(", str_c(prefixes, collapse = "|"), ")"))) |> 
+  select(data_id_merged) |> 
+  distinct() |>
+  View()
+
+
+
+
+
+
+
+
+
 # 00? add data articles metadata ------------------------------------------
 
 

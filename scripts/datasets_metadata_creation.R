@@ -1,4 +1,4 @@
-# This script adds metadata of Charité datasets listed in "charite_dois_and_ids_8_for_matching.RData".
+# This script adds metadata of Charité datasets listed in "charite_dois_and_ids_8_for_matching.RData" to create a metadata file.
 # the output is the same table but with the following added columns:
 # license, human/not, covid related (yes/no), data access (yes/restricted), doi/acc_n, repository, is in DAS, year ,matched/not with DCC
 
