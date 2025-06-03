@@ -226,69 +226,69 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 
 ```{r fig-datasets-properties-prep}
 
-# Prepare table for sankey:
-
-dcc_charite_for_sankey <- dcc_charite_joined_final |>
-  select(data_id_merged, data_access, covid_related, repository) |>
-  distinct() |>
-  mutate(acc_nr_or_doi = case_when(str_starts(data_id_merged, "10.") ~ "DOI", .default = "Accession Number"))
-
-# Create links
-
-links_ac_access <- dcc_charite_for_sankey |>
-  mutate(source = case_when(acc_nr_or_doi == "Accession Number" ~ "Accession Number",
-                            .default = "DOI"),
-         target = case_when(data_access == "yes" ~ "Full Access",
-                            data_access == "restricted" ~ "Restricted Access",
-                            .default = "not checked yet")) |>
-  count(source, target) |>
-  rename(value = n) |>
-  as.data.frame()
-
-links_access_rep <- dcc_charite_for_sankey |>
-  mutate(source = case_when(data_access == "yes" ~ "Full Access",
-                            data_access == "restricted" ~ "Restricted Access",
-                            .default = "not checked yet"),
-         target = case_when(
-           repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
-           repository == "figshare" ~ "figshare",
-           repository == "the european genome-phenome archive(ega)" ~ "EGA",
-           repository == "gene expression omnibus (geo)" ~ "GEO",
-           repository == "pride proteomics identification database" ~ "PRIDE",
-           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-           repository == "european nucleotide archive" ~ "ENA",
-           repository == "the protein data bank" ~ "PDB",
-           repository == "elsevier data repository" ~ "elsevier",
-           .default = repository)) |>
-  count(source, target) |>
-  rename(value = n) |>
-  as.data.frame()
-
-links_rep_covid <- dcc_charite_for_sankey |>
-  mutate(source = case_when(
-           repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
-           repository == "figshare" ~ "figshare",
-           repository == "the european genome-phenome archive(ega)" ~ "EGA",
-           repository == "gene expression omnibus (geo)" ~ "GEO",
-           repository == "pride proteomics identification database" ~ "PRIDE",
-           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-           repository == "european nucleotide archive" ~ "ENA",
-           repository == "the protein data bank" ~ "PDB",
-           repository == "elsevier data repository" ~ "elsevier",
-           .default = repository),
-         target = case_when(covid_related == "TRUE" ~ "Covid Related",
-                            covid_related == "FALSE" ~ "Not Covid Related",
-                            .default = "covid not checked yet")) |>
-  count(source, target) |>
-  rename(value = n) |>
-  as.data.frame()
-
-links_all <- bind_rows(links_ac_access, links_access_rep, links_rep_covid)
-
-# save as RData
-save_cr(links_all, file = file.path(here("data",
-                                         "tables_for_plots",
-                                         "links_all.RData")))
+# # Prepare table for sankey:
+# 
+# dcc_charite_for_sankey <- dcc_charite_joined_final |>
+#   select(data_id_merged, data_access, covid_related, repository) |>
+#   distinct() |>
+#   mutate(acc_nr_or_doi = case_when(str_starts(data_id_merged, "10.") ~ "DOI", .default = "Accession Number"))
+# 
+# # Create links
+# 
+# links_ac_access <- dcc_charite_for_sankey |>
+#   mutate(source = case_when(acc_nr_or_doi == "Accession Number" ~ "Accession Number",
+#                             .default = "DOI"),
+#          target = case_when(data_access == "yes" ~ "Full Access",
+#                             data_access == "restricted" ~ "Restricted Access",
+#                             .default = "not checked yet")) |>
+#   count(source, target) |>
+#   rename(value = n) |>
+#   as.data.frame()
+# 
+# links_access_rep <- dcc_charite_for_sankey |>
+#   mutate(source = case_when(data_access == "yes" ~ "Full Access",
+#                             data_access == "restricted" ~ "Restricted Access",
+#                             .default = "not checked yet"),
+#          target = case_when(
+#            repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+#            repository == "figshare" ~ "figshare",
+#            repository == "the european genome-phenome archive(ega)" ~ "EGA",
+#            repository == "gene expression omnibus (geo)" ~ "GEO",
+#            repository == "pride proteomics identification database" ~ "PRIDE",
+#            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+#            repository == "european nucleotide archive" ~ "ENA",
+#            repository == "the protein data bank" ~ "PDB",
+#            repository == "elsevier data repository" ~ "elsevier",
+#            .default = repository)) |>
+#   count(source, target) |>
+#   rename(value = n) |>
+#   as.data.frame()
+# 
+# links_rep_covid <- dcc_charite_for_sankey |>
+#   mutate(source = case_when(
+#            repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+#            repository == "figshare" ~ "figshare",
+#            repository == "the european genome-phenome archive(ega)" ~ "EGA",
+#            repository == "gene expression omnibus (geo)" ~ "GEO",
+#            repository == "pride proteomics identification database" ~ "PRIDE",
+#            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+#            repository == "european nucleotide archive" ~ "ENA",
+#            repository == "the protein data bank" ~ "PDB",
+#            repository == "elsevier data repository" ~ "elsevier",
+#            .default = repository),
+#          target = case_when(covid_related == "TRUE" ~ "Covid Related",
+#                             covid_related == "FALSE" ~ "Not Covid Related",
+#                             .default = "covid not checked yet")) |>
+#   count(source, target) |>
+#   rename(value = n) |>
+#   as.data.frame()
+# 
+# links_all <- bind_rows(links_ac_access, links_access_rep, links_rep_covid)
+# 
+# # save as RData
+# save_cr(links_all, file = file.path(here("data",
+#                                          "tables_for_plots",
+#                                          "links_all.RData")))
 
 ```
 

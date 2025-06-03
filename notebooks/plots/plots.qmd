@@ -237,65 +237,65 @@ geom_text(
 #| fig.height: 8
 #| fig.width: 12
 
-# Create a function for verifying the links df structure, extracting its entities and finally plotting it:
-
-get_nodes_from_links <- function(links) {
-  stopifnot(all(c("source", "target", "value") %in% names(links)))
-  data.frame(
-    name = unique(c(as.character(links$source), as.character(links$target)))
-  )
-}
-
-plot_Sankey <- function(links, ...) {
-  nodes <- get_nodes_from_links(links)
-
-  # Assign group labels to nodes
-  # Map directly to colors
-  highlight_colors <- list(
-    "Accession Number" = "blue",
-    "DOI" = "red",
-    "Full Access" = "yellow",
-    "Restricted Access" = "green",
-    "Not Covid Related" = "purple",
-    "Covid Related" = "pink",
-    "covid not checked yet" = "white"
-  )
-
-  # Assign group (color name) to each node, default to gray
-  nodes$group <- sapply(nodes$name, function(n) {
-    if (!is.null(highlight_colors[[n]])) highlight_colors[[n]] else "gray"
-  })
-
-  links$IDsource <- match(links$source, nodes$name) - 1
-  links$IDtarget <- match(links$target, nodes$name) - 1
-
-  # Color scale: domain = unique group values (colors), range = same
-  color_domain <- unique(nodes$group)
-  domain_str <- paste0('"', color_domain, '"', collapse = ", ")
-  range_str <- paste0('"', color_domain, '"', collapse = ", ")
-  my_color <- paste0(
-    "d3.scaleOrdinal()",
-    ".domain([", domain_str, "])",
-    ".range([", range_str, "])"
-  )
-
-  sankeyNetwork(
-    Links = links, Nodes = nodes,
-    Source = "IDsource", Target = "IDtarget",
-    Value = "value", NodeID = "name",
-    NodeGroup = "group",  # ← now using color group directly
-    colourScale = my_color,
-    ...
-  )
-}
-
-# Plot
-
-plot_Sankey(links_all, sinksRight = FALSE, fontSize = 20)
-
-s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 22)
-
-saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sankey_interactive_plot.html"), selfcontained = TRUE)
+# # Create a function for verifying the links df structure, extracting its entities and finally plotting it:
+# 
+# get_nodes_from_links <- function(links) {
+#   stopifnot(all(c("source", "target", "value") %in% names(links)))
+#   data.frame(
+#     name = unique(c(as.character(links$source), as.character(links$target)))
+#   )
+# }
+# 
+# plot_Sankey <- function(links, ...) {
+#   nodes <- get_nodes_from_links(links)
+# 
+#   # Assign group labels to nodes
+#   # Map directly to colors
+#   highlight_colors <- list(
+#     "Accession Number" = "blue",
+#     "DOI" = "red",
+#     "Full Access" = "yellow",
+#     "Restricted Access" = "green",
+#     "Not Covid Related" = "purple",
+#     "Covid Related" = "pink",
+#     "covid not checked yet" = "white"
+#   )
+# 
+#   # Assign group (color name) to each node, default to gray
+#   nodes$group <- sapply(nodes$name, function(n) {
+#     if (!is.null(highlight_colors[[n]])) highlight_colors[[n]] else "gray"
+#   })
+# 
+#   links$IDsource <- match(links$source, nodes$name) - 1
+#   links$IDtarget <- match(links$target, nodes$name) - 1
+# 
+#   # Color scale: domain = unique group values (colors), range = same
+#   color_domain <- unique(nodes$group)
+#   domain_str <- paste0('"', color_domain, '"', collapse = ", ")
+#   range_str <- paste0('"', color_domain, '"', collapse = ", ")
+#   my_color <- paste0(
+#     "d3.scaleOrdinal()",
+#     ".domain([", domain_str, "])",
+#     ".range([", range_str, "])"
+#   )
+# 
+#   sankeyNetwork(
+#     Links = links, Nodes = nodes,
+#     Source = "IDsource", Target = "IDtarget",
+#     Value = "value", NodeID = "name",
+#     NodeGroup = "group",  # ← now using color group directly
+#     colourScale = my_color,
+#     ...
+#   )
+# }
+# 
+# # Plot
+# 
+# plot_Sankey(links_all, sinksRight = FALSE, fontSize = 20)
+# 
+# s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 22)
+# 
+# saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sankey_interactive_plot.html"), selfcontained = TRUE)
 
 
 ```
