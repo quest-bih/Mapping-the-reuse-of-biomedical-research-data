@@ -258,12 +258,6 @@ write_csv_cr(no_secondary_id,
              row.names = FALSE)
 
 
-sample_170_ids_no_citation |>
-  dplyr::filter(str_starts(data_id_merged, str_c("^(", str_c(prefixes, collapse = "|"), ")"))) |> 
-  select(data_id_merged) |> 
-  distinct() |>
-  View()
-
 
 
 
