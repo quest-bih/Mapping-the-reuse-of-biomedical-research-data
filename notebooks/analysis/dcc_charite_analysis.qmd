@@ -720,7 +720,7 @@ write_csv_cr(sample_30_ids_no_citation,
                            "sample_30_ids_no_citation.csv")),
           row.names = F)
 
-# sample 70 more:
+# sample 170 more:
 
 sampled_df <- df |> sample_n(170)
 
@@ -749,16 +749,7 @@ sample_170_ids_no_citation <- charite_dois_and_ids_clean_manually_validated  |>
   sample_n(70) |> 
   select(-data_identifier)
 
-sample_30_ids_no_citation |> inner_join(sample_170_ids_no_citation) |> View() # check: None of them are in the 70!
-
-# add DAS from master:
-    
-
-    
-
-
-left_join(df1, select(df2, id, status), by = "id")
-
+sample_30_ids_no_citation |> inner_join(sample_170_ids_no_citation) |> View() # check: None of them are in the 170!
 
 # save
 write_csv_cr(sample_170_ids_no_citation,
@@ -769,9 +760,26 @@ write_csv_cr(sample_170_ids_no_citation,
                            "sample_170_ids_no_citation.csv")),
           row.names = F)
 
+# sample 3 more because 3 were not available anymore, this time from the master dataset
+
+load(here("data", "verification", "metadata all", "datasets_metadata_master_updated", "rda", "datasets_metadata_master_updated_003.RData"))
+
+load(here("data", "verification", "metadata all", "sample_170_ids_no_citation.RData"))
 
 
-
+sample_3_ids_no_citation <- datasets_metadata_master_updated_003 |> 
+  dplyr::filter(in_dcc == "FALSE") |> 
+  dplyr::filter(!data_id_merged %in% sample_170_ids_no_citation$data_id_merged) |> 
+  sample_n(3)
+  
+# save
+write_csv_cr(sample_3_ids_no_citation,
+          file = file.path(here(
+                           "data",
+                           "verification",
+                           "verification of sample",
+                           "sample_3_ids_no_citation.csv")),
+          row.names = F)
 ```
 
 #### Table 14. Cleaned Matched DCC-Charite List

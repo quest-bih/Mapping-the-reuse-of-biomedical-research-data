@@ -273,5 +273,7 @@ For steps to ensure the validity of data, see the methods section.
 **Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot
 
 <!-- ::: quarto-figure -->
+
 <!-- ![Figure X: Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){.embedded width="100%" height="600px"} -->
+
 <!-- ::: -->
