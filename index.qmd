@@ -27,7 +27,7 @@ The literature on data use and reuse employs different terms for statements whic
 
 ### 1.3. Institutional dataset reuse as specific application
 
-We were interested in the reuse of data published by researchers from our institution. The primary focus of our study are the questions which datasets have been mentioned in the literature, and how often. In addition, we investigated the characteristics of the reuse e.g. with regard to the type of identifier, the repositories where data were deposited, and the time lag between data publication and data reference.
+We were interested in the reuse of data published by researchers from our institution. The primary focus of our study are the questions which datasets have been mentioned in the literature, and how often. In addition, we investigated the characteristics of reuse with regard to properties of data (e.g., whether it is data collected from human participants), properties of metadata (e.g., license), and the time lag between data publication and data reference.
 
 We work at the Charité – Universitätsmedizin Berlin, a large university medical hospital, where very diverse biomedical research is undertaken. The Charité’s researchers published ca. 5600 reviewed articles in 2023, of which 79% are open access in some form. The research ranges from clinical and epidemiological studies to preclinical studies in animals, cell cultures, and in silico. A smaller subset of publications also stems from views onto medicine from other domains, including sociological, historical, and meta-research approaches. Information on publication access types, as well as several other metrics of open and responsible research can be found in an institutional Responsible Research Dashboard (Charité Dashboard on Responsible Research, no date).
 
@@ -35,11 +35,11 @@ The list of datasets published by our institution is an outcome of the process o
 
 ### 1.4. Data Citation Corpus as data source
 
-The use of references to datasets is complicated by the fact that data reuse is rarely acknowledged by data citations (Ninkov et al., 2021; Gregory et al., 2023). More commonly, data reuse is mentioned in a more or less informal way in different article sections (Park et al., 2018; van de Sandt et al., 2021). The Data Citation Corpus (DCC) (Make Data Count – Data Citation Corpus, no date) is the first comprehensive approach to address this issue by text-mining a large body of the published literature for references to reused data. It[\[EB1\]](#_msocom_1)  includes (check) approximately 5 million dataset citations to datasets in \>2300 repositories, mentioned in research articles from \>27000 journals (update to v3). These and further numbers are displayed in the DCC dashboard (DataCite – Data Citation Corpus, no date). Beyond this dashboard we are not aware of any published analysis of the DCC. In particular, there is no comprehensive validation as yet with regard to the completeness, correctness, or bias within the DCC, although … ref has documented common data quality issues in the DCC. Such a validation could e.g. investigate, whether known cases of data reuse are present in the DCC. However, the lack of large and diverse sets of reuse cases which are in themselves validated precludes an extensive validation of the DCC at the time being.
+The use of references to datasets is complicated by the fact that data reuse is rarely acknowledged by data citations (Ninkov et al., 2021; Gregory et al., 2023). More commonly, data reuse is mentioned in a more or less informal way in different article sections (Park et al., 2018; van de Sandt et al., 2021). The Data Citation Corpus (DCC) (Make Data Count – Data Citation Corpus, no date) is the first comprehensive approach to address this issue by text-mining a large body of the published literature for references to reused data. It[\[EB1\]](#_msocom_1)  includes (check) approximately 5 million dataset citations to datasets in \>2300 repositories, mentioned in research articles from \>27000 journals (update to v3). These and further numbers are displayed in the DCC dashboard (DataCite – Data Citation Corpus, no date). Beyond this dashboard we are not aware of any published analysis of the DCC. In particular, there is no comprehensive validation as yet with regard to the completeness, correctness, or bias within the DCC, although Page (2024) has documented common data quality issues in the DCC. Such a validation could e.g. investigate, whether known cases of data reuse are present in the DCC. However, the lack of large and diverse sets of reuse cases which are in themselves validated precludes an extensive validation of the DCC at the time being.
 
 ### 1.5. Indirect data citations via data articles
 
-In addition to data citations and data mentions, some authors reference not the reused dataset directly, but rather a data article where it is described, given that such an article exists (Callaghan et al., 2012, Gregory et al., 2023). We have used dataset articles in two common data journals to track such indirect data citations. This complements the analysis of the DCC, and allows for a more comprehensive picture of dataset reuse. Such an analysis requires distinguishing between indirect dataset citations and references to the data article proper. Thus, this analysis is constrained by the substantial effort necessary for investigating the context of individual citations.
+In addition to data citations and data mentions, some authors reference not the reused dataset directly, but an article which describes the results derived from the data, given that such an article exists (Callaghan et al., 2012; Gregory et al., 2023; Yoon et al., 2019). We have used dataset articles in two common data journals to track such indirect data citations. This complements the analysis of the DCC, and allows for a more comprehensive picture of dataset reuse. Such an analysis requires distinguishing between indirect dataset citations and references to the data article proper. Thus, this analysis is constrained by the substantial effort necessary for investigating the context of individual citations.
 
 ## 2. Methods
 
@@ -258,6 +258,10 @@ Lastly, a sample of the remaining cases was taken in order to manualy verify the
 
 For steps to ensure the validity of data, see the methods section.
 
+References
+
+Yoon et al. 2019 <https://onlinelibrary.wiley.com/doi/full/10.1002/leap.1213>
+
 # Plots
 
 {{< embed notebooks/plots/plots.qmd#fig-distinct-numbers >}}
@@ -273,5 +277,7 @@ For steps to ensure the validity of data, see the methods section.
 **Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot
 
 <!-- ::: quarto-figure -->
+
 <!-- ![Figure X: Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){.embedded width="100%" height="600px"} -->
+
 <!-- ::: -->
