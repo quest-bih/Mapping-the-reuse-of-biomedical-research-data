@@ -42,30 +42,53 @@ The matching was done by joining the two lists by the **identifier** columns. Th
 
 ```{r Matching manually validated Charite list with DCC}
 
-
-# Load "DCC_corpus_10_id_std.RData
-
-load(here("data",
-          "wrangling_steps",
-          "dcc",
-          "DCC_corpus_10_id_std.RData"))
-
 # Load charite_dois_and_ids_manually_valditaed.RData
 
 load(here("data",
           "wrangling_steps",
+          "dcc",
+          "DCC_corpus_11_osf_doi.RData"))
+
+# Load "DCC_corpus_11_osf_doi.RData
+
+load(here("data",
+          "wrangling_steps",
           "charite",
-          "charite_dois_and_ids_8_for_matching.RData"))
+          "charite_dois_and_ids_9_w_sec_id.RData"))
 
-# Remove the line below if phs000424 is already excluded:
-charite_dois_and_ids_clean_manually_validated <- charite_dois_and_ids_clean_manually_validated |>
-  dplyr::filter(charite_data_id_or_acc_nr_merged != "phs000424")
+# Primary id join (by data_id_merged)
 
-# Join
-dcc_charite_joined <- charite_dois_and_ids_8_for_matching |>
-  inner_join(DCC_corpus_10_id_std, by = c("data_id_merged" = "data_id_or_acc_nr"),
-             suffix = c("_charite", "_dcc")) |>
-  select(everything())
+joined_primary <- charite_dois_and_ids_9_w_sec_id |>
+  inner_join(
+    DCC_corpus_11_osf_doi,
+    by = c("data_id_merged" = "data_id_or_acc_nr"),
+    suffix = c("_charite", "_dcc")
+  )
+
+# Secondary id join (by data_id_secondary, and only if not NA and not already matched)
+
+joined_secondary <- charite_dois_and_ids_9_w_sec_id |>
+  dplyr::filter(!is.na(data_id_secondary)) |> # exclude NAs
+  anti_join(joined_primary, by = "data_id_merged") |> # get only rows that didn't match with primary id
+  inner_join(
+    DCC_corpus_11_osf_doi,
+    by = c("data_id_secondary" = "data_id_or_acc_nr"),
+    suffix = c("_charite", "_dcc")
+  )
+
+# Combine both
+dcc_charite_joined <- joined_primary |>
+  bind_rows(joined_secondary)
+
+# check
+
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_1_low.RData"))
+
+dcc_charite_joined_1_low |> 
+  anti_join(dcc_charite_joined, by = "data_id_merged") |> 
+  select(data_id_merged) |> 
+  distinct() |> 
+  View()
 
 # Save
 save_cr(dcc_charite_joined, file = file.path(here("data", "processed","dcc_charite_joined", "dcc_charite_joined.RData")))
@@ -136,20 +159,21 @@ The exclusion steps are illustrated in **Figure 1.** below, followed by the clea
 
 # Check if there are still any relevant columns with upper case
 dcc_charite_joined |> summarise(across(everything(), ~ any(str_detect(as.character(.), "[A-Z]")))) |> View()
-# "publisher" is still uppercased
+# "publisher" is still uppercasedm but I'll leave it for now
 
-# 1. tolower "publisher" column (other uppercased columns are not relevant)
+# 1. Add a "detected_data_id" column
 
-dcc_charite_joined_1_low <- dcc_charite_joined |> 
-  mutate(publisher = tolower(publisher))
+dcc_charite_joined_1_det_id <- dcc_charite_joined |>
+  mutate(detected_data_id = coalesce(data_id_secondary, data_id_merged)) |>
+  relocate(detected_data_id, .after = data_id_secondary)
 
 # save
-save_cr(dcc_charite_joined_1_low, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                  "dcc_charite_joined_1_low.RData")))
+save_cr(dcc_charite_joined_1_det_id, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                  "dcc_charite_joined_1_det_id.RData")))
 
 # 2. Remove self-citations
 
-dcc_charite_joined_2_rm_self <- dcc_charite_joined_1_low |> 
+dcc_charite_joined_2_rm_self <- dcc_charite_joined_1_det_id |> 
   dplyr::filter(doi_charite != doi_dcc)
 
 # save
@@ -317,613 +341,4 @@ dcc_charite_joined_5_rm_au_ov <- dcc_charite_joined_5_rm_au_ov |>
 save_cr(dcc_charite_joined_5_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                         "dcc_charite_joined_5_rm_au_ov.RData")))
 
-```
-
-##### adding covid-related info
-
-```{r add covid related label}
-
-# load datasets metadata table
-
-load(here("data", "verification", "metadata all", "datasets_metadata_7_lic.RData"))
-
-# prepare for join
-
-covid_info_for_join <- datasets_metadata_7_lic |>
-  select(data_id_merged, covid_related) |>
-  distinct() |>
-  dplyr::filter(!is.na(covid_related)) # deduplicate NA cases
-
-# check NA cases with duplicate data_id values
-covid_info_for_join |>
-  group_by(data_id_merged) |>
-  dplyr::filter(n() > 1, n_distinct(covid_related) > 1) |>
-  ungroup() |> View()
-
-# Join into _joined
-
-dcc_charite_joined_6_covid_info <- dcc_charite_joined_5_rm_au_ov |> 
-  left_join(
-    covid_info_for_join |>
-      select(data_id_merged, covid_related),
-    by = "data_id_merged")
-
-# Save
-save_cr(dcc_charite_joined_6_covid_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                             "dcc_charite_joined_6_covid_info.RData")))
-
-```
-
-# Adding publication years of data sets
-
-```{r datasets publication years}
-
-# Process of manually extracting datasets years, verifying with Evgeny and creating a final dataset years filled file:
-
-# #  I first saved a copy of the latest full info file (datasets_years_filled_after_EB_verification_v2.csv) as   
-# #  "datasets_years_filled_AC_v3.csv".
-# 
-# #  manually added the datasets in "datasets_with_no_years_info.csv" to "_AC_v3"
-# 
-# #  updated the added datasets' years info, marking them as bold.
-# 
-# # I then sent Evgeny the cases where I couldn't find the dataset / year of it:
-# 
-# # Get datasets I couldn't find their years:
-# 
-# no_year <- read.csv(
-#   file.path(here("data",
-#                  "verification",
-#                  "datasets years",
-#                  "datasets_years_filled_AC_v3.csv")),
-#             header = TRUE,
-#             sep = ",") |> 
-#   dplyr::filter(is.na(charite_id_year))
-# 
-# # Save
-# write_csv_cr(no_year,
-#   file.path(here("data",
-#                  "verification",
-#                  "datasets years",
-#                  "no_year.csv")),
-#             row.names = FALSE)
-# 
-# # The completed info from Evgeny was added to  "AC_v3" and was saved as "datasets_years_filled_after_EB_verification_v3.csv".
-# 
-# # Load information about data sets publication years - manually validated
-# 
-# full_ds_years_info <- read.csv(
-#   file.path(here("data",
-#                  "verification",
-#                  "datasets years",
-#                  "datasets_years_filled_after_EB_verification_v3.csv")),
-#             header = TRUE,
-#             sep = ",")
-#
-# # After EB verification, I've created a file to use as the metadata file for datasets: datasets_years_filled_AC_v4.csv
-
-# Load metadata about datasets publication years: current version: _v4
-
-# ds_years_info <- read.csv(
-#   file.path(here("data",
-#                  "verification",
-#                  "datasets years",
-#                  "datasets_years_filled_AC_v4.csv")),
-#             header = TRUE,
-#             sep = ",")
-# 
-# save_cr(ds_years_info, file = file.path(here("data",
-#                                              "inputs_for_quick_render",
-#                                              "ds_years_info.RData")))
-
-# prepare for join
-
-years_info_for_join <- datasets_metadata_7_lic |>
-  select(data_id_merged, charite_id_year) |>
-  distinct() |>
-  dplyr::filter(!is.na(charite_id_year)) # deduplicate NA cases
-
-# check NA cases with duplicate data_id values
-years_info_for_join |>
-  group_by(data_id_merged) |>
-  dplyr::filter(n() > 1, n_distinct(charite_id_year) > 1) |>
-  ungroup() |> View()
-
-# Join into _joined
-
-dcc_charite_joined_7_ds_years <- dcc_charite_joined_6_covid_info |> 
-  left_join(
-  years_info_for_join |>
-    select(data_id_merged, charite_id_year),
-  by = "data_id_merged")
-
-# Save
-save_cr(dcc_charite_joined_7_ds_years, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                             "dcc_charite_joined_7_ds_years.RData")))
-
-# Add more datasets year to _7_ds_years
-
-# get missing years
-missing_matched_ds_years <- dcc_charite_joined_7_ds_years |> 
-  dplyr::filter(is.na(charite_id_year)) |> 
-  select(data_id_merged) |> 
-  distinct()
-
-# save
-write_csv_cr(missing_matched_ds_years,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "datasets years",
-                           "datasets_years_filled_AC_v5.csv")),
-          row.names = FALSE)
-
-# I've filled the years )and updated dataset metadata file accordingly), so:
-
-# prepare updated datasets_metadata for joining
-more_years_info_for_join <- datasets_metadata_8_more_years |>
-  select(data_id_merged, charite_id_year) |>
-  distinct() |>
-  dplyr::filter(!is.na(charite_id_year)) # deduplicate NA cases
-
-# Add them back to _joined:
-
-dcc_charite_joined_8_ds_added_years <- dcc_charite_joined_7_ds_years |> 
-  left_join(more_years_info_for_join |>
-              select(data_id_merged, charite_id_year),
-            by = "data_id_merged") |> 
-  mutate(charite_id_year = coalesce(charite_id_year.x, charite_id_year.y)) |>
-  select(-c(charite_id_year.x, charite_id_year.y))
-  
-
-# Save
-save_cr(dcc_charite_joined_8_ds_added_years, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                             "dcc_charite_joined_8_ds_added_years.RData")))
-
-# check if there are any inconsistencies
-
-identifiers_to_verify <- dcc_charite_joined_8_ds_added_years |> 
-  mutate(dif = publication_year_dcc - charite_id_year) |>
-  select(data_id_merged, charite_id_year, dif) |>
-  dplyr::filter(dif < 0) |> 
-  distinct() # negative dif between dataset and dcc paper
-
-
-dcc_earlier_than_charite_p <- dcc_charite_joined_8_ds_added_years |> 
-  mutate(dif = publication_year_dcc - publication_year_charite) |>
-  dplyr::filter(dif < 0) |> 
-  select(doi_charite) |>
-  distinct() # dcc paper - charite paper
-
-
-# dcc paper earlier than 2016...
-
-# 
-# # Cases where DCC paper publication year is stated as earlier than 2017
-# 
-# # Only Charite's papers:
-# 
-# dcc_paper_2016_and_earlier <- dcc_charite_joined_7_ds_years_info |> 
-#   dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
-#   select(doi_charite,
-#          publication_year_charite,
-#          charite_data_id_or_acc_nr,
-#          dataset_publication_year) |> 
-#   distinct()
-# 
-# # Save
-# write_csv_cr(dcc_paper_2016_and_earlier,
-#           file = file.path(here(
-#                            "data",
-#                            "verification",
-#                            "dates verification",
-#                            "dcc_paper_2016_and_earlier.csv")),
-#           row.names = FALSE)
-# 
-# 
-# 
-# # Full info:
-# 
-# dcc_paper_2016_and_earlier_full <- dcc_charite_joined_7_ds_years_info |> 
-#   dplyr::filter(as.numeric(substr(publishedDate, 1, 4)) <= 2016) |> 
-#   select(doi_dcc,
-#          doi_charite,
-#          publication_year_dcc,
-#          publication_year_charite,
-#          charite_data_id_or_acc_nr,
-#          dataset_publication_year) |> 
-#   distinct()
-# 
-# # Save
-# write_csv_cr(dcc_paper_2016_and_earlier_full,
-#           file = file.path(here(
-#                            "data",
-#                            "verification",
-#                            "dates verification",
-#                            "dcc_paper_2016_and_earlier_full.csv")),
-#           row.names = FALSE)
-# 
-# 
-# # Cases where DCC paper publication year is stated as earlier than Charite paper publication year
-# 
-# # Only Charite's paper:
-# 
-# dcc_paper_earlier_than_charite_paper <- dcc_charite_joined_7_ds_years_info |> 
-#   dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
-#   mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
-#     select(doi_charite,
-#          publication_year_charite) |> 
-#   distinct()
-# 
-# write_csv_cr(dcc_paper_earlier_than_charite_paper,
-#           file = file.path(here(
-#                            "data",
-#                            "verification",
-#                            "dates verification",
-#                            "dcc_paper_earlier_than_charite_paper.csv")),
-#           row.names = FALSE)
-# 
-# 
-# # Full info:
-# 
-# dcc_paper_earlier_than_charite_paper_full <- dcc_charite_joined_7_ds_years_info |> 
-#   dplyr::filter(as.numeric(publication_year_dcc) < publication_year_charite) |> 
-#   mutate(lag = as.numeric(publication_year_dcc) - publication_year_charite) |> 
-#     select(doi_charite,
-#          publication_year_charite,
-#          doi_dcc,
-#          publication_year_dcc,
-#          lag) |> 
-#   distinct()
-# 
-# write_csv_cr(dcc_paper_earlier_than_charite_paper_full,
-#           file = file.path(here(
-#                            "data",
-#                            "verification",
-#                            "dates verification",
-#                            "dcc_paper_earlier_than_charite_paper_full.csv")),
-#           row.names = FALSE)
-# 
-# # Cases where DCC paper publication year is stated as earlier than dataset publication year
-# 
-# 
-# # Only datasets
-# 
-# dcc_paper_earlier_than_dataset <- dcc_charite_joined_7_ds_years_info |> 
-#   dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
-#   mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
-#     select(charite_data_id_or_acc_nr,
-#          dataset_publication_year,) |> 
-#   distinct()
-# 
-# write_csv_cr(dcc_paper_earlier_than_dataset,
-#           file = file.path(here(
-#                            "data",
-#                            "verification",
-#                            "dates verification",
-#                            "dcc_paper_earlier_than_dataset.csv")),
-#           row.names = FALSE)
-# 
-# # Full info
-# 
-# dcc_paper_earlier_than_dataset_full <- dcc_charite_joined_7_ds_years_info |> 
-#   dplyr::filter(as.numeric(publication_year_dcc) < dataset_publication_year) |> 
-#   mutate(lag = as.numeric(publication_year_dcc) - dataset_publication_year) |> 
-#     select(doi_dcc,
-#          charite_data_id_or_acc_nr,
-#          publication_year_dcc,
-#          dataset_publication_year,
-#          lag) |> 
-#   distinct()
-# 
-# write_csv_cr(dcc_paper_earlier_than_dataset_full,
-#           file = file.path(here(
-#                            "data",
-#                            "verification",
-#                            "dates verification",
-#                            "dcc_paper_earlier_than_dataset_full.csv")),
-#           row.names = FALSE)
-# 
-# # 5. Check if there are any cases that are invalid and need removal, according to results of section (4) above
-#     
-#   # There was actually nothing to exclude. See Evgeny's message after a sample check:
-#   # https://teams.microsoft.com/l/message/19:ad68b3fd-e590-4981-92ff-3ae78e877fd9_cba60d9f-88ed-4fe4-ac8c-0c0e5477dfee@unq.gbl.spaces/1729246170305?context=%7B%22contextType%22%3A%22chat%22%7D
-# 
-# # 6. Create a table with cases where there are different Charite paper dois for the same accession number
-#     
-# # Create table for verification
-# 
-# same_data_id_with_different_charite_papers <- dcc_charite_joined_7_ds_years_info |>
-#   select(doi_charite, charite_data_id_or_acc_nr) |> 
-#   group_by(charite_data_id_or_acc_nr) |>
-#   dplyr::filter(n() > 1 & (n_distinct(doi_charite) > 1)) |>
-#   distinct() |>
-#   ungroup()
-# 
-# # Save
-# write_csv_cr(same_data_id_with_different_charite_papers,
-#           file = file.path(here(
-#                        "data",
-#                        "verification",
-#                        "datasets with different charite papers",
-#                        "same_data_id_with_different_charite_papers.csv")),
-#       row.names = FALSE)
-# 
-# # Evgeny approved these cases as valid.
-```
-
-<br>
-
-**Note:** A data article was discovered in the Charite list (10.1016/j.dib.2021.107320) during a routine manual validation of the code. It was removed automatically during the removal of papers with author(s) overlap step. This means that there could potentially be more data articles in the matched DCC-Charite list.
-
-<br>
-
-**Figure 1.** above shows the exclusion steps that were made on the matched DCC-Charite list and their effect on the remaining number of citing papers and cited identifiers. The gray numbers indicate how many papers / identifiers were removed in each step.
-
-```{r sample check}
-
-# Get top 20 most frequent identifiers
-top_identifiers <- dcc_charite_joined_7_ds_years_info |>
-  dplyr::filter(charite_data_id_or_acc_nr != "phs000424") |> 
-  count(charite_data_id_or_acc_nr, sort = TRUE) |>    # Count occurrences
-  slice_head(n = 20) |>                 # Select top 3 identifiers
-  pull(charite_data_id_or_acc_nr)                      # Extract values
-
-# Filter original df for top identifiers and select one random row per group
-sample_top_ids <- dcc_charite_joined_7_ds_years_info |>
-  dplyr::filter(charite_data_id_or_acc_nr %in% top_identifiers) |>
-  group_by(charite_data_id_or_acc_nr) |>
-  slice_sample(n = 1) |>                # Select one random row per identifier
-  ungroup()
-
-# Save
-write_csv_cr(sample_top_ids,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "verification of sample",
-                           "sample_top_ids.csv")),
-          row.names = F)
-```
-
-Check datasets that weren't a match: First let's randomally sample 30 of them. Blanka will extract their metadata, and if it doesn't take too long, I'll get all datasets for her to extract.
-
-```{r sample check of datasets that weren't mentioned}
-
-sampled_df <- df |> sample_n(30)
-
-# load "dcc_charite_joined_7_ds_years_info"
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_7_ds_years_info.RData"))
-
-# load "charite_dois_and_ids_clean_manually_validated"
-load(here("data", "processed", "charite", "charite_dois_and_ids_clean_manually_validated.RData"))
-
-
-sample_30_ids_no_citation <- charite_dois_and_ids_clean_manually_validated  |>
-  select(doi_auto_current, charite_data_id_or_acc_nr_merged) |> 
-  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_7_ds_years_info$charite_data_id_or_acc_nr) |> 
-  sample_n(30)
-
-  # replace one non-valid dataset manually (since I sampled from everything, not just from the valid ones):
-  sample_30_ids_no_citation[
-    sample_30_ids_no_citation$doi_auto_current == "10.1016/j.immuni.2021.09.002" &
-    sample_30_ids_no_citation$charite_data_id_or_acc_nr_merged == "datasets",
-    c("doi_auto_current", "charite_data_id_or_acc_nr_merged")
-  ] <- list("10.1093/gigascience/giad024", "10.5281/zenodo.1197578")
-
-# save
-write_csv_cr(sample_30_ids_no_citation,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "verification of sample",
-                           "sample_30_ids_no_citation.csv")),
-          row.names = F)
-
-# sample 170 more:
-
-sampled_df <- df |> sample_n(170)
-
-# load "dcc_charite_joined_7_ds_years_info"
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_7_ds_years_info.RData"))
-
-# load "charite_dois_and_ids_clean_manually_validated"
-load(here("data", "processed", "charite", "charite_dois_and_ids_clean_manually_validated.RData"))
-
-# load previous 30 sampled to make sure that I sample from the rest
-sample_30_ids_no_citation <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "verification of sample",
-                 "sample_30_ids_no_citation.csv")),
-  header = TRUE)
-
-sample_170_ids_no_citation <- charite_dois_and_ids_clean_manually_validated  |>
-  select(doi_auto_current, charite_data_id_or_acc_nr_merged, data_identifier) |> 
-  left_join(
-    master_2020_2023 |> select(doi, data_identifier, data_availability_statement), 
-    by = c("doi_auto_current" = "doi", 
-           "data_identifier" = "data_identifier")) |>
-  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% dcc_charite_joined_7_ds_years_info$charite_data_id_or_acc_nr) |>
-  dplyr::filter(!charite_data_id_or_acc_nr_merged %in% sample_30_ids_no_citation$charite_data_id_or_acc_nr_merged) |>
-  sample_n(70) |> 
-  select(-data_identifier)
-
-sample_30_ids_no_citation |> inner_join(sample_170_ids_no_citation) |> View() # check: None of them are in the 170!
-
-# save
-write_csv_cr(sample_170_ids_no_citation,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "verification of sample",
-                           "sample_170_ids_no_citation.csv")),
-          row.names = F)
-
-# sample 3 more because 3 were not available anymore, this time from the master dataset
-
-load(here("data", "verification", "metadata all", "datasets_metadata_master_updated", "rda", "datasets_metadata_master_updated_003.RData"))
-
-load(here("data", "verification", "metadata all", "sample_170_ids_no_citation.RData"))
-
-
-sample_3_ids_no_citation <- datasets_metadata_master_updated_003 |> 
-  dplyr::filter(in_dcc == "FALSE") |> 
-  dplyr::filter(!data_id_merged %in% sample_170_ids_no_citation$data_id_merged) |> 
-  sample_n(3)
-  
-# save
-write_csv_cr(sample_3_ids_no_citation,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "verification of sample",
-                           "sample_3_ids_no_citation.csv")),
-          row.names = F)
-
-# sample 11 more because 12 of the previous sampled were actually detected in DCC!
-
-# They were actually matching with author overlap and were excluded from _joined eventually.
-# That's why they were in the pool to sample from
-
-# load 170
-
-load(here("data",
-          "verification",
-          "verification of sample",
-          "sample_170_ids_no_citation.RData"))
-
-# load 30
-sample_30 <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "verification of sample",
-                 "sample_30_ids_no_citation.csv")),
-  header = TRUE)
-
-# load 3
-sample_3 <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "verification of sample",
-                 "sample_3_ids_no_citation.csv")),
-  header = TRUE)
-
-# get only author-ovelapped from _joined (to know what to filter by later)
-
-only_au_ov <- dcc_charite_joined_4_au_info |>
-  dplyr::filter(
-    !doi_charite %in% dcc_charite_joined_5_rm_au_ov$doi_charite)
-
-# Here's where I check if there are cases in one of the samples, and there are:
-
-au_ov_in_sample <- only_au_ov |> 
-  dplyr::filter(
-    doi_charite %in% sample_170_ids_no_citation$doi
-    | doi_charite %in% sample_30$doi_auto_current
-    | doi_charite %in% sample_3$doi
-  ) |>
-  select(doi_charite) |> 
-  distinct()
-
-# save for Blanka the DOI list to replace
-write_csv_cr(au_ov_in_sample,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "verification of sample",
-                           "au_ov_in_sample.csv")),
-          row.names = F)
-
-# get 12 additional cases to replace the DOIs above
-
-sample_12_replacment_cases <- datasets_metadata_master_updated_003 |> 
-  dplyr::filter(in_dcc == "FALSE") |> # not in DCC (but still includes author overlap!)
-  dplyr::filter(!data_id_merged %in% sample_30$charite_data_id_or_acc_nr_merged) |> # not in the 30 sample
-  dplyr::filter(!data_id_merged %in% sample_170_ids_no_citation$data_id_merged) |> # not in the 170 sample
-  dplyr::filter(!data_id_merged %in% sample_3$data_id_merged) |> # not in the 3 sample
-  dplyr::filter(!doi %in% only_au_ov$doi_charite) |> # not in author overlap
-  sample_n(12) |> # sample 12
-  select(
-    unique_id,
-    doi,
-    doi_no_ver_info,
-    data_id,
-    data_id_merged,
-    data_access,
-    in_dashboard,
-    source,
-    listed_in_numbat_output,
-    validated,
-    Category,
-    dataset_is_doi,
-    repository,
-    charite_id_year,
-    in_dcc,
-    human_data,
-    covid_related,
-    license
-  ) # reorder columns to match more for Blanka's columns order
-
-# # sanity check:
-# 
-# sample_12_replacment_cases |> 
-#  dplyr::filter(
-#     doi %in% only_au_ov$doi_charite)
-
-
-# manually fix a zenodo entry (it was later fixed in the whole master metadata)
-
-sample_12_replacment_cases <- sample_12_replacment_cases |> 
-  mutate(data_id_merged = str_replace(
-    data_id_merged,
-    fixed("10.5281/zenodo.7895994"),
-    "10.5281/zenodo.7889352"
-  ))
-
-# save
-write_csv_cr(sample_12_replacment_cases,
-          file = file.path(here(
-                           "data",
-                           "verification",
-                           "verification of sample",
-                           "sample_12_replacment_cases.csv")),
-          row.names = F)
-
-
-
-
-```
-
-#### Table 14. Cleaned Matched DCC-Charite List
-
-<br>
-
-```{r dcc-charite joined list after cleaning table}
-
-# Render table
-
-datatable(
-  dcc_charite_joined_7_ds_years_info,
-  options = list(
-    pageLength = -1,  
-    scrollY = "200px", 
-    scrollX = TRUE,    
-    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
-    dom = 'Bfrtip',
-    buttons = c('csv')
-    ),
-  extensions = 'Buttons'
-  )
-```
-
-```{r distinct dcc papers and ids}
-
-# # distinct number of dois and ids in dcc after cleaning
-# dcc_doi_distinct <- DCC_corpus_5_ex_chr_rm |> select(doi) |> distinct() |> nrow()
-# dcc_id_distinct <- DCC_corpus_5_ex_chr_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
-# 
-# # save
-# save_cr(dcc_doi_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_doi_distinct.RData")))
-# save_cr(dcc_id_distinct, file = file.path(here( "Data Inputs", "Inputs for a Quick Render", "dcc_id_distinct.RData")))
 ```

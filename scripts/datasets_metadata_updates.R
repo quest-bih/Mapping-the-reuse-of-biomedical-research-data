@@ -210,6 +210,32 @@ datasets_metadata_master_updated_004 <- datasets_metadata_master_updated_003 |>
 # save
 metadata_update(datasets_metadata_master_updated_004) # call function to save as csv, xlsx, rda
 
+
+
+# 005: add secondary id ---------------------------------------------------
+
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# load secondary id info
+secondary_ids <- read.csv(
+  file.path(here("data", "verification", "2nd_id", "secondary_id_filled.csv")),
+  header = TRUE,
+  sep = ",")
+
+# add
+datasets_metadata_master_updated_005 <- datasets_metadata_master_updated_004 |> 
+  left_join(secondary_ids |> 
+              dplyr::filter(!is.na(secondary_study_accession)
+                            & ! secondary_study_accession == ""),
+            by = "data_id_merged") |> 
+  rename(data_id_secondary = secondary_study_accession) |> 
+  relocate(data_id_secondary, .after = data_id_merged)
+
+# save
+metadata_update(datasets_metadata_master_updated_005) # call function to save as csv, xlsx, rda
+
 # 00?: add missing metadata from Evgeny -----------------------------------------------
 
 # load

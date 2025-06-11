@@ -128,15 +128,22 @@ dcc_added_joined_3_existing_excluded <- dcc_added_joined_2_rm_au_ov |>
   anti_join(dcc_charite_joined_8_ds_added_years,
             by = c("doi_dcc" = "doi_dcc", "more_ids" = "data_id_merged"))
             
+# save
+save_cr(dcc_added_joined_1_au_info, file = file.path(here("data", "wrangling_steps", "added", "dcc_added_joined_1_au_info.RData")))
+save_cr(dcc_added_joined_2_rm_au_ov, file = file.path(here("data", "wrangling_steps", "added", "dcc_added_joined_2_rm_au_ov.RData")))
+save_cr(dcc_added_joined_3_existing_excluded, file = file.path(here("data", "wrangling_steps", "added", "dcc_added_joined_3_existing_excluded.RData")))
 
-dcc_added_joined_2_rm_au_ov |>
-  dplyr::filter(more_ids %in% dcc_charite_joined_8_ds_added_years$data_id_merged) |> View()
-  select(more_ids) |> 
-  distinct() |> 
-  nrow()
+# get only doi of charite and id for evgeny to check if it should be included as a proper reuse:
 
-dcc_added_joined_2_rm_au_ov |>
-  dplyr::filter(doi_dcc %in% dcc_charite_joined_8_ds_added_years$doi_dcc) |>
-  select(more_ids) |> 
-  distinct() |> 
-  nrow()
+added_cases_dois_and_ids <- dcc_added_joined_3_existing_excluded |> 
+  select(doi_added, more_ids) |> 
+  distinct()
+
+# save
+write_csv_cr(added_cases_dois_and_ids,
+             file = file.path(here(
+               "data",
+               "verification",
+               "added",
+               "added_cases_dois_and_ids.csv")),
+             row.names = FALSE)

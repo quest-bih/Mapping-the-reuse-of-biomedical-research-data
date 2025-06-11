@@ -439,6 +439,39 @@ write_csv_cr(
               "charite_dois_and_ids_8_for_matching.csv"),
   row.names = FALSE
 ) # as csv
+
+# add secondary identifier, where it exists
+
+# load secondary id info
+secondary_ids <- read.csv(
+  file.path(here("data", "verification", "2nd_id", "secondary_id_filled.csv")),
+  header = TRUE,
+  sep = ",")
+
+# add
+charite_dois_and_ids_9_w_sec_id <- charite_dois_and_ids_8_for_matching |> 
+  left_join(secondary_ids |> 
+              dplyr::filter(!is.na(secondary_study_accession)
+                            & ! secondary_study_accession == ""),
+            by = "data_id_merged") |> 
+  rename(data_id_secondary = secondary_study_accession) |> 
+  relocate(data_id_secondary, .after = data_id_merged)
+
+# Save: This file will be loaded in charite_loading_and_preprocessing.qmd!
+
+save_cr(charite_dois_and_ids_9_w_sec_id,
+        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_9_w_sec_id.RData"))) # as RData
+
+write_csv_cr(
+  charite_dois_and_ids_9_w_sec_id,
+  file = here("data",
+              "verification",
+              "m_val",
+              "charite_dois_and_ids_9_w_sec_id.csv"),
+  row.names = FALSE
+) # as csv
+
+
 ```
 
 <br>
