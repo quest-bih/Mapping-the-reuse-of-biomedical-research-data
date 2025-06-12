@@ -262,11 +262,11 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 # Datasets Access, Repositories and Covid-relationship
 
 ```{r fig-datasets-properties-prep}
-
+# 
 # # Prepare table for sankey:
 # 
-# dcc_charite_for_sankey <- datasets_metadata_master_updated_003 |>
-#   dplyr::filter(in_dcc == "TRUE") |> 
+# dcc_charite_for_sankey <- datasets_metadata_master_updated_005 |>
+#   dplyr::filter(in_dcc == "TRUE") |>
 #   select(data_id_merged, Category, license, data_access, covid_related, repository) |>
 #   distinct()
 # 
@@ -353,8 +353,7 @@ save_cr(dif_for_plot, file = file.path(here("data",
 
 # For 2020-2022: we want to show if mentionings are increasing over time (where the baseline timepoint is the dataset’s publication year).
 
-So I could plot 1/2/3 years difference on x axis, and then how many mentions for each dataset.
-Try to normalize so that we could really see the change throughout the years
+So I could plot 1/2/3 years difference on x axis, and then how many mentions for each dataset. Try to normalize so that we could really see the change throughout the years
 
 ```{r}
 
@@ -379,8 +378,8 @@ ds_age_cit_cor_prep |>
   stat_summary(fun = median, geom = "point", shape = 95, size = 6, color = "red") +
   labs(
     title = "Citations by Dataset Age",
-    x = "Dataset Age When Cited (Years)",
-    y = "Number of Citations"
+    x = "Dataset Age (Years)",
+    y = "Number of Citations (Log Scale)"
   ) +
   scale_y_log10() +
   theme_classic()
@@ -392,24 +391,23 @@ ds_age_cit_cor_prep |>
 
 # comparisons between referenced and non-referenced datasets properties
 
-Create a table like in the reference pic that I took, with:
-Dimensions of metadata on one side (human, covid, etc)
-3 column with colors for the p value of x sqr: matched, non matched, p value
+Create a table like in the reference pic that I took, with: Dimensions of metadata on one side (human, covid, etc) 3 column with colors for the p value of x sqr: matched, non matched, p value
 
-(for this I need to perform X^2 on joined (but for now, on dataset_master, until I join it with joined)
+(for this I need to perform X\^2 on joined (but for now, on dataset_master, until I join it with joined)
 
 ```{r}
 
 ```
 
 # Non mentioned datasets: publication years of datasets over time
+
 (for this I need dataset_master)
 
 ```{r}
 
 ##### Get the data from the 200 sampled!
 
-not_mentioned_years <- datasets_metadata_master_updated_003 |> 
+not_mentioned_years <- datasets_metadata_master_updated_005 |> 
   dplyr::filter(in_dcc == "FALSE") |> 
   select(charite_id_year, data_id_merged) |> 
   distinct() |> 
@@ -420,4 +418,3 @@ not_mentioned_years <- datasets_metadata_master_updated_003 |>
 
 
 ```
-

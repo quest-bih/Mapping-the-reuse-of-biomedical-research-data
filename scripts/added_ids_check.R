@@ -1,6 +1,9 @@
 # this script loads manually added ids for existing matched ids and look for them in the DCC
 # then it exclude cases of author overlap
 
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+library(pacman)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, readxl)
 
 # 1. Load & reshape data ------------------------------------------------------------
 
