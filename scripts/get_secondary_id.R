@@ -9,9 +9,7 @@ library(dplyr)
 accessions <- read.csv(
   file.path(here("data",
                  "verification",
-                 "metadata all",
-                 "datasets_metadata_master_updated",
-                 "tables to fill",
+                 "2nd_id",
                  "no_secondary_id.csv")),
   header = TRUE)
 
@@ -50,9 +48,7 @@ write_csv_cr(
   file = file.path(
     here("data",
          "verification",
-         "metadata all",
-         "datasets_metadata_master_updated",
-         "tables to fill",
+         "2nd_id",
          "secondary_id_filled.csv")
   ),
   row.names = FALSE

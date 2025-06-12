@@ -192,7 +192,51 @@ datasets_metadata_master_updated_003 <- datasets_metadata_master_updated_002 |>
 metadata_update(datasets_metadata_master_updated_003) # call function to save as csv, xlsx, rda
 
 
-# 004: add missing metadata from Evgeny -----------------------------------------------
+# 004: fix zenodo cases where data_id_merged is shifted -----------------------------------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+datasets_metadata_master_updated_004 <- datasets_metadata_master_updated_003 |>
+  left_join(charite_dois_and_ids_8_for_matching |>
+              select(unique_id, data_id_m_val, data_id_merged),
+            by = "unique_id") |> 
+  select(-c(data_id_m_val.x, data_id_merged.x)) |> 
+  rename(data_id_m_val = data_id_m_val.y,
+         data_id_merged = data_id_merged.y) |> 
+  relocate(data_id_m_val, .after = data_id_no_ex_chr) |>
+  relocate(data_id_merged, .after = data_id_m_val)
+
+# save
+metadata_update(datasets_metadata_master_updated_004) # call function to save as csv, xlsx, rda
+
+
+
+# 005: add secondary id ---------------------------------------------------
+
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# load secondary id info
+secondary_ids <- read.csv(
+  file.path(here("data", "verification", "2nd_id", "secondary_id_filled.csv")),
+  header = TRUE,
+  sep = ",")
+
+# add
+datasets_metadata_master_updated_005 <- datasets_metadata_master_updated_004 |> 
+  left_join(secondary_ids |> 
+              dplyr::filter(!is.na(secondary_study_accession)
+                            & ! secondary_study_accession == ""),
+            by = "data_id_merged") |> 
+  rename(data_id_secondary = secondary_study_accession) |> 
+  relocate(data_id_secondary, .after = data_id_merged)
+
+# save
+metadata_update(datasets_metadata_master_updated_005) # call function to save as csv, xlsx, rda
+
+# 00?: add missing metadata from Evgeny -----------------------------------------------
 
 # load
 load_latest_metadata_update() # call function to load latest version

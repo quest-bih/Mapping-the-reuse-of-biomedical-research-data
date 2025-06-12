@@ -914,8 +914,43 @@ DCC_corpus_10_id_std <- DCC_corpus_9_nm_v_rm |>
 #   dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
 #                 | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
 
-# Save 9th DCC wrangling step
+# Save 10th DCC wrangling step
 save_cr(DCC_corpus_10_id_std, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_10_id_std.RData")))
+```
+
+```{r set osf to doi}
+
+# eventually OSF should be in a DOI format, so here I'll format it as such
+
+# Overview of osf ids
+
+DCC_corpus_10_id_std |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |>
+  select(data_id_or_acc_nr) |> 
+  distinct() |> View()
+
+# Format to 10.17605/osf.io.XXXXX
+
+DCC_corpus_11_osf_doi <- DCC_corpus_10_id_std |> 
+mutate(
+    data_id_or_acc_nr = case_when(
+      str_detect(data_id_or_acc_nr, "//osf.io/[A-Za-z0-9]+") # detect "//osf.io/XXXX"
+      ~ paste0(
+        "10.17605",
+        str_replace(str_extract(data_id_or_acc_nr, "//osf.io/[A-Za-z0-9]+"), "^/", "") # add doi prefix and ignore everything after this pattern and
+      ),
+      .default = data_id_or_acc_nr
+    )
+  )
+  
+# check
+DCC_corpus_11_osf_doi |> 
+  dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |>
+  select(data_id_or_acc_nr) |> 
+  distinct() |> View()
+
+# Save 11th DCC wrangling step
+save_cr(DCC_corpus_11_osf_doi, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_11_osf_doi.RData")))
 ```
 
 <br>

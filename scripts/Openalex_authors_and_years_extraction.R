@@ -178,6 +178,45 @@ save_path <- file.path(here("data",
 
 save(final_results, file = save_path)
 
+
+# added -------------------------------------------------------------------
+
+# List of dataframes
+
+dfs <- list(df)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "added_dois_metadata_v1.RData"))
+
+save(final_results, file = save_path)
+
+
+# DCC for added -----------------------------------------------------------
+
+# List of dataframes
+
+df1 <- df |> slice(1:150)
+df2 <- df |> slice(151:224)
+
+dfs <- list(df1, df2)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "added_dois_metadata_v1.RData"))
+
+save(final_results, file = save_path)
+
 #### EXPERIMENTAL: get list of DFs (chunks of 150 obs) into a list:
 
 # # Vector of DOIs to remove
