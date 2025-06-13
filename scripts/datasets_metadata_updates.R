@@ -210,32 +210,6 @@ datasets_metadata_master_updated_004 <- datasets_metadata_master_updated_003 |>
 # save
 metadata_update(datasets_metadata_master_updated_004) # call function to save as csv, xlsx, rda
 
-
-
-# 005: add secondary id ---------------------------------------------------
-
-
-# load
-load_latest_metadata_update() # call function to load latest version
-
-# load secondary id info
-secondary_ids <- read.csv(
-  file.path(here("data", "verification", "2nd_id", "secondary_id_filled.csv")),
-  header = TRUE,
-  sep = ",")
-
-# add
-datasets_metadata_master_updated_005 <- datasets_metadata_master_updated_004 |> 
-  left_join(secondary_ids |> 
-              dplyr::filter(!is.na(secondary_study_accession)
-                            & ! secondary_study_accession == ""),
-            by = "data_id_merged") |> 
-  rename(data_id_secondary = secondary_study_accession) |> 
-  relocate(data_id_secondary, .after = data_id_merged)
-
-# save
-metadata_update(datasets_metadata_master_updated_005) # call function to save as csv, xlsx, rda
-
 # 00?: add missing metadata from Evgeny -----------------------------------------------
 
 # load
@@ -302,71 +276,28 @@ write_csv_cr(no_secondary_id,
              row.names = FALSE)
 
 
-
-
-
-
-
-
-
-
 # 00? add data articles metadata ------------------------------------------
 
+# Not sure I need this if Blanka will take care of this:
 
-data_articles_ids <- read_excel(file.path(here("data",
-                                               "raw",
-                                               "data_articles",
-                                               "v10"),
-                                          "datajournal_articles - analysis of citations v10.xlsx"),
-                                sheet = "datasets_repos") |> # load relevant sheet from xlsx
-  rename(doi = `Charité article DOI`,
-         data_identifier = `dataset DOI, accession code, or link`) |>  # rename columns to meach numbat list later
-  mutate(across(everything(), tolower)) |> # tolower
-  select(doi, data_identifier, license) |> # get only relevant columns: charite data article and dataset id
-  dplyr::filter(!data_identifier == "n/a") # remove NAs
-
-
-
-
+# data_articles_ids <- read_excel(file.path(here("data",
+#                                                "raw",
+#                                                "data_articles",
+#                                                "v10"),
+#                                           "datajournal_articles - analysis of citations v10.xlsx"),
+#                                 sheet = "datasets_repos") |> # load relevant sheet from xlsx
+#   rename(doi = `Charité article DOI`,
+#          data_identifier = `dataset DOI, accession code, or link`) |>  # rename columns to meach numbat list later
+#   mutate(across(everything(), tolower)) |> # tolower
+#   select(doi, data_identifier, license) |> # get only relevant columns: charite data article and dataset id
+#   dplyr::filter(!data_identifier == "n/a") # remove NAs
 
 
 # 00? add more metadata of non-matched ids --------------------------------
 
 
-# sample 170 non-matched to send to blanks so that she would add metadata to them
+# load added metadata
 
-# get the first 30 that I already sampled
 
-first_30 <- read.csv(
-  file.path(here("data",
-                 "verification",
-                 "verification of sample",
-                 "sample_30_ids_no_citation.csv")),
-  header = TRUE)
 
-# Verify that 
-# all(first_30$charite_data_id_or_acc_nr_merged %in% datasets_master_metadata$data_id_merged)
-
-# sample 170 
-
-sample_170_ids_no_citation <- datasets_master_metadata |> 
-  dplyr::filter(in_dcc == "FALSE") |> 
-  distinct(data_id_merged, .keep_all = TRUE) |>
-  dplyr::filter(!data_id_merged %in% first_30$charite_data_id_or_acc_nr_merged) |> 
-  slice_sample(n = 170)
-
-# save
-save_cr(sample_170_ids_no_citation,
-        file = file.path(here("data", "verification","verification of sample", "sample_170_ids_no_citation.RData")))
-
-# write as csv
-write_csv_cr(
-  sample_170_ids_no_citation,
-  file = here("data",
-              "verification",
-              "verification of sample",
-              "sample_170_ids_no_citation.csv"),
-  row.names = FALSE
-)
-
-# add the metadata of the 170 back to datasets_metadata_master_updated
+# add

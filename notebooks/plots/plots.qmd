@@ -342,3 +342,24 @@ dif_for_plot |>
     axis.text.x = element_text(size = 18, color = "black")
     )
 ```
+# dataset age - citation relationship
+
+```{r}
+
+# add headers
+
+# ds_age_cit_cor_prep |> 
+#   ggplot(aes(x = factor(ds_age_when_cited), y = n_citations)) +
+#   geom_boxplot(outlier.shape = NA, fill = "lightgray") +
+#   geom_jitter(width = 0.2, size = 2, alpha = 0.7) +
+#   stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "blue") +
+#   stat_summary(fun = median, geom = "point", shape = 95, size = 6, color = "red") +
+#   labs(
+#     title = "Citations by Dataset Age",
+#     x = "Dataset Age (Years)",
+#     y = "Number of Citations (Log Scale)"
+#   ) +
+#   scale_y_log10() +
+#   theme_classic()
+```
+

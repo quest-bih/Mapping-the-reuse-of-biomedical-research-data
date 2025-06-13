@@ -12,7 +12,7 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB)
 
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
@@ -61,7 +61,7 @@ load_latest_metadata_update <- function() {
   invisible(get(loaded_vars[1], envir = .GlobalEnv))
 }
 
-load_latest_metadata_update() # call function to load latest version
+datasets_metadata_master_latest <- load_latest_metadata_update() # call function to load latest version
 
 # Load _4 for counting with author overlap:
 
@@ -75,6 +75,12 @@ load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_8_ds_add
 
 dcc_charite_joined_final <- dcc_charite_joined_8_ds_added_years
 rm(dcc_charite_joined_8_ds_added_years)
+
+
+# load latest master metadata
+
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_8_ds_added_years.RData"))
+
 
 ```
 
@@ -265,7 +271,7 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 # 
 # # Prepare table for sankey:
 # 
-# dcc_charite_for_sankey <- datasets_metadata_master_updated_005 |>
+# dcc_charite_for_sankey <- datasets_metadata_master_latest |>
 #   dplyr::filter(in_dcc == "TRUE") |>
 #   select(data_id_merged, Category, license, data_access, covid_related, repository) |>
 #   distinct()
@@ -369,24 +375,15 @@ ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
   dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
   ungroup()
 
+# model
 
-ds_age_cit_cor_prep |> 
-  ggplot(aes(x = factor(ds_age_when_cited), y = n_citations)) +
-  geom_boxplot(outlier.shape = NA, fill = "lightgray") +
-  geom_jitter(width = 0.2, size = 2, alpha = 0.7) +
-  stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "blue") +
-  stat_summary(fun = median, geom = "point", shape = 95, size = 6, color = "red") +
-  labs(
-    title = "Citations by Dataset Age",
-    x = "Dataset Age (Years)",
-    y = "Number of Citations (Log Scale)"
-  ) +
-  scale_y_log10() +
-  theme_classic()
+model_nb <- glmmTMB(
+  n_citations ~ ds_age_when_cited + (1 | data_id_merged),
+  data = df,
+  family = nbinom2
+)
 
-
-
-
+summary(model_nb)
 ```
 
 # comparisons between referenced and non-referenced datasets properties
@@ -407,7 +404,7 @@ Create a table like in the reference pic that I took, with: Dimensions of metada
 
 ##### Get the data from the 200 sampled!
 
-not_mentioned_years <- datasets_metadata_master_updated_005 |> 
+not_mentioned_years <- datasets_metadata_master_latest |> 
   dplyr::filter(in_dcc == "FALSE") |> 
   select(charite_id_year, data_id_merged) |> 
   distinct() |> 
