@@ -342,6 +342,7 @@ dif_for_plot |>
     axis.text.x = element_text(size = 18, color = "black")
     )
 ```
+
 # dataset age - citation relationship
 
 ```{r}
@@ -362,4 +363,3 @@ dif_for_plot |>
 #   scale_y_log10() +
 #   theme_classic()
 ```
-
