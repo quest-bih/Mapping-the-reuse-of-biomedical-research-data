@@ -92,7 +92,7 @@ charite_da_dois_and_ids <- read.csv(
 rm(dashboard_dois) # clean up
 ```
 
-# 2. Data Cleaning
+# 2. Data Cleaning Steps
 
 <br>
 
@@ -362,13 +362,12 @@ The distribution of manual validation methods can be seen in **Table 11.** below
 extract_acc_nr <- function(url_string, pattern) {
   url_string <- tolower(url_string) # standardizing for lower case
   acc_nr <- elements <- NULL
-  if (stringr::str_detect(url_string, "osf")) { # extracting osf acc_nr
-    return(url_string |> 
-             stringr::str_extract("osf.*$") |>
-             stringr::str_remove("\\?.*") |> 
-             stringr::str_remove("\\/$") |> 
-             (\(x) paste0("//", x))())
-  } else if (stringr::str_detect(url_string, "doi\\:")) { # removing "doi" prefixes
+  
+  if (str_detect(url_string, "osf|figshare")) {
+  return(url_string)  # ✅ Skip processing if OSF or figshare found
+}
+  
+  if (stringr::str_detect(url_string, "doi\\:")) { # removing "doi" prefixes
     return(url_string |> 
              stringr::str_remove(".*\\: ?") |> 
              stringr::str_squish() |> 
@@ -396,9 +395,6 @@ extract_acc_nr <- function(url_string, pattern) {
                     stringr::str_remove("\\.v?\\d{1,3}$")) |> 
     dplyr::pull(elements)
   
-  if (stringr::str_detect(url_string, "figshare\\.com\\/")) {
-    acc_nr <- paste0("10.6084/m9.figshare.", acc_nr)
-  }
   return(acc_nr)
 }
 
@@ -408,9 +404,60 @@ pattern <- "(acc(?!ess)|accession|ccdcid|studyid|id|run|term|acc)\\=" # we build
 
 charite_dois_and_ids_3_auto_cleaned <- charite_dois_and_ids_2_no_db |>
   mutate(data_id_auto_cleaned = map_chr(data_id, \(x) extract_acc_nr(x, pattern))) |> # apply function
-  relocate(data_id_auto_cleaned, .after = data_id) |> # relocate new auto_cleaned column
-  mutate(data_id_m_val = "") |> # create a column for manual validation
-  relocate(data_id_m_val, .after = data_id_auto_cleaned) # relocate m_val
+  mutate(
+    # Extract slug only where applicable:
+    # - If 'data_id' contains an osf.io/[slug] or osf.io/preprints/.../[slug],
+    #   extract the 5-character slug from the end.
+    slug = case_when(
+      str_detect(data_id, "osf\\.io/[A-Za-z0-9]+")
+      ~ str_extract(data_id, "osf\\.io/(preprints/[^/]+/)?[A-Za-z0-9]{5}") |> 
+        str_extract("[A-Za-z0-9]{5}$"),
+      .default = NA
+      ),
+
+    # Apply formatting logic only when data_id has a valid osf.io slug:
+    # - If slug and DOI (valid or malformed) are present, format as '10.xxxx/osf.io/slug'.
+    # - If only slug is present, format as '//osf.io/slug'.
+    # - All other rows remain unchanged.
+    data_id_auto_cleaned = case_when(
+      str_detect(data_id, "osf\\.io/[A-Za-z0-9]+")
+      & !is.na(slug) & str_detect(data_id, "10\\.\\d+|10\\d{4,}")
+      ~ paste0(
+        str_extract(data_id, "10\\.\\d+|10\\d{4,}") |> 
+          str_replace("^10(\\d{4,})$", "10.\\1"),
+        "/osf.io/",
+        slug
+        ),
+      str_detect(data_id, "osf\\.io/[A-Za-z0-9]+") & !is.na(slug) ~ paste0("//osf.io/", slug),
+      .default = data_id_auto_cleaned
+    ),
+
+    # Construct a matching key prefixing the slug with 'osf_' when slug is available;
+    # otherwise set to NA.
+    dataset_for_matching = case_when(
+      !is.na(slug) ~ paste0("osf_", slug),
+      .default = NA)) |>  
+  mutate(
+    # Step 1: Fix malformed figshare entries without DOI
+    data_id_auto_cleaned = case_when(
+      str_detect(data_id, "figshare") &
+        !str_detect(data_id, "10\\.\\d+") ~ data_id_auto_cleaned |>
+          str_replace(".*(?=figshare\\.com)", "//"),          # Normalize to start at figshare.com
+      .default = data_id_auto_cleaned
+    )
+  ) |>
+  mutate(
+    # Step 2: Extract valid DOI if present in figshare entry
+    data_id_auto_cleaned = case_when(
+      str_detect(data_id, "figshare") &
+        str_detect(data_id, "10\\.\\d+") ~ str_extract(
+          data_id,
+          "10\\.\\d{4,9}/[^\\s/]+"                            # Extracts full DOI, avoids trailing slashes/spaces
+        ),
+      .default = data_id_auto_cleaned
+    )
+  ) |>
+  relocate(data_id_auto_cleaned, slug, dataset_for_matching, .after = data_id) # relocate m_val
 
 # save
 save_cr(charite_dois_and_ids_3_auto_cleaned, file = file.path(here(
@@ -444,9 +491,9 @@ save_cr(charite_dois_and_ids_6_m_val_done,
 
 # create a column with the most standardized data_id
 charite_dois_and_ids_7_id_merged <- charite_dois_and_ids_6_m_val_done |> 
-  mutate(data_id_merged =
+  mutate(dataset_for_matching =
            coalesce(na_if(data_id_m_val, ""), data_id_no_ex_chr)) |> 
-  relocate(data_id_merged, .after = data_id_m_val)
+  relocate(dataset_for_matching, .after = data_id_m_val)
 
 save_cr(charite_dois_and_ids_7_id_merged,
         file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_7_id_merged.RData"))) # as RData
@@ -482,9 +529,9 @@ charite_dois_and_ids_9_w_sec_id <- charite_dois_and_ids_8_for_matching |>
   left_join(secondary_ids |> 
               dplyr::filter(!is.na(secondary_study_accession)
                             & ! secondary_study_accession == ""),
-            by = "data_id_merged") |> 
+            by = "dataset_for_matching") |> 
   rename(data_id_secondary = secondary_study_accession) |> 
-  relocate(data_id_secondary, .after = data_id_merged)
+  relocate(data_id_secondary, .after = dataset_for_matching)
 
 # Save: This file will be loaded in charite_loading_and_preprocessing.qmd!
 
@@ -546,7 +593,7 @@ The matching was done by joining the two lists by the **identifier** columns. Th
 load(here("data",
           "wrangling_steps",
           "dcc",
-          "DCC_corpus_11_osf_doi.RData"))
+          "DCC_corpus_11_std_lbl.RData"))
 
 # Load "DCC_corpus_11_osf_doi.RData
 
@@ -555,12 +602,12 @@ load(here("data",
           "charite",
           "charite_dois_and_ids_9_w_sec_id.RData"))
 
-# Primary id join (by data_id_merged)
+# Primary id join (by dataset_for_matching)
 
 joined_primary <- charite_dois_and_ids_9_w_sec_id |>
   inner_join(
-    DCC_corpus_11_osf_doi,
-    by = c("data_id_merged" = "data_id_or_acc_nr"),
+    DCC_corpus_11_std_lbl,
+    by = "dataset_for_matching",
     suffix = c("_charite", "_dcc")
   )
 
@@ -568,10 +615,10 @@ joined_primary <- charite_dois_and_ids_9_w_sec_id |>
 
 joined_secondary <- charite_dois_and_ids_9_w_sec_id |>
   dplyr::filter(!is.na(data_id_secondary)) |> # exclude NAs
-  anti_join(joined_primary, by = "data_id_merged") |> # get only rows that didn't match with primary id
+  anti_join(joined_primary, by = "dataset_for_matching") |> # get only rows that didn't match with primary id
   inner_join(
     DCC_corpus_11_osf_doi,
-    by = c("data_id_secondary" = "data_id_or_acc_nr"),
+    by = c("dataset_for_matching_2nd_id" = "dataset_for_matching"),
     suffix = c("_charite", "_dcc")
   )
 
@@ -584,8 +631,8 @@ dcc_charite_joined <- joined_primary |>
 load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_1_low.RData"))
 
 dcc_charite_joined_1_low |> 
-  anti_join(dcc_charite_joined, by = "data_id_merged") |> 
-  select(data_id_merged) |> 
+  anti_join(dcc_charite_joined, by = "dataset_for_matching") |> 
+  select(dataset_for_matching) |> 
   distinct() |> 
   View()
 
@@ -636,7 +683,7 @@ dcc_charite_joined |> summarise(across(everything(), ~ any(str_detect(as.charact
 # 1. Add a "detected_data_id" column
 
 dcc_charite_joined_1_det_id <- dcc_charite_joined |>
-  mutate(detected_data_id = coalesce(data_id_secondary, data_id_merged)) |>
+  mutate(detected_data_id = coalesce(data_id_secondary, dataset_for_matching)) |>
   relocate(detected_data_id, .after = data_id_secondary)
 
 # save
@@ -756,7 +803,7 @@ dcc_charite_joined_4_au_info |> dplyr::filter(is.na(publication_year_charite)
                                               | is.na(authors_charite)
                                               | is.na(publication_year_dcc)
                                               | is.na(authors_dcc)) |>
-  relocate(doi_dcc, .after = data_id_merged) |> 
+  relocate(doi_dcc, .after = dataset_for_matching) |> 
   View()
 
 # Out of 7 cases of no metadata, 5 can be removed due to doi_dcc = data_id:
@@ -793,7 +840,7 @@ no_common_element <- function(x, y) {
 # Apply the filter using the function to create a matched list with no "Author Overlap"
 dcc_charite_joined_5_rm_au_ov <- dcc_charite_joined_4_au_info  |> 
   dplyr::filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
-  distinct(doi_charite, data_id_merged, doi_dcc, .keep_all = TRUE)
+  distinct(doi_charite, dataset_for_matching, doi_dcc, .keep_all = TRUE)
 
 # check for any missing values in repository column
 
@@ -803,9 +850,9 @@ dcc_charite_joined_5_rm_au_ov |> dplyr::filter(repository == "" | is.na(reposito
 
 dcc_charite_joined_5_rm_au_ov <- dcc_charite_joined_5_rm_au_ov |> 
   mutate(repository = case_when(
-    data_id_merged == "phs000101"
+    dataset_for_matching == "phs000101"
     ~ "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)",
-    data_id_merged == "up000005640"
+    dataset_for_matching == "up000005640"
     ~ "uniprot",
     .default = repository))
 

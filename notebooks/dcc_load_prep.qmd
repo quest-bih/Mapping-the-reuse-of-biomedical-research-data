@@ -864,18 +864,18 @@ dcc_openneuro_check <- DCC_corpus_10_id_std |>
 save_cr(DCC_corpus_10_id_std, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_10_id_std.RData")))
 ```
 
-# 11. Label which cases were standardidzed
+# 11. Label which cases were standardidzed and rename dataset column for matching
 
 ```{r}
 
 DCC_corpus_11_std_lbl <- DCC_corpus_10_id_std |> 
-  mutate(was_the_id_standardized =
-           dataset != data_id_or_acc_nr)
-
+  rename(dataset_for_matching = for_matching) |> # rename dataset column for matching
+  mutate(was_the_id_standardized = dataset != data_id_or_acc_nr, # label what was standardized
+         dataset_for_matching = coalesce(dataset_for_matching, data_id_or_acc_nr) # coalesce all into "dataset_for_matching"
+  )
 # Save 11th DCC wrangling step
 save_cr(DCC_corpus_11_std_lbl, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_11_std_lbl.RData")))
 ```
-
 
 # 12. Proportion of General Repositories in DCC (After Cleaning)
 
