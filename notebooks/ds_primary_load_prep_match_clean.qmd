@@ -533,7 +533,7 @@ save_cr(charite_dois_and_ids_7_id_merged_cat_sum,
 
 ```
 
-# Matching DCC and Charite Lists by Dataset Identifiers
+# 5. Matching DCC and Charite Lists by Dataset Identifiers
 
 <br>
 
@@ -595,34 +595,7 @@ save_cr(dcc_charite_joined, file = file.path(here("data", "processed","dcc_chari
 rm(DCC_corpus_10_id_std) # clean up
 ```
 
-<br>
-
-#### Table 1. Matched DCC-Charite List
-
-<br>
-
-```{r dcc-charite joined table}
-
-# Render table
-
-datatable(
-  dcc_charite_joined, 
-  options = list(
-    pageLength = -1,  
-    scrollY = "200px", 
-    scrollX = TRUE,    
-    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
-    dom = 'Bfrtip',
-    buttons = c('csv')
-    ),
-  extensions = 'Buttons'
-  )
-
-```
-
-<br>
-
-# 5. Cleaning Matched DCC-Charite List
+# 6. Cleaning Matched DCC-Charite List
 
 <br>
 

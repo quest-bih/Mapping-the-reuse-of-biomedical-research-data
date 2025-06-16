@@ -387,13 +387,13 @@ Columns were renamed and values from relevant columns were set to lower case, in
 # Rename columns and initial characters cleaning for the DOI and data identifier columns
 
 DCC_corpus_2_renamed_clean <- DCC_corpus_1_dates |>
-  rename(doi = publication,
-         data_id_or_acc_nr = dataset) |> # rename columns
-  mutate(data_id_or_acc_nr = str_to_lower(data_id_or_acc_nr), # tolower
+  rename(doi = publication) |> 
+  mutate(data_id_or_acc_nr = dataset, # keep original "dataset" column and mutate a col to standardize
+         data_id_or_acc_nr = str_to_lower(data_id_or_acc_nr), # tolower
          data_id_or_acc_nr = str_remove_all(data_id_or_acc_nr, " "), # remove blank spaces
          data_id_or_acc_nr = str_replace_all(data_id_or_acc_nr, ",", "."), # replace "," with "."
          # Same procedure for DOIs
-         doi = str_to_lower(doi), 
+         doi = str_to_lower(doi), # actually all dois are already lower-cased
          doi = str_remove_all(doi, " "), 
          doi = str_replace_all(doi, ",", "."),
          doi = str_replace(doi, "https://doi.org/", ""), # standardize DOIs (remove prefixes)
@@ -409,10 +409,17 @@ rm(DCC_corpus_1_dates) # clean up
 
 # 5. Removing identifiers prefixes
 
-For all identifiers containing "/10." NOT as the end of their string value, every character before "/10." was removed.
+For all identifiers containing "/10." not at the end of the string, every character up to and including the slash before "10." was removed. This steps makes it easier to futrher standardize dataset's DOIs.
 
 ```{r Remove identifiers prefixes}
 
+# # explore cases to remove prefix from:
+# DCC_corpus_2_renamed_clean |>
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "10\\.")
+#                 & !str_starts(data_id_or_acc_nr, "10\\.")) |>
+#   View()
+
+# remove characters before "10." in case the value itself doesn't start with "10."
 DCC_corpus_3_rm_prefix <- DCC_corpus_2_renamed_clean |>
   mutate(data_id_or_acc_nr = case_when(
     str_detect(data_id_or_acc_nr, "/10\\.")
@@ -421,6 +428,7 @@ DCC_corpus_3_rm_prefix <- DCC_corpus_2_renamed_clean |>
     .default = data_id_or_acc_nr
   ))
 
+# # check
 # DCC_corpus_3_rm_prefix |>
 #   dplyr::filter(str_detect(data_id_or_acc_nr, "10\\.")
 #                 & !str_starts(data_id_or_acc_nr, "10\\.")) |>
@@ -459,56 +467,6 @@ zenodo_na <- DCC_corpus_4_std_gen_rep |> dplyr::filter(data_id_or_acc_nr == "10.
 save_cr(zenodo_na, file = file.path(here("data", "inputs_for_quick_render", "zenodo_na.RData"))) # save
 ```
 
-```{r Standardizing general repositories entries OSF}
-
-# Exploring & standardizing the general repositories values (osf): std to: //osf.io/xxxxx
-
-# DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |> View() # not standardized in DCC
-
-# When an identifier ends with "osf.io/*anything*", keep this ending, add "//" before it and remove trailing "/"
-DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |> 
-mutate(data_id_or_acc_nr = case_when(
-  str_detect(data_id_or_acc_nr, "osf\\.io/.+$")
-  ~ paste0("//", str_replace(str_extract(data_id_or_acc_nr, "osf\\.io/.+$"), "/$", "")),  
-    .default =  data_id_or_acc_nr))
-
-# Get the rest that my code didn't handle
-osf_not_std <- DCC_corpus_4_std_gen_rep |>
-  dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |>
-  dplyr::filter(!str_starts(data_id_or_acc_nr, "//osf.io"))
-
-save_cr(osf_not_std, file = file.path(here("data", "inputs_for_quick_render", "osf_not_std.RData"))) # save
-```
-
-```{r Standardizing general repositories entries Figshare}
-
-# # Exploring & standardizing the general repositories values (figshare): std to: 10.6084/m9.figshare.xxxxx
-
-# DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "figshare")) |> View() # not standardized in DCC
-
-# When an identifier has with "10.6084/m9.figshare.*anything*", keep this string and anything after it and remove trailing "/"
-DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |> 
-mutate(data_id_or_acc_nr = case_when(
-  str_detect(data_id_or_acc_nr, "10\\.6084/m9\\.figshare\\..+$")
-  ~ paste0("", str_replace(str_extract(data_id_or_acc_nr, "10\\.6084/m9\\.figshare\\..+$"), "/$", "")),  
-    .default = data_id_or_acc_nr))
-
-# Standardize identifiers that have "m9.figshare" in them but don't start with "10.6084/m9.figshare."
-DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |>
-  mutate(data_id_or_acc_nr = case_when(
-    str_detect(data_id_or_acc_nr, "m9.figshare") & !str_starts(data_id_or_acc_nr, "10.6084/m9.figshare.") ~ 
-      str_replace(data_id_or_acc_nr, ".*?(m9\\.figshare\\..*)", "10.6084/\\1"),
-    .default = data_id_or_acc_nr
-  ))
-
-# Get the rest that my code didn't handle
-figshare_not_std <- DCC_corpus_4_std_gen_rep |>
-  dplyr::filter(str_detect(data_id_or_acc_nr, "m9.figshare")) |>
-  dplyr::filter(!str_starts(data_id_or_acc_nr, "10.6084/m9.figshare."))
-
-save_cr(figshare_not_std, file = file.path(here("data", "inputs_for_quick_render", "figshare_not_std.RData"))) # save
-```
-
 ```{r Standardizing general repositories entries Dryad}
 
 # # Exploring & standardizing the general repositories values (dryad): std to: 10.5061/dryad/xxxxx
@@ -529,76 +487,127 @@ dryad_not_std <- DCC_corpus_4_std_gen_rep |>
   dplyr::filter(!str_starts(data_id_or_acc_nr, "10.5061/dryad."))
 
 save_cr(dryad_not_std, file = file.path(here("data", "inputs_for_quick_render", "dryad_not_std.RData"))) # save
+```
+
+```{r Standardizing general repositories entries Figshare}
+
+# # Exploring & standardizing the general repositories values (figshare): std to: 10.6084/m9.figshare.xxxxx or to a URL
+
+# DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "figshare")) |> View() # not standardized in DCC
+
+# # Most figsahre cases in the DCC are in DOI format. Let's see what's not:
+# DCC_corpus_3_rm_prefix |>
+#   dplyr::filter(
+#     str_detect(data_id_or_acc_nr, "figshare") &
+#     !str_detect(data_id_or_acc_nr, "10\\.\\d+")
+#   ) |> View()
+
+
+DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |> 
+  mutate(
+    # Step 1: Fix malformed figshare entries without DOI
+    data_id_or_acc_nr = case_when(
+      str_detect(data_id_or_acc_nr, "figshare") &
+        !str_detect(data_id_or_acc_nr, "10\\.\\d+") ~ data_id_or_acc_nr |>
+          str_replace("10/6084", "10.6084") |>                # Fix malformed DOI
+          str_replace(".*(?=figshare\\.com)", "//"),          # Normalize to start at figshare.com
+      .default = data_id_or_acc_nr
+    )
+  ) |>
+  mutate(
+    # Step 2: Extract valid DOI if present in figshare entry
+    data_id_or_acc_nr = case_when(
+      str_detect(data_id_or_acc_nr, "figshare") &
+        str_detect(data_id_or_acc_nr, "10\\.\\d+") ~ str_extract(
+          data_id_or_acc_nr,
+          "10\\.\\d{4,9}/[^\\s/]+"                            # Extracts full DOI, avoids trailing slashes/spaces
+        ),
+      .default = data_id_or_acc_nr
+    )
+  )
+
+
+# Get the rest that my code didn't handle
+figshare_not_std <- DCC_corpus_4_std_gen_rep |>
+  select(dataset, data_id_or_acc_nr) |>
+  dplyr::filter(str_detect(data_id_or_acc_nr, "figshare")) |>  # Get all figshare cases
+  dplyr::filter(
+    !str_starts(data_id_or_acc_nr, regex("10\\.\\d+")) &    # Not in standardized DOI form
+    !str_starts(data_id_or_acc_nr, "//figshare.com")) |>             # Not in standardized figshare URL form
+  distinct()
+
+
+save_cr(figshare_not_std, file = file.path(here("data", "inputs_for_quick_render", "figshare_not_std.RData"))) # save
+```
+
+```{r Standardizing general repositories entries OSF}
+
+# Exploring & standardizing the general repositories values (osf): std to: //osf.io/xxxxx or to a DOI form
+
+# DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |> View() # not standardized in DCC
+
+# OSF could be listed as a DOI or as a URL.
+# So below I will standardize any OSF to either DOI or URL
+# But I will mutate a column for matching "for_matching" that'll have osf values in the format "osf_xxxxx" and for other cases (non-osf) just the standardized values (data_id_or_acc_nr), in case there were any osf accession numbers that could exist as a DOI / URL in th Charité / DCC lists and wouldn't match just because of the format.
+
+
+DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |> 
+  mutate(
+    # Extract slug only where applicable:
+    # - If 'dataset' contains an osf.io/[slug] or osf.io/preprints/.../[slug],
+    #   extract the 5-character slug from the end.
+    slug = case_when(
+      str_detect(dataset, "osf\\.io/[A-Za-z0-9]+")
+      ~ str_extract(dataset, "osf\\.io/(preprints/[^/]+/)?[A-Za-z0-9]{5}") |> 
+        str_extract("[A-Za-z0-9]{5}$"),
+      .default = NA
+      ),
+
+    # Apply formatting logic only when dataset has a valid osf.io slug:
+    # - If slug and DOI (valid or malformed) are present, format as '10.xxxx/osf.io/slug'.
+    # - If only slug is present, format as '//osf.io/slug'.
+    # - All other rows remain unchanged.
+    data_id_or_acc_nr = case_when(
+      str_detect(dataset, "osf\\.io/[A-Za-z0-9]+")
+      & !is.na(slug) & str_detect(dataset, "10\\.\\d+|10\\d{4,}")
+      ~ paste0(
+        str_extract(dataset, "10\\.\\d+|10\\d{4,}") |> 
+          str_replace("^10(\\d{4,})$", "10.\\1"),
+        "/osf.io/",
+        slug
+        ),
+      str_detect(dataset, "osf\\.io/[A-Za-z0-9]+") & !is.na(slug) ~ paste0("//osf.io/", slug),
+      .default = data_id_or_acc_nr
+    ),
+
+    # Construct a matching key prefixing the slug with 'osf_' when slug is available;
+    # otherwise set to NA.
+    for_matching = case_when(
+      !is.na(slug) ~ paste0("osf_", slug),
+      .default = NA))
+
+
+osf_not_std <- DCC_corpus_4_std_gen_rep |>
+  select(dataset, data_id_or_acc_nr) |>
+  dplyr::filter(
+    str_detect(dataset, "osf")) |>
+  dplyr::filter(
+    !str_starts(data_id_or_acc_nr, regex("10\\.\\d+")) &    # Not in standardized DOI form
+    !str_starts(data_id_or_acc_nr, "//osf.io")) |>         # Not in standardized figshare URL form
+  distinct()
+
+save_cr(osf_not_std, file = file.path(here("data", "inputs_for_quick_render", "osf_not_std.RData"))) # save
+```
+
+```{r}
+
+# Reorder columns and save _4
+
+DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |> 
+  relocate(data_id_or_acc_nr, slug, for_matching, .after = dataset)
 
 # Save 4th wrangling step
 save_cr(DCC_corpus_4_std_gen_rep, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_4_std_gen_rep.RData")))
-```
-
-```{r DCC general repositories nonstandardized}
-
-# Create tables of general repositories cases that needed standardizing
-
-# zenodo
-
-zenodo_tibble <- DCC_corpus_2_renamed_clean |>
-  dplyr::filter(
-    str_detect(data_id_or_acc_nr, "zenodo\\.") &
-    !str_detect(data_id_or_acc_nr, "^10\\.5281/zenodo\\.\\d+$")
-  )
-
-# osf
-
-osf_tibble <- DCC_corpus_2_renamed_clean |>
-  dplyr::filter(
-    str_detect(data_id_or_acc_nr, "osf\\.io/.+$") &
-    !str_detect(data_id_or_acc_nr, "^https?://osf\\.io/\\w+$")
-  )
-
-# figshare
-
-figshare_tibble <- DCC_corpus_2_renamed_clean |>
-  dplyr::filter(
-    str_detect(data_id_or_acc_nr, "10\\.6084/m9\\.figshare\\..+$") &
-    !str_detect(data_id_or_acc_nr, "^10\\.6084/m9\\.figshare\\.\\d+$")
-  )
-
-# dryad
-
-dryad_tibble <- DCC_corpus_2_renamed_clean |>
-  dplyr::filter(
-    str_detect(data_id_or_acc_nr, "10\\.5061/dryad\\.") &
-    !str_detect(data_id_or_acc_nr, "^10\\.5061/dryad\\.\\d+$")
-  )
-
-# Get counts
-
-z_tib_c <- zenodo_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # zenodo
-o_tib_c <- osf_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # osf
-f_tib_c <- figshare_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # figshare
-d_tib_c <- dryad_tibble |> select(data_id_or_acc_nr) |> distinct() |> nrow() # dryad
-
-# Save counts
-
-save_cr(z_tib_c, file = file.path(here("data", "inputs_for_quick_render", "z_tib_c.RData")))
-save_cr(o_tib_c, file = file.path(here("data", "inputs_for_quick_render", "o_tib_c.RData")))
-save_cr(f_tib_c, file = file.path(here("data", "inputs_for_quick_render", "f_tib_c.RData")))
-save_cr(d_tib_c, file = file.path(here("data", "inputs_for_quick_render", "d_tib_c.RData")))
-
-# Create sample tables for rendering
-
-zenodo_tibble_sampled <- zenodo_tibble |> sample_n(100)
-osf_tibble_sampled <- osf_tibble |> sample_n(100)
-figshare_tibble_sampled <- figshare_tibble |> sample_n(100)
-dryad_tibble_sampled <- dryad_tibble |> sample_n(100)
-
-# Save sample tables
-
-save_cr(zenodo_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render",   "zenodo_tibble_sampled.RData")))
-save_cr(osf_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render",      "osf_tibble_sampled.RData")))
-save_cr(figshare_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render", "figshare_tibble_sampled.RData")))
-save_cr(dryad_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render",    "dryad_tibble_sampled.RData")))
-
-rm(DCC_corpus_2_renamed_clean) # clean up
 ```
 
 <br>
@@ -629,63 +638,6 @@ save_cr(ver_info, file = file.path(here("data", "inputs_for_quick_render", "ver_
 save_cr(DCC_corpus_5_rm_v_info, file = file.path(here("data", "wrangling_steps", "dcc",  "DCC_corpus_5_rm_v_info.RData")))
 ```
 
-<br>
-
-## Table 5. DOIs or Identifiers with Version Information (Sample)
-
-<br>
-
-```{r DCC ids with version info}
-
-# Create a table of cases with version trails: ends with ".v" followed by an integer / ".t" and any number / ".p" and any number
-
-trail_cases_tibble <- DCC_corpus_4_std_gen_rep |>
-  dplyr::filter(
-    str_detect(data_id_or_acc_nr, "\\.v\\d+(/t\\d+)?(\\.p\\d+)?$") |
-    str_detect(doi, "\\.v\\d+(/t\\d+)?(\\.p\\d+)?$")
-  )
-
-save_cr(trail_cases_tibble, file = file.path(here("data", "inputs_for_quick_render", "trail_cases_tibble.RData"))) # save
-
-# Get counts
-
-no_of_cases_with_v_info <- nrow(trail_cases_tibble)
-
-save_cr(no_of_cases_with_v_info, file = file.path(here("data", "inputs_for_quick_render", "no_of_cases_with_v_info.RData"))) # save
-
-# Create a sample table
-
-trail_cases_tibble_sampled <- trail_cases_tibble |> sample_n(100)
-
-save_cr(trail_cases_tibble_sampled, file = file.path(here("data", "inputs_for_quick_render", "trail_cases_tibble_sampled.RData"))) # save
-
-rm(DCC_corpus_4_std_gen_rep) # clean up
-```
-
-<br>
-
-Overall, the DCC contained **`r no_of_cases_with_v_info`** cases with version information within a DOI or an Identifier. **Table 6.** below shows a sample of version information suffixes:
-
-## Table 6. Sample of version information suffixes
-
-```{r DCC ids with version info table}
-
-# Render table
-
-datatable(
-  trail_cases_tibble_sampled, 
-  options = list(
-    pageLength = -1,  
-    scrollY = "200px", 
-    scrollX = TRUE,    
-    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
-    dom = 'Bfrtip',
-    buttons = c('csv')
-    ),
-  extensions = 'Buttons',  class = 'stripe hover cell-border' # Add light styling
-  )
-```
-
 # 8. Removing Excess Characters
 
 Cleaning records end with dots or "/" or has comas
@@ -712,25 +664,19 @@ DCC_corpus_6_ex_chr_rm <- DCC_corpus_5_rm_v_info |>
 save_cr(DCC_corpus_6_ex_chr_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_6_ex_chr_rm.RData")))
 ```
 
-# 9. Standardizing DOIs of papers
-
-For later analysis steps, DOIs of papers were also standardized to start with "10.". There were 4 cases
+# 9. Removing cases where paper value equals dataset value
 
 ```{r Standardizing DOIs of papers}
 
-# Get cases where a DOI of a data set doesn't start with "10."
+# First, get cases where a DOI of a data set doesn't start with "10."
 
 not_std_dois <- DCC_corpus_6_ex_chr_rm |>
   dplyr::filter(str_detect(doi, "10\\.")
                 & !str_starts(doi, "10\\."))
 
-
 save_cr(not_std_dois, file = file.path(here("data", "inputs_for_quick_render", "not_std_dois.RData"))) # save
-```
 
-# 10. Removing cases where paper value equals dataset value
-
-```{r Removing cases where doi is the same as id}
+# there were 4 cases that I didn't fix.
 
 # Get cases where paper's doi = dataset's id (after removing excess characters)
 
@@ -779,20 +725,20 @@ nm_counts <- DCC_corpus_8_preprint_rm |>
   dplyr::filter(startsWith(data_id_or_acc_nr, "nm_") & grepl("\\.", data_id_or_acc_nr)) |>  # Check if "." exists
   mutate(digits_after_dot = sapply(strsplit(data_id_or_acc_nr, "\\."), function(x) ifelse(length(x) > 1, nchar(x[2]), 0))) 
 
-# Modify col1 by removing "." and everything after it using case_when()
+# Modify data_id_or_acc_nr by removing "." and everything after it
 DCC_corpus_9_nm_v_rm <- DCC_corpus_8_preprint_rm |> 
   mutate(data_id_or_acc_nr = case_when(
     startsWith(data_id_or_acc_nr, "nm_")
     & grepl("\\.", data_id_or_acc_nr)
     ~ sapply(strsplit(data_id_or_acc_nr, "\\."), function(x) x[1]),  # Keep only the part before "."
-    .default = data_id_or_acc_nr  # Keep unchanged if it doesn't match
+    .default = data_id_or_acc_nr
   ))
 
 # Save 9th DCC wrangling step
 save_cr(DCC_corpus_9_nm_v_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_9_nm_v_rm.RData")))
 ```
 
-# Last standardization steps to match the Charité identifiers / DOIs format:
+# 10. Last standardization steps to match the Charité identifiers / DOIs format:
 
 1.  convert "pxd" DOIs to "pxdXXXXX" format
 2.  standardize "mendeley" datasets (10.17632/xxxxx)
@@ -804,29 +750,29 @@ save_cr(DCC_corpus_9_nm_v_rm, file = file.path(here("data", "wrangling_steps", "
 # There were ~10K cases where an accession number weas still a part of a url and had to be extracted.
 # So here we will extract them, and use the step to also standardize last known identifiers.
 
-# Overview
-
-dcc_pxd <- DCC_corpus_9_nm_v_rm |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "10.6019/pxd")) # pxs
-
-dcc_mendeley <- DCC_corpus_9_nm_v_rm |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
-                | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
-
-dcc_openneuro <- DCC_corpus_9_nm_v_rm |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
-                | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
-
-dcc_phs <- DCC_corpus_9_nm_v_rm |> 
-  select(data_id_or_acc_nr) |> 
-  distinct() |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
+# # Overview
+# 
+# dcc_pxd <- DCC_corpus_9_nm_v_rm |>
+#   select(data_id_or_acc_nr) |>
+#   distinct() |>
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "10.6019/pxd")) # pxs
+# 
+# dcc_mendeley <- DCC_corpus_9_nm_v_rm |>
+#   select(data_id_or_acc_nr) |>
+#   distinct() |>
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
+#                 | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
+# 
+# dcc_openneuro <- DCC_corpus_9_nm_v_rm |>
+#   select(data_id_or_acc_nr) |>
+#   distinct() |>
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
+#                 | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
+# 
+# dcc_phs <- DCC_corpus_9_nm_v_rm |>
+#   select(data_id_or_acc_nr) |>
+#   distinct() |>
+#   dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
 
 
 # define the prefixes (keep the dash if it's part of the prefix)
@@ -890,104 +836,54 @@ DCC_corpus_10_id_std <- DCC_corpus_9_nm_v_rm |>
     )
   )
 
-# # Check
-# 
-# dcc_pxd_check <- DCC_corpus_10_id_std |> 
-#   select(data_id_or_acc_nr) |> 
-#   distinct() |> 
-#   dplyr::filter(str_detect(data_id_or_acc_nr, "pxd")) # pxd
-# 
-# dcc_phs_check <- DCC_corpus_10_id_std |> 
-#   select(data_id_or_acc_nr) |> 
-#   distinct() |> 
-#   dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
-# 
-# dcc_mendeley_check <- DCC_corpus_10_id_std |> 
-#   select(data_id_or_acc_nr) |> 
-#   distinct() |> 
-#   dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
-#                 | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
-# 
-# dcc_openneuro_check <- DCC_corpus_10_id_std |> 
-#   select(data_id_or_acc_nr) |> 
-#   distinct() |> 
-#   dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
-#                 | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
+# Check
+
+dcc_pxd_check <- DCC_corpus_10_id_std |>
+  select(data_id_or_acc_nr) |>
+  distinct() |>
+  dplyr::filter(str_detect(data_id_or_acc_nr, "pxd")) # pxd
+
+dcc_phs_check <- DCC_corpus_10_id_std |>
+  select(data_id_or_acc_nr) |>
+  distinct() |>
+  dplyr::filter(str_detect(data_id_or_acc_nr, "phs")) # phs
+
+dcc_mendeley_check <- DCC_corpus_10_id_std |>
+  select(data_id_or_acc_nr) |>
+  distinct() |>
+  dplyr::filter(str_detect(data_id_or_acc_nr, "mendeley")
+                | str_detect(data_id_or_acc_nr, "10.17632/")) # mendeley
+
+dcc_openneuro_check <- DCC_corpus_10_id_std |>
+  select(data_id_or_acc_nr) |>
+  distinct() |>
+  dplyr::filter(str_detect(data_id_or_acc_nr, "openneuro")
+                | str_detect(data_id_or_acc_nr, "10.18112")) # openneuro
 
 # Save 10th DCC wrangling step
 save_cr(DCC_corpus_10_id_std, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_10_id_std.RData")))
 ```
 
-```{r set osf to doi}
+# 11. Label which cases were standardidzed
 
-# eventually OSF should be in a DOI format, so here I'll format it as such
+```{r}
 
-# Overview of osf ids
-
-DCC_corpus_10_id_std |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |>
-  select(data_id_or_acc_nr) |> 
-  distinct() |> View()
-
-# Format to 10.17605/osf.io.XXXXX
-
-DCC_corpus_11_osf_doi <- DCC_corpus_10_id_std |> 
-mutate(
-    data_id_or_acc_nr = case_when(
-      str_detect(data_id_or_acc_nr, "//osf.io/[A-Za-z0-9]+") # detect "//osf.io/XXXX"
-      ~ paste0(
-        "10.17605",
-        str_replace(str_extract(data_id_or_acc_nr, "//osf.io/[A-Za-z0-9]+"), "^/", "") # add doi prefix and ignore everything after this pattern and
-      ),
-      .default = data_id_or_acc_nr
-    )
-  )
-  
-# check
-DCC_corpus_11_osf_doi |> 
-  dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |>
-  select(data_id_or_acc_nr) |> 
-  distinct() |> View()
+DCC_corpus_11_std_lbl <- DCC_corpus_10_id_std |> 
+  mutate(was_the_id_standardized =
+           dataset != data_id_or_acc_nr)
 
 # Save 11th DCC wrangling step
-save_cr(DCC_corpus_11_osf_doi, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_11_osf_doi.RData")))
+save_cr(DCC_corpus_11_std_lbl, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_11_std_lbl.RData")))
 ```
 
-<br>
 
-As shown in **Table 6.** below, after removing excess characters and trails from DOIs and data set identifiers, cases where these two values were actually the same were discovered. These cases weren't visible before standardizing and cleaning the DOIs and the data set identifiers, meaning a simple comparison between the DOI and dataset columns resulted in 0 results.
-
-<br>
-
-## Table 7. Cases where value of paper's DOI is the same as value of dataset's identifier (Sample)
-
-<br>
-
-```{r doi_is_id table}
-
-# Render table
-
-datatable(
-  doi_is_id_sampled, 
-  options = list(
-    pageLength = -1,  
-    scrollY = "200px", 
-    scrollX = TRUE,    
-    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
-    dom = 'Bfrtip',
-    buttons = c('csv')
-    ),
-  extensions = 'Buttons'
-  )
-```
-
-# 11. Proportion of General Repositories in DCC (After Cleaning)
+# 12. Proportion of General Repositories in DCC (After Cleaning)
 
 ```{r Proportion of general repositories in DCC}
 
 # Get total count if general repositories (to use later in percentages calcaultion)
 
-dcc_id_dist <- DCC_corpus_8_preprint_rm |> select(data_id_or_acc_nr) |> distinct() |> nrow()
+dcc_id_dist <- DCC_corpus_10_id_std |> select(data_id_or_acc_nr) |> distinct() |> nrow()
 
 # Create general repositories counts and percentages table
 
@@ -1013,97 +909,9 @@ gen_rep_dcc <- DCC_corpus_8_preprint_rm |>
 save_cr(gen_rep_dcc, file = file.path(here("data", "inputs_for_quick_render", "gen_rep_dcc.RData"))) # save
 ```
 
-## Table 8. Non-standardized Identifiers
-
-The table below shows a sample of the general repositories identifiers before the standardization process (one for each repository):
-
-```{r nonstandardized general repositories table}
-
-# # Prepare table
-# 
-# sample_gen_rep <- zenodo_tibble_sampled |> 
-#   select(data_id_or_acc_nr) |> 
-#   sample_n(1) |> 
-#   bind_rows(
-#     figshare_tibble_sampled |>
-#       select(data_id_or_acc_nr) |>
-#       sample_n(1)
-#     ) |> 
-#     bind_rows(
-#     dryad_tibble_sampled |>
-#       select(data_id_or_acc_nr) |>
-#       sample_n(1)
-#     ) |>
-#     bind_rows(
-#     osf_tibble_sampled |>
-#       select(data_id_or_acc_nr) |>
-#       sample_n(1)
-#     )
-# 
-# # Render table
-# 
-# datatable(
-#   sample_gen_rep,
-#   options = list(
-#     pageLength = -1,
-#     scrollY = "200px",
-#     scrollX = TRUE,
-#     lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
-#     dom = 'Bfrtip',
-#     buttons = c('csv')
-#     ),
-#   extensions = 'Buttons'
-#   )
-```
-
 <br>
 
-## Table 9. Remaining cases after standardization process
-
-<br>
-
-Cases that were left non-standardized after the standardization procedure were not valid. **Table 9.** below shows a sample of these cases - one for each general repository:
-
-<br>
-
-```{r General Repositories Cases Left Unstandardized table}
-
-# Prepare table
-
-sample_na_gen_rep <- zenodo_na |> 
-  select(data_id_or_acc_nr) |> 
-  sample_n(1) |> 
-  bind_rows(
-    figshare_not_std |>
-      select(data_id_or_acc_nr) |>
-      sample_n(1)
-    ) |> 
-    bind_rows(
-    osf_not_std |>
-      select(data_id_or_acc_nr) |>
-      sample_n(1)
-    )
-
-# Render table
-
-datatable(
-  sample_na_gen_rep,
-  options = list(
-    title = "Zenodo",
-    pageLength = -1,
-    scrollY = "200px",
-    scrollX = TRUE,
-    lengthMenu = list(c(-1, 5, 10, 25, 50), c("All", 5, 10, 25, 50)),
-    dom = 'Bfrtip',
-    buttons = c('csv')
-    ),
-  extensions = 'Buttons'
-  )
-```
-
-<br>
-
-## ??? Blank Spaces, Commas and Trails Dots and Slashes
+# 13. Blank Spaces, Commas and Trails Dots and Slashes
 
 <br>
 
@@ -1268,11 +1076,11 @@ datatable(
   )
 ```
 
-# 12. Publication years distribution
+# 14. Publication years distribution
 
 ```{r}
 
-dcc_years_dist <- DCC_corpus_9_nm_v_rm |>
+dcc_years_dist <- DCC_corpus_10_id_std |>
   select(doi, publishedDate) |> 
   mutate(year = as.integer(format(publishedDate, "%Y"))) |> 
   select(-publishedDate) |> 
@@ -1327,7 +1135,7 @@ dcc_years_dist_for_plot |>
 
 ```
 
-# 13. Repositories distribution
+# 15. Repositories distribution
 
 ```{r}
 
