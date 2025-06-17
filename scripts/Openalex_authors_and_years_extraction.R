@@ -141,31 +141,33 @@ final_results <- map_dfr(dfs, process_dataframe)
 save_path <- file.path(here("data",
                             "verification",
                             "metadata matched",
-                            "charite_dois_metadata_20052025.RData"))
+                            "charite_dois_metadata_17062025.RData"))
 
 save(final_results, file = save_path)
 
 # DCC ---------------------------------------------------------------------
 
-# after running once, I found problematic according to console output:
-df <- df |> 
-  dplyr::filter(!doi %in% c("10.17605/osf.io/95ayu",
-                           "10.17605/osf.io/e8h3q",
-                           "10.17605/osf.io/gs2t5",
-                           "10.17605/osf.io/gupbf",
-                           "10.17605/osf.io/3jk45"))
+# # after running once, I found problematic according to console output:
+# df <- df |> 
+#   dplyr::filter(!doi %in% c("10.17605/osf.io/95ayu",
+#                            "10.17605/osf.io/e8h3q",
+#                            "10.17605/osf.io/gs2t5",
+#                            "10.17605/osf.io/gupbf",
+#                            "10.17605/osf.io/3jk45"))
+# 
+# # Set a "list of dataframes"
+# 
+# df1 <- df |> slice(1:150)
+# df2 <- df |> slice(151:300)
+# df3 <- df |> slice(301:450)
+# df4 <- df |> slice(451:600)
+# df5 <- df |> slice(601:750)
+# df6 <- df |> slice(751:900)
+# df7 <- df |> slice(901:928)
+# 
+# dfs <- list(df1, df2, df3, df4, df5, df6, df7)
 
-# Set a "list of dataframes"
-
-df1 <- df |> slice(1:150)
-df2 <- df |> slice(151:300)
-df3 <- df |> slice(301:450)
-df4 <- df |> slice(451:600)
-df5 <- df |> slice(601:750)
-df6 <- df |> slice(751:900)
-df7 <- df |> slice(901:928)
-
-dfs <- list(df1, df2, df3, df4, df5, df6, df7)
+dfs <- list(df)
 
 # Apply function to each dataframe and bind results together
 final_results <- map_dfr(dfs, process_dataframe)
@@ -174,7 +176,7 @@ final_results <- map_dfr(dfs, process_dataframe)
 save_path <- file.path(here("data",
                             "verification",
                             "metadata matched",
-                            "dcc_dois_metadata_20052025.RData"))
+                            "dcc_dois_metadata_17062025.RData"))
 
 save(final_results, file = save_path)
 
