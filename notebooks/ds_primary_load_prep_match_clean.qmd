@@ -583,9 +583,9 @@ charite_dois_and_ids_8_wide <- charite_dois_and_ids_7_w_sec_id |>
   group_by(dataset_for_matching) |>
   arrange(dataset_for_matching) |>
 
-  # First entry (keep doi + 1st data_identifier)
+  # First entry (keep all original columns, rename data_identifier)
   slice_head(n = 1) |>
-  rename(data_identifier_orig_1st = data_identifier_orig) |>
+  rename(data_identifier_orig_1st_entry = data_identifier_orig) |>
 
   # Join second entry from same group
   left_join(
@@ -600,17 +600,12 @@ charite_dois_and_ids_8_wide <- charite_dois_and_ids_7_w_sec_id |>
   # Remove second entry if it's a duplicate of the first
   mutate(
     data_identifier_orig_2nd_entrie = case_when(
-      data_identifier_orig_1st == data_identifier_orig_2nd_entrie ~ NA_character_,
-      .default = data_identifier_orig_2nd_entrie
+      data_identifier_orig_1st_entry == data_identifier_orig_2nd_entrie ~ NA_character_,
+      TRUE ~ data_identifier_orig_2nd_entrie
     )
   ) |>
-  ungroup() |>
-  transmute(
-    doi,
-    data_identifier_orig = data_identifier_orig_1st,
-    data_identifier_orig_2nd_entrie,
-    dataset_for_matching
-  )
+  ungroup() |> 
+  relocate(data_identifier_orig_2nd_entrie, .after = data_identifier_orig_1st_entry)
 
 # Save for matching with DCC
 
@@ -640,11 +635,11 @@ load(here("data",
 load(here("data",
           "wrangling_steps",
           "charite",
-          "charite_dois_and_ids_7_w_sec_id.RData"))
+          "charite_dois_and_ids_8_wide.RData"))
 
 # Primary id join (by dataset_for_matching)
 
-joined_primary <- charite_dois_and_ids_9_w_sec_id |>
+joined_primary <- charite_dois_and_ids_8_wide |>
   inner_join(
     DCC_corpus_11_std_lbl,
     by = "dataset_for_matching",
@@ -653,7 +648,7 @@ joined_primary <- charite_dois_and_ids_9_w_sec_id |>
 
 # Secondary id join (by data_id_secondary, and only if not NA and not already matched)
 
-joined_secondary <- charite_dois_and_ids_9_w_sec_id |>
+joined_secondary <- charite_dois_and_ids_8_wide |>
   dplyr::filter(!is.na(data_id_secondary)) |> # exclude NAs
   anti_join(joined_primary, by = "dataset_for_matching") |> # get only rows that didn't match with primary id
   inner_join(
