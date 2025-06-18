@@ -363,27 +363,27 @@ So I could plot 1/2/3 years difference on x axis, and then how many mentions for
 
 ```{r}
 
-ds_age_cit_cor_prep <- dcc_charite_joined_final |> 
-  select(data_id_merged, doi_dcc, publication_year_dcc, charite_id_year) |> 
-  dplyr::filter(charite_id_year > 2019) |> 
-  mutate(ds_age_when_cited = publication_year_dcc - charite_id_year) |>
-  count(ds_age_when_cited, data_id_merged, name = "n_citations") |> 
-  dplyr::filter(ds_age_when_cited >= 0) 
-
-ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
-  group_by(data_id_merged) |>
-  dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
-  ungroup()
-
-# model
-
-model_nb <- glmmTMB(
-  n_citations ~ ds_age_when_cited + (1 | data_id_merged),
-  data = df,
-  family = nbinom2
-)
-
-summary(model_nb)
+# ds_age_cit_cor_prep <- dcc_charite_joined_final |> 
+#   select(data_id_merged, doi_dcc, publication_year_dcc, charite_id_year) |> 
+#   dplyr::filter(charite_id_year > 2019) |> 
+#   mutate(ds_age_when_cited = publication_year_dcc - charite_id_year) |>
+#   count(ds_age_when_cited, data_id_merged, name = "n_citations") |> 
+#   dplyr::filter(ds_age_when_cited >= 0) 
+# 
+# ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
+#   group_by(data_id_merged) |>
+#   dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
+#   ungroup()
+# 
+# # model
+# 
+# model_nb <- glmmTMB(
+#   n_citations ~ ds_age_when_cited + (1 | data_id_merged),
+#   data = df,
+#   family = nbinom2
+# )
+# 
+# summary(model_nb)
 ```
 
 # comparisons between referenced and non-referenced datasets properties
@@ -404,12 +404,12 @@ Create a table like in the reference pic that I took, with: Dimensions of metada
 
 ##### Get the data from the 200 sampled!
 
-not_mentioned_years <- datasets_metadata_master_latest |> 
-  dplyr::filter(in_dcc == "FALSE") |> 
-  select(charite_id_year, data_id_merged) |> 
-  distinct() |> 
-  group_by(charite_id_year) |> 
-  summarise(n = n())
+# not_mentioned_years <- datasets_metadata_master_latest |> 
+#   dplyr::filter(in_dcc == "FALSE") |> 
+#   select(charite_id_year, data_id_merged) |> 
+#   distinct() |> 
+#   group_by(charite_id_year) |> 
+#   summarise(n = n())
 
 
 

@@ -349,7 +349,7 @@ dif_for_plot |>
 
 # add headers
 
-# ds_age_cit_cor_prep |> 
+# ds_age_cit_cor_prep |>
 #   ggplot(aes(x = factor(ds_age_when_cited), y = n_citations)) +
 #   geom_boxplot(outlier.shape = NA, fill = "lightgray") +
 #   geom_jitter(width = 0.2, size = 2, alpha = 0.7) +
