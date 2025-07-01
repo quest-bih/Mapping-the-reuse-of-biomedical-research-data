@@ -8,6 +8,7 @@
 notebooks/plots/plots.embed_files/
 notebooks/plots/C-/
 notebooks/plots/
+notebooks/.DS_Store
 data/raw/dcc/
 data/wrangling_steps/dcc/
 data/processed/dcc/
