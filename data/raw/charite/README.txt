@@ -1,4 +1,4 @@
-Changes between master_od_screening_manual_check_2020_2023_v2.rda and master_od_screening_manual_check_2020_2023_v2.1.rda:
+*** Changes between master_od_screening_manual_check_2020_2023_v2.rda and master_od_screening_manual_check_2020_2023_v2.1.rda:
 
 1. Remove the 2022 record for the DOI `10.3758/s13428-022-02019-8`
 
@@ -35,3 +35,7 @@ Changes between master_od_screening_manual_check_2020_2023_v2.rda and master_od_
 17. Normalize Zenodo DOI for `10.1038/s41598-022-09309-3`
 
 18. Normalize Zenodo DOI for `10.1038/s41598-022-22353-3`
+
+*** data_articles_AC.csv is "data_articles_AI_2025_05_14.csv":
+Its original name is: data_articles_datasets_ids_listed_in_numbat_as_well_commented_AI_2025_05_14.csv
+(shortened for convinient)

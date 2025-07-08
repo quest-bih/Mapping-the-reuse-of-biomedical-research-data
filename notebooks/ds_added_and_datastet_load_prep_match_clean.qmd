@@ -35,8 +35,9 @@ write_csv_cr <- function(x, file, ...) {
 ```
 
 # 1. Loading raw inputs of two additional sources of datasets identifiers:
-* identifiers of Charite's datasets that were additionally extracted for the numbat-dcc matched list
-* identifiers extracted using DataStet
+
+-   identifiers of Charite's datasets that were additionally extracted for the numbat-dcc matched list
+-   identifiers extracted using DataStet
 
 <br>
 
@@ -215,7 +216,6 @@ datastet_ids_3_std_gen_rep <- datastet_ids_3_std_gen_rep |>
 save_cr(datastet_ids_3_std_gen_rep, file = file.path(here("data", "wrangling_steps", "datastet", "datastet_ids_3_std_gen_rep.RData")))
 
 ```
-
 
 ```{r Automatic extraction of accession numbers}
 
