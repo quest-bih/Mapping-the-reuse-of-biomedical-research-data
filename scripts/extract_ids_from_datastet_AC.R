@@ -5,8 +5,8 @@ extract_ids <- function(text) {
   all_matches <- character()
   
   # cond0
-  cond0 <- str_extract_all(text, "(?i)(figshare|zenodo|osf|mendeley|harvard|dryad)[^\\s,)]*")[[1]] %>%
-    str_remove("[.,;)]$") %>%
+  cond0 <- str_extract_all(text, "(?i)(figshare|zenodo|osf|mendeley|harvard|dryad)[^\\s,)]*")[[1]] |>
+    str_remove("[.,;)]$") |>
     unique()
   all_matches <- c(all_matches, cond0)
   
@@ -23,21 +23,21 @@ extract_ids <- function(text) {
   
   # cond1
   prefix_pattern <- paste0("(?<![a-zA-Z0-9])(?:", paste(prefixes, collapse = "|"), ")[0-9]+(?:\\.[0-9]+)*")
-  cond1 <- str_extract_all(text, regex(prefix_pattern, ignore_case = TRUE))[[1]] %>%
-    unique() %>%
+  cond1 <- str_extract_all(text, regex(prefix_pattern, ignore_case = TRUE))[[1]] |>
+    unique() |>
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond1)
   
   # cond2
-  cond2 <- str_extract_all(text, "10\\.[^\\s,)]+")[[1]] %>%
-    unique() %>%
+  cond2 <- str_extract_all(text, "10\\.[^\\s,)]+")[[1]] |>
+    unique() |>
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond2)
   
   # cond3
-  cond3 <- str_extract_all(text, "//[^\\s,)]+")[[1]] %>%
-    str_remove("^//") %>%
-    unique() %>%
+  cond3 <- str_extract_all(text, "//[^\\s,)]+")[[1]] |>
+    str_remove("^//") |>
+    unique() |>
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond3)
   
@@ -57,8 +57,8 @@ extract_ids <- function(text) {
     "[a-z]{4,6}[:digit:]{3,}"
   )
   
-  cond_other <- unlist(lapply(other_patterns, function(pat) str_extract_all(text, regex(pat, ignore_case = TRUE))[[1]])) %>%
-    unique() %>%
+  cond_other <- unlist(lapply(other_patterns, function(pat) str_extract_all(text, regex(pat, ignore_case = TRUE))[[1]])) |>
+    unique() |>
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond_other)
   
@@ -71,18 +71,24 @@ extract_ids <- function(text) {
   return(paste(unique(all_matches), collapse = ";"))
 }
 
+datastet_results <- all_results_unique |> 
+  select(doi, context, year) |> 
+  mutate(context = tolower(context)) |> 
+  distinct()
+  
+
 # Mutate into the dataframe test
-test_ex_1 <- test %>%
+datastet_results_1_ext_ids <- datastet_results  |> 
   mutate(extracted_id = vapply(context, extract_ids, FUN.VALUE = character(1)))
 
 # reshape
-test_reshaped_1 <- test_ex_1 |> 
+datastet_results_2_reshaped <- datastet_results_1_ext_ids |> 
   separate_rows(extracted_id, sep = ";") |> 
   select(doi, extracted_id, year) |> 
   distinct()
 
 # clean
-test_cleaned_1 <- test_reshaped_1 |> 
+datastet_results_3_cleaned <- datastet_results_2_reshaped |> 
   dplyr::filter(
     !(
       str_detect(extracted_id, "zenodo|dryad|osf|figshare|harvard|mendeley|//github\\.") &
@@ -92,3 +98,8 @@ test_cleaned_1 <- test_reshaped_1 |>
   dplyr::filter(extracted_id != "") |> 
   distinct()
 
+# save as input for ds_datastet...
+save_cr(datastet_results_3_cleaned, file = file.path(here("data",
+                                                          "raw",
+                                                          "datastet",
+                                                          "datastet_results_3_cleaned.RData")))
