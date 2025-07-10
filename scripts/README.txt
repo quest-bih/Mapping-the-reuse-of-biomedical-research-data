@@ -11,7 +11,7 @@ prefixes:
 prefixes <- c(
     "sam", "gse", "gsm", "gds", "gpl", "e-mtab-", "egas", "egad", "e-geod", "mk", "mh", "phs", "mn", "mw",
     "pxd", "srr", "prj(eb|na|db|da|ea|sa|ma)", "emd-", "gcst", "pdb_", "nm_", "nct", "err", "gds", "msv", "mz", "nc_", "np_",
-    "sr(p|rx|s|z)", "phs", "pgs", "s-bsst", "mt", "kt", "st", "ol", "op", "or", "oq", "scp",
+    "sr(p|r|x|s|z)", "phs", "pgs", "s-bsst", "mt", "kt", "st", "ol", "op", "or", "oq", "scp",
     "s-biad", "e-tabm", "empiar", "fr-fcm-z", "gca_", "egac", "up", "ng", "gcf_", "ensg", "syn"
   )
 
@@ -28,6 +28,7 @@ for example if you have the string "//zenodo.dspfijds", cond0 will extract "dspf
 lastly, other conditions: any of these patterns, unless their extractions are included in any of the previous conditions' extractions:
   other_patterns <- c(
     "fcon_ ?1000\\.projects\\.nitrc\\.org",
+    "rcsb\\.?\\s*org/structure/[^)]+",
     "(?<!of )[0-9]{6,10}\\b",
     "dip:[0-9]{3}",
     "fr-fcm-[a-z0-9]{4}",

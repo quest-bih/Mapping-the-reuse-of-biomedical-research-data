@@ -53,9 +53,9 @@ For matched numbat-dcc identifiers, additional identifiers were extracted from t
 added_ids_orig <- read_excel(here("data", "raw", "added_ids", "additional data ids.xlsx"))
 
 # load DataStet ids
-load(here("data", "raw", "datastet", "datastet_ids_2022.Rdata"))
-datastet_ids_orig <- ids
-rm(ids)
+load(here("data", "raw", "datastet", "datastet_results_3_cleaned.RData"))
+datastet_ids_orig <- datastet_results_3_cleaned
+rm(datastet_results_3_cleaned)
 ```
 
 # 2. Data Cleaning Steps

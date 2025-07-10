@@ -3,11 +3,10 @@ load(here("data", "raw", "datastet", "archive", "all_results_unique.RData")) # l
 extract_ids <- function(text) {
   all_matches <- character()
   
-  # cond1:  general-purpose repositories
-  cond1_pattern <- "(?i)(figshare\\.|zenodo\\.|osf\\.io/|mendeley\\.com/datasets/|dryad\\.)(?:[\\s\\da-z]*[\\s\\d][\\s\\da-z]*?)(?=[\\)\\],#';\">:])"
-  cond1 <- str_extract_all(text, regex(cond1_pattern, ignore_case = TRUE))[[1]] |> 
+  # cond1: general-purpose repositories
+  cond0 <- str_extract_all(text, "(?i)(figshare|zenodo|osf|mendeley|harvard|dryad)[^\\s,)]*")[[1]] |>
     unique()
-  all_matches <- c(all_matches, cond1)
+  all_matches <- c(all_matches, cond0)
   
   skip_if_included <- function(new_matches, existing_matches) {
     new_matches[!sapply(new_matches, function(nm) any(str_detect(existing_matches, fixed(nm)) | str_detect(nm, fixed(existing_matches))))]
@@ -20,50 +19,48 @@ extract_ids <- function(text) {
     "s-biad", "e-tabm", "empiar", "fr-fcm-z", "gca_", "egac", "up", "ng", "gcf_", "ensg", "syn"
   )
   
-  # cond2: prefixes 
-  prefix_pattern <- paste0("(?i)(?<![a-z0-9])(?:", paste(prefixes, collapse = "|"), ")[0-9\\s]+(?=[^0-9\\s])")
-  cond2 <- str_extract_all(text, regex(prefix_pattern, ignore_case = TRUE))[[1]] |> 
-    unique() |> 
+  # cond2: prefixes
+  prefix_pattern <- paste0("(?<![a-zA-Z0-9])(?:", paste(prefixes, collapse = "|"), ")[0-9]+(?:\\.[0-9]+)*")
+  cond1 <- str_extract_all(text, regex(prefix_pattern, ignore_case = TRUE))[[1]] |>
+    unique() |>
+    skip_if_included(all_matches)
+  all_matches <- c(all_matches, cond1)
+  
+  # cond3: dois
+  cond2 <- str_extract_all(text, "10\\.[^\\s,)]+")[[1]] |>
+    unique() |>
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond2)
   
-  # cond3: dois 
-  cond3_pattern <- "10\\.[0-9]+/[a-z0-9\\.\\s]+?(?=[\\)\\],#';\">:])"
-  cond3 <- str_extract_all(text, regex(cond3_pattern, ignore_case = TRUE))[[1]] |> 
-    unique() |> 
+  # cond4: urls
+  cond3 <- str_extract_all(text, "//[^\\s,)]+")[[1]] |>
+    unique() |>
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond3)
   
-  # cond4: urls 
-  cond4_pattern <- "//[^)\\],#';\">:]+"
-  cond4 <- str_extract_all(text, regex(cond4_pattern, ignore_case = TRUE))[[1]] |> 
-    unique() |> 
-    skip_if_included(all_matches)
-  all_matches <- c(all_matches, cond4)
-  
-  # cond5: other patterns  with whitespace allowed
+  # cond5: other patterns
   other_patterns <- c(
-    "fcon_\\s*1000\\.\\s*projects\\.\\s*nitrc\\.\\s*org",
-    "rcsb\\.\\s*org/structure/[^).,#']+",
-    "(?<!of )[0-9\\s]{6,10}\\b",
-    "dip:[0-9\\s]{3}",
-    "fr-fcm-[a-z0-9\\s]{4}",
-    "collections?(?:[:/])[0-9\\s]{4}",
-    "icpsr\\s*[0-9\\s]{4}",
-    "sn\\s*[0-9\\s]{4}",
-    "search\\.\\s*kg\\.\\s*ebrains\\.\\s*eu",
+    "fcon_ ?1000\\.projects\\.nitrc\\.org",
+    "rcsb\\.?\\s*org/structure/[^)]+",
+    "(?<!of )[0-9]{6,10}\\b",
+    "dip:[0-9]{3}",
+    "fr-fcm-[a-z0-9]{4}",
+    "collections?(?:[:/])[0-9]{4}",
+    "icpsr ?[0-9]{4}",
+    "sn ?[0-9]{4}",
+    "search\\.kg\\.ebrains\\.eu",
     "[a-z]{1}[:digit:]{4}",
     "[a-z]{2}[:digit:]{6}",
     "[a-z]{3}[:digit:]{5}",
-    "[a-z]{4,6}[:digit:]{3,}",
-    "e\\s*n\\s*c\\s*s\\s*r\\s*0\\s*0\\s*0\\s*[0-9]{3}\\s*[a-z]{3}"
+    "[a-z]{4,6}[:digit:]{3,}"
   )
   
-  cond5 <- unlist(lapply(other_patterns, function(pat) str_extract_all(text, regex(pat, ignore_case = TRUE))[[1]])) |> 
-    unique() |> 
+  cond_other <- unlist(lapply(other_patterns, function(pat) str_extract_all(text, regex(pat, ignore_case = TRUE))[[1]])) |>
+    unique() |>
     skip_if_included(all_matches)
-  all_matches <- c(all_matches, cond5)
+  all_matches <- c(all_matches, cond_other)
   
+  # remove pure digits
   all_matches <- all_matches[!str_detect(all_matches, "^\\d+$")]
   
   if (length(all_matches) == 0) {
@@ -76,8 +73,9 @@ datastet_results <- all_results_unique |>
   select(doi, context, year) |> 
   mutate(context = tolower(context)) |> 
   distinct()
-
-datastet_results_1_ext_ids <- datastet_results |> 
+  
+# Mutate into the dataframe test
+datastet_results_1_ext_ids <- datastet_results  |> 
   mutate(extracted_id = vapply(context, extract_ids, FUN.VALUE = character(1)))
 
 # reshape
@@ -95,13 +93,6 @@ datastet_results_3_cleaned <- datastet_results_2_reshaped |>
   dplyr::filter(!str_detect(extracted_id, "^[a-zA-Z][0-9]{1,2}$")) |> 
   dplyr::filter(!is.na(extracted_id)) |> 
   dplyr::filter(extracted_id != "") |> 
-  # filter out: only letters (a-z) / only numbers with or without whitespaces, after "//" or not, with or w/o "-" anywhere
-  dplyr::filter(
-    !str_detect(
-      extracted_id,
-      "^[-\\sa-zA-Z]+$|^[-\\s0-9]+$|^//[-\\sa-zA-Z]+$|^//[-\\s0-9]+$"
-    )
-  ) |>
   distinct()
 
 # save as input for ds_datastet notebook
