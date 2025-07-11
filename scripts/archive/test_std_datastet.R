@@ -2,16 +2,28 @@ prefixes <- c(
   "sam", "gse", "gsm", "gds", "gpl", "e-mtab-", "egas", "egad", "e-geod", "mk", "mh", "phs", "mn", "mw",
   "pxd", "srr", "prj(eb|na|db|da|ea|sa|ma)", "emd-", "gcst", "pdb_", "nm_", "nct", "err", "gds", "msv", "mz", "nc_", "np_",
   "sr(p|r|x|s|z)", "phs", "pgs", "s-bsst", "mt", "kt", "st", "ol", "op", "or", "oq", "scp",
-  "s-biad", "e-tabm", "empiar", "fr-fcm-z", "gca_", "egac", "up", "ng", "gcf_", "ensg", "syn"
+  "s-biad", "e-tabm", "empiar", "fr-fcm-z", "gca_", "egac", "up", "ng", "gcf_", "ensg", "syn", "rs"
 )
+
+# first filter out any "//" that isn't one of the other cases:
+test_1_no_ursl_and_or <- test |> 
+  dplyr::filter(
+    !(str_detect(extracted_id, "//") &
+        !str_detect(extracted_id, "figshare|zenodo|osf|dryad|mendeley") &
+        !str_detect(extracted_id, "10\\.") &
+        !str_detect(str_replace_all(extracted_id, "\\s", ""), str_c(prefixes, collapse = "|")) &
+        !str_detect(extracted_id, "addgene|10xgenomics|id=") ) &
+    !str_detect(str_replace_all(extracted_id, "\\s", ""), "^or\\d+$")
+    )
+
+
+# zenodo
 
 test <- datastet_results_3_cleaned |> mutate(row_num = row_number())
 
-
 test_zenodo <- test |> dplyr::filter(str_detect(extracted_id, "zenodo"))
-  
-  
-  
+
+
 test_zenodo_std <- test_zenodo |> 
   mutate(
     extracted_id_std = case_when(
@@ -51,6 +63,7 @@ test_osf_std <- test_osf |>
     )
   )
 
+# figshare
 test_figshare <- test |> dplyr::filter(str_detect(extracted_id, "figshare"))
 
 test_figshare_std <- test_figshare |> 
@@ -66,6 +79,7 @@ test_figshare_std <- test_figshare |>
     )
   )
 
+#mendeley
 test_mendeley <- test |> dplyr::filter(str_detect(extracted_id, "mendeley"))
 
 test_mendeley_std <- test_mendeley |> 
@@ -83,6 +97,7 @@ test_mendeley_std <- test_mendeley |>
     )
   )
 
+#dryad
 test_dryad <- test |> dplyr::filter(str_detect(extracted_id, "dryad"))
 
 test_dryad_std <- test_dryad |> 
@@ -99,6 +114,7 @@ test_dryad_std <- test_dryad |>
     )
   )
 
+#prefixes
 test_prefixes <- test |> 
   dplyr::filter(str_detect(str_replace_all(extracted_id, "\\s", ""), str_c(prefixes, collapse = "|"))) |>
   dplyr::filter(!str_detect(extracted_id, "//")) |> 
@@ -117,6 +133,19 @@ test_prefixes_std <- test_prefixes |>
             str_extract(str_c("^(?:", str_c(prefixes, collapse = "|"), ")[0-9]+")) |> 
             coalesce(extracted_id)
         ),
+      .default = extracted_id
+    )
+  )
+
+#dois
+test_dois_std <- test_dois |> 
+  mutate(
+    extracted_id_std = case_when(
+      str_detect(extracted_id, "10\\.") &
+        !str_detect(extracted_id, "figshare|zenodo|osf|dryad|mendeley") &
+        !str_detect(extracted_id, fixed(doi)) ~ extracted_id |> 
+        str_replace_all("\\s+", "") |> 
+        str_extract("10\\.[^\\s]+"),
       .default = extracted_id
     )
   )

@@ -1,18 +1,25 @@
-load(here("data", "raw", "datastet", "archive", "all_results_unique.RData")) # load datastet output as an input to this code
+# Load datastet output for identifier extraction and cleaning
+load(here("data", "raw", "datastet", "archive", "all_results_unique.RData"))
 
+# Define function to extract dataset identifiers from text
 extract_ids <- function(text) {
-  all_matches <- character()
+  all_matches <- character()  # initialize empty vector to collect matches
   
-  # cond1:  general-purpose repositories
+  # cond1: extract from general-purpose repository mentions
   cond1_pattern <- "(?i)(figshare\\.|zenodo\\.|osf\\.io/|mendeley\\.com/datasets/|dryad\\.)(?:[\\s\\da-z]*[\\s\\d][\\s\\da-z]*?)(?=[\\)\\],#';\">:])"
   cond1 <- str_extract_all(text, regex(cond1_pattern, ignore_case = TRUE))[[1]] |> 
-    unique()
-  all_matches <- c(all_matches, cond1)
+    unique()  # deduplicate
+  all_matches <- c(all_matches, cond1)  # add to collected matches
   
+  # Helper to skip matches already included
   skip_if_included <- function(new_matches, existing_matches) {
-    new_matches[!sapply(new_matches, function(nm) any(str_detect(existing_matches, fixed(nm)) | str_detect(nm, fixed(existing_matches))))]
+    new_matches[!sapply(new_matches, function(nm) any(
+      str_detect(existing_matches, fixed(nm)) |  # check if new is in existing
+        str_detect(nm, fixed(existing_matches))    # or existing in new
+    ))]
   }
   
+  # List of known repository and database prefixes
   prefixes <- c(
     "sam", "gse", "gsm", "gds", "gpl", "e-mtab-", "egas", "egad", "e-geod", "mk", "mh", "phs", "mn", "mw",
     "pxd", "srr", "prj(eb|na|db|da|ea|sa|ma)", "emd-", "gcst", "pdb_", "nm_", "nct", "err", "gds", "msv", "mz", "nc_", "np_",
@@ -20,28 +27,28 @@ extract_ids <- function(text) {
     "s-biad", "e-tabm", "empiar", "fr-fcm-z", "gca_", "egac", "up", "ng", "gcf_", "ensg", "syn"
   )
   
-  # cond2: prefixes 
+  # cond2: extract identifiers with known prefixes followed by numbers
   prefix_pattern <- paste0("(?i)(?<![a-z0-9])(?:", paste(prefixes, collapse = "|"), ")[0-9\\s]+(?=[^0-9\\s])")
   cond2 <- str_extract_all(text, regex(prefix_pattern, ignore_case = TRUE))[[1]] |> 
     unique() |> 
-    skip_if_included(all_matches)
-  all_matches <- c(all_matches, cond2)
+    skip_if_included(all_matches)  # skip overlaps with previous
+  all_matches <- c(all_matches, cond2)  # add
   
-  # cond3: dois 
+  # cond3: extract DOIs
   cond3_pattern <- "10\\.[0-9]+/[a-z0-9\\.\\s]+?(?=[\\)\\],#';\">:])"
   cond3 <- str_extract_all(text, regex(cond3_pattern, ignore_case = TRUE))[[1]] |> 
     unique() |> 
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond3)
   
-  # cond4: urls 
+  # cond4: extract URLs (//...)
   cond4_pattern <- "//[^)\\],#';\">:]+"
   cond4 <- str_extract_all(text, regex(cond4_pattern, ignore_case = TRUE))[[1]] |> 
     unique() |> 
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond4)
   
-  # cond5: other patterns  with whitespace allowed
+  # cond5: extract other patterns (fcon, icpsr, rcsb, etc.)
   other_patterns <- c(
     "fcon_\\s*1000\\.\\s*projects\\.\\s*nitrc\\.\\s*org",
     "rcsb\\.\\s*org/structure/[^).,#']+",
@@ -58,54 +65,148 @@ extract_ids <- function(text) {
     "[a-z]{4,6}[:digit:]{3,}",
     "e\\s*n\\s*c\\s*s\\s*r\\s*0\\s*0\\s*0\\s*[0-9]{3}\\s*[a-z]{3}"
   )
-  
-  cond5 <- unlist(lapply(other_patterns, function(pat) str_extract_all(text, regex(pat, ignore_case = TRUE))[[1]])) |> 
+  cond5 <- unlist(lapply(other_patterns, function(pat)
+    str_extract_all(text, regex(pat, ignore_case = TRUE))[[1]]
+  )) |> 
     unique() |> 
     skip_if_included(all_matches)
   all_matches <- c(all_matches, cond5)
   
+  # Remove identifiers containing only numbers
   all_matches <- all_matches[!str_detect(all_matches, "^\\d+$")]
   
+  # Return semicolon-separated list of identifiers or NA if none found
   if (length(all_matches) == 0) {
     return(NA_character_)
   }
   return(paste(unique(all_matches), collapse = ";"))
 }
 
+# Prepare base dataset: select doi/context/year, lowercase context, deduplicate
 datastet_results <- all_results_unique |> 
-  select(doi, context, year) |> 
-  mutate(context = tolower(context)) |> 
-  distinct()
+  select(doi, context, year) |>  # keep relevant columns
+  mutate(context = tolower(context)) |>  # lowercase for consistency
+  distinct()  # remove duplicates
 
+# Apply extraction function to extract identifiers
 datastet_results_1_ext_ids <- datastet_results |> 
-  mutate(extracted_id = vapply(context, extract_ids, FUN.VALUE = character(1)))
+  mutate(extracted_id = vapply(context, extract_ids, FUN.VALUE = character(1)))  # extract ids
 
-# reshape
+# Reshape extracted_id from semicolon-separated to long format
 datastet_results_2_reshaped <- datastet_results_1_ext_ids |> 
-  separate_rows(extracted_id, sep = ";") |> 
-  select(doi, extracted_id, year) |> 
-  distinct()
+  separate_rows(extracted_id, sep = ";") |>  # split into rows
+  select(doi, extracted_id, year) |>  # keep relevant
+  distinct()  # deduplicate
 
-# clean
+# Initial cleaning of extracted identifiers
 datastet_results_3_cleaned <- datastet_results_2_reshaped |> 
-  dplyr::filter(
+  dplyr::filter(  # remove non-numeric repository mentions without digits
     !(
       str_detect(extracted_id, "zenodo|dryad|osf|figshare|harvard|mendeley|//github\\.") &
-        !str_detect(extracted_id, "[0-9]"))) |> 
-  dplyr::filter(!str_detect(extracted_id, "^[a-zA-Z][0-9]{1,2}$")) |> 
-  dplyr::filter(!is.na(extracted_id)) |> 
-  dplyr::filter(extracted_id != "") |> 
-  # filter out: only letters (a-z) / only numbers with or without whitespaces, after "//" or not, with or w/o "-" anywhere
-  dplyr::filter(
+        !str_detect(extracted_id, "[0-9]")
+    )
+  ) |> 
+  dplyr::filter(!str_detect(extracted_id, "^[a-zA-Z][0-9]{1,2}$")) |>  # remove letter + 1-2 digit codes
+  dplyr::filter(!is.na(extracted_id)) |>  # remove NA
+  dplyr::filter(extracted_id != "") |>  # remove empty strings
+  dplyr::filter(  # remove only-letter or only-digit patterns (with/without //, -, or spaces)
     !str_detect(
       extracted_id,
       "^[-\\sa-zA-Z]+$|^[-\\s0-9]+$|^//[-\\sa-zA-Z]+$|^//[-\\s0-9]+$"
     )
-  ) |>
-  distinct()
+  ) |> 
+  distinct()  # deduplicate
 
-# save as input for ds_datastet notebook
-save_cr(datastet_results_3_cleaned, file = file.path(here("data",
-                                                          "raw",
-                                                          "datastet",
-                                                          "datastet_results_3_cleaned.RData")))
+# Standardize identifiers step-by-step
+datastet_results_4_std <- datastet_results_3_cleaned |> 
+  mutate(
+    slug = extracted_id |> 
+      str_replace_all("\\s", "") |>  # remove spaces
+      str_extract("osf\\.io/([A-Za-z0-9]{4,5})") |>  # extract slug from osf.io
+      str_remove("osf\\.io/"),  # remove prefix
+    extracted_id_std = case_when(
+      str_detect(extracted_id, "zenodo\\.org/record") ~ str_c(  # if zenodo full URL
+        "10.5281/zenodo.",
+        extracted_id |> 
+          str_extract("zenodo\\.org/record/? *([0-9]+)") |>  # extract record id
+          str_remove("^zenodo\\.org/record/? *")  # remove prefix
+      ),
+      str_detect(extracted_id, "zenodo") ~ str_c(  # if zenodo mention
+        "10.5281/zenodo.",
+        extracted_id |> 
+          str_extract("zenodo\\.? *([0-9]+)") |>  # extract id
+          str_remove("^zenodo\\.? *")  # remove prefix
+      ),
+      !is.na(slug) ~ paste0("//osf.io/", slug),  # reconstruct osf URL if slug found
+      str_detect(extracted_id, "figshare") ~ str_c(  # figshare handling
+        "10.6084/m9.figshare.",
+        extracted_id |> 
+          str_extract("figshare\\.? *([0-9]+)") |>  # extract id
+          str_remove("^figshare\\.? *")  # remove prefix
+      ),
+      str_detect(extracted_id, "mendeley.*datasets") ~ str_c(  # mendeley datasets
+        "10.17632/",
+        extracted_id |> 
+          str_replace_all("\\s", "") |>  # remove spaces
+          str_extract("datasets/([A-Za-z0-9]+)") |>  # extract dataset id
+          str_remove("^datasets/")  # remove prefix
+      ),
+      str_detect(extracted_id, "mendeley") ~ NA_character_,  # drop general mendeley
+      str_detect(extracted_id, "dryad") ~ str_c(  # dryad handling
+        "10.5061/dryad.",
+        extracted_id |> 
+          str_replace_all("\\s", "") |>  # remove spaces
+          str_extract("dryad\\.?([A-Za-z0-9]+)") |>  # extract id
+          str_remove("^dryad\\.?")  # remove prefix
+      ),
+      str_detect(str_replace_all(extracted_id, "\\s", ""), str_c(prefixes, collapse = "|")) &  # if prefix detected
+        !str_detect(extracted_id, "//") &  # no URL
+        !str_starts(str_trim(extracted_id), "10\\.") ~ (  # not a DOI
+          extracted_id |> 
+            str_replace_all("(?<=\\d) \\d{1,2}(\\s*)$", "") |>  # remove trailing small number blocks
+            str_replace_all(" \\s*", "") |>  # remove spaces
+            str_extract(str_c("^(?:", str_c(prefixes, collapse = "|"), ")[0-9]+")) |>  # extract prefix+numbers
+            coalesce(extracted_id)  # fallback: keep as is
+        ),
+      str_detect(extracted_id, "10\\.") &  # if DOI detected
+        !str_detect(extracted_id, "figshare|zenodo|osf|dryad|mendeley") &  # not known repos
+        !str_detect(extracted_id, fixed(doi)) ~ extracted_id |> 
+        str_replace_all("\\s+", "") |>  # remove spaces
+        str_extract("10\\.[^\\s]+"),  # extract DOI
+      str_detect(extracted_id, "id=") ~ extracted_id |>  # extract id= values
+        str_extract("id=([^\\s/&]+)") |> 
+        str_remove("^id="),
+      str_detect(extracted_id, "addgene\\.org/") ~ extracted_id |>  # addgene URL cleanup
+        str_extract("addgene\\.org/([0-9 \\t]*)") |> 
+        str_remove("addgene\\.org/") |> 
+        str_remove_all("\\s"),
+      .default = extracted_id  # fallback: keep as is
+    ),
+    dataset_for_matching = case_when(
+      !is.na(slug) ~ paste0("osf_", slug),  # create osf slug for matching
+      .default = NA
+    )
+  )
+
+# Filter out identifiers with unwanted patterns post-standardization
+datastet_results_5_filtered <- datastet_results_4_std |> 
+  dplyr::filter(!(str_detect(extracted_id_std, "//"))) |>  # remove URLs
+  dplyr::filter(!str_detect(str_replace_all(extracted_id_std, "\\s", ""), "^or\\d+$")) |>  # remove OR identifiers
+  dplyr::filter(!str_detect(str_replace_all(extracted_id_std, "\\s", ""), "^[a-zA-Z]\\d+$"))  # remove single letter+digit
+
+# Remove trailing periods
+datastet_results_6_rm_trails <- datastet_results_5_filtered |> 
+  mutate(extracted_id_std = str_remove(extracted_id_std, "\\.+$"))  # remove trailing dots
+
+# Filter out identifiers that match the paper's DOI exactly
+datastet_results_7_rm_same_dois <- datastet_results_6_rm_trails |> 
+  mutate(extracted_id_std = str_replace_all(extracted_id_std, "\\s+", "")) |>  # remove spaces
+  dplyr::filter(!str_detect(extracted_id_std, fixed(doi)))  # remove if equal to DOI
+
+# Filter out additional cases according to Evgeny's comments
+
+
+# Save cleaned, standardized dataset identifiers for use in the ds_datastet notebook
+save_cr(datastet_results_8_rm_non_ds, file = file.path(
+  here("data", "raw", "datastet", "datastet_results_8_rm_non_ds.RData")
+))
