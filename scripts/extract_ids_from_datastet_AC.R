@@ -87,6 +87,10 @@ datastet_results <- all_results_unique |>
   mutate(context = tolower(context)) |>  # lowercase for consistency
   distinct()  # remove duplicates
 
+#save
+save_cr(datastet_results, file = file.path(
+  here("data", "raw", "datastet", "archive", "datastet_results.RData")))
+
 # Apply extraction function to extract identifiers
 # datastet_results_1_ext_ids <- datastet_results |>
 #   mutate(extracted_id = vapply(context, extract_ids, FUN.VALUE = character(1)))  
@@ -100,6 +104,10 @@ datastet_results_1_ext_ids <- datastet_results |>
       .default = vapply(context, extract_ids, FUN.VALUE = character(1))
     )
   )
+
+#save
+save_cr(datastet_results_1_ext_ids, file = file.path(
+  here("data", "raw", "datastet", "archive", "datastet_results_1_ext_ids.RData")))
 
 # Reshape extracted_id from semicolon-separated to long format
 datastet_results_2_reshaped <- datastet_results_1_ext_ids |> 
@@ -199,9 +207,30 @@ datastet_results_4_std <- datastet_results_3_cleaned |>
 
 # Filter out identifiers with unwanted patterns post-standardization
 datastet_results_5_filtered <- datastet_results_4_std |> 
-  dplyr::filter(!str_starts(data_id_auto_cleaned, "//")) |> 
-  dplyr::filter(!str_detect(str_replace_all(data_id_auto_cleaned, "\\s", ""), "^or\\d+$")) |>  # remove OR identifiers
+  dplyr::filter(!(str_starts(data_id_auto_cleaned, "//")
+                  & !str_starts(data_id_auto_cleaned, "//osf.io/"))  # remove values starting with "//" unless they're valid OSF links
+  ) |>  dplyr::filter(!str_detect(str_replace_all(data_id_auto_cleaned, "\\s", ""), "^or\\d+$")) |>  # remove OR identifiers
   dplyr::filter(!str_detect(str_replace_all(data_id_auto_cleaned, "\\s", ""), "^[a-zA-Z]\\d+$"))  # remove single letter+digit
+
+datastet_results_5_filtered <- datastet_results_4_std |> 
+  dplyr::filter(
+    !(str_starts(data_id_auto_cleaned, "//") &  # if it starts with "//"
+        !str_starts(data_id_auto_cleaned, "//osf.io/"))  # ...but it's not a valid OSF link → remove
+  ) |> 
+  dplyr::filter(
+    !str_detect(  # remove identifiers like "or123"
+      str_replace_all(data_id_auto_cleaned, "\\s", ""),  # remove whitespace first
+      "^or\\d+$"
+    )
+  ) |> 
+  dplyr::filter(
+    !str_detect(  # remove identifiers like "a1", "B9", etc.
+      str_replace_all(data_id_auto_cleaned, "\\s", ""),  # remove whitespace
+      "^[a-zA-Z]\\d+$"  # single letter followed by 1+ digit
+    )
+  )
+
+
 
 # Remove trailing periods
 datastet_results_6_rm_trails <- datastet_results_5_filtered |> 
@@ -240,5 +269,4 @@ datastet_results_8_rm_patterns <- datastet_results_7_rm_same_dois |>
 
 # Save cleaned, standardized dataset identifiers for use in the ds_datastet notebook
 save_cr(datastet_results_8_rm_patterns, file = file.path(
-  here("data", "raw", "datastet", "datastet_results_8_rm_patterns.RData")
-))
+  here("data", "raw", "datastet", "datastet_results_8_rm_patterns.RData")))
