@@ -171,6 +171,10 @@ added_and_ds_for_matching_1_t <- added_and_ds_m_val_v1_done |>
   mutate(valid = as.character(valid)) |> # convert to chr
   dplyr::filter(valid == "TRUE") # get only "TRUE"
 
+save_cr(added_and_ds_for_matching_1_t,
+        file = file.path(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_1_t.RData"))) # as RData
+
+
 # 3. coaslece into dataset_for_matching and remove trails and versions
 
   # versions removal:
@@ -244,7 +248,12 @@ added_and_ds_for_matching_2_rm_exc <- added_and_ds_for_matching_1_t |>
   #   ) |> View()
 
 
-# 4. categorize doi / acc_nr; add col "Category" and "is_gen_rep"; rename "valid" to "validated"
+# save
+save_cr(added_and_ds_for_matching_2_rm_exc,
+        file = file.path(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_2_rm_exc.RData"))) # as RData
+
+
+# 4. categorize doi / acc_nr; add col "Category" and "is_gen_rep"; label if already exists in numbat/DA; rename "valid" to "validated"; 
 
 added_and_ds_for_matching_3_lbl <- added_and_ds_for_matching_2_rm_exc |> 
   mutate(
@@ -256,31 +265,35 @@ added_and_ds_for_matching_3_lbl <- added_and_ds_for_matching_2_rm_exc |>
       dataset_for_matching,
       regex("zenodo|dryad|osf|figshare|mendeley")
     )
-  )
+  ) |>
+  mutate(
+    in_numbat_or_data_articles = dataset_for_matching %in% c(
+      charite_dois_and_ids_8_wide$dataset_for_matching,
+      charite_dois_and_ids_8_wide$data_id_secondary
+    )
+  ) |> 
+  rename(validate = valid)
 
 
-# 5. label cases that are already in numbat / data articles analysis
+# save
+save_cr(added_and_ds_for_matching_3_lbl,
+        file = file.path(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_3_lbl.RData"))) # as RData
 
+# 5. exclude cases that are already in numbat / data articles analysis
 
+added_and_ds_for_matching_4_rm_exist <- added_and_ds_for_matching_3_lbl |> 
+  dplyr::filter(in_numbat_or_data_articles == "FALSE")
 
-# 6. exclude cases that are already in numbat / data articles analysis
-
-
-
-
-#####
-
-# saving template
-
-save_cr(..._6_for_matching,
-        file = file.path(here("data", "wrangling_steps", "charite", ".._6_for_matching.RData"))) # as RData
+# save
+save_cr(added_and_ds_for_matching_4_rm_exist,
+        file = file.path(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_4_rm_exist.RData"))) # as RData
 
 write_csv_cr(
-  ..._6_for_matching,
+  added_and_ds_for_matching_4_rm_exist,
   file = here("data",
               "verification",
               "m_val",
-              ".._6_for_matching.csv"),
+              "added_and_ds_for_matching_4_rm_exist.csv"),
   row.names = FALSE
 ) # as csv
 
@@ -295,52 +308,35 @@ The matching was done by joining the two lists by the **identifier** columns. Th
 
 ```{r Matching manually validated Charite list with DCC}
 
-# Load charite_dois_and_ids_manually_valditaed.RData
+# Load "DCC_corpus_11_osf_doi.RData"
 
 load(here("data",
           "wrangling_steps",
           "dcc",
           "DCC_corpus_11_std_lbl.RData"))
 
-# Load "DCC_corpus_11_osf_doi.RData
+# Load "added_and_ds_for_matching_4_rm_exist.RData"
 
 load(here("data",
           "wrangling_steps",
-          "charite",
-          "charite_dois_and_ids_8_wide.RData"))
+          "datastet",
+          "added_and_ds_for_matching_4_rm_exist.RData"))
 
-# Primary id join (by dataset_for_matching)
+#  join (by dataset_for_matching)
 
-joined_primary <- charite_dois_and_ids_8_wide |>
+dcc_ds_and_added_joined <- added_and_ds_for_matching_4_rm_exist |>
   inner_join(
     DCC_corpus_11_std_lbl,
     by = "dataset_for_matching",
-    suffix = c("_charite", "_dcc")
+    suffix = c("_datastet_and_added", "_dcc")
   ) |> 
   mutate(primary = TRUE)
 
-# Secondary id join (by data_id_secondary, and only if not NA and not already matched)
-
-joined_secondary <- charite_dois_and_ids_8_wide |>
-  dplyr::filter(!is.na(data_id_secondary)) |> # exclude NAs
-  anti_join(joined_primary, by = "dataset_for_matching") |> # get only rows that didn't match with primary id
-  inner_join(
-    DCC_corpus_11_std_lbl,
-    by = c("data_id_secondary" = "dataset_for_matching"),
-    suffix = c("_charite", "_dcc")
-  )
-
-# Combine both
-dcc_charite_joined <- joined_primary |>
-  bind_rows(joined_secondary) |> 
-  mutate(primary = case_when(
-    is.na(primary) ~ FALSE,
-    .default = primary))
-
 # Save
-save_cr(dcc_charite_joined, file = file.path(here("data", "processed","dcc_charite_joined", "dcc_charite_joined.RData")))
+save_cr(dcc_ds_and_added_joined, file = file.path(here("data", "wrangling_steps","dcc_datastet_and_added", "dcc_ds_and_added_joined.RData")))
 
 rm(DCC_corpus_11_std_lbl) # clean up
+
 ```
 
 # 6. Cleaning Matched DCC-Charite List
@@ -378,33 +374,34 @@ The exclusion steps are illustrated in **Figure 1.** below, followed by the clea
 ### 1. Initial cleaning and exclusion
 
 # Check if there are still any relevant columns with upper case
-dcc_charite_joined |> summarise(across(everything(), ~ any(str_detect(as.character(.), "[A-Z]")))) |> View()
+dcc_ds_and_added_joined |> summarise(across(everything(), ~ any(str_detect(as.character(.), "[A-Z]")))) |> View()
 # "publisher" is still uppercased, but I'll leave it for now
 
-# 1. Add a "detected_data_id" column
+# 1. Remove self-citations
 
-dcc_charite_joined_1_det_id <- dcc_charite_joined |>
-    mutate(
-    detected_id = case_when(
-      primary ~ dataset_for_matching,
-      .default = data_id_secondary
-    )
-  ) |> 
-  relocate(detected_id, .after = data_id_secondary)
+dcc_ds_and_added_joined_2_rm_self <- dcc_ds_and_added_joined |> 
+  dplyr::filter(doi_datastet_and_added != doi_dcc)
 
 # save
-save_cr(dcc_charite_joined_1_det_id, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                  "dcc_charite_joined_1_det_id.RData")))
+save_cr(dcc_ds_and_added_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                       "dcc_ds_and_added_joined_2_rm_self.RData")))
 
-# 2. Remove self-citations
 
-dcc_charite_joined_2_rm_self <- dcc_charite_joined_1_det_id |> 
-  dplyr::filter(doi_charite != doi_dcc)
+dois_ids_grouped <- dcc_ds_and_added_joined_2_rm_self |> select(doi_dcc,dataset_for_matching) |> group_by(dataset_for_matching) |> summarise(n=n())
 
-# save
-save_cr(dcc_charite_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                       "dcc_charite_joined_2_rm_self.RData")))
+write_csv_cr(dois_ids_grouped, file = file.path(here("data",
+                                                     "verification",
+                                                     "datastet_and_added_summarised",
+                                                     "dois_ids_grouped.csv")),
+              row.names = FALSE)
 
+dois_ids_distinct <- dcc_ds_and_added_joined_2_rm_self |> select(doi_dcc, dataset_for_matching) |> distinct()
+
+write_csv_cr(dois_ids_distinct, file = file.path(here("data",
+                                                     "verification",
+                                                     "datastet_and_added_summarised",
+                                                     "dois_ids_distinct.csv")),
+              row.names = FALSE)
 
 ### 2. Excluding authors overlap:
 
