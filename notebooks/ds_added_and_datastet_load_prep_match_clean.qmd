@@ -149,124 +149,142 @@ Manually validation were performed on the outputs from the previous section and 
 ```{r Load manual validation of accession numbers extraction}
 
 # The manual validation process was done in a separate file and resulted in the file:
-  # Manual validation of accession numbers extraction function for charite papers.csv
+  # added_and_ds_m_val_v1_done.csv
 
-# So in this chunk we will load the most recent .csv file from the manual validation directory and assign it to "charite_dois_and_ids_clean_manually_validated", and then wrangle it to show the manual validation process.
+# So in this chunk we will load the most recent .csv file from the manual validation directory and assign it to "added_and_ds_dois_and_ids_clean_manually_validated", and then wrangle it to prepare it for matching.
 
-# 1. Load "charite_dois_and_ids_6_m_val_done.csv"
+# 1. Load "added_and_ds_m_val_v1_done.csv"
 
-charite_dois_and_ids_4_m_val_done <- read.csv(
-  file.path(here("data", "verification", "m_val", "with_new_ids_to_val_v1.csv")),
+added_and_ds_m_val_v1_done <- read.csv(
+  file.path(here("data", "verification", "m_val", "added_and_datastet", "added_and_ds_m_val_v1_done.csv")),
   header = TRUE,
   sep = ",")
 
 # save as RData
-save_cr(charite_dois_and_ids_4_m_val_done,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_4_m_val_done.RData")))
+save_cr(added_and_ds_m_val_v1_done,
+        file = file.path(here("data", "wrangling_steps", "datastet", "added_and_ds_m_val_v1_done.RData")))
+
+# 2. Label NAs as "TRUE" under "valid" column and filter out "FALSE"
+
+added_and_ds_for_matching_1_t <- added_and_ds_m_val_v1_done |> 
+  mutate(valid = case_when(is.na(valid) ~ TRUE, .default = valid)) |> # relable "NA"s as "TRUE"
+  mutate(valid = as.character(valid)) |> # convert to chr
+  dplyr::filter(valid == "TRUE") # get only "TRUE"
+
+# 3. coaslece into dataset_for_matching and remove trails and versions
+
+  # versions removal:
+  #
+  # .digit
+  # for example:
+  # phs002018.1
+  # 10.17632/5fpk9g52rw.1
+  # 
+  # .digits but only if the original value doesn't start with "10."
+  # for example:
+  # phs002018.10
+  # 
+  # .vdigit(s) but only if the original value doesn't start with "10."
+  # for example:
+  # phs001672.v10
+  # phs001039.v1
+  # 10.6084/m9.figshare.14417594.v1
+  # 
+  # 
+  # .vdigit.digit.digit 
+  # for example:
+  # 10.18112/openneuro.ds001734.v1.0.4
+  # 
+  # 
+  # .vdigit(s).pdigit(s)
+  # for example:
+  # phs001395.v2.p1
+  # phs000007.v30.p11
+
+added_and_ds_for_matching_2_rm_exc <- added_and_ds_for_matching_1_t |>
+  mutate(
+    dataset_for_matching = case_when(
+      # 1. Keep existing value if not NA
+      !is.na(dataset_for_matching) ~ dataset_for_matching,
+
+      # 2. Use m_val if dataset_for_matching is NA and m_val is not empty or NA
+      is.na(dataset_for_matching) & !is.na(m_val) & m_val != "" ~ m_val,
+
+      # 3. Otherwise: clean data_id_auto_cleaned and strip version suffixes
+      .default = data_id_auto_cleaned |>
+        str_replace_all(",", ".") |>            # replace commas with dots
+        str_trim() |>                           # trim spaces
+        str_remove_all("\\s") |>                # remove internal spaces
+        str_remove_all("[()]+") |>              # remove parentheses
+        str_remove_all("[/\\.]+$") |>           # remove trailing slashes or dots
+        # Remove version info at end of string
+        str_remove("(\\.\\d+)$") |>             # remove trailing .digit
+        str_remove("(?<!^10)\\.\\d+$") |>       # remove .digits if not starting with 10.
+        str_remove("(?<!^10)\\.v\\d+$") |>      # remove .v{digit} if not starting with 10.
+        str_remove("\\.v\\d+\\.\\d+\\.\\d+$") |> # remove .vX.Y.Z
+        str_remove("\\.v\\d+\\.p\\d+$")          # remove .vX.pY
+    )
+  )
+
+  # # Check:
+  # added_and_ds_for_matching_2_rm_exc |>
+  #   dplyr::filter(
+  #     str_detect(
+  #       dataset_for_matching,
+  #       regex(
+  #         paste0(
+  #           "\\.\\d+$",                         # ends with .digit
+  #           "|(?<!^10)\\.\\d+$",               # .digits, but not if starts with 10.
+  #           "|(?<!^10)\\.v\\d+$",              # .vDigit, but not if starts with 10.
+  #           "|\\.v\\d+\\.\\d+\\.\\d+$",        # .vX.Y.Z
+  #           "|\\.v\\d+\\.p\\d+$"               # .vX.pY
+  #         )
+  #       )
+  #     )
+  #   ) |> View()
 
 
-# added_and_ds_dois_and_ids_1_rm_exc <- added_and_datastet_dois_and_ids |> 
-#   mutate(
-#     doi = doi |> 
-#       str_replace_all(",", ".") |>          # replace commas with dots
-#       str_trim() |>                         # remove leading and trailing spaces
-#       str_remove_all("\\s") |>              # remove all spaces in the string
-#       str_remove_all("[()]+") |>            # remove any "(" and ")"
-#       str_remove_all("[/\\.]+$"),           # remove all trailing slashes and dots
-#     data_id = data_id |> 
-#       str_replace_all(",", ".") |>          # same procedure for id column
-#       str_trim() |>                         
-#       str_remove_all("\\s") |>              
-#       str_remove_all("[()]+") |>            # remove any "(" and ")"
-#       str_remove_all("[/\\.]+$")            
-#   )
+# 4. categorize doi / acc_nr; add col "Category" and "is_gen_rep"; rename "valid" to "validated"
+
+added_and_ds_for_matching_3_lbl <- added_and_ds_for_matching_2_rm_exc |> 
+  mutate(
+    Category = case_when(
+      str_detect(dataset_for_matching, "^10\\.") ~ "doi",
+      .default = "acc_nr"
+    ),
+    is_gen_rep = str_detect(
+      dataset_for_matching,
+      regex("zenodo|dryad|osf|figshare|mendeley")
+    )
+  )
 
 
-# 2. Get only relevant cases to match with DCC
+# 5. label cases that are already in numbat / data articles analysis
 
-# create a column with the most standardized data_id
-charite_dois_and_ids_5_id_coalesced <- charite_dois_and_ids_4_m_val_done |> 
-  mutate(dataset_for_matching =
-           coalesce(dataset_for_matching, na_if(data_id_m_val, ""), data_id_auto_cleaned))
 
-save_cr(charite_dois_and_ids_5_id_coalesced,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_5_id_coalesced.RData"))) # as RData
 
-# get only relevant cases: doi, acc_nr, gen_rep
-charite_dois_and_ids_6_for_matching <- charite_dois_and_ids_5_id_coalesced |>
-  dplyr::filter(
-    Category %in% c("doi", "acc_nr")
-    | (Category == "url" & is_gen_rep == TRUE)) 
+# 6. exclude cases that are already in numbat / data articles analysis
 
-# Save: This file will be loaded in charite_loading_and_preprocessing.qmd!
 
-save_cr(charite_dois_and_ids_6_for_matching,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_6_for_matching.RData"))) # as RData
+
+
+#####
+
+# saving template
+
+save_cr(..._6_for_matching,
+        file = file.path(here("data", "wrangling_steps", "charite", ".._6_for_matching.RData"))) # as RData
 
 write_csv_cr(
-  charite_dois_and_ids_6_for_matching,
+  ..._6_for_matching,
   file = here("data",
               "verification",
               "m_val",
-              "charite_dois_and_ids_6_for_matching.csv"),
+              ".._6_for_matching.csv"),
   row.names = FALSE
 ) # as csv
 
-# add secondary identifier, where it exists
 
-# load secondary id info
-secondary_ids <- read.csv(
-  file.path(here("data", "verification", "2nd_id", "secondary_id_filled.csv")),
-  header = TRUE,
-  sep = ",")
-
-# add
-charite_dois_and_ids_7_w_sec_id <- charite_dois_and_ids_6_for_matching |> 
-  left_join(secondary_ids |> 
-              dplyr::filter(!is.na(secondary_study_accession)
-                            & !secondary_study_accession == ""),
-            by = c("dataset_for_matching" = "data_id_merged")) |> 
-  rename(data_id_secondary = secondary_study_accession) |> 
-  relocate(data_id_secondary, .after = dataset_for_matching)
-
-# save
-save_cr(charite_dois_and_ids_7_w_sec_id,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_7_w_sec_id.RData")))
-
-# add a column with 2nd numbat entry for cases with more than one form of id for same doi in numbat
-
-charite_dois_and_ids_8_wide <- charite_dois_and_ids_7_w_sec_id |>
-  group_by(dataset_for_matching) |>
-  arrange(dataset_for_matching) |>
-
-  # First entry (keep all original columns, rename data_identifier)
-  slice_head(n = 1) |>
-  rename(data_identifier_orig_1st_entry = data_identifier_orig) |>
-
-  # Join second entry from same group
-  left_join(
-    charite_dois_and_ids_7_w_sec_id |>
-      group_by(dataset_for_matching) |>
-      arrange(dataset_for_matching) |>
-      slice_tail(n = 1) |>
-      select(dataset_for_matching, data_identifier_orig_2nd_entrie = data_identifier_orig),
-    by = "dataset_for_matching"
-  ) |>
-
-  # Remove second entry if it's a duplicate of the first
-  mutate(
-    data_identifier_orig_2nd_entrie = case_when(
-      data_identifier_orig_1st_entry == data_identifier_orig_2nd_entrie ~ NA_character_,
-      TRUE ~ data_identifier_orig_2nd_entrie
-    )
-  ) |>
-  ungroup() |> 
-  relocate(data_identifier_orig_2nd_entrie, .after = data_identifier_orig_1st_entry)
-
-# Save for matching with DCC
-
-save_cr(charite_dois_and_ids_8_wide,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_8_wide.RData")))
 ```
 
 # 5. Matching DCC and Charite Lists by Dataset Identifiers
