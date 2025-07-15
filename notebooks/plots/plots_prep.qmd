@@ -308,7 +308,7 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 #            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
 #            repository == "european nucleotide archive" ~ "ENA",
 #            repository == "the protein data bank" ~ "PDB",
-#            repository %in% c("elsevier data repository", "elsevier bv") ~ "elsevier",
+#            repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "mendeley",
 #            .default = repository)) |>
 #   count(source, target) |>
 #   rename(value = n) |>
@@ -324,7 +324,7 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 #            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
 #            repository == "european nucleotide archive" ~ "ENA",
 #            repository == "the protein data bank" ~ "PDB",
-#            repository %in% c("elsevier data repository", "elsevier bv") ~ "elsevier",
+#            repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "mendeley",
 #            .default = repository),
 #          target = case_when(covid_related == "TRUE" ~ "Covid Related",
 #                             covid_related == "FALSE" ~ "Not Covid Related",

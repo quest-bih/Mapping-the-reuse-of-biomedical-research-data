@@ -84,10 +84,36 @@ charite_da_dois_and_ids <- read.csv(
   file.path(here("data",
                  "raw",
                  "charite",
-                 "data_articles_datasets_ids_listed_in_numbat_as_well_commented_AI_2025_05_14.csv")),
+                 "data_articles_AI_2025_05_14.csv")),
   header = TRUE,
   sep = ";") |> 
   dplyr::filter(identifier_from_data_article_analysis != "NULL") # remove NULLs
+
+# Manually append additional identifiers for the same dataset
+
+ids_vector <- c(
+  "https://physionet.org/content/ptb-xl/1.0.3/",
+  "https://physionet.org/content/ptb-xl/1.0.1/",
+  "https://doi.org/10.13026/kfzx-aw45",
+  "https://doi.org/10.13026/zx4k-te85",
+  "https://doi.org/10.13026/6sec-a640",
+  "https://doi.org/10.13026/kfzx-aw45",
+  "https://doi.org/10.13026/qgmg-0d46",
+  "https://doi.org/10.13026/x4td-x982"
+  )
+
+charite_da_dois_and_ids_1_m_add <- bind_rows(
+  # filter rows where 'charite_doi' matches the target DOI to duplicate
+  charite_da_dois_and_ids |>
+    dplyr::filter(charite_doi == "10.1038/s41597-020-0495-6") |>
+    # duplicate this row to match the length of 'ids_vector'
+    slice(rep(1, length(ids_vector))) |>
+    # replace the identifier column with 'ids_vector'
+    mutate(identifier_from_data_article_analysis = ids_vector),
+  # then add all other rows that do not match the target DOI (unchanged)
+  charite_da_dois_and_ids |>
+    dplyr::filter(charite_doi != "10.1038/s41597-020-0495-6")
+)
 
 rm(dashboard_dois) # clean up
 ```
@@ -165,40 +191,40 @@ charite_2020_2023 <- master_2020_2023_1_unique |>
 #
 # Thesee enteries were taken care of and now there are no such entries.
 
-# 3. Explore which cases to include
-
-# 2020-2022
-
-cases_of_ids_until_2022 <- charite_2020_2023 |>
- dplyr::filter(year %in% 2020:2022) |> 
- group_by(open_data_assessment, own_or_reuse_data, data_access) |>
- summarise(n = n()) |>
- arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
-
-write_csv_cr(cases_of_ids_until_2022, file = file.path(here("data",
-                                                           "verification",
-                                                           "inclusion-info-charite",
-                                                           "inclusion_criteria_until_2022_v4.csv")),
-            row.names = FALSE)
-
-# Evgeny and Ana replied that each of the 3 cases below should be included for cases between 2020 and 2022:
-# access = yes, own = unsure / own, assessment = open data
-# access = unsure, own = own, assessment = open data
-# access = restricted, own = unsure / own / NULL, assessment = NULL
-
-# 2023
-
-cases_of_ids_2023 <- charite_2020_2023 |>
- dplyr::filter(year == 2023) |> 
- group_by(open_data_assessment, own_or_reuse_data, data_access, restricted_authorship) |>
- summarise(n = n()) |>
- arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
-
-write_csv_cr(cases_of_ids_2023, file = file.path(here("data",
-                                                     "verification",
-                                                     "inclusion-info-charite",
-                                                     "inclusion_criteria_2023_v4.csv")),
-            row.names = FALSE)
+  # 3. Explore which cases to include
+  
+  # 2020-2022
+  
+  cases_of_ids_until_2022 <- charite_2020_2023 |>
+   dplyr::filter(year %in% 2020:2022) |> 
+   group_by(open_data_assessment, own_or_reuse_data, data_access) |>
+   summarise(n = n()) |>
+   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
+  
+  write_csv_cr(cases_of_ids_until_2022, file = file.path(here("data",
+                                                             "verification",
+                                                             "inclusion-info-charite",
+                                                             "inclusion_criteria_until_2022_v4.csv")),
+              row.names = FALSE)
+  
+  # Evgeny and Ana replied that each of the 3 cases below should be included for cases between 2020 and 2022:
+  # access = yes, own = unsure / own, assessment = open data
+  # access = unsure, own = own, assessment = open data
+  # access = restricted, own = unsure / own / NULL, assessment = NULL
+  
+  # 2023
+  
+  cases_of_ids_2023 <- charite_2020_2023 |>
+   dplyr::filter(year == 2023) |> 
+   group_by(open_data_assessment, own_or_reuse_data, data_access, restricted_authorship) |>
+   summarise(n = n()) |>
+   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
+  
+  write_csv_cr(cases_of_ids_2023, file = file.path(here("data",
+                                                       "verification",
+                                                       "inclusion-info-charite",
+                                                       "inclusion_criteria_2023_v4.csv")),
+              row.names = FALSE)
 
 # 4. Filter to get only relevant cases (open / restricted data)
 
@@ -263,16 +289,17 @@ charite_2020_2023_od_and_rest_db_lbl_2nd_source_dist <- charite_2020_2023_od_and
 
 # # First I'll check if I should exclude any papers from the data articles list
 # 
-# charite_da_dois_and_ids |>
+# charite_da_dois_and_ids_1_m_add |>
 #   dplyr::filter(charite_doi %in% dashboard_dois_dedup$doi) |> 
 #   select(charite_doi, identifier_from_data_article_analysis) |> 
-#   View() # all data articles are in the dashboard, so none should be excluded
+#   View()
+# # all data articles are in the dashboard, so none should be excluded
 
 # Now I can add the data articles identifiers with their source and overlap with numbat labeled
 
 charite_dois_and_ids <- charite_2020_2023_od_and_rest_db_lbl_2nd_source_dist |> 
   mutate(source = "numbat") |> # label Numbat cases
-  bind_rows(charite_da_dois_and_ids |> 
+  bind_rows(charite_da_dois_and_ids_1_m_add |> 
               select(charite_doi,
                      identifier_from_data_article_analysis,
                      listed_in_numbat_output) |> 
@@ -303,15 +330,17 @@ charite_dois_and_ids <- charite_2020_2023_od_and_rest_db_lbl_2nd_source_dist |>
 # save
 save_cr(charite_dois_and_ids, file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids.RData")))
 
-# 8. Remove clinvar datasets
+# 8. Remove clinvar datasets and DOIs that were eventually found out to be not "Open Data"
 
 charite_dois_and_ids_1_no_clinvar <- charite_dois_and_ids |>
+  # remove clinvar cases
   dplyr::filter(
   !str_detect(data_id, "clinvar") &
   !str_starts(data_id, "vcv") &
   !str_starts(data_id, "scv") &
-  !str_starts(data_id, "rcv")
-)
+  !str_starts(data_id, "rcv")) |> 
+  # remove DOIs that are not really open data
+  dplyr::filter(!doi == "10.1186/s13059-021-02306-1")
 
 # save
 save_cr(charite_dois_and_ids_1_no_clinvar, file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_1_no_clinvar.RData")))
@@ -333,6 +362,7 @@ rm(
   charite_2020_2023_od_and_rest_db_lbl,
   charite_2020_2023_od_and_rest_db_lbl_2nd_source_dist,
   charite_da_dois_and_ids,
+  charite_da_dois_and_ids_1_m_add,
   dashboard_dois_dedup,
   dois_to_exclude,
   charite_2020_2023_od_and_rest_db_lbl_2nd_source,
@@ -731,46 +761,48 @@ dcc_charite_joined_2_rm_self <- dcc_charite_joined_1_det_id |>
 save_cr(dcc_charite_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                        "dcc_charite_joined_2_rm_self.RData")))
 
-
 ### 2. Excluding authors overlap:
 
-# Get authors and years info collected so far:
+  # # Get authors and years info collected so far:
+  # 
+  #   # Get authors and years info:
+  #   
+  #   load(here("data",
+  #             "verification",
+  #             "metadata matched",
+  #             "charite_dois_metadata_20052025.RData")) # load charite
+  #   
+  #   charite_dois_metadata <- final_results # assign
+  #   
+  #   load(here("data",
+  #             "verification",
+  #             "metadata matched",
+  #             "dcc_dois_metadata_20052025.RData")) # load dcc
+  #   
+  #   dcc_dois_metadata <- final_results # assign
+  #   
+  #   rm(final_results) # clean up
+  # 
+  # # Prepare both metadata lists before joining
+  # 
+  # charite_dois_metadata <- charite_dois_metadata |>
+  #   rename(doi_charite = doi) |> # rename column
+  #   mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/")) # remove prefix
+  #   
+  # dcc_dois_metadata <- dcc_dois_metadata |> 
+  #   rename(doi_dcc = doi) |> # rename column
+  #   mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/")) # remove prefix
 
-  # Get authors and years info:
-  
-  load(here("data",
-            "verification",
-            "metadata matched",
-            "charite_dois_metadata_20052025.RData")) # load charite
-  
-  charite_dois_metadata <- final_results # assign
-  
-  load(here("data",
-            "verification",
-            "metadata matched",
-            "dcc_dois_metadata_20052025.RData")) # load dcc
-  
-  dcc_dois_metadata <- final_results # assign
-  
-  rm(final_results) # clean up
+# The commented section above resulted in the files loaded below:
 
-# Prepare both metadata lists before joining
-
-charite_dois_metadata <- charite_dois_metadata |>
-  rename(doi_charite = doi) |> # rename column
-  mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/")) # remove prefix
-  
-dcc_dois_metadata <- dcc_dois_metadata |> 
-  rename(doi_dcc = doi) |> # rename column
-  mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/")) # remove prefix
+load(here("data", "verification", "metadata matched", "charite_doi_metadata_v1.RData")) # load charite
+load(here("data", "verification", "metadata matched", "dcc_doi_metadata_v1.RData")) # load charite
 
 # Join info into dcc-charite list
 
 dcc_charite_joined_3_au_info <- dcc_charite_joined_2_rm_self |> 
-  left_join(charite_dois_metadata, by = "doi_charite", suffix = c("", "_charite")) |> 
-  left_join(dcc_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
-  rename(publication_year_charite = publication_year,
-         authors_charite = authors)
+  left_join(charite_doi_metadata, by = "doi_charite", suffix = c("", "_charite")) |> 
+  left_join(dcc_doi_metadata, by = "doi_dcc", suffix = c("", "_dcc"))
 
 # Check for blanks & NAs in metadata
 
@@ -784,110 +816,11 @@ dcc_charite_joined_3_au_info |> dplyr::filter(is.na(publication_year_charite)
                                               | is.na(authors_charite)
                                               | is.na(publication_year_dcc)
                                               | is.na(authors_dcc)) |>
-  View() # there are some NAs
+  View() # No NAs
 
-# Create doi lists for charite and dcc to extract info for
-
-# Charite
-
-charite_dois_for_au_and_year_info <- dcc_charite_joined_3_au_info |>
-  dplyr::filter(is.na(authors_charite)) |> 
-  select(doi_charite) |>
-  rename(doi = doi_charite) |>
-  distinct()
-
-write_csv_cr(
-  charite_dois_for_au_and_year_info,
-  file = here("data",
-               "verification",
-               "metadata matched",
-               "dois to get info of",
-               "charite_dois_for_au_and_year_info_17062025.csv"),
-          row.names = FALSE)
-
-# DCC
-
-dcc_dois_for_au_and_year_info <- dcc_charite_joined_3_au_info |>
-  dplyr::filter(is.na(authors_dcc)) |> 
-  select(doi_dcc) |>
-  rename(doi = doi_dcc) |>
-  distinct()
-
-write_csv_cr(
-  dcc_dois_for_au_and_year_info,
-  file = here("data",
-               "verification",
-               "metadata matched",
-               "dois to get info of",
-               "dcc_dois_for_au_and_year_info_17062025.csv"),
-          row.names = FALSE)
-
-# Run OpenAlex on these cases - done.
-
-# Get authors and years info:
-  
-  load(here("data",
-            "verification",
-            "metadata matched",
-            "charite_dois_metadata_17062025.RData")) # load charite
-  
-  charite_dois_metadata <- final_results # assign
-  
-  load(here("data",
-            "verification",
-            "metadata matched",
-            "dcc_dois_metadata_17062025.RData")) # load dcc
-  
-  dcc_dois_metadata <- final_results # assign
-  
-  rm(final_results) # clean up
-
-  # Prepare both metadata lists before joining
-
-charite_dois_metadata <- charite_dois_metadata |>
-  rename(doi_charite = doi) |> # rename column
-  mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/")) # remove prefix
-  
-dcc_dois_metadata <- dcc_dois_metadata |> 
-  rename(doi_dcc = doi) |> # rename column
-  mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/")) # remove prefix
-
-  
-# join back to 3_au_info:
-
-dcc_charite_joined_3_au_info <- dcc_charite_joined_3_au_info |> 
-  left_join(charite_dois_metadata, by = "doi_charite", suffix = c("", "_charite")) |> 
-  left_join(dcc_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
-  mutate(publication_year_charite = coalesce(publication_year_charite, publication_year_charite_charite),
-         authors_charite = coalesce(authors_charite, authors_charite_charite),
-         publication_year_dcc = coalesce(publication_year_dcc, publication_year_dcc_dcc),
-         authors_dcc = coalesce(authors_dcc, authors_dcc_dcc)) |> 
-  select(-c(publication_year_dcc_dcc, authors_dcc_dcc, authors, publication_year, publication_year_charite_charite, authors_charite_charite))
-
-dcc_charite_joined_3_au_info |> dplyr::filter(is.na(publication_year_charite)
-                                              | is.na(authors_charite)
-                                              | is.na(publication_year_dcc)
-                                              | is.na(authors_dcc)) |>
-  View() # there are 2 NAs
-
-# I've completed them manually.
-
-# create doi metadata files to load next time:
-
-charite_doi_metadata <- dcc_charite_joined_3_au_info |> 
-  select(doi_charite, authors_charite, publication_year_charite) |>
-  distinct()
-
-dcc_doi_metadata <- dcc_charite_joined_3_au_info |> 
-  select(doi_dcc, authors_dcc, publication_year_dcc) |>
-  distinct()
-
-# save doi metadata files
-save_cr(charite_doi_metadata, file = file.path(here("data", "verification", "metadata matched",
-                                                        "charite_doi_metadata_v1.RData")))
-
-save_cr(dcc_doi_metadata, file = file.path(here("data", "verification", "metadata matched",
-                                                        "dcc_doi_metadata_v1.RData")))
+# save
+save_cr(dcc_charite_joined_3_au_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "dcc_charite_joined_3_au_info.RData")))
 
 # Remove cases with author overlap:
 
