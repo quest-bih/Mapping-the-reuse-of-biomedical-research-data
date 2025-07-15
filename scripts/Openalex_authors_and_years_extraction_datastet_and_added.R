@@ -163,3 +163,154 @@ save_path <- file.path(here("data",
 
 save(final_results, file = save_path)
 
+
+# find out what's left ----------------------------------------------------
+
+# ds_and_added
+
+# load csv
+selected_file <- tclvalue(tkgetOpenFile(title = "Please select a CSV file with a \"doi\" column"))
+df <- read.csv(selected_file) |> rename(doi = 1)
+
+#check
+for_check <- final_results |>
+  mutate(doi = str_remove(doi, "^https://doi\\.org/"))
+
+dois_left <- df |> dplyr::filter(!doi %in% for_check$doi)
+
+# add manually the one that's left
+final_results <- final_results |> 
+  bind_rows(
+    tibble(
+      doi = "https://doi.org/10.3324/haematol.2020.276048",
+      publication_year = 2022,
+      authors = "Sarah Grasedieck;Ariene Cabantog;Liam MacPhee;Junbum Im;Christoph Ruess;Burcu Demir;Nadine Sperb;Frank G. Ruecker;Konstanze Doehner;Tobias Herold;Jonathan R. Pollack;Lars Bullinger;Arefeh Rouhi;Florian Kuchenbauer"
+    )
+  )
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_and_added",
+                            "ds_and_added_dois_metadata_v2.RData"))
+
+save(final_results, file = save_path)
+
+# dcc
+
+# load csv
+selected_file <- tclvalue(tkgetOpenFile(title = "Please select a CSV file with a \"doi\" column"))
+df <- read.csv(selected_file) |> rename(doi = 1)
+
+#check
+for_check <- final_results |>
+  mutate(doi = str_remove(doi, "^https://doi\\.org/"))
+
+# get dois
+
+  # 1. Get DOIs from for_check where authors is NA
+  missing_authors <- for_check |> 
+    dplyr::filter(is.na(authors)) |> 
+    select(doi)
+  
+  # 2. Get DOIs that are in df but not in for_check
+  missing_in_for_check <- df |> 
+    dplyr::filter(!doi %in% for_check$doi)
+  
+  # 3. Append
+  dois_left <- bind_rows(missing_authors, missing_in_for_check)
+
+dcc_ds_and_added_joined_2_rm_self |> 
+  dplyr::filter(doi_dcc %in% dois_left$doi) |> 
+  dplyr::filter(doi_dcc != "none") |> 
+  group_by(dataset_for_matching) |> summarise(n=n()) |>
+  View()
+
+
+  
+# add manually
+
+
+
+
+final_results <- final_results |> 
+  bind_rows(
+    tibble(
+      doi = c(
+        "https://doi.org/10.3324/haematol.2020.276048",
+        "",
+        "",
+        "",
+      publication_year = "2022",
+      authors = "Sarah Grasedieck;Ariene Cabantog;Liam MacPhee;Junbum Im;Christoph Ruess;Burcu Demir;Nadine Sperb;Frank G. Ruecker;Konstanze Doehner;Tobias Herold;Jonathan R. Pollack;Lars Bullinger;Arefeh Rouhi;Florian Kuchenbauer"
+    )
+  ))
+
+
+
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_and_added",
+                            "dcc_of_ds_and_added_dois_metadata_v2.RData"))
+
+save(final_results, file = save_path)
+
+
+# get authors position ----------------------------------------------------
+
+# I first commented this line in the function: |> select(doi, publication_year, authors)
+# Then I ran it to get "final_results"
+# And below I'll add the info that I need
+
+# first save all metadata
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_and_added",
+                            "dcc_of_ds_and_added_dois_all_metadata_v1.RData"))
+
+save(final_results, file = save_path)
+
+# get authors position
+
+authors_position_to_join <- final_results |>
+  mutate(
+    doi = str_remove(doi, regex("^https://doi\\.org/")),
+    
+    position_of_charite_authors = map_chr(author, ~
+                                            .x |>
+                                            dplyr::mutate(
+                                              match_charite = str_detect(institution_display_name, fixed("Charité")) |
+                                                str_detect(au_affiliation_raw, fixed("Charité"))
+                                            ) |>
+                                            dplyr::filter(match_charite) |>
+                                            pull(author_position) |>
+                                            unique() |>
+                                            str_c(collapse = ";")
+    ),
+    
+    position_of_charite_authors = case_when(
+      position_of_charite_authors == "" ~ "No Charité Author Detected",
+      position_of_charite_authors == "middle" ~ "middle",
+      .default = position_of_charite_authors
+    )
+  ) |>
+  select(doi, position_of_charite_authors)
+
+# Note! 
+
+# save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_and_added",
+                            "dcc_of_ds_and_added_dois_authors_position_to_join_v1.RData"))
+
+save(authors_position_to_join, file = save_path)
+
+
+  

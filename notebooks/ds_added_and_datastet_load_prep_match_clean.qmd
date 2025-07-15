@@ -379,15 +379,17 @@ dcc_ds_and_added_joined |> summarise(across(everything(), ~ any(str_detect(as.ch
 
 # 1. Remove self-citations
 
-dcc_ds_and_added_joined_2_rm_self <- dcc_ds_and_added_joined |> 
+dcc_ds_and_added_joined_1_rm_self <- dcc_ds_and_added_joined |> 
   dplyr::filter(doi_datastet_and_added != doi_dcc)
 
 # save
-save_cr(dcc_ds_and_added_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
-                                                       "dcc_ds_and_added_joined_2_rm_self.RData")))
+save_cr(dcc_ds_and_added_joined_1_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                       "dcc_ds_and_added_joined_1_rm_self.RData")))
 
+### 2. Exclude cases that are not datasets
 
-dois_ids_grouped <- dcc_ds_and_added_joined_2_rm_self |> select(doi_dcc,dataset_for_matching) |> group_by(dataset_for_matching) |> summarise(n=n())
+# create a list of detected values to verify
+dois_ids_grouped <- dcc_ds_and_added_joined_1_rm_self |> select(doi_dcc,dataset_for_matching) |> group_by(dataset_for_matching) |> summarise(n=n())
 
 write_csv_cr(dois_ids_grouped, file = file.path(here("data",
                                                      "verification",
@@ -395,7 +397,8 @@ write_csv_cr(dois_ids_grouped, file = file.path(here("data",
                                                      "dois_ids_grouped.csv")),
               row.names = FALSE)
 
-dois_ids_distinct <- dcc_ds_and_added_joined_2_rm_self |> select(doi_dcc, dataset_for_matching) |> distinct()
+# create a minimized joined list for overview
+dois_ids_distinct <- dcc_ds_and_added_joined_1_rm_self |> select(doi_dcc, dataset_for_matching) |> distinct()
 
 write_csv_cr(dois_ids_distinct, file = file.path(here("data",
                                                      "verification",
@@ -403,11 +406,43 @@ write_csv_cr(dois_ids_distinct, file = file.path(here("data",
                                                      "dois_ids_distinct.csv")),
               row.names = FALSE)
 
-### 2. Excluding authors overlap:
+# create a list of charite dois and ids to add charite author's position to and to verify identifiers as real ones 
+charite_dois_ids_distinct <- dcc_ds_and_added_joined_1_rm_self |>
+  select(doi_datastet_and_added, dataset_for_matching) |>
+  distinct()
+
+write_csv_cr(charite_dois_ids_distinct, file = file.path(here("data",
+                                                     "verification",
+                                                     "datastet_and_added_summarised",
+                                                     "charite_dois_ids_distinct.csv")),
+              row.names = FALSE)
+
+# load labeled list 
+
+dois_ids_grouped_filled <- here("data", "verification", "datastet_and_added_summarised", "charite_dois_ids_grouped_filled.xlsx") |>
+  read_excel()
+
+# create a subset to filter by
+
+real_ids <- dois_ids_grouped_filled |> 
+  dplyr::filter(is_dataset == "y") |> 
+  select(dataset_for_matching)
+
+# exclude cases by labeled list
+
+dcc_ds_and_added_joined_2_rm_non_ids <- dcc_ds_and_added_joined_1_rm_self |> 
+  dplyr::filter(dataset_for_matching %in% real_ids$dataset_for_matching)
+
+# save
+save_cr(dcc_ds_and_added_joined_2_rm_non_ids, file = file.path(here("data","wrangling_steps", "dcc_datastet_and_added", "dcc_ds_and_added_joined_2_rm_non_ids.RData")))
+
+### 3. Adding authors and years metadata:
 
 # prepare dois dfs for openalex authors extraction script
 
-ds_and_addde_dois_distinct <- dcc_ds_and_added_joined_2_rm_self |> 
+# NOTE: these csvs were actually written before removing non-ids, so there might be irrelevant cases there, but it shouldn't matter when joining them into "dcc_ds_and_added_joined_3_au_info".
+
+ds_and_added_dois_distinct <- dcc_ds_and_added_joined_2_rm_self |> 
   select(doi_datastet_and_added) |> 
   distinct()
 
@@ -415,7 +450,7 @@ write_csv_cr(ds_and_addde_dois_distinct, file = file.path(here("data",
                                                      "verification",
                                                      "metadata matched",
                                                      "ds_and_added",
-                                                     "ds_and_addde_dois_distinct.csv")),
+                                                     "ds_and_added_dois_distinct.csv")),
               row.names = FALSE)
 
 
@@ -430,162 +465,67 @@ write_csv_cr(dcc_of_ds_and_addde_dois_distinct, file = file.path(here("data",
                                                      "dcc_of_ds_and_addde_dois_distinct.csv")),
               row.names = FALSE)
 
-#####
-
 # Get authors and years info:
 
 load(here("data",
           "verification",
           "metadata matched",
-          "charite_dois_metadata_20052025.RData")) # load charite
+          "ds_and_added",
+          "ds_and_added_dois_metadata_v2.RData")) # load charite
 
-charite_dois_metadata <- final_results # assign
+ds_and_added_dois_metadata <- final_results # assign
 
 load(here("data",
           "verification",
           "metadata matched",
-          "dcc_dois_metadata_20052025.RData")) # load dcc
+          "ds_and_added",
+          "dcc_of_ds_and_added_dois_metadata_v1.RData")) # load dcc
 
-dcc_dois_metadata <- final_results # assign
+dcc_of_ds_and_added_dois_metadata <- final_results # assign
 
 rm(final_results) # clean up
 
 # Prepare both metadata lists before joining
 
-charite_dois_metadata <- charite_dois_metadata |>
-  rename(doi_charite = doi) |> # rename column
-  mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/")) # remove prefix
+ds_and_added_dois_metadata <- ds_and_added_dois_metadata |>
+  rename(doi_datastet_and_added = doi) |> # rename column
+  mutate(doi_datastet_and_added = str_remove(doi_datastet_and_added, "^https://doi.org/")) # remove prefix
   
-dcc_dois_metadata <- dcc_dois_metadata |> 
+dcc_of_ds_and_added_dois_metadata <- dcc_of_ds_and_added_dois_metadata |> 
   rename(doi_dcc = doi) |> # rename column
   mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/")) # remove prefix
 
 # Join info into dcc-charite list
 
-dcc_charite_joined_3_au_info <- dcc_charite_joined_2_rm_self |> 
-  left_join(charite_dois_metadata, by = "doi_charite", suffix = c("", "_charite")) |> 
-  left_join(dcc_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
-  rename(publication_year_charite = publication_year,
-         authors_charite = authors)
+dcc_ds_and_added_joined_3_au_info <- dcc_ds_and_added_joined_2_rm_self |> 
+  left_join(ds_and_added_dois_metadata, by = "doi_datastet_and_added", suffix = c("", "_datastet_and_added")) |> 
+  left_join(dcc_of_ds_and_added_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
+  rename(publication_year_datastet_and_added = publication_year,
+         authors_datastet_and_added = authors)
 
 # Check for blanks & NAs in metadata
 
-dcc_charite_joined_3_au_info |> dplyr::filter(publication_year_charite == ""
-                                              | authors_charite == ""
+dcc_ds_and_added_joined_3_au_info |> dplyr::filter(publication_year_datastet_and_added == ""
+                                              | authors_datastet_and_added == ""
                                               | publication_year_dcc == ""
                                               | authors_dcc == "") |>
   View() # no blanks
 
-dcc_charite_joined_3_au_info |> dplyr::filter(is.na(publication_year_charite)
-                                              | is.na(authors_charite)
+dcc_ds_and_added_joined_3_au_info |> dplyr::filter(is.na(publication_year_datastet_and_added)
+                                              | is.na(authors_datastet_and_added)
                                               | is.na(publication_year_dcc)
                                               | is.na(authors_dcc)) |>
   View() # there are some NAs
 
-# Create doi lists for charite and dcc to extract info for
 
-# Charite
+# Add missing cases manually
 
-charite_dois_for_au_and_year_info <- dcc_charite_joined_3_au_info |>
-  dplyr::filter(is.na(authors_charite)) |> 
-  select(doi_charite) |>
-  rename(doi = doi_charite) |>
-  distinct()
 
-write_csv_cr(
-  charite_dois_for_au_and_year_info,
-  file = here("data",
-               "verification",
-               "metadata matched",
-               "dois to get info of",
-               "charite_dois_for_au_and_year_info_17062025.csv"),
-          row.names = FALSE)
+# save
+save_cr(dcc_ds_and_added_joined_3_au_info, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_ds_and_added_joined_3_au_info.RData")))
 
-# DCC
-
-dcc_dois_for_au_and_year_info <- dcc_charite_joined_3_au_info |>
-  dplyr::filter(is.na(authors_dcc)) |> 
-  select(doi_dcc) |>
-  rename(doi = doi_dcc) |>
-  distinct()
-
-write_csv_cr(
-  dcc_dois_for_au_and_year_info,
-  file = here("data",
-               "verification",
-               "metadata matched",
-               "dois to get info of",
-               "dcc_dois_for_au_and_year_info_17062025.csv"),
-          row.names = FALSE)
-
-# Run OpenAlex on these cases - done.
-
-# Get authors and years info:
-  
-  load(here("data",
-            "verification",
-            "metadata matched",
-            "charite_dois_metadata_17062025.RData")) # load charite
-  
-  charite_dois_metadata <- final_results # assign
-  
-  load(here("data",
-            "verification",
-            "metadata matched",
-            "dcc_dois_metadata_17062025.RData")) # load dcc
-  
-  dcc_dois_metadata <- final_results # assign
-  
-  rm(final_results) # clean up
-
-  # Prepare both metadata lists before joining
-
-charite_dois_metadata <- charite_dois_metadata |>
-  rename(doi_charite = doi) |> # rename column
-  mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/")) # remove prefix
-  
-dcc_dois_metadata <- dcc_dois_metadata |> 
-  rename(doi_dcc = doi) |> # rename column
-  mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/")) # remove prefix
-
-  
-# join back to 3_au_info:
-
-dcc_charite_joined_3_au_info <- dcc_charite_joined_3_au_info |> 
-  left_join(charite_dois_metadata, by = "doi_charite", suffix = c("", "_charite")) |> 
-  left_join(dcc_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
-  mutate(publication_year_charite = coalesce(publication_year_charite, publication_year_charite_charite),
-         authors_charite = coalesce(authors_charite, authors_charite_charite),
-         publication_year_dcc = coalesce(publication_year_dcc, publication_year_dcc_dcc),
-         authors_dcc = coalesce(authors_dcc, authors_dcc_dcc)) |> 
-  select(-c(publication_year_dcc_dcc, authors_dcc_dcc, authors, publication_year, publication_year_charite_charite, authors_charite_charite))
-
-dcc_charite_joined_3_au_info |> dplyr::filter(is.na(publication_year_charite)
-                                              | is.na(authors_charite)
-                                              | is.na(publication_year_dcc)
-                                              | is.na(authors_dcc)) |>
-  View() # there are 2 NAs
-
-# I've completed them manually.
-
-# create doi metadata files to load next time:
-
-charite_doi_metadata <- dcc_charite_joined_3_au_info |> 
-  select(doi_charite, authors_charite, publication_year_charite) |>
-  distinct()
-
-dcc_doi_metadata <- dcc_charite_joined_3_au_info |> 
-  select(doi_dcc, authors_dcc, publication_year_dcc) |>
-  distinct()
-
-# save doi metadata files
-save_cr(charite_doi_metadata, file = file.path(here("data", "verification", "metadata matched",
-                                                        "charite_doi_metadata_v1.RData")))
-
-save_cr(dcc_doi_metadata, file = file.path(here("data", "verification", "metadata matched",
-                                                        "dcc_doi_metadata_v1.RData")))
-
-# Remove cases with author overlap:
+### 4. Excluding  cases with authors overlap:
 
 # Function to check if there are no common elements between two semicolon-separated strings
 no_common_element <- function(x, y) {
@@ -595,26 +535,11 @@ no_common_element <- function(x, y) {
 }
 
 # Apply the filter using the function to create a matched list with no "Author Overlap"
-dcc_charite_joined_4_rm_au_ov <- dcc_charite_joined_3_au_info  |> 
-  dplyr::filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
-  distinct(doi_charite, dataset_for_matching, doi_dcc, .keep_all = TRUE)
+dcc_ds_and_added_joined_4_rm_au_ov <- dcc_ds_and_added_joined_3_au_info  |> 
+  dplyr::filter(map2_lgl(authors_datastet_and_added, authors_dcc, no_common_element)) |> 
+  distinct(doi_datastet_and_added, dataset_for_matching, doi_dcc, .keep_all = TRUE)
 
 # save
-save_cr(dcc_charite_joined_4_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                        "dcc_charite_joined_4_rm_au_ov.RData")))
-
-##### FINISH FROM HERE:
-
-# Add metadata: 
-# data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
-
-
-# load metadata file
-
-
-# add to _joined
-
-# dcc_charite_joined_5_w_metadata <- dcc_charite_joined_4_rm_au_ov |> 
-  
-  
+save_cr(dcc_datastet_and_added_4_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_datastet_and_added_4_rm_au_ov.RData")))
 ```

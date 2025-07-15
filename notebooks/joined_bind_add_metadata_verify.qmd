@@ -1,0 +1,140 @@
+---
+title: "ds_added_and_datastet_load_prep_match_clean"
+date: "today"
+author: "Avihay Cohen"
+format:
+  html:
+    self-contained: true
+editor: visual
+---
+
+```{r setup, echo=FALSE}
+
+Sys.setenv(LANG = "EN")  # Set environment language to English
+
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+library(pacman)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi)
+
+save_cr <- function(..., file) {
+  dir_path <- dirname(file)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+  save(..., file = file)
+} # wrapper for save() with automatic directory creation
+
+write_csv_cr <- function(x, file, ...) {
+  dir_path <- dirname(file)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+  write.csv(x, file = file, ...)
+} # wrapper for write.csv() with automatic directory creation
+
+```
+
+# 1. Loading 2 joined lists of 4 sources (numbat, data articles, datastet, added ids)
+
+
+```{r Loading 2 joined lists of 4 sources}
+
+# load joined dcc numbat and data articles
+load(here("data",
+          "wrangling_steps",
+          "dcc_charite",
+          "dcc_charite_joined_4_rm_au_ov.RData"))
+
+
+##### REPLACE WITH REAL JOINED!
+# load joined dcc datastet and added
+load(here("data",
+          "wrangling_steps",
+          "dcc_datastet_and_added",
+          "dcc_ds_and_added_joined_1_rm_self.RData")) 
+
+```
+
+# 2. Bind
+
+```{r Bind}
+
+# 1. Prepare for binding
+
+# Get column names that exist only in each joined list
+
+only_in_dcc_ds <- setdiff(colnames(dcc_ds_and_added_joined_1_rm_self),
+                          colnames(dcc_charite_joined_4_rm_au_ov))
+
+only_in_dcc_charite <- setdiff(colnames(dcc_charite_joined_4_rm_au_ov),
+                               colnames(dcc_ds_and_added_joined_1_rm_self))
+
+# View different column names between the lists
+tibble(
+  # left column: values only in dcc_ds, padded with NA if dcc_charite has more entries
+  dcc_ds_and_added_joined_1_rm_self = c(only_in_df1, rep(NA, max(0, length(only_in_df2) - length(only_in_df1)))),
+  # right column: opposite
+  dcc_charite_joined_4_rm_au_ov     = c(only_in_df2, rep(NA, max(0, length(only_in_df1) - length(only_in_df2))))
+) |> View()
+
+dcc_ds_for_binding <- dcc_ds_and_added_joined_1_rm_self |> 
+  rename(
+    data_id_mval = m_val,
+    slug_charite = slug_datastet_and_added,
+    data_id_source = source_datastet_and_added
+    )
+  
+  
+  
+  
+  s
+
+
+dcc_charite_for_binding <- dcc_charite_joined_4_rm_au_ov |> 
+    rename(
+      data_id_source = source_charite,
+      
+ |> 
+   mutate(in_numbat_or_data_articles == "TRUE")
+      
+      
+# bind
+
+
+```
+
+
+# 3. Add Metadata
+
+```{r Add metadata}
+
+# Add metadata: 
+# data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
+
+
+# load metadata file
+
+
+# add to results
+
+
+
+```
+
+# 4. Verify Results
+
+```{r Verify results}
+
+
+```
+
+# 5. Create Results Tables
+
+```{r Create results tables}
+
+
+```
+
+
+  
+  
