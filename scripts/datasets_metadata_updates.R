@@ -10,7 +10,6 @@ if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi, writexl)
 
-
 # wrappers for save. write.csv() and write_xlsx with automatic directory creation
 
 save_cr <- function(..., file) {
@@ -90,7 +89,6 @@ load_latest_metadata_update <- function() {
   # Return the object invisibly
   invisible(get(loaded_vars[1], envir = .GlobalEnv))
 }
-
 
 # Updating datasets_metadata_master_updated -------------------------------
 
@@ -210,14 +208,13 @@ datasets_metadata_master_updated_004 <- datasets_metadata_master_updated_003 |>
 # save
 metadata_update(datasets_metadata_master_updated_004) # call function to save as csv, xlsx, rda
 
-# 00?: add missing metadata from Evgeny -----------------------------------------------
+# 005: add missing metadata of matched from Evgeny -----------------------------------------------
 
-# load
 load_latest_metadata_update() # call function to load latest version
 
 # prepare a missing values table 
 
-in_dcc_to_fill_eb <- datasets_metadata_master_updated_003 |>
+in_dcc_to_fill_eb <- datasets_metadata_master_updated_004 |>
   dplyr::filter(in_dcc == "TRUE") |>
   select(
     doi,
@@ -244,41 +241,100 @@ write_csv_cr(in_dcc_to_fill_eb,
                          "in_dcc_to_fill_eb.csv"),
              row.names = FALSE)
 
-##### CONTINUE FROM HERE
 
+# load filled file
+in_dcc_filled <- read_excel(here("data",
+                                 "verification",
+                                 "metadata all",
+                                 "datasets_metadata_master_updated",
+                                 "filled tables",
+                                 "in_dcc_to_fill_bi_v3.xlsx"))
 
+# join to master metadata
+datasets_metadata_master_updated_005 <- datasets_metadata_master_updated_004 |>
+  mutate(license = case_when(license == "NULL" ~ NA_character_, .default = license)) |> 
+  left_join(in_dcc_filled |>
+              select(-c(`...9`, `Notes`, `Evgeny comment`)),
+            by = c("doi", "data_id_merged", "source"), suffix = c("", "_new")) |> 
+  mutate(
+    covid_related = coalesce(covid_related_new),
+    human_data = coalesce(human_data, human_data_new),
+    data_availability_statement = coalesce(data_availability_statement, data_availability_statement_new),
+    license = coalesce(license, license_new) # merge updated values into columns
+  ) |> 
+  select(-ends_with("_new")) |> # remove temporary new columns
+  select(-unique_id) # remove unique_id column
 
+# manually correct one value, since in "in_dcc_filled" there were 2 contradicting values for the same doi+data_id
 
-
-# 00?: add a secondary identifier for EBI repo ----------------------------
-
-# load
-load_latest_metadata_update() # call function to load latest version
-
-# get EBI (ena) prefixes
-prefixes <- c("prj", "erp", "samea", "ers", "err", "erx", "erz", "cab", "gca", "cm", "erc", "taxon")
-
-# get ids with thie prefixes to understand how many are there
-
-no_secondary_id <- datasets_metadata_master_updated_003 |>
-  dplyr::filter(str_starts(data_id_merged, str_c("^(", str_c(prefixes, collapse = "|"), ")"))) |> 
-  select(data_id_merged) |> 
-  distinct()
+datasets_metadata_master_updated_005 <- datasets_metadata_master_updated_005 |>
+  mutate(
+    data_availability_statement = case_when(
+      doi == "10.1038/s41597-022-01806-4" &
+        data_id_merged == "10.18112/openneuro.ds001226" ~ "yes",
+      .default = data_availability_statement
+    )
+  )
 
 # save
-write_csv_cr(no_secondary_id,
-             file = here("data",
-                         "verification",
-                         "metadata all",
-                         "datasets_metadata_master_updated",
-                         "tables to fill",
-                         "no_secondary_id.csv"),
-             row.names = FALSE)
+metadata_update(datasets_metadata_master_updated_005) # call function to save as csv, xlsx, rda
+
+# 006: add non-matched metadata ----------------------------
+
+load_latest_metadata_update() # call function to load latest version
 
 
-# 00? add data articles metadata ------------------------------------------
+# load filled file
+not_in_dcc_filled <- read_excel(here("data",
+                                 "verification",
+                                 "metadata all",
+                                 "datasets_metadata_master_updated",
+                                 "filled tables",
+                                 "sample_200_ids_no_citation_v14.xlsx"))
 
-# Not sure I need this if Blanka will take care of this:
+# prepare for joining
+
+not_in_dcc_filled_for_joining <- not_in_dcc_filled |> 
+  select(doi, data_id_merged, ...) |> 
+  mutate(data_availability_statement = case_when(
+    `dataset mentioned in DAS` == "1" ~ "yes"
+  ))
+
+
+
+# 007: rename, remove and create columns ----------------------------
+
+# rename / remove / create according to the instructions below:
+  # unique_id - remove
+  # doi -> doi_charite
+  # doi_no_ver_info - keep
+  # data_id -> data_identifier_orig_1st_entry
+  # data_id_auto_cleaned - keep
+  # data_id_no_ex_chr - remove
+  # data_id_m_val - keep
+  # data_id_merged -> dataset_for_matching
+  # data_access
+  # in_dashboard
+  # source -> data_id_source
+  # listed_in_numbat_output - remove
+  # validated - remove
+  # Category -> category
+  # covid_related
+  # human_data
+  # dataset_is_doi - if same as category then remove
+  # repository
+  # in_dcc
+  # data_availability_statement
+  # charite_id_year
+  # license
+  # create (left_join) "is_gen_rep"
+
+
+# 00? add data articles metadata? ------------------------------------------
+
+
+
+# add only if Blanka didn't already added metadata for data articles in matched / non-matched:
 
 # data_articles_ids <- read_excel(file.path(here("data",
 #                                                "raw",
@@ -291,13 +347,3 @@ write_csv_cr(no_secondary_id,
 #   mutate(across(everything(), tolower)) |> # tolower
 #   select(doi, data_identifier, license) |> # get only relevant columns: charite data article and dataset id
 #   dplyr::filter(!data_identifier == "n/a") # remove NAs
-
-
-# 00? add more metadata of non-matched ids --------------------------------
-
-
-# load added metadata
-
-
-
-# add

@@ -32,6 +32,37 @@ write_csv_cr <- function(x, file, ...) {
   write.csv(x, file = file, ...)
 } # wrapper for write.csv() with automatic directory creation
 
+# fucntion to load latest metadata version
+
+load_latest_metadata_update <- function() {
+  # Define target directory using here()
+  rda_dir <- here("data", "verification", "metadata all", "datasets_metadata_master_updated", "rda")
+  
+  # List all .RData files
+  files <- list.files(rda_dir, pattern = "\\.RData$", full.names = TRUE)
+  
+  # Extract numeric suffixes from filenames
+  suffixes <- sub(".*_([0-9]+)\\.RData$", "\\1", files)
+  suffixes_num <- as.integer(suffixes)
+  
+  # Find file with highest suffix
+  max_index <- which.max(suffixes_num)
+  latest_file <- files[max_index]
+  
+  # Load the file
+  loaded_vars <- load(latest_file, envir = .GlobalEnv)
+  
+  # Extract and print the base file name without extension
+  file_base <- tools::file_path_sans_ext(basename(latest_file))
+  current_suffix <- sub(".*_(\\d+)$", "\\1", file_base)
+  next_suffix <- sprintf("%03d", as.integer(current_suffix) + 1)
+  next_file_base <- sub("_(\\d+)$", paste0("_", next_suffix), file_base)
+  message("✅ Loaded: ", file_base, "\nNext file version: ", next_file_base)
+  
+  # Return the object invisibly
+  invisible(get(loaded_vars[1], envir = .GlobalEnv))
+}
+
 ```
 
 # 1. Loading Raw Inputs of Charite's list
@@ -588,7 +619,28 @@ write_csv_cr(
 
 # add secondary identifier, where it exists
 
-# load secondary id info
+# # load latest id metadata file
+# load_latest_metadata_update()
+# 
+# # get EBI (ena) prefixes
+# prefixes <- c("prj", "erp", "samea", "ers", "err", "erx", "erz", "cab", "gca", "cm", "erc", "taxon")
+# 
+# # get ids with these prefixes to understand how many are there
+# 
+# no_secondary_id <- datasets_metadata_master_updated_003 |>
+#   dplyr::filter(str_starts(data_id_merged, str_c("^(", str_c(prefixes, collapse = "|"), ")"))) |> 
+#   select(data_id_merged) |> 
+#   distinct()
+# 
+# # save
+# write_csv_cr(no_secondary_id,
+#              file = here("data",
+#                          "verification",
+#                          "2nd_id",
+#                          "no_secondary_id.csv"),
+#              row.names = FALSE)
+
+# load secondary id info once it's filled
 secondary_ids <- read.csv(
   file.path(here("data", "verification", "2nd_id", "secondary_id_filled.csv")),
   header = TRUE,
