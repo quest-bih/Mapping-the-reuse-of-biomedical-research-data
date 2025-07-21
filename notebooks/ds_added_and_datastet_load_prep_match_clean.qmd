@@ -386,7 +386,7 @@ dcc_ds_and_added_joined_1_rm_self <- dcc_ds_and_added_joined |>
 save_cr(dcc_ds_and_added_joined_1_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
                                                        "dcc_ds_and_added_joined_1_rm_self.RData")))
 
-### 2. Exclude cases that are not datasets
+### 2. Initial exclusion of cases that are clearly not datasets
 
 # create a list of detected values to verify
 dois_ids_grouped <- dcc_ds_and_added_joined_1_rm_self |> select(doi_dcc,dataset_for_matching) |> group_by(dataset_for_matching) |> summarise(n=n())
@@ -497,7 +497,7 @@ dcc_of_ds_and_added_dois_metadata <- dcc_of_ds_and_added_dois_metadata |>
 
 # Join info into dcc-charite list
 
-dcc_ds_and_added_joined_3_au_info <- dcc_ds_and_added_joined_2_rm_self |> 
+dcc_ds_and_added_joined_3_au_info <- dcc_ds_and_added_joined_1_rm_self |> 
   left_join(ds_and_added_dois_metadata, by = "doi_datastet_and_added", suffix = c("", "_datastet_and_added")) |> 
   left_join(dcc_of_ds_and_added_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
   rename(publication_year_datastet_and_added = publication_year,
@@ -518,14 +518,26 @@ dcc_ds_and_added_joined_3_au_info |> dplyr::filter(is.na(publication_year_datast
   View() # there are some NAs
 
 
-# Add missing cases manually
+# I checked all missing cases manually, and they are all abstracts, posters, oral presentations or non-resolved dois.
+# Therefore, I'll exclude them as well
 
+# get missing cases
+dcc_ds_and_added_joined_3_au_info <-  dcc_ds_and_added_joined_3_au_info |>
+  dplyr::filter(!is.na(authors_dcc)) |> # this condition includes all cases to remove
+  distinct()
+
+# check again
+dcc_ds_and_added_joined_3_au_info |> dplyr::filter(is.na(publication_year_datastet_and_added)
+                                              | is.na(authors_datastet_and_added)
+                                              | is.na(publication_year_dcc)
+                                              | is.na(authors_dcc)) |>
+  View() # no NAs
 
 # save
 save_cr(dcc_ds_and_added_joined_3_au_info, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
                                                         "dcc_ds_and_added_joined_3_au_info.RData")))
 
-### 4. Excluding  cases with authors overlap:
+### 4. Excluding cases with authors overlap:
 
 # Function to check if there are no common elements between two semicolon-separated strings
 no_common_element <- function(x, y) {
@@ -540,6 +552,41 @@ dcc_ds_and_added_joined_4_rm_au_ov <- dcc_ds_and_added_joined_3_au_info  |>
   distinct(doi_datastet_and_added, dataset_for_matching, doi_dcc, .keep_all = TRUE)
 
 # save
-save_cr(dcc_datastet_and_added_4_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
-                                                        "dcc_datastet_and_added_4_rm_au_ov.RData")))
+save_cr(dcc_ds_and_added_joined_4_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_ds_and_added_joined_4_rm_au_ov.RData")))
+
+
+  ### Write an xlsx file to fill with the following info:
+  # 1. is it a real dataset
+  # 2. is the dataset open-data
+  # 3. metadata for relevant cases
+  #
+  # Writing the xlsx file is done in sanity_check.R
+
+### 5.Excluding non-ids and non-OD cases
+
+# Load info from the filled "charite_dois_ids_distinct_v1.xlsx" file
+
+# NOTE: this file includes some redundant cases:
+# These are the NA cases that were removed in _joined_3_au_info (but only after creating the xlsx file).
+# It's not relevant or changing anything, since these cases don't exist in _joined_4_rm_au_ov, and therefore will be ignored in the left join. It was just a bit of extra work for the extractors, unfortunaltely.
+
+# charite_dois_ids_distinct_filled <- read_excel(here("data",
+#                                                     "verification",
+#                                                     "datastet_and_added_summarised",
+#                                                     "charite_dois_ids_distinct_v1.xlsx"))
+# # prepare table to filter by (od_ids)
+# 
+#   # exclude non-ids
+#   # exclude non-OD
+#   # select relevant columns
+# 
+# 
+# dcc_ds_and_added_joined_5_od_ids <- dcc_ds_and_added_joined_4_rm_au_ov |> 
+#   dplyr::filter(dataset_for_matching %in% od_ids$dataset_for_matching) 
+#
+# # save
+# save_cr(dcc_ds_and_added_joined_5_od_ids, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+#                                                         "dcc_ds_and_added_joined_5_od_ids.RData")))
+
 ```
