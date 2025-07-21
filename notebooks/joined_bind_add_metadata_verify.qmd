@@ -44,13 +44,11 @@ load(here("data",
           "dcc_charite",
           "dcc_charite_joined_4_rm_au_ov.RData"))
 
-
-##### REPLACE WITH REAL JOINED!
 # load joined dcc datastet and added
 load(here("data",
           "wrangling_steps",
           "dcc_datastet_and_added",
-          "dcc_ds_and_added_joined_1_rm_self.RData")) 
+          "dcc_ds_and_added_joined_5_od_ids.RData")) 
 
 ```
 
@@ -62,23 +60,23 @@ load(here("data",
 
 # Get column names that exist only in each joined list
 
-only_in_dcc_ds <- setdiff(colnames(dcc_ds_and_added_joined_1_rm_self),
+only_in_dcc_ds <- setdiff(colnames(dcc_ds_and_added_joined_5_od_ids),
                           colnames(dcc_charite_joined_4_rm_au_ov))
 
 only_in_dcc_charite <- setdiff(colnames(dcc_charite_joined_4_rm_au_ov),
-                               colnames(dcc_ds_and_added_joined_1_rm_self))
+                               colnames(dcc_ds_and_added_joined_5_od_ids))
 
 # View different column names between the lists
 tibble(
   # left column: values only in dcc_ds, padded with NA if dcc_charite has more entries
-  dcc_ds_and_added_joined_1_rm_self = c(only_in_df1, rep(NA, max(0, length(only_in_df2) - length(only_in_df1)))),
+  dcc_ds_and_added_joined_5_od_ids = c(only_in_dcc_ds, rep(NA, max(0, length(only_in_dcc_charite) - length(only_in_dcc_ds)))),
   # right column: opposite
-  dcc_charite_joined_4_rm_au_ov     = c(only_in_df2, rep(NA, max(0, length(only_in_df1) - length(only_in_df2))))
+  dcc_charite_joined_4_rm_au_ov     = c(only_in_dcc_charite, rep(NA, max(0, length(only_in_dcc_ds) - length(only_in_dcc_charite))))
 ) |> View()
 
 # Rename columns in dcc_ds to match dcc_charite columns (just because their were named first)
 
-dcc_ds_for_binding <- dcc_ds_and_added_joined_1_rm_self |> 
+dcc_ds_for_binding <- dcc_ds_and_added_joined_5_od_ids |> 
   rename(
     
     # renaming columns to the dcc_charite column names (which will merge them when binding)
@@ -87,6 +85,9 @@ dcc_ds_for_binding <- dcc_ds_and_added_joined_1_rm_self |>
     slug_charite = slug_datastet_and_added,
     data_id_m_val = m_val,
     data_id_source = source_datastet_and_added,
+    publication_year_charite = publication_year_datastet_and_added,
+    authors_charite = authors_datastet_and_added,
+
     
     # renaming columns in order to keep their source apparent
     doi_year_from_datastet = year, # to mark that this column originated from Datastet source file
@@ -113,8 +114,7 @@ dcc_charite_for_binding <- dcc_charite_joined_4_rm_au_ov |>
           listed_in_numbat_output, # relevant only for data articles values and values here are all FALSE
           data_identifier_orig_2nd_entrie)) # in the matched list (and only there), this column is the same as 1st_entry
           
-      
-# bind
+# 2. Bind
 
 dcc_detected_ids_all_sources <- bind_rows(
   dcc_charite_for_binding,
@@ -122,6 +122,13 @@ dcc_detected_ids_all_sources <- bind_rows(
 )
 
 # save
+save_cr(dcc_detected_ids_all_sources, file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+                                                        "dcc_detected_ids_all_sources_1_binded.RData")))
+
+
+
+
+
 
 ```
 
@@ -145,6 +152,17 @@ dcc_detected_ids_all_sources <- bind_rows(
 # 4. Verify Results
 
 ```{r Verify results}
+
+
+# 1. Check for contradictory datastet metadata for the same charite id
+
+dcc_detected_ids_all_sources |> 
+  select(doi_charite, doi_year_from_datastet) |>
+  distinct() |> 
+  group_by(doi_charite) |> 
+  summarise(n = n()) |> 
+  dplyr::filter(n>1) |> 
+  View()
 
 
 ```
