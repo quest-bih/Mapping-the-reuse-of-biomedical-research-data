@@ -5,6 +5,37 @@ if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, readxl)
 
+# fucntion to load latest metadata version
+
+load_latest_metadata_update <- function() {
+  # Define target directory using here()
+  rda_dir <- here("data", "verification", "metadata all", "datasets_metadata_master_updated", "rda")
+  
+  # List all .RData files
+  files <- list.files(rda_dir, pattern = "\\.RData$", full.names = TRUE)
+  
+  # Extract numeric suffixes from filenames
+  suffixes <- sub(".*_([0-9]+)\\.RData$", "\\1", files)
+  suffixes_num <- as.integer(suffixes)
+  
+  # Find file with highest suffix
+  max_index <- which.max(suffixes_num)
+  latest_file <- files[max_index]
+  
+  # Load the file
+  loaded_vars <- load(latest_file, envir = .GlobalEnv)
+  
+  # Extract and print the base file name without extension
+  file_base <- tools::file_path_sans_ext(basename(latest_file))
+  current_suffix <- sub(".*_(\\d+)$", "\\1", file_base)
+  next_suffix <- sprintf("%03d", as.integer(current_suffix) + 1)
+  next_file_base <- sub("_(\\d+)$", paste0("_", next_suffix), file_base)
+  message("✅ Loaded: ", file_base, "\nNext file version: ", next_file_base)
+  
+  # Return the object invisibly
+  invisible(get(loaded_vars[1], envir = .GlobalEnv))
+}
+
 
 # 1. Sample 30 cases to check feasibility ---------------------------------
 
@@ -260,7 +291,7 @@ sample_1_replacement_case <- datasets_metadata_master_updated_005 |>
   dplyr::filter(!data_id_merged %in% sample_3$data_id_merged) |> # not in the 3 sample
   dplyr::filter(!data_id_merged %in% sample_12$data_id_merged) |> # not in the 12 sample
   dplyr::filter(!doi %in% only_au_ov$doi_charite) |> # not in author overlap
-  sample_n(1) |> # sample 12
+  sample_n(1) |> # sample 1
   select(
     unique_id,
     doi,
@@ -296,6 +327,31 @@ write_csv_cr(sample_1_replacement_case,
                "verification of sample",
                "sample_1_replacement_case.csv")),
              row.names = F)
+
+
+# sample 1 more dataset ---------------------------------------------------
+
+# 10.5281/zenodo.1197578 was accidentally twice in the list!
+
+load_latest_metadata_update() # call function to load latest version
+
+sample_1_more_case <- datasets_metadata_master_updated_008 |> 
+  dplyr::filter(is.na(human_data)
+                & is.na(covid_related)
+                & is.na(data_availability_statement)
+                & is.na(license)) |>
+  sample_n(1) |> # sample 1
+  select(doi_charite, dataset_for_matching, data_availability_statement, human_data, covid_related, license)
+  
+# save
+write_csv_cr(sample_1_more_case,
+             file = file.path(here(
+               "data",
+               "verification",
+               "verification of sample",
+               "sample_1_more_case.csv")),
+             row.names = F)
+
 
 # TBD: replace "non-matched" if needed ------------------------------------
 

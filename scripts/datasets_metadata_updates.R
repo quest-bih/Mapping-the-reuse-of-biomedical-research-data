@@ -295,55 +295,169 @@ not_in_dcc_filled <- read_excel(here("data",
 # prepare for joining
 
 not_in_dcc_filled_for_joining <- not_in_dcc_filled |> 
-  select(doi, data_id_merged, ...) |> 
-  mutate(data_availability_statement = case_when(
-    `dataset mentioned in DAS` == "1" ~ "yes"
-  ))
+  select(doi, data_id_merged, `covid`, `human data`, `dataset mentioned in DAS`, license) |> 
+  mutate(
+    data_availability_statement = case_when(
+      `dataset mentioned in DAS` == "1" ~ "TRUE",
+      `dataset mentioned in DAS` == "0" ~ "FALSE",
+      .default = as.character(`dataset mentioned in DAS`)),
+    human_data = case_when(
+      `human data` == "1" ~ "TRUE",
+      `human data` == "0" ~ "FALSE",
+      .default = as.character(`human data`)),
+    covid_related = case_when(
+      `covid` == "1" ~ "TRUE",
+      `covid` == "0" ~ "FALSE",
+      .default = as.character(`covid`)),
+    license = case_when(
+      license == "0" ~ "no license",
+      .default = license)) |> 
+  select(-c(`dataset mentioned in DAS`, `human data`, `covid`))
+
+# join
+
+datasets_metadata_master_updated_006 <- datasets_metadata_master_updated_005 |> 
+  left_join(not_in_dcc_filled_for_joining,
+            by = c("doi", "data_id_merged")) |> 
+  mutate(
+    license = coalesce(license.y, license.x),
+    data_availability_statement = coalesce(data_availability_statement.y, data_availability_statement.x),
+    human_data = coalesce(human_data.y, human_data.x),
+    covid_related = coalesce(covid_related.y, covid_related.x) # get new value unless the new value is NA, then fall back to old value
+  ) |>
+  select(-license.x, -license.y, 
+         -data_availability_statement.x, -data_availability_statement.y,
+         -human_data.x, -human_data.y,
+         -covid_related.x, -covid_related.y)
+
+# there were 4 cases where some metadata was not there to begin with:
+left_to_fill <- not_in_dcc_filled |>
+  dplyr::filter(is.na(`human data`)
+                | is.na(`dataset mentioned in DAS`)
+                | is.na(`covid`)
+                | is.na(`license`)) |>
+  select(doi, data_id_merged, `human data`, `dataset mentioned in DAS`, `covid`, `license`)
+
+# I'll add it in a separate step, once I get it.
+
+# save
+metadata_update(datasets_metadata_master_updated_006) # call function to save as csv, xlsx, rda
+
+# 007: restructure table ----------------------------
+
+load_latest_metadata_update() # call function to load latest version
+
+datasets_metadata_master_updated_007 <- datasets_metadata_master_updated_006 |>
+  # remove redundant columns
+  select(-c(data_id_no_ex_chr, validated, dataset_is_doi, Category)) |> 
+  # rename columns to fit dcc-charite joined tables
+  rename(
+    doi_charite = doi,
+    data_identifier_orig_1st_entry = data_id,
+    dataset_for_matching = data_id_merged,
+    data_id_source = source
+  ) |> 
+  # create "orig_id_is_doi" and "is_gen_rep" by "data_identifier_orig_1st_entry" value
+  mutate(
+    orig_id_is_doi = case_when(
+      str_detect(data_identifier_orig_1st_entry, fixed("10.")) ~ "TRUE",
+      .default = "FALSE"),
+    is_gen_rep = case_when(
+      str_detect(data_identifier_orig_1st_entry, regex("zenodo|figshare|dryad|mendeley|harvard|osf")) ~ "TRUE",
+      .default = "FALSE"),
+    # if dataset_for_matching starts with "10.17605/osf.io/", convert the value to "osf_*slug*"
+    dataset_for_matching = case_when(
+      str_starts(dataset_for_matching, "10.17605/osf.io/")
+      ~ str_c("osf_", str_remove(dataset_for_matching, "10.17605/osf.io/")),
+      .default = dataset_for_matching
+    ))
+
+# save
+metadata_update(datasets_metadata_master_updated_007) # call function to save as csv, xlsx, rda
+  
+# 008 add data articles metadata, where missing ------------------------------------------
+
+load_latest_metadata_update() # call function to load latest version
+
+# load Blanka'ss data articles file
+data_articles_ids <- read_excel(file.path(here("data",
+                                               "raw",
+                                               "data_articles",
+                                               "v10"),
+                                          "datajournal_articles - analysis of citations v10.xlsx"),
+                                sheet = "datasets_repos") |> # load relevant sheet from xlsx
+  rename(doi_charite = `Charité article DOI`,
+         data_identifier_orig_1st_entry = `dataset DOI, accession code, or link`) |>  # rename columns to meach numbat list later
+  mutate(across(everything(), tolower)) |> # tolower
+  select(doi_charite, data_identifier_orig_1st_entry, license) |> # get only relevant columns: charite data article and dataset id
+  dplyr::filter(!data_identifier_orig_1st_entry == "n/a")
+
+# check what's missing
+data_articles_ids |>
+  inner_join(datasets_metadata_master_updated_008, by = c("doi_charite", "data_identifier_orig_1st_entry")) |>
+  select(doi_charite, dataset_for_matching, license.x, license.y) |> View()
+
+# add manually
+
+datasets_metadata_master_updated_008 <- datasets_metadata_master_updated_007 |> 
+  mutate(license = case_when(
+    dataset_for_matching %in% c("srp136594", "ccrp136594", "ghnv00000000", "gse173610") ~ "no license",
+    dataset_for_matching %in% c("10.6084/m9.figshare.c.4869732", "pxd016782") ~ "cc0",
+    dataset_for_matching %in% c("10.6084/m9.figshare.c.5222051", "10.6084/m9.figshare.19316219", "10.6084/m9.figshare.19255067") ~ "cc-by",
+    .default = license))
+
+# save
+metadata_update(datasets_metadata_master_updated_008) # call function to save as csv, xlsx, rda
+
+# 009: complete metadata of 200 non-matched cases -------------------
+
+load_latest_metadata_update() # call function to load latest version
+
+# change entries manually
+datasets_metadata_master_updated_009 <- datasets_metadata_master_updated_008 |> 
+  mutate(
+    data_availability_statement = case_when(
+      dataset_for_matching == "pxd036786" ~ "TRUE",
+      dataset_for_matching == "prjna413158" ~ "TRUE",
+      dataset_for_matching == "10.5281/zenodo.7889352" ~ "TRUE",
+      dataset_for_matching == "e-mtab-8521" ~ "TRUE",
+      dataset_for_matching == "gse148720" ~ "FALSE",
+      .default = data_availability_statement
+    ),
+    human_data = case_when(
+      dataset_for_matching == "pxd036786" ~ "TRUE",
+      dataset_for_matching == "prjna413158" ~ "TRUE",
+      dataset_for_matching == "10.5281/zenodo.7889352" ~ "TRUE",
+      dataset_for_matching == "e-mtab-8521" ~ "FALSE",
+      dataset_for_matching == "gse148720" ~ "FALSE",
+      .default = human_data
+      ),
+    covid_related = case_when(
+      dataset_for_matching == "pxd036786" ~ "FALSE",
+      dataset_for_matching == "prjna413158" ~ "FALSE",
+      dataset_for_matching == "10.5281/zenodo.7889352" ~ "FALSE",
+      dataset_for_matching == "e-mtab-8521" ~ "FALSE",
+      dataset_for_matching == "gse148720" ~ "FALSE",
+      .default = covid_related
+    ),
+    license = case_when(
+      dataset_for_matching == "pxd036786" ~ "cc0",
+      dataset_for_matching == "prjna413158" ~ "no license",
+      dataset_for_matching == "10.5281/zenodo.7889352" ~ "cc-by",
+      dataset_for_matching == "e-mtab-8521" ~ "no license",
+      dataset_for_matching == "gse148720" ~ "no license",
+      .default = license
+    )
+  )
 
 
-
-# 007: rename, remove and create columns ----------------------------
-
-# rename / remove / create according to the instructions below:
-  # unique_id - remove
-  # doi -> doi_charite
-  # doi_no_ver_info - keep
-  # data_id -> data_identifier_orig_1st_entry
-  # data_id_auto_cleaned - keep
-  # data_id_no_ex_chr - remove
-  # data_id_m_val - keep
-  # data_id_merged -> dataset_for_matching
-  # data_access
-  # in_dashboard
-  # source -> data_id_source
-  # listed_in_numbat_output - remove
-  # validated - remove
-  # Category -> category
-  # covid_related
-  # human_data
-  # dataset_is_doi - if same as category then remove
-  # repository
-  # in_dcc
-  # data_availability_statement
-  # charite_id_year
-  # license
-  # create (left_join) "is_gen_rep"
+# save
+metadata_update(datasets_metadata_master_updated_009) # call function to save as csv, xlsx, rda
 
 
-# 00? add data articles metadata? ------------------------------------------
+# 010: standardize metadata values ----------------------------------------
 
-
-
-# add only if Blanka didn't already added metadata for data articles in matched / non-matched:
-
-# data_articles_ids <- read_excel(file.path(here("data",
-#                                                "raw",
-#                                                "data_articles",
-#                                                "v10"),
-#                                           "datajournal_articles - analysis of citations v10.xlsx"),
-#                                 sheet = "datasets_repos") |> # load relevant sheet from xlsx
-#   rename(doi = `Charité article DOI`,
-#          data_identifier = `dataset DOI, accession code, or link`) |>  # rename columns to meach numbat list later
-#   mutate(across(everything(), tolower)) |> # tolower
-#   select(doi, data_identifier, license) |> # get only relevant columns: charite data article and dataset id
-#   dplyr::filter(!data_identifier == "n/a") # remove NAs
+# to lower 
+# CC BY -> cc-by
+# DAS: yes -> "TRUE"; no -> "FALSE"
+#
