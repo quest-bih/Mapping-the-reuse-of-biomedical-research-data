@@ -457,7 +457,75 @@ metadata_update(datasets_metadata_master_updated_009) # call function to save as
 
 # 010: standardize metadata values ----------------------------------------
 
-# to lower 
-# CC BY -> cc-by
-# DAS: yes -> "TRUE"; no -> "FALSE"
-#
+load_latest_metadata_update() # call function to load latest version
+
+# check col types
+str(datasets_metadata_master_updated_009)
+
+# convert logi cols to to chr
+datasets_metadata_master_updated_in_process <- datasets_metadata_master_updated_009 |> 
+  mutate(in_dashboard = as.character(in_dashboard),
+         listed_in_numbat_output = as.character(listed_in_numbat_output))
+
+# check unique values of relevant columns: overview
+datasets_metadata_master_updated_in_process |>
+  select(7:last_col()) |>
+  select(-charite_id_year) |> 
+  map(~ as.character(unique(.x))) |>   # Coerce to character
+  enframe(name = "column", value = "unique_values") |>
+  View()
+
+# check all unique values of license, data_availability_statement and repository
+datasets_metadata_master_updated_in_process |> select(license) |> unique()
+datasets_metadata_master_updated_in_process |> select(data_availability_statement) |> unique()
+datasets_metadata_master_updated_in_process |> select(repository) |> unique()
+
+datasets_metadata_master_updated_010 <- datasets_metadata_master_updated_in_process |>
+  mutate(
+    das_for_analysis = case_when(
+      is.na(data_availability_statement) ~ NA_character_,
+      data_availability_statement %in% c("TRUE", "yes") ~ "TRUE",
+      .default = "FALSE"
+    ),
+    license_for_analysis = case_when(
+      is.na(license) ~ NA_character_,
+      license %in% c("CC0", "cc0", "CC BY", "cc-by", "CC BY-NC", "CC BY;CC0", "CC BY-NC-SA", "CC BY-NC-ND", "GNU GPLv3", "MIT", "GNU") ~ "TRUE",
+      .default = "FALSE"
+    )
+  )
+
+# save
+metadata_update(datasets_metadata_master_updated_010) # call function to save as csv, xlsx, rda
+
+
+# 011: add last matched metadata ------------------------------------------
+
+load_latest_metadata_update() # call function to load latest version
+
+# I created this table to fill NAs in:
+datasets_metadata_master_updated_010 |>
+  dplyr::filter(in_dcc == "TRUE") |>
+  select(doi_charite, data_identifier_orig_1st_entry, dataset_for_matching, license_for_analysis, data_access, covid_related) |>
+  distinct() |> 
+  dplyr::filter(
+    is.na(license_for_analysis)
+    | is.na(data_access)
+    | is.na(covid_related)) |> 
+  View()
+
+# and sent it here:
+# https://teams.microsoft.com/l/message/19:cba60d9f-88ed-4fe4-ac8c-0c0e5477dfee_efba9537-d132-44d8-bc1e-c7742bb99d78@unq.gbl.spaces/1753449258487?context=%7B%22contextType%22%3A%22chat%22%7D
+
+
+# load filled table
+
+
+# prepare for joining
+
+
+# join
+
+
+# save
+metadata_update(datasets_metadata_master_updated_011) # call function to save as csv, xlsx, rda
+
