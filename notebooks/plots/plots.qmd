@@ -58,8 +58,8 @@ combined_count_tibbles |>
   geom_bar(stat = "identity",
            position = "dodge",
            color = "black") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
+  # geom_bar(stat = "identity", fill = "gray30",
+  #          alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
   geom_text(aes(label = value), 
             vjust = -0.5, 
             size = 6, 
@@ -73,18 +73,16 @@ combined_count_tibbles |>
   theme_classic() +
   theme(
     legend.position = "none",
-    axis.title.x = element_text(size = 16),
-    axis.title.y = element_text(size = 16, margin = margin(r = 20)),  # space between y title and axis
-    axis.text.x = element_text(size = 16, angle = 45, hjust = 1),     # diagonal x labels
-    axis.text.y = element_text(size = 14),
-    strip.text = element_text(size = 16, margin = margin(b = 10), vjust = -0.5)
+    axis.title.x = element_text(size = 16, color = "black"),
+    axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.text.x = element_text(size = 16, color = "black", angle = 45, hjust = 1),     # diagonal x labels
+    axis.text.y = element_text(size = 14, color = "black"),
+    strip.text = element_text(size = 16, color = "black", margin = margin(b = 10), vjust = -0.5)
   ) +
   labs(
     x = "",
     y = "Count"
   )
-
-
 ```
 
 # Distribution Frequency of Datasets References
@@ -120,10 +118,10 @@ ds_freq |>
   theme_classic() +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(size = 16, margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 16, margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 14),
-    axis.text.x = element_text(size = 14)
+    axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 16, color = "black", margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 14, color = "black")
     )
 
 ```
@@ -137,6 +135,8 @@ ds_freq |>
 #| fig.height: 10
 #| fig.width: 10
 
+# # linear scale
+#
 # rep_dt |>
 #   ggplot(aes(x = reorder(repository, n), y = n)) +
 #   geom_bar(stat = "identity",
@@ -167,16 +167,13 @@ rep_dt |>
   ggplot(aes(x = reorder(repository, n), y = n)) +
   geom_bar(stat = "identity",
            position = "dodge",
-           fill = "#80CBC4",
-           color = "gray") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.015)) +  # Shadow
+           fill = "#80CBC4") +
   geom_text(aes(y = n, label = n),
             hjust = -0.2,
             size = 6, color = "black") +
   scale_y_log10(
-    breaks = c(1, 3, 10, 30, 100, 400),
-    labels = c(1, 3, 10, 30, 100, 400),
+    breaks = c(1, 3, 10, 30, 100, 300),
+    labels = c(1, 3, 10, 30, 100, 300),
     expand = expansion(mult = c(0.02, 0.15))
   ) +
   coord_flip() +
@@ -184,8 +181,8 @@ rep_dt |>
   theme_classic() +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(size = 24, margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 24, margin = margin(t = 20)),  # space between x title and axis
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
     axis.text.y = element_text(size = 20, color = "black"),
     axis.text.x = element_text(size = 20, color = "black"),
     panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
@@ -226,8 +223,8 @@ geom_text(
   theme_classic() +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(size = 24, margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 24, margin = margin(t = 20)),  # space between x title and axis
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
     axis.text.y = element_text(size = 16, color = "black"),
     axis.text.x = element_text(size = 16, color = "black")
     )
@@ -340,8 +337,8 @@ dif_for_plot |>
     theme_classic() +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(size = 20, margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 20, margin = margin(t = 20)),  # space between x title and axis
+    axis.title.y = element_text(size = 20, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 20, color = "black", margin = margin(t = 20)),  # space between x title and axis
     axis.text.y = element_text(size = 18, color = "black"),
     axis.text.x = element_text(size = 18, color = "black")
     )
@@ -374,6 +371,7 @@ dif_for_plot |>
 ```
 
 # DCC Publication years distribution
+
 ```{r}
 #| label: fig-dcc-pub-years
 #| fig-cap: DCC papers publication years distribution
@@ -406,12 +404,13 @@ dcc_years_dist_for_plot |>
   labs(x = "Year", y = "Number of Papers") +
   theme_classic() +
   theme(legend.position = "none",
-        axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12))
+        axis.text.x = element_text(size = 12, color = "black"),
+        axis.text.y = element_text(size = 12, color = "black"))
 
 ```
 
 # DCC Repositories distribution
+
 ```{r}
 #| label: fig-dcc-rep
 #| fig-cap: DCC repositories distribution
@@ -441,9 +440,9 @@ geom_text(aes(y = n + 2, label = perc),
   labs(x = "Repository", y = "Number of Cases") +
   theme_classic() +
   theme(
-    axis.title.x = element_text(size = 18),
-    axis.title.y = element_text(size = 18),
-    axis.text.x = element_text(size = 14),
-    axis.text.y = element_text(size = 14))  # Adjust size as needed
+    axis.title.x = element_text(size = 18, color = "black"),
+    axis.title.y = element_text(size = 18, color = "black"),
+    axis.text.x = element_text(size = 14, color = "black"),
+    axis.text.y = element_text(size = 14, color = "black"))  # Adjust size as needed
 
 ```
