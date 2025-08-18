@@ -65,16 +65,16 @@ datasets_metadata_master_latest <- load_latest_metadata_update() # call function
 
 # Load _4 for counting with author overlap:
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_4_au_info.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_3_au_info.RData"))
 
 # Load the most recent .RData file from the data\processed directory and assign it to "dcc_charite_joined_final"
 
 # Assign the loaded object to a new variable name
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_8_ds_added_years.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_5_w_metadata.RData"))
 
-dcc_charite_joined_final <- dcc_charite_joined_8_ds_added_years
-rm(dcc_charite_joined_8_ds_added_years)
+dcc_charite_joined_final <- dcc_charite_joined_5_w_metadata
+rm(dcc_charite_joined_5_w_metadata)
 ```
 
 <br>
@@ -94,13 +94,13 @@ counts_final <- tibble(
 
 # 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
 
-# I'll use dcc_charite_joined_4_au_info to count, since it is one step before excluding author overlap cases.
+# I'll use dcc_charite_joined_3_au_info to count, since it is one step before excluding author overlap cases.
 
 # However, I need to *exclude* cases where the author overlap is a result of the same paper that is present once as a preprint (as "doi_charite") and once as a publication (as "doi_dcc").
 
 # So I'll first create a table with the cases suspected of being preprint-publication cases and check them for author overlap:
 
-dcc_charite_blank_journals <- dcc_charite_joined_4_au_info |> # get all cases from the step before "author overlap exclusion" step
+dcc_charite_blank_journals <- dcc_charite_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
   dplyr::filter(journal == "") |> # get only cases where there's no journal information, because most of them are preprint cases
   rowwise()  |> 
   mutate(
@@ -138,7 +138,7 @@ dcc_charite_blank_journals_exact_overlap <- dcc_charite_blank_journals |>
 
 # Now I'll look for author overlap cases in general:
 
-dcc_charite_all_exact_overlap <- dcc_charite_joined_4_au_info |> # get all cases from the step before "author overlap exclusion" step
+dcc_charite_all_exact_overlap <- dcc_charite_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
   dplyr::filter(authors_dcc == authors_charite) |> 
   select(doi_charite, doi_dcc) |> 
   distinct()
@@ -153,7 +153,7 @@ cases_to_remove <- dcc_charite_blank_journals_exact_overlap |>
 
 # Remove those preprint-publication cases
 
-dcc_charite_joined_w_au_ov <- dcc_charite_joined_4_au_info |> 
+dcc_charite_joined_w_au_ov <- dcc_charite_joined_3_au_info |> 
   anti_join(cases_to_remove, by = c("doi_charite", "doi_dcc")) 
 
 # Get counts
@@ -360,27 +360,27 @@ So I could plot 1/2/3 years difference on x axis, and then how many mentions for
 
 ```{r}
 
-# ds_age_cit_cor_prep <- dcc_charite_joined_final |> 
-#   select(data_id_merged, doi_dcc, publication_year_dcc, charite_id_year) |> 
-#   dplyr::filter(charite_id_year > 2019) |> 
-#   mutate(ds_age_when_cited = publication_year_dcc - charite_id_year) |>
-#   count(ds_age_when_cited, data_id_merged, name = "n_citations") |> 
-#   dplyr::filter(ds_age_when_cited >= 0) 
-# 
-# ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
-#   group_by(data_id_merged) |>
-#   dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
-#   ungroup()
-# 
-# # model
-# 
-# model_nb <- glmmTMB(
-#   n_citations ~ ds_age_when_cited + (1 | data_id_merged),
-#   data = df,
-#   family = nbinom2
-# )
-# 
-# summary(model_nb)
+ds_age_cit_cor_prep <- dcc_charite_joined_final |>
+  select(data_id_merged, doi_dcc, publication_year_dcc, charite_id_year) |>
+  dplyr::filter(charite_id_year > 2019) |>
+  mutate(ds_age_when_cited = publication_year_dcc - charite_id_year) |>
+  count(ds_age_when_cited, data_id_merged, name = "n_citations") |>
+  dplyr::filter(ds_age_when_cited >= 0)
+
+ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
+  group_by(data_id_merged) |>
+  dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
+  ungroup()
+
+# model
+
+model_nb <- glmmTMB(
+  n_citations ~ ds_age_when_cited + (1 | data_id_merged),
+  data = df,
+  family = nbinom2
+)
+
+summary(model_nb)
 ```
 
 # comparisons between referenced and non-referenced datasets properties

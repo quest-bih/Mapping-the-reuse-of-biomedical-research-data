@@ -32,6 +32,37 @@ write_csv_cr <- function(x, file, ...) {
   write.csv(x, file = file, ...)
 } # wrapper for write.csv() with automatic directory creation
 
+# fucntion to load latest metadata version
+
+load_latest_metadata_update <- function() {
+  # Define target directory using here()
+  rda_dir <- here("data", "verification", "metadata all", "datasets_metadata_master_updated", "rda")
+  
+  # List all .RData files
+  files <- list.files(rda_dir, pattern = "\\.RData$", full.names = TRUE)
+  
+  # Extract numeric suffixes from filenames
+  suffixes <- sub(".*_([0-9]+)\\.RData$", "\\1", files)
+  suffixes_num <- as.integer(suffixes)
+  
+  # Find file with highest suffix
+  max_index <- which.max(suffixes_num)
+  latest_file <- files[max_index]
+  
+  # Load the file
+  loaded_vars <- load(latest_file, envir = .GlobalEnv)
+  
+  # Extract and print the base file name without extension
+  file_base <- tools::file_path_sans_ext(basename(latest_file))
+  current_suffix <- sub(".*_(\\d+)$", "\\1", file_base)
+  next_suffix <- sprintf("%03d", as.integer(current_suffix) + 1)
+  next_file_base <- sub("_(\\d+)$", paste0("_", next_suffix), file_base)
+  message("✅ Loaded: ", file_base, "\nNext file version: ", next_file_base)
+  
+  # Return the object invisibly
+  invisible(get(loaded_vars[1], envir = .GlobalEnv))
+}
+
 ```
 
 # 1. Loading 2 joined lists of 4 sources (numbat, data articles, datastet, added ids)
@@ -44,11 +75,15 @@ load(here("data",
           "dcc_charite",
           "dcc_charite_joined_4_rm_au_ov.RData"))
 
+dcc_charite_joined_final <- dcc_charite_joined_4_rm_au_ov
+
 # load joined dcc datastet and added
 load(here("data",
           "wrangling_steps",
           "dcc_datastet_and_added",
-          "dcc_ds_and_added_joined_5_od_ids.RData")) 
+          "dcc_ds_and_added_joined_4_rm_au_ov.RData")) # CHANGE TO THE MOST RECENT!
+
+dcc_ds_joined_final <- dcc_ds_and_added_joined_4_rm_au_ov
 
 ```
 
@@ -60,23 +95,23 @@ load(here("data",
 
 # Get column names that exist only in each joined list
 
-only_in_dcc_ds <- setdiff(colnames(dcc_ds_and_added_joined_5_od_ids),
-                          colnames(dcc_charite_joined_4_rm_au_ov))
+only_in_dcc_ds <- setdiff(colnames(dcc_ds_joined_final),
+                          colnames(dcc_charite_joined_final))
 
-only_in_dcc_charite <- setdiff(colnames(dcc_charite_joined_4_rm_au_ov),
-                               colnames(dcc_ds_and_added_joined_5_od_ids))
+only_in_dcc_charite <- setdiff(colnames(dcc_charite_joined_final),
+                               colnames(dcc_ds_joined_final))
 
 # View different column names between the lists
 tibble(
   # left column: values only in dcc_ds, padded with NA if dcc_charite has more entries
-  dcc_ds_and_added_joined_5_od_ids = c(only_in_dcc_ds, rep(NA, max(0, length(only_in_dcc_charite) - length(only_in_dcc_ds)))),
+  dcc_ds_joined_final = c(only_in_dcc_ds, rep(NA, max(0, length(only_in_dcc_charite) - length(only_in_dcc_ds)))),
   # right column: opposite
-  dcc_charite_joined_4_rm_au_ov     = c(only_in_dcc_charite, rep(NA, max(0, length(only_in_dcc_ds) - length(only_in_dcc_charite))))
+  dcc_charite_joined_final     = c(only_in_dcc_charite, rep(NA, max(0, length(only_in_dcc_ds) - length(only_in_dcc_charite))))
 ) |> View()
 
 # Rename columns in dcc_ds to match dcc_charite columns (just because their were named first)
 
-dcc_ds_for_binding <- dcc_ds_and_added_joined_5_od_ids |> 
+dcc_ds_for_binding <- dcc_ds_joined_final |> 
   rename(
     
     # renaming columns to the dcc_charite column names (which will merge them when binding)
@@ -102,7 +137,7 @@ dcc_ds_for_binding <- dcc_ds_and_added_joined_5_od_ids |>
 # And columns that are relevant only for datastet + added, and kept with their names:
 # added_id
   
-dcc_charite_for_binding <- dcc_charite_joined_4_rm_au_ov |> 
+dcc_charite_for_binding <- dcc_charite_joined_final |> 
     rename(
       data_id_source = source_charite, # renaming was done in ds_added as well
       category = Category, # just lower-casing
@@ -121,30 +156,68 @@ dcc_detected_ids_all_sources <- bind_rows(
   dcc_ds_for_binding
 )
 
-# # save
-# save_cr(dcc_detected_ids_all_sources, file = file.path(here("data", "wrangling_steps", "all_sources_binded",
-#                                                         "dcc_detected_ids_all_sources_1_binded.RData")))
+# save
+save_cr(dcc_detected_ids_all_sources, file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+                                                        "dcc_detected_ids_all_sources_1_binded.RData")))
 ```
 
 # 3. Add Metadata
 
 ```{r Add metadata}
 
+### FOR NOW, I'LL WORK ONLY ON NUMBAT + DA. ONCE I GET THE DS+ADDED OD LIST, I'LL FILTER IN THE DS QMD AND RUN THIS QMD AGAIN.
+
+dcc_detected_ids_numbat <- dcc_detected_ids_all_sources |> 
+  dplyr::filter(data_id_source %in% c("numbat", "data_articles"))
+
 # Add metadata: 
 # data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
 
-
 # load metadata file
+load_latest_metadata_update()
+
+# prepare for joining
+
+metadata_for_joining <- datasets_metadata_master_updated_011 |>
+  select(doi_charite,
+         dataset_for_matching,
+         data_access,
+         license,
+         human_data,
+         covid_related,
+         orig_id_is_doi,
+         repository
+         )
+
+
+# add to _joined
+dcc_detected_ids_numbat_w_metadata <- dcc_detected_ids_numbat |>
+  left_join(metadata_for_joining,
+            by = c("doi_charite", "dataset_for_matching")) |> 
+  mutate(
+    repository = coalesce(repository.y, repository.x),
+    data_access = coalesce(data_access.y, data_access.x) # get new value unless the new value is NA, then fall back to old value
+  ) |>
+  select(
+    -repository.y, -repository.x,
+    -data_access.y, -data_access.x)
 
 
   # IMPORTANT: here mutate "license" into "license for analysis":
-  # mutate(license_for_analysis = case_when(
-  #     is.na(license) ~ NA_character_,
-  #     license %in% c("CC0", "cc0", "CC BY", "cc-by", "CC BY-NC", "CC BY;CC0", "CC BY-NC-SA", "CC BY-NC-ND", "GNU GPLv3",
-  #                    "MIT", "GNU") ~ "TRUE",
-  #     .default = "FALSE"))
 
-# add to results
+  # mutate(
+  #   das_for_analysis = case_when(
+  #     is.na(data_availability_statement) ~ NA_character_,
+  #     data_availability_statement %in% c("TRUE", "yes") ~ "TRUE",
+  #     .default = "FALSE"
+  #   ),
+  #   license_for_analysis = case_when(
+  #     is.na(license) ~ NA_character_,
+  #     license %in% c("CC0", "cc0", "CC BY", "cc-by", "CC BY-NC", "CC BY;CC0", "CC BY-NC-SA", "CC BY-NC-ND", "GNU GPLv3", "MIT", "GNU") ~ "TRUE",
+  #     .default = "FALSE"
+  #   )
+  # )
+
 
 
 

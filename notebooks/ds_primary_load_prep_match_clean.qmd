@@ -891,19 +891,4 @@ dcc_charite_joined_4_rm_au_ov <- dcc_charite_joined_3_au_info  |>
 # save
 save_cr(dcc_charite_joined_4_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                         "dcc_charite_joined_4_rm_au_ov.RData")))
-
-##### FINISH FROM HERE:
-
-# Add metadata: 
-# data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
-
-
-# load metadata file
-
-
-# add to _joined
-
-# dcc_charite_joined_5_w_metadata <- dcc_charite_joined_4_rm_au_ov |> 
-  
-  
 ```

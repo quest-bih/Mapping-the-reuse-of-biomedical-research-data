@@ -556,9 +556,10 @@ datasets_metadata_master_updated_011 <- datasets_metadata_master_updated_010 |>
   select(-license.x, -license.y, 
          -data_access.x, -data_access.y,
          -covid_related.x, -covid_related.y) |> 
-  select(-license_for_analysis)
+  select(-c(license_for_analysis, das_for_analysis))
 
-# NOTICE: I removed "license_for_analysis" and moved the mutation code to "joined_bind_add_metadata_verify.qmd"
+# NOTICE: I removed "license_for_analysis" and "das_for_analysis" columns
+# and moved the mutation code to "joined_bind_add_metadata_verify.qmd"
 # because it makes more sense for this operation to be excecuted there.
 
 # save
