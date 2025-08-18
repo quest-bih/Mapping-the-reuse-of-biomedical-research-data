@@ -34,6 +34,10 @@ load(here("data", "tables_for_plots", "combined_count_tibbles.RData")) # fig-dis
 
 load(here("data", "tables_for_plots", "dif_for_plot.RData")) # fig-datasets-and-papers-years
 
+load(here("data", "tables_for_plots", "dcc_years_dist_for_plot.RData")) # fig-dcc-pub-years
+
+load(here("data", "tables_for_plots", "rep_for_plot.RData")) # fig-dcc-rep
+
 ```
 
 <br>
@@ -346,6 +350,11 @@ dif_for_plot |>
 # dataset age - citation relationship
 
 ```{r}
+#| label: fig-age-citation
+#| fig-cap: DCC papers publication years distribution
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
 
 # add headers
 
@@ -362,4 +371,79 @@ dif_for_plot |>
 #   ) +
 #   scale_y_log10() +
 #   theme_classic()
+```
+
+# DCC Publication years distribution
+```{r}
+#| label: fig-dcc-pub-years
+#| fig-cap: DCC papers publication years distribution
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+dcc_years_dist_for_plot |>
+  ggplot(aes(x = reorder(year, year), y = n, fill = highlight)) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           color = "black") +
+  geom_bar(stat = "identity",
+           fill = "white",
+           alpha = 0.2,
+           position = position_nudge(x = -0.05, y = -0.1)) +
+  geom_text(aes(y = n + 2,
+                label = perc),
+            vjust = -0.7,
+            hjust = 0.5,
+            size = 4,
+            color = "black") +
+  scale_fill_manual(values = c(`TRUE` = "yellow", `FALSE` = "white")) +
+  scale_y_continuous(
+    limits = c(0, 250000),
+    breaks = c(0, 10000, 50000, 100000, 150000, 200000, 250000),
+    labels = c("0", "10k", "50k", "100k", "150k", "200k", "250k"),
+    expand = expansion(mult = c(0.02, 0.02))
+  ) +
+  labs(x = "Year", y = "Number of Papers") +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+
+```
+
+# DCC Repositories distribution
+```{r}
+#| label: fig-dcc-rep
+#| fig-cap: DCC repositories distribution
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+rep_for_plot |>
+  ggplot(aes(x = reorder(repository, n), y = n)) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           fill = "#FFE0B2",
+           color = "black") +
+  geom_bar(stat = "identity", fill = "gray30",
+           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
+geom_text(aes(y = n + 2, label = perc),
+            vjust = 0.5,
+            hjust = -0.05,
+            size = 5, color = "black") + # text next to bars
+ scale_y_continuous(
+    limits = c(0, 2500000),
+    breaks = c(0, 500000, 1000000, 1500000, 2000000),
+    labels = c("0", "0.5 Million", "1 Million", "1.5 Million", "2 Million"),
+    expand = expansion(mult = c(0.005, 0.005))) +
+  coord_flip() +
+  
+  labs(x = "Repository", y = "Number of Cases") +
+  theme_classic() +
+  theme(
+    axis.title.x = element_text(size = 18),
+    axis.title.y = element_text(size = 18),
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14))  # Adjust size as needed
+
 ```
