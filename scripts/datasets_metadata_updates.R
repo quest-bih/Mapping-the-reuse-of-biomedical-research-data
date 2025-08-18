@@ -497,35 +497,69 @@ datasets_metadata_master_updated_010 <- datasets_metadata_master_updated_in_proc
 # save
 metadata_update(datasets_metadata_master_updated_010) # call function to save as csv, xlsx, rda
 
-
 # 011: add last matched metadata ------------------------------------------
 
 load_latest_metadata_update() # call function to load latest version
 
-# I created this table to fill NAs in:
-datasets_metadata_master_updated_010 |>
+# Create a table to fill NAs in:
+last_matched_metadata_to_fill <- datasets_metadata_master_updated_010 |>
   dplyr::filter(in_dcc == "TRUE") |>
   select(doi_charite, data_identifier_orig_1st_entry, dataset_for_matching, license_for_analysis, data_access, covid_related) |>
   distinct() |> 
   dplyr::filter(
     is.na(license_for_analysis)
     | is.na(data_access)
-    | is.na(covid_related)) |> 
-  View()
+    | is.na(covid_related))
 
-# and sent it here:
+# Save as xslx (was done retroactively)
+
+write_xlsx_cr(last_matched_metadata_to_fill, file = here(
+  "data", "verification", "metadata all",
+  "datasets_metadata_master_updated", "tables to fill",
+  "last_metadata_of_matched_to_fill.xlsx"))
+
+# Send the file here:
 # https://teams.microsoft.com/l/message/19:cba60d9f-88ed-4fe4-ac8c-0c0e5477dfee_efba9537-d132-44d8-bc1e-c7742bb99d78@unq.gbl.spaces/1753449258487?context=%7B%22contextType%22%3A%22chat%22%7D
 
 
 # load filled table
-
+last_matched_metadata_to_fill_filled <- read_excel(here(
+  "data",
+  "verification",
+  "metadata all",
+  "datasets_metadata_master_updated",
+  "filled tables",
+  "last_metadata_of_matched_to_fill_filled_BI.xlsx"))
 
 # prepare for joining
 
+  # check type
+  str(last_matched_metadata_to_fill_filled_for_joining)
+  str(datasets_metadata_master_updated_010)
 
+last_matched_metadata_to_fill_filled_for_joining <- last_matched_metadata_to_fill_filled |> 
+  select(-7, -dataset_for_matching) |> 
+  mutate(license_for_analysis = as.character(license_for_analysis),
+         covid_related = as.character(covid_related)) |> 
+  rename(license = license_for_analysis) 
+  
 # join
 
+datasets_metadata_master_updated_011 <- datasets_metadata_master_updated_010 |> 
+  left_join(last_matched_metadata_to_fill_filled_for_joining,
+            by = c("doi_charite", "data_identifier_orig_1st_entry")) |> 
+  mutate(
+    license = coalesce(license.y, license.x),
+    data_access = coalesce(data_access.y, data_access.x),
+    covid_related = coalesce(covid_related.y, covid_related.x) # get new value unless the new value is NA, then fall back to old value
+  ) |>
+  select(-license.x, -license.y, 
+         -data_access.x, -data_access.y,
+         -covid_related.x, -covid_related.y) |> 
+  select(-license_for_analysis)
+
+# NOTICE: I removed "license_for_analysis" and moved the mutation code to "joined_bind_add_metadata_verify.qmd"
+# because it makes more sense for this operation to be excecuted there.
 
 # save
 metadata_update(datasets_metadata_master_updated_011) # call function to save as csv, xlsx, rda
-

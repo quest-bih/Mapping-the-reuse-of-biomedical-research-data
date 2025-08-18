@@ -137,7 +137,15 @@ dcc_detected_ids_all_sources <- bind_rows(
 # load metadata file
 
 
+  # IMPORTANT: here mutate "license" into "license for analysis":
+  # mutate(license_for_analysis = case_when(
+  #     is.na(license) ~ NA_character_,
+  #     license %in% c("CC0", "cc0", "CC BY", "cc-by", "CC BY-NC", "CC BY;CC0", "CC BY-NC-SA", "CC BY-NC-ND", "GNU GPLv3",
+  #                    "MIT", "GNU") ~ "TRUE",
+  #     .default = "FALSE"))
+
 # add to results
+
 
 
 
