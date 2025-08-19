@@ -564,3 +564,87 @@ datasets_metadata_master_updated_011 <- datasets_metadata_master_updated_010 |>
 
 # save
 metadata_update(datasets_metadata_master_updated_011) # call function to save as csv, xlsx, rda
+
+
+# 012: add metadata for 2 missed secondary ids ----------------------------------------
+
+# these detected ids weren't in the last step because they are secondary ids, and I accidentally omitted them:
+# erp123138 (secondary to prjeb39602)
+# srp229815 (secondary to prjna589622)
+
+load_latest_metadata_update() # call function to load latest version
+
+# create a table to fill
+secondaries_to_fill <- datasets_metadata_master_updated_011 |> 
+  select(
+    doi_charite,
+    dataset_for_matching,
+    data_access,
+    license,
+    human_data,
+    covid_related,
+    orig_id_is_doi,
+    repository
+  ) |> 
+  dplyr::filter(dataset_for_matching %in% c("prjeb39602", "prjna589622")) |> 
+  mutate(
+    data_id_secondary = case_when(dataset_for_matching == "prjeb39602" ~ "erp123138", .default = "srp229815"),
+    detected_in_dcc = case_when(dataset_for_matching == "prjeb39602" ~ "erp123138", .default = "srp229815")) |> 
+  relocate(data_id_secondary, .after = dataset_for_matching) |> 
+  relocate(detected_in_dcc, .after = data_id_secondary)
+
+# Save as xslx (was done retroactively)
+
+write_xlsx_cr(secondaries_to_fill, file = here(
+  "data", "verification", "metadata all",
+  "datasets_metadata_master_updated", "tables to fill",
+  "2_secondary_ids_to_fill.xlsx"))
+
+# file was sent here:
+# https://teams.microsoft.com/l/message/19:cba60d9f-88ed-4fe4-ac8c-0c0e5477dfee_efba9537-d132-44d8-bc1e-c7742bb99d78@unq.gbl.spaces/1755591105733?context=%7B%22contextType%22%3A%22chat%22%7D
+
+# load filled table
+secondaries_to_fill_filled <- read_excel(here(
+  "data",
+  "verification",
+  "metadata all",
+  "datasets_metadata_master_updated",
+  "filled tables",
+  "2_secondary_ids_to_fill_filled_BI.xlsx"))
+
+# fill out manually by values in xlsx
+# (It's just a bit more readable than standardizing before joining and then joining)
+
+datasets_metadata_master_updated_012 <- datasets_metadata_master_updated_012 |> 
+  mutate(data_access =
+           case_when(dataset_for_matching %in% c("prjeb39602", "prjna589622")
+                     ~ "yes",
+                     .default = data_access),
+         data_availability_statement =
+           case_when(dataset_for_matching %in% c("prjeb39602", "prjna589622")
+                     ~ "yes",
+                     .default = data_availability_statement),
+         license =
+           case_when(dataset_for_matching %in% c("prjeb39602", "prjna589622")
+                     ~ "TRUE",
+                     .default = license),
+         human_data =
+           case_when(dataset_for_matching %in% c("prjeb39602", "prjna589622")
+                     ~ "TRUE",
+                     .default = human_data),
+         covid_related =
+           case_when(dataset_for_matching %in% c("prjeb39602", "prjna589622")
+                     ~ "FALSE",
+                     .default = covid_related),
+         charite_id_year =
+           case_when(dataset_for_matching == "prjeb39602"
+                     ~ 2020,
+                     .default = charite_id_year),
+         charite_id_year =
+           case_when(dataset_for_matching == "prjna589622"
+                     ~ 2019,
+                     .default = charite_id_year)
+         )
+
+# save
+metadata_update(datasets_metadata_master_updated_012) # call function to save as csv, xlsx, rda

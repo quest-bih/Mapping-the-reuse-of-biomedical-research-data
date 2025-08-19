@@ -63,18 +63,16 @@ load_latest_metadata_update <- function() {
 
 datasets_metadata_master_latest <- load_latest_metadata_update() # call function to load latest version
 
-# Load _4 for counting with author overlap:
+# Load _3 for counting with author overlap:
 
 load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_3_au_info.RData"))
 
-# Load the most recent .RData file from the data\processed directory and assign it to "dcc_charite_joined_final"
+load(here("data", "wrangling_steps", "all_sources_binded",                                                      
+          "dcc_detected_ids_numbat_w_metadata_2_metadata.RData"))
 
-# Assign the loaded object to a new variable name
-
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_5_w_metadata.RData"))
-
-dcc_charite_joined_final <- dcc_charite_joined_5_w_metadata
-rm(dcc_charite_joined_5_w_metadata)
+dcc_charite_joined_final <- dcc_detected_ids_numbat_w_metadata |> 
+  dplyr::filter(data_id_source == "numbat")
+rm(dcc_detected_ids_numbat_w_metadata)
 ```
 
 <br>
@@ -89,7 +87,7 @@ rm(dcc_charite_joined_5_w_metadata)
 counts_final <- tibble(
   `Mentioning Articles` = dcc_charite_joined_final |> select(doi_dcc) |> distinct() |> nrow(),
   `Charité Articles` = dcc_charite_joined_final |> select(doi_charite) |> distinct() |> nrow(),
-  `Mentioned Datasets` = dcc_charite_joined_final |> select(data_id_merged) |> distinct() |> nrow()
+  `Mentioned Datasets` = dcc_charite_joined_final |> select(detected_in_dcc) |> distinct() |> nrow()
 )
 
 # 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
@@ -161,7 +159,7 @@ dcc_charite_joined_w_au_ov <- dcc_charite_joined_3_au_info |>
 counts_w_au_ov <- tibble(
   `Mentioning Articles` = dcc_charite_joined_w_au_ov |> select(doi_dcc) |> distinct() |> nrow(),
   `Charité Articles` = dcc_charite_joined_w_au_ov |> select(doi_charite) |> distinct() |> nrow(),
-  `Mentioned Datasets` = dcc_charite_joined_w_au_ov |> select(data_id_merged) |> distinct() |> nrow()
+  `Mentioned Datasets` = dcc_charite_joined_w_au_ov |> select(detected_id) |> distinct() |> nrow()
 )
 
 # Prepare count tibbles (with and without author overlap cases) for plotting
@@ -189,7 +187,7 @@ save_cr(combined_count_tibbles, file = file.path(here("data",
 ```{r fig-datasets-freq-dist-prep}
 
 ds_freq <- dcc_charite_joined_final |>
-  group_by(data_id_merged) |>
+  group_by(detected_in_dcc) |>
   summarise(n = n())
 
 # save as RData
@@ -214,6 +212,8 @@ rep_dt <- dcc_charite_joined_final |>
     repository == "the protein data bank" ~ "pdb",
     repository %in% c("elsevier data repository", "elsevier bv") ~ "elsevier",
     .default = repository)) |>  # shorten rep names for a nicer appearance
+  select(repository, detected_in_dcc, doi_dcc) |> 
+  distinct() |> 
   group_by(repository) |> 
   summarise(n = n()) |> 
   arrange(desc(n))
@@ -231,23 +231,23 @@ save_cr(rep_dt, file = file.path(here("data",
 ```{r fig-ref-by-year-prep}
 
 year_dcc_dt_all <- dcc_charite_joined_final |>
-  select(doi_dcc, data_id_merged, publication_year_dcc) |> 
+  select(doi_dcc, detected_in_dcc, publication_year_dcc) |> 
   distinct() |> 
-  count(data_id_merged, sort = TRUE)
+  count(detected_in_dcc, sort = TRUE)
 
 year_dcc_dt_all_for_plot <- year_dcc_dt_all |>
-  inner_join(dcc_charite_joined_final, by = "data_id_merged")
+  inner_join(dcc_charite_joined_final, by = "detected_in_dcc")
 
 year_dcc_dt_all_for_plot_agg <- year_dcc_dt_all_for_plot |> 
   mutate(
-    data_id_merged = case_when(
-      !data_id_merged %in% c("6y2e", "gse14764", "gse148729", "gse55235") ~ "Others",
-      .default = data_id_merged),
+    detected_in_dcc = case_when(
+      !detected_in_dcc %in% c("6y2e", "gse14764", "gse148729", "gse55235") ~ "Others",
+      .default = detected_in_dcc),
     publication_year_dcc = as.character(publication_year_dcc),
     publication_year_dcc = case_when(
       publication_year_dcc %in% c("2009", "2010", "2011", "2012") ~ "<=2012",
       .default = publication_year_dcc)) |> 
-  group_by(data_id_merged, publication_year_dcc) |> 
+  group_by(detected_in_dcc, publication_year_dcc) |> 
   summarise(count = n(), .groups = "drop") |> 
   dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
 
@@ -262,121 +262,133 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 
 ```{r fig-datasets-properties-prep}
 
-# # Prepare table for sankey:
-# 
-# dcc_charite_for_sankey <- datasets_metadata_master_latest |>
-#   dplyr::filter(in_dcc == "TRUE") |>
-#   select(dataset_for_matching, orig_id_is_doi, license_for_analysis, data_access, covid_related, repository) |>
-#   distinct()
-# 
-# # Create links
-# 
-# links_ac_lic <- dcc_charite_for_sankey |>
-#   mutate(source = case_when(orig_id_is_doi == "FALSE" ~ "Accession Number",
-#                             .default = "DOI"),
-#          target = case_when(license_for_analysis == "TRUE" ~ "CC License",
-#                             license_for_analysis == "FALSE" ~ "No CC License",
-#                             .default = "license not checked yet")) |>
-#   count(source, target) |>
-#   rename(value = n) |>
-#   as.data.frame()
-# 
-# links_lic_access <- dcc_charite_for_sankey |>
-#   mutate(source = case_when(license_for_analysis == "TRUE" ~ "CC License",
-#                             license_for_analysis == "FALSE" ~ "No CC License",
-#                             .default = "license not checked yet"),
-#          target = case_when(data_access == "yes" ~ "Full Access",
-#                             data_access == "restricted" ~ "Restricted Access",
-#                             .default = "access not checked yet")) |>
-#   count(source, target) |>
-#   rename(value = n) |>
-#   as.data.frame()
-# 
-# links_access_rep <- dcc_charite_for_sankey |>
-#   mutate(source = case_when(data_access == "yes" ~ "Full Access",
-#                             data_access == "restricted" ~ "Restricted Access",
-#                             .default = "access not checked yet"),
-#          target = case_when(
-#            repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
-#            repository == "figshare" ~ "Figshare",
-#            repository == "the european genome-phenome archive(ega)" ~ "EGA",
-#            repository == "gene expression omnibus (geo)" ~ "GEO",
-#            repository == "pride proteomics identification database" ~ "PRIDE",
-#            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-#            repository == "european nucleotide archive" ~ "ENA",
-#            repository == "the protein data bank" ~ "PDB",
-#            repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "Mendeley",
-#            .default = repository)) |>
-#   count(source, target) |>
-#   rename(value = n) |>
-#   as.data.frame()
-# 
-# links_rep_covid <- dcc_charite_for_sankey |>
-#   mutate(source = case_when(
-#            repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
-#            repository == "figshare" ~ "Figshare",
-#            repository == "the european genome-phenome archive(ega)" ~ "EGA",
-#            repository == "gene expression omnibus (geo)" ~ "GEO",
-#            repository == "pride proteomics identification database" ~ "PRIDE",
-#            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-#            repository == "european nucleotide archive" ~ "ENA",
-#            repository == "the protein data bank" ~ "PDB",
-#            repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "Mendeley",
-#            .default = repository),
-#          target = case_when(covid_related == "TRUE" ~ "Covid Related",
-#                             covid_related == "FALSE" ~ "Not Covid Related",
-#                             .default = "covid not checked yet")) |>
-#   count(source, target) |>
-#   rename(value = n) |>
-#   as.data.frame()
-# 
-# links_all <- bind_rows(links_ac_lic, links_lic_access, links_access_rep, links_rep_covid)
-# 
-# # save as RData
-# save_cr(links_all, file = file.path(here("data",
-#                                          "tables_for_plots",
-#                                          "links_all.RData")))
+# Prepare table for sankey:
+
+dcc_charite_for_sankey <- dcc_charite_joined_final |>
+  select(detected_in_dcc, orig_id_is_doi, license_for_analysis, data_access, covid_related, repository) |>
+  distinct()
+
+# Create links
+
+links_ac_lic <- dcc_charite_for_sankey |>
+  mutate(source = case_when(orig_id_is_doi == "FALSE" ~ "Accession Number",
+                            .default = "DOI"),
+         target = case_when(license_for_analysis == "TRUE" ~ "CC License",
+                            license_for_analysis == "FALSE" ~ "No CC License",
+                            .default = "license not checked yet")) |>
+  count(source, target) |>
+  rename(value = n) |>
+  as.data.frame()
+
+links_lic_access <- dcc_charite_for_sankey |>
+  mutate(source = case_when(license_for_analysis == "TRUE" ~ "CC License",
+                            license_for_analysis == "FALSE" ~ "No CC License",
+                            .default = "license not checked yet"),
+         target = case_when(data_access == "yes" ~ "Full Access",
+                            data_access == "restricted" ~ "Restricted Access",
+                            .default = "access not checked yet")) |>
+  count(source, target) |>
+  rename(value = n) |>
+  as.data.frame()
+
+links_access_rep <- dcc_charite_for_sankey |>
+  mutate(source = case_when(data_access == "yes" ~ "Full Access",
+                            data_access == "restricted" ~ "Restricted Access",
+                            .default = "access not checked yet"),
+         target = case_when(
+           repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+           repository == "figshare" ~ "Figshare",
+           repository == "the european genome-phenome archive(ega)" ~ "EGA",
+           repository == "gene expression omnibus (geo)" ~ "GEO",
+           repository == "pride proteomics identification database" ~ "PRIDE",
+           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+           repository == "european nucleotide archive" ~ "ENA",
+           repository == "the protein data bank" ~ "PDB",
+           repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "Mendeley",
+           repository == "bioproject" ~ "Bioproject",
+           repository == "arrayexpress" ~ "Arrayexpress",
+           repository == "openneuro" ~ "Openneuro",
+           repository == "uniprot" ~ "Uniprot",
+           repository == "zenodo" ~ "Zenodo",
+           repository == "harvard dataverse" ~ "Harvard Dataverse",
+           .default = repository)) |>
+  count(source, target) |>
+  rename(value = n) |>
+  as.data.frame()
+
+links_rep_covid <- dcc_charite_for_sankey |>
+  mutate(source = case_when(
+           repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+           repository == "figshare" ~ "Figshare",
+           repository == "the european genome-phenome archive(ega)" ~ "EGA",
+           repository == "gene expression omnibus (geo)" ~ "GEO",
+           repository == "pride proteomics identification database" ~ "PRIDE",
+           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+           repository == "european nucleotide archive" ~ "ENA",
+           repository == "the protein data bank" ~ "PDB",
+           repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "Mendeley",
+           repository == "bioproject" ~ "Bioproject",
+           repository == "arrayexpress" ~ "Arrayexpress",
+           repository == "openneuro" ~ "Openneuro",
+           repository == "uniprot" ~ "Uniprot",
+           repository == "zenodo" ~ "Zenodo",
+           repository == "harvard dataverse" ~ "Harvard Dataverse",
+           .default = repository),
+         target = case_when(covid_related == "TRUE" ~ "Covid Related",
+                            covid_related == "FALSE" ~ "Not Covid Related",
+                            .default = "covid not checked yet")) |>
+  count(source, target) |>
+  rename(value = n) |>
+  as.data.frame()
+
+links_all <- bind_rows(links_ac_lic, links_lic_access, links_access_rep, links_rep_covid)
+
+# save as RData
+save_cr(links_all, file = file.path(here("data",
+                                         "tables_for_plots",
+                                         "links_all.RData")))
 
 ```
 
 # Datasets and Citing Papers Publication Years
 
-```{r Datasets and Citing Papers Publication Years, echo=FALSE}
-
-dif_for_plot <- dcc_charite_joined_final |>
-  select(data_id_merged, charite_id_year) |>
-  distinct() |>
-  mutate(dif = publication_year_dcc - charite_id_year)
-
-# save as RData
-save_cr(dif_for_plot, file = file.path(here("data",
-                                            "tables_for_plots",
-                                            "dif_for_plot.RData")))
-```
-
-# For 2020-2022: we want to show if mentionings are increasing over time (where the baseline timepoint is the dataset’s publication year).
+For 2020-2022: we want to show if mentionings are increasing over time (where the baseline timepoint is the dataset’s publication year).
 
 So I could plot 1/2/3 years difference on x axis, and then how many mentions for each dataset. Try to normalize so that we could really see the change throughout the years
 
-```{r}
+```{r Datasets and Citing Papers Publication Years, echo=FALSE}
 
+# get data
 ds_age_cit_cor_prep <- dcc_charite_joined_final |>
-  select(data_id_merged, doi_dcc, publication_year_dcc, charite_id_year) |>
+  select(detected_in_dcc, doi_dcc, publication_year_dcc, charite_id_year) |>
   dplyr::filter(charite_id_year > 2019) |>
   mutate(ds_age_when_cited = publication_year_dcc - charite_id_year) |>
-  count(ds_age_when_cited, data_id_merged, name = "n_citations") |>
+  count(ds_age_when_cited, detected_in_dcc, name = "n_citations") |>
   dplyr::filter(ds_age_when_cited >= 0)
 
-ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
-  group_by(data_id_merged) |>
-  dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
-  ungroup()
+# get only datasets that are cited at every age:
+# ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
+#   group_by(detected_in_dcc) |>
+#   dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
+#   ungroup()
 
+
+# tag datasets that appear more than once (for line connection)
+ds_tagged <- ds_age_cit_cor_prep |>
+  dplyr::group_by(detected_in_dcc) |>
+  dplyr::mutate(n_instances = dplyr::n()) |>
+  dplyr::ungroup() |>
+  dplyr::mutate(has_line = n_instances > 1)
+
+# save as RData
+save_cr(ds_tagged, file = file.path(here("data",
+                                         "tables_for_plots",
+                                         "ds_tagged.RData")))
 # model
 
 model_nb <- glmmTMB(
-  n_citations ~ ds_age_when_cited + (1 | data_id_merged),
-  data = df,
+  n_citations ~ ds_age_when_cited + (1 | detected_in_dcc),
+  data = ds_age_cit_cor_prep,
   family = nbinom2
 )
 
@@ -403,7 +415,7 @@ Create a table like in the reference pic that I took, with: Dimensions of metada
 
 # not_mentioned_years <- datasets_metadata_master_latest |> 
 #   dplyr::filter(in_dcc == "FALSE") |> 
-#   select(charite_id_year, data_id_merged) |> 
+#   select(charite_id_year, detected_in_dcc) |> 
 #   distinct() |> 
 #   group_by(charite_id_year) |> 
 #   summarise(n = n())

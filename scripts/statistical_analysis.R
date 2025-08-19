@@ -1,4 +1,8 @@
-df <- datasets_metadata_master_updated_009 |>
+
+# 1. matched vs non matched -----------------------------------------------
+
+# get data
+df <- datasets_metadata_master_updated_012 |>
   dplyr::filter(
     !is.na(data_availability_statement)
     & !is.na(license)
@@ -16,6 +20,7 @@ df <- datasets_metadata_master_updated_009 |>
       .default = "FALSE"
     ))
 
+# convert to logical
 df_cleaned <- df |>
   mutate(across(c(in_dcc, data_availability_statement, license, human_data, covid_related), ~ .x == "TRUE"))
 

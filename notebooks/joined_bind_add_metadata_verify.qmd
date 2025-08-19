@@ -178,20 +178,24 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_for_joining <- datasets_metadata_master_updated_011 |>
+metadata_for_joining <- datasets_metadata_master_updated_012 |>
   select(doi_charite,
          dataset_for_matching,
+         data_id_source,
+         listed_in_numbat_output,
          data_access,
          license,
          human_data,
          covid_related,
          orig_id_is_doi,
-         repository
+         repository,
+         data_availability_statement,
+         charite_id_year
          )
-
 
 # add to _joined
 dcc_detected_ids_numbat_w_metadata <- dcc_detected_ids_numbat |>
+  select(-data_id_source) |> # metadata master file has the most updated values
   left_join(metadata_for_joining,
             by = c("doi_charite", "dataset_for_matching")) |> 
   mutate(
@@ -202,25 +206,37 @@ dcc_detected_ids_numbat_w_metadata <- dcc_detected_ids_numbat |>
     -repository.y, -repository.x,
     -data_access.y, -data_access.x)
 
+# check
+dcc_detected_ids_numbat_w_metadata |> 
+  dplyr::filter(
+    is.na(data_access)
+    | is.na(license)
+    | is.na(human_data)
+    | is.na(covid_related)
+    | is.na(orig_id_is_doi)
+    | is.na(repository)
+  ) |>  View()
 
-  # IMPORTANT: here mutate "license" into "license for analysis":
+# Add coluns for analysis
 
-  # mutate(
-  #   das_for_analysis = case_when(
-  #     is.na(data_availability_statement) ~ NA_character_,
-  #     data_availability_statement %in% c("TRUE", "yes") ~ "TRUE",
-  #     .default = "FALSE"
-  #   ),
-  #   license_for_analysis = case_when(
-  #     is.na(license) ~ NA_character_,
-  #     license %in% c("CC0", "cc0", "CC BY", "cc-by", "CC BY-NC", "CC BY;CC0", "CC BY-NC-SA", "CC BY-NC-ND", "GNU GPLv3", "MIT", "GNU") ~ "TRUE",
-  #     .default = "FALSE"
-  #   )
-  # )
+dcc_detected_ids_numbat_w_metadata <- dcc_detected_ids_numbat_w_metadata |> 
+  mutate(
+    das_for_analysis = case_when(
+      is.na(data_availability_statement) ~ NA_character_,
+      data_availability_statement %in% c("TRUE", "yes") ~ "TRUE",
+      .default = "FALSE"
+    ),
+    license_for_analysis = case_when(
+      is.na(license) ~ NA_character_,
+      license %in% c("CC0", "cc0", "CC BY", "cc-by", "CC BY-NC", "CC BY;CC0", "CC BY-NC-SA", "CC BY-NC-ND", "GNU GPLv3", "MIT", "GNU") ~ "TRUE",
+      .default = "FALSE"
+    )
+  )
 
-
-
-
+# save
+save_cr(dcc_detected_ids_numbat_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+                                                        "dcc_detected_ids_numbat_w_metadata_2_metadata.RData")))
+# NOTE! THIS IS ONLY NUMBAT FOR NOW!
 
 ```
 
