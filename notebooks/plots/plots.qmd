@@ -16,7 +16,7 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm)
 
 # Load tables for plots
 
@@ -39,6 +39,9 @@ load(here("data", "tables_for_plots", "dcc_years_dist_for_plot.RData")) # fig-dc
 load(here("data", "tables_for_plots", "rep_for_plot.RData")) # fig-dcc-rep
 
 load(here("data", "tables_for_plots", "ds_tagged.RData")) # fig-age-citation
+
+load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-age-citation
+
 
 ```
 
@@ -321,14 +324,14 @@ ggplot(ds_tagged, aes(x = factor(ds_age_when_cited), y = n_citations)) +
   # Boxplot
   geom_boxplot(outlier.shape = NA, fill = "lightgray") +
   
-  # Lines connecting repeated datasets
-  geom_line(
-    data = dplyr::filter(ds_tagged, has_line),
-    aes(group = detected_in_dcc, color = detected_in_dcc),
-    linewidth = 0.6,
-    alpha = 0.7,
-    show.legend = FALSE
-  ) +
+  # # Lines connecting repeated datasets
+  # geom_line(
+  #   data = dplyr::filter(ds_tagged, has_line),
+  #   aes(group = detected_in_dcc, color = detected_in_dcc),
+  #   linewidth = 0.6,
+  #   alpha = 0.7,
+  #   show.legend = FALSE
+  # ) +
   
   # Points without jitter (for repeated datasets)
   geom_point(
@@ -439,4 +442,23 @@ geom_text(aes(y = n + 2, label = perc),
     axis.text.x = element_text(size = 14, color = "black"),
     axis.text.y = element_text(size = 14, color = "black"))  # Adjust size as needed
 
+```
+
+# Sources of Identifiers
+
+```{r}
+#| label: fig-venn-ids
+#| fig-cap: Sources of Matched Identifiers
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+setlist <- id_source_for_venn |>
+  distinct(detected_in_dcc, data_id_source) |>  # avoid duplicates
+  group_by(data_id_source) |>
+  summarise(items = list(detected_in_dcc)) |>
+  deframe()
+
+# Plot Venn
+ggvenn(setlist)
 ```

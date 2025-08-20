@@ -270,17 +270,32 @@ References
 
 {{< embed notebooks/plots/plots.qmd#fig-distinct-numbers >}}
 
+**Note:** Counts distinct mentioning papers and detected ids, with and without author overlap cases.
+
 {{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
+
+**Note:** Counts how many mentions are there for each dataset. The labels over the bars sum to 89, which is the distinct number of datasets detected in DCC.
+
 
 {{< embed notebooks/plots/plots.qmd#fig-repo-dist >}}
 
+**Note:** These are the number of mentions that each repository has. The total sum includes cases where several papers mentioned the same dataset, cases where several datasets were mentioned in the same paper, and 1 to 1 relationships (which were the majority of cases).
+
 {{< embed notebooks/plots/plots.qmd#fig-ref-by-year >}}
 
+**Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot <br> 3. Years 2023-2024 are not shown in the plot, and that's why the total number of mentions is lower than in other plots.
 
-**Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot
+{{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
 
-<!-- ::: quarto-figure -->
+**Note:** This plot will be updated with DataStet and Added sources
 
-<!-- ![Figure X: Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){.embedded width="100%" height="600px"} -->
+{{< embed notebooks/plots/plots.qmd#fig-dcc-rep >}}
 
-<!-- ::: -->
+**Note:** This is the distribution of repositories in the DCC
+
+
+::: quarto-figure
+
+![Figure X: Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){.embedded width="100%" height="600px"}
+
+:::
