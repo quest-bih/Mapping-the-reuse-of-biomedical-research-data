@@ -285,9 +285,6 @@ References
 
 **Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot <br> 3. Years 2023-2024 are not shown in the plot, and that's why the total number of mentions is lower than in other plots.
 
-{{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
-
-**Note:** This plot will be updated with DataStet and Added sources
 
 {{< embed notebooks/plots/plots.qmd#fig-dcc-rep >}}
 

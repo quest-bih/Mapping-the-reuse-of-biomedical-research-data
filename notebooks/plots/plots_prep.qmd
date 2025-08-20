@@ -421,19 +421,19 @@ Create a table like in the reference pic that I took, with: Dimensions of metada
 # Sources of Identifiers
 
 ```{r}
-id_source_for_venn <- dcc_detected_ids_numbat_w_metadata |> 
-  select(detected_in_dcc, data_id_source)
-
-# venn_input_for_debugging <- id_source_for_venn |>
-#   distinct(detected_in_dcc, data_id_source) |>  # remove duplicate rows
-#   pivot_wider(names_from = data_id_source, values_from = data_id_source,
-#               values_fn = length, values_fill = 0) |>
-#   mutate(across(-detected_in_dcc, ~ .x > 0)) # create a TRUE/FALSE matrix for debugging
-
-# save as RData
-save_cr(id_source_for_venn, file = file.path(here("data",
-                                         "tables_for_plots",
-                                         "id_source_for_venn.RData")))
+# id_source_for_venn <- dcc_charite_joined_final |> 
+#   select(detected_in_dcc, data_id_source)
+# 
+# # venn_input_for_debugging <- id_source_for_venn |>
+# #   distinct(detected_in_dcc, data_id_source) |>  # remove duplicate rows
+# #   pivot_wider(names_from = data_id_source, values_from = data_id_source,
+# #               values_fn = length, values_fill = 0) |>
+# #   mutate(across(-detected_in_dcc, ~ .x > 0)) # create a TRUE/FALSE matrix for debugging
+# 
+# # save as RData
+# save_cr(id_source_for_venn, file = file.path(here("data",
+#                                          "tables_for_plots",
+#                                          "id_source_for_venn.RData")))
 ```
 
 # Exclusion Steps

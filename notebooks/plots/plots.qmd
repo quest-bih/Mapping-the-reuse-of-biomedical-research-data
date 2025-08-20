@@ -40,7 +40,7 @@ load(here("data", "tables_for_plots", "rep_for_plot.RData")) # fig-dcc-rep
 
 load(here("data", "tables_for_plots", "ds_tagged.RData")) # fig-age-citation
 
-load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-age-citation
+# load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-age-citation
 
 
 ```
@@ -447,18 +447,18 @@ geom_text(aes(y = n + 2, label = perc),
 # Sources of Identifiers
 
 ```{r}
-#| label: fig-venn-ids
-#| fig-cap: Sources of Matched Identifiers
-#| fig-format: png
-#| fig.height: 8
-#| fig.width: 10
-
-setlist <- id_source_for_venn |>
-  distinct(detected_in_dcc, data_id_source) |>  # avoid duplicates
-  group_by(data_id_source) |>
-  summarise(items = list(detected_in_dcc)) |>
-  deframe()
-
-# Plot Venn
-ggvenn(setlist)
+# #| label: fig-venn-ids
+# #| fig-cap: Sources of Matched Identifiers
+# #| fig-format: png
+# #| fig.height: 8
+# #| fig.width: 10
+# 
+# setlist <- id_source_for_venn |>
+#   distinct(detected_in_dcc, data_id_source) |>  # avoid duplicates
+#   group_by(data_id_source) |>
+#   summarise(items = list(detected_in_dcc)) |>
+#   deframe()
+# 
+# # Plot Venn
+# ggvenn(setlist)
 ```
