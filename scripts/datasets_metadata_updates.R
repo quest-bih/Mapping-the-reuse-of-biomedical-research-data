@@ -648,3 +648,55 @@ datasets_metadata_master_updated_012 <- datasets_metadata_master_updated_012 |>
 
 # save
 metadata_update(datasets_metadata_master_updated_012) # call function to save as csv, xlsx, rda
+
+
+# 013: rejoin to latest numbat+DA -----------------------------------------
+
+# from sources: 012, matched metadata, non-matched metadata
+
+# how it all started:
+# https://docs.google.com/document/d/1y-WVv9rrwy8d1KOzKG1u0WTiAtZoCfu3qTcl2y_sjGw/edit?tab=t.0#bookmark=id.40nwpc5w2tl
+
+# So I'm actually going to change the structure of the file so that it'll match the numbat+DA file that is being matched with DCC
+
+# get _8_wide:
+
+# prepare non_matched for joining
+
+# join non-matched
+
+# prepare matched for joining
+
+# join matched
+
+# prepare 012 for joining - get only pairs that don't already have metadata!
+
+# join 012
+
+
+  # check that there are no inconsistencies:
+  wide_paired <- charite_dois_and_ids_8_wide |> 
+    mutate(
+      paired = paste(trimws(doi), trimws(dataset_for_matching), sep = ";"),
+      source = "wide"
+    ) |> 
+    select(paired, source) |> 
+    distinct()
+  
+  metadata_paired <- datasets_metadata_master_updated_013 |> 
+    mutate(
+      paired = paste(trimws(doi_charite), trimws(dataset_for_matching), sep = ";"),
+      source = "meta"
+    ) |> 
+    select(paired, source) |> 
+    distinct()
+  
+  wide_paired |> 
+    bind_rows(metadata_paired) |> 
+    add_count(paired, name = "n") |> 
+    dplyr::filter(n == 1) |> 
+    separate(paired, into = c("doi", "id"), sep = ";") |> 
+    View()
+
+# save
+metadata_update(datasets_metadata_master_updated_013) # call function to save as csv, xlsx, rda
