@@ -90,9 +90,9 @@ dashboard_dois <- read.csv(
   header = TRUE,
   sep = ",") |> 
   mutate(doi = gsub("\\+", "/", doi)) |> 
-  mutate(doi = tolower(doi))
+  mutate(doi_lc = tolower(doi)) # create doi column with lowercase
 
-dashboard_dois_dedup <- dashboard_dois |> group_by(doi) |> slice(1) |> ungroup() # deduplicate dois
+dashboard_dois_dedup <- dashboard_dois |> group_by(doi_lc) |> slice(1) |> ungroup() # deduplicate dois
 
 # Load list of DOIs to exclude (for having no Charité affiliation)
 
@@ -107,7 +107,7 @@ dois_to_exclude <- read.csv(
   header = TRUE,
   sep = ",") |> 
   rename(doi = DOI) |> 
-  mutate(doi = tolower(doi))
+  mutate(doi_lc = tolower(doi)) # create doi column with lowercase
 
 # 2. Load Charite datasets identifiers from data articles
 
@@ -118,7 +118,19 @@ charite_da_dois_and_ids <- read.csv(
                  "data_articles_AI_2025_05_14.csv")),
   header = TRUE,
   sep = ";") |> 
-  dplyr::filter(identifier_from_data_article_analysis != "NULL") # remove NULLs
+  dplyr::filter(identifier_from_data_article_analysis != "NULL") |> # remove NULLs
+  rename(doi = charite_doi,
+         data_identifier = identifier_from_data_article_analysis,
+         numbat_id_of_da_id = Numbat_data_identifier) |> # rename columns
+  mutate(doi_lc = tolower(doi),
+         doi_no_ver_info = tolower(doi),
+         data_id_lc = tolower(data_identifier),
+         numbat_id_of_da_id_lc = tolower(numbat_id_of_da_id)) |> # create doi and id columns with lowercase
+  mutate(data_access = case_when(
+    `open.or.restricted` %in% c("open", "1") ~ "yes",
+    .default = `open.or.restricted`)) |> 
+  mutate(data_access = na_if(data_access, "n/a")) # convert data_access to "yes" / "restricted" / "unsure" values to keep consistency with numbat cases
+    
 
 # Manually append additional identifiers for the same dataset
 
@@ -136,14 +148,15 @@ ids_vector <- c(
 charite_da_dois_and_ids_1_m_add <- bind_rows(
   # filter rows where 'charite_doi' matches the target DOI to duplicate
   charite_da_dois_and_ids |>
-    dplyr::filter(charite_doi == "10.1038/s41597-020-0495-6") |>
+    dplyr::filter(doi == "10.1038/s41597-020-0495-6") |>
     # duplicate this row to match the length of 'ids_vector'
     slice(rep(1, length(ids_vector))) |>
     # replace the identifier column with 'ids_vector'
-    mutate(identifier_from_data_article_analysis = ids_vector),
+    mutate(data_identifier = ids_vector,
+           data_id_lc = ids_vector),
   # then add all other rows that do not match the target DOI (unchanged)
   charite_da_dois_and_ids |>
-    dplyr::filter(charite_doi != "10.1038/s41597-020-0495-6")
+    dplyr::filter(doi != "10.1038/s41597-020-0495-6")
 )
 
 rm(dashboard_dois) # clean up
@@ -182,16 +195,14 @@ View(master_2020_2023_1_unique[!stringi::stri_enc_isutf8(master_2020_2023_1_uniq
 
 # Both cases where there's a doi and id values are not relevant, and will be removed below
 
-charite_2020_2023 <- master_2020_2023_1_unique |>
+numbat_2020_2023 <- master_2020_2023_1_unique |>
   dplyr::filter(!temp_unique_id %in% c(2859, 3169)) |> # remove 2 irrelevant cases with encoding issues
   select(-temp_unique_id) |>  # remove temporary unique_id column
-  mutate(doi = tolower(doi),
-         data_id = tolower(data_identifier)) |> # tolower
-  rename(data_identifier_orig = data_identifier) |> # keep original id col
+  mutate(doi_lc = tolower(doi),
+         data_id_lc = tolower(data_identifier)) |> # tolower
   mutate(doi = na_if(doi, "na")) |> # replace "na" with true NA
   dplyr::filter(!(is.na(doi))) |> # filter out cases where doi is NA
-  mutate(doi_no_ver_info = str_remove(doi, "\\.[0-9]$")) # remove version information from DOIs
-
+  mutate(doi_no_ver_info = str_remove(doi_lc, "\\.[0-9]$")) # remove version information from DOIs
 
 # # 2. Verify that for a unique combination of doi+data_id there's only one metadata entry
 # 
@@ -202,31 +213,31 @@ charite_2020_2023 <- master_2020_2023_1_unique |>
 #   x[!(is.na(x) | x_clean %in% c("null", ""))]
 # }
 # 
-# double_data_for_same_doi_id <- charite_2020_2023 |> 
-#   select(doi, data_id, dataset_license, license_name, data_availability_statement, data_access) |> 
-#   group_by(doi, data_id) |> 
+# double_data_for_same_doi_id <- numbat_2020_2023 |>
+#   select(doi_lc, data_id_lc, dataset_license, license_name, data_availability_statement, data_access) |>
+#   group_by(doi_lc, data_id_lc) |>
 #   dplyr::filter(
 #     n_distinct(not_bad(dataset_license)) > 1
 #     | n_distinct(not_bad(license_name)) > 1
 #     | n_distinct(not_bad(data_availability_statement)) > 1
 #     | n_distinct(not_bad(data_access)) > 1
-#   ) |> 
-#   ungroup() |> 
-#   dplyr::filter(data_id != "null") |> 
-#   arrange(data_id)
+#   ) |>
+#   ungroup() |>
+#   dplyr::filter(data_id_lc != "null") |>
+#   arrange(data_id_lc)
 # 
 # save_cr(double_data_for_same_doi_id, file = file.path(here("data",
 #                                                            "verification",
 #                                                            "contradictions_in_numbat",
 #                                                            "double_data_for_same_doi_id.RData")))
-#
-# Thesee enteries were taken care of and now there are no such entries.
+# 
+# These enteries were taken care of and now there are no such entries.
 
   # 3. Explore which cases to include
   
   # 2020-2022
   
-  cases_of_ids_until_2022 <- charite_2020_2023 |>
+  cases_of_ids_until_2022 <- numbat_2020_2023 |>
    dplyr::filter(year %in% 2020:2022) |> 
    group_by(open_data_assessment, own_or_reuse_data, data_access) |>
    summarise(n = n()) |>
@@ -245,7 +256,7 @@ charite_2020_2023 <- master_2020_2023_1_unique |>
   
   # 2023
   
-  cases_of_ids_2023 <- charite_2020_2023 |>
+  cases_of_ids_2023 <- numbat_2020_2023 |>
    dplyr::filter(year == 2023) |> 
    group_by(open_data_assessment, own_or_reuse_data, data_access, restricted_authorship) |>
    summarise(n = n()) |>
@@ -259,7 +270,7 @@ charite_2020_2023 <- master_2020_2023_1_unique |>
 
 # 4. Filter to get only relevant cases (open / restricted data)
 
-charite_2020_2023_od_and_rest <- charite_2020_2023 |>
+numbat_2020_2023_od_and_rest <- numbat_2020_2023 |>
   dplyr::filter(
     # open / restricted by 2020-2022 criteria
     (year %in% 2020:2022
@@ -288,117 +299,142 @@ charite_2020_2023_od_and_rest <- charite_2020_2023 |>
        & restricted_authorship == "own_restricted")
     )
 
-# 5. Label if doi is in the dashboard or not
+# 5. Label if doi is in the dashboard; select only relevant columns; exclude according to 2nd source
 
-charite_2020_2023_od_and_rest_db_lbl <- charite_2020_2023_od_and_rest |> 
+numbat_2020_2023_od_and_rest_db_lbl <- numbat_2020_2023_od_and_rest |> 
   mutate(in_dashboard = case_when(
-    doi %in% dashboard_dois_dedup$doi
-    |doi_no_ver_info %in% dashboard_dois_dedup$doi
+    doi_lc %in% dashboard_dois_dedup$doi_lc
+    |doi_no_ver_info %in% dashboard_dois_dedup$doi_lc
     ~ TRUE,
     .default = FALSE)) |>
-  select(doi, doi_no_ver_info, data_identifier_orig, data_id, data_access, in_dashboard)
+  select(doi, doi_lc, doi_no_ver_info, data_identifier, data_id_lc, data_access, in_dashboard)
   
 # 6. Exclude any DOI that has no affiliation to Charité, according to a second source
 
-charite_2020_2023_od_and_rest_db_lbl_2nd_source <- charite_2020_2023_od_and_rest_db_lbl |> 
-  dplyr::filter(!doi %in% dois_to_exclude$doi)
+numbat_2020_2023_od_and_rest_db_lbl_2nd_source <- numbat_2020_2023_od_and_rest_db_lbl |> 
+  dplyr::filter(!doi_lc %in% dois_to_exclude$doi_lc)
 
-# # Verify before deduplication that for the same doi+data_id combination, data access is not different:
-# 
-# charite_2020_2023_od_and_rest_db_lbl_2nd_source |>
-#   dplyr::add_count(doi, data_id, name = "n") |>
-#   dplyr::filter(n > 1) |>
-#   dplyr::select(-n) |>  # optional: drop the count column
-#   View()
+# Verify before deduplication that for the same doi+data_id combination, data access is not different:
+
+numbat_2020_2023_od_and_rest_db_lbl_2nd_source |>
+  group_by(doi_lc, data_id_lc) |>
+  dplyr::filter(n() > 1) |>  # only those with duplicates
+  summarise(
+    unique_access = n_distinct(data_access),
+    .groups = "drop"
+  ) |>
+  dplyr::filter(unique_access > 1) |>  # this means conflicting values
+  View()
 
 # Deduplicate
 
-charite_2020_2023_od_and_rest_db_lbl_2nd_source_dist <- charite_2020_2023_od_and_rest_db_lbl_2nd_source |> 
-  distinct(across(-data_identifier_orig), .keep_all = TRUE)
-  
+numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist <- numbat_2020_2023_od_and_rest_db_lbl_2nd_source |> 
+  distinct()
+
 # 7. Add papers and identifiers from the data articles analysis and label if they are also in numbat (TRUE) or not (FALSE)
 
-# # First I'll check if I should exclude any papers from the data articles list
-# 
+# First I'll check if I should exclude any papers from the data articles list
+
 # charite_da_dois_and_ids_1_m_add |>
-#   dplyr::filter(charite_doi %in% dashboard_dois_dedup$doi) |> 
-#   select(charite_doi, identifier_from_data_article_analysis) |> 
+#   dplyr::filter(doi_lc %in% dashboard_dois_dedup$doi_lc) |>
+#   select(doi_lc) |>
+#   distinct() |> 
 #   View()
-# # all data articles are in the dashboard, so none should be excluded
+# 
+# charite_da_dois_and_ids_1_m_add |> select(doi_lc) |>  distinct() |> View()
+
+# all data articles are in the dashboard, so none should be excluded
+
+# Then I'll create doi_id_orig_pair for each
+
+numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist_paired_orig <- numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist |> 
+  mutate(doi_id_orig_pair = paste(doi, data_identifier, sep = ";"))
+
+charite_da_dois_and_ids_2_paired_orig <- charite_da_dois_and_ids_1_m_add |> 
+  mutate(doi_id_orig_pair = paste(doi, data_identifier, sep = ";"))
 
 # Now I can add the data articles identifiers with their source and overlap with numbat labeled
 
-charite_dois_and_ids <- charite_2020_2023_od_and_rest_db_lbl_2nd_source_dist |> 
+numbat_da_dois_and_ids <- numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist_paired_orig |> 
   mutate(source = "numbat") |> # label Numbat cases
-  bind_rows(charite_da_dois_and_ids_1_m_add |> 
-              select(charite_doi,
-                     identifier_from_data_article_analysis,
-                     listed_in_numbat_output) |> 
-              rename(doi = charite_doi,
-                     data_id = identifier_from_data_article_analysis)) |> # add data articles cases
+  bind_rows(charite_da_dois_and_ids_2_paired_orig |> 
+              select(doi,
+                     doi_lc,
+                     doi_no_ver_info,
+                     data_identifier,
+                     data_id_lc,
+                     doi_id_orig_pair,
+                     data_access,
+                     numbat_id_of_da_id,
+                     numbat_id_of_da_id_lc,
+                     listed_in_numbat_output)) |> # add data articles cases
   mutate(source =
            case_when(is.na(source) ~ "data_articles", .default = source), # label data articles
          listed_in_numbat_output =
            case_when(source == "numbat" ~ TRUE, .default = listed_in_numbat_output), # label numbat-data_articles overlap
          in_dashboard =
-           case_when(source == "data_articles" ~ TRUE, .default = in_dashboard)) |> # label data articles as in_dashboard
-  group_by(doi, data_id) |>
-  mutate(
-    remove_row = case_when(
-      listed_in_numbat_output == TRUE &
-      n_distinct(source) > 1 &
-      source == "numbat" ~ TRUE,
-      .default = FALSE
-    )
-  ) |> # identify cases that are from numbat AND from data articles and have the same doi and data_id
-  ungroup() |>
-  dplyr::filter(!remove_row) |> # remove their numbat duplicates 
-  select(-remove_row)
-
-# # check that doi-id could serve as a composite key
-# charite_dois_and_ids |> group_by(doi, data_id) |> summarise(n=n()) |> dplyr::filter(n>1) |> View()
+           case_when(source == "data_articles" ~ TRUE, .default = in_dashboard)) # label data articles as in_dashboard
 
 # save
-save_cr(charite_dois_and_ids, file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids.RData")))
+save_cr(numbat_da_dois_and_ids, file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids.RData")))
 
 # 8. Remove clinvar datasets and DOIs that were eventually found out to be not "Open Data"
 
-charite_dois_and_ids_1_no_clinvar <- charite_dois_and_ids |>
+numbat_da_dois_and_ids_1_no_clinvar <- numbat_da_dois_and_ids |>
   # remove clinvar cases
   dplyr::filter(
-  !str_detect(data_id, "clinvar") &
-  !str_starts(data_id, "vcv") &
-  !str_starts(data_id, "scv") &
-  !str_starts(data_id, "rcv")) |> 
+  !str_detect(data_id_lc, "clinvar") &
+  !str_starts(data_id_lc, "vcv") &
+  !str_starts(data_id_lc, "scv") &
+  !str_starts(data_id_lc, "rcv")) |> 
   # remove DOIs that are not really open data
-  dplyr::filter(!doi == "10.1186/s13059-021-02306-1")
+  dplyr::filter(!doi_lc == "10.1186/s13059-021-02306-1") # this removes the id "10.5281/zenodo.4454489" from the table
 
 # save
-save_cr(charite_dois_and_ids_1_no_clinvar, file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_1_no_clinvar.RData")))
+save_cr(numbat_da_dois_and_ids_1_no_clinvar, file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_1_no_clinvar.RData")))
 
 # 9. Exclude DOIs that are not in the dashboard
 
-charite_dois_and_ids_2_in_db <- charite_dois_and_ids_1_no_clinvar |> 
+numbat_da_dois_and_ids_2_in_db <- numbat_da_dois_and_ids_1_no_clinvar |> 
   dplyr::filter(in_dashboard == "TRUE")
 
 # save
-save_cr(charite_dois_and_ids_2_in_db, file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_2_in_db.RData")))
+save_cr(numbat_da_dois_and_ids_2_in_db, file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_2_in_db.RData")))
 
-rm(
+rm(cases_of_ids_2023,
+  cases_of_ids_until_2022,
+  charite_da_dois_and_ids_2_paired_orig,
+  numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist_paired_orig,
   master_2020_2023_corr,
-  charite_dois_and_ids,
+  numbat_da_dois_and_ids,
   master_2020_2023_1_unique,
-  charite_2020_2023,
-  charite_2020_2023_od_and_rest,
-  charite_2020_2023_od_and_rest_db_lbl,
-  charite_2020_2023_od_and_rest_db_lbl_2nd_source_dist,
+  numbat_2020_2023,
+  numbat_2020_2023_od_and_rest,
+  numbat_2020_2023_od_and_rest_db_lbl,
+  numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist,
   charite_da_dois_and_ids,
   charite_da_dois_and_ids_1_m_add,
   dashboard_dois_dedup,
   dois_to_exclude,
-  charite_2020_2023_od_and_rest_db_lbl_2nd_source,
-  charite_dois_and_ids_1_no_clinvar
+  numbat_2020_2023_od_and_rest_db_lbl_2nd_source,
+  numbat_da_dois_and_ids_1_no_clinvar
   ) # clean up
+
+
+# data dictionary for numbat_da_dois_and_ids_2_in_db:
+
+# "doi"                       original entry of doi in numbat / data article files
+# "doi_lc"                    lower case of "doi"
+# "doi_no_ver_info"           "doi_lc" w/o version information
+# "data_identifier"           original entry of id in numbat / data article files
+# "data_id_lc"                lower case of "data_identifier"
+# "data_access"               original entry of data_access in numbat / data article files
+# "in_dashboard"              "TRUE" if the doi is in the charite dashboard   (they all are in the list for matching with DCC)    
+# "doi_id_orig_pair"          in case a join by original values is needed
+# "source"                    is the record came from numbat or from data articles
+# "numbat_id_of_da_id"        for data articles identifiers, these are the identifiers that were listed in numbat
+# "listed_in_numbat_output"   TRUE if "data_identifier" of data articles is already listed in numbat as well
+
 ```
 
 <br>
@@ -477,33 +513,33 @@ pattern <- "(acc(?!ess)|accession|ccdcid|studyid|id|run|term|acc)\\=" # we build
 
 # Applying the function to extract accession numbers automatically
 
-charite_dois_and_ids_3_auto_cleaned <- charite_dois_and_ids_2_in_db |>
-  mutate(data_id_auto_cleaned = map_chr(data_id, \(x) extract_acc_nr(x, pattern))) |> # apply function
+numbat_da_dois_and_ids_3_auto_cleaned <- numbat_da_dois_and_ids_2_in_db |>
+  mutate(data_id_auto_cleaned = map_chr(data_id_lc, \(x) extract_acc_nr(x, pattern))) |> # apply function
   mutate(
     # Extract slug only where applicable:
-    # - If 'data_id' contains an osf.io/[slug] or osf.io/preprints/.../[slug],
+    # - If 'data_id_lc' contains an osf.io/[slug] or osf.io/preprints/.../[slug],
     #   extract the 5-character slug from the end.
     slug = case_when(
-      str_detect(data_id, "osf\\.io/[A-Za-z0-9]+")
-      ~ str_extract(data_id, "osf\\.io/(preprints/[^/]+/)?[A-Za-z0-9]{5}") |> 
+      str_detect(data_id_lc, "osf\\.io/[A-Za-z0-9]+")
+      ~ str_extract(data_id_lc, "osf\\.io/(preprints/[^/]+/)?[A-Za-z0-9]{5}") |> 
         str_extract("[A-Za-z0-9]{5}$"),
       .default = NA
       ),
 
-    # Apply formatting logic only when data_id has a valid osf.io slug:
+    # Apply formatting logic only when data_id_lc has a valid osf.io slug:
     # - If slug and DOI (valid or malformed) are present, format as '10.xxxx/osf.io/slug'.
     # - If only slug is present, format as '//osf.io/slug'.
     # - All other rows remain unchanged.
     data_id_auto_cleaned = case_when(
-      str_detect(data_id, "osf\\.io/[A-Za-z0-9]+")
-      & !is.na(slug) & str_detect(data_id, "10\\.\\d+|10\\d{4,}")
+      str_detect(data_id_lc, "osf\\.io/[A-Za-z0-9]+")
+      & !is.na(slug) & str_detect(data_id_lc, "10\\.\\d+|10\\d{4,}")
       ~ paste0(
-        str_extract(data_id, "10\\.\\d+|10\\d{4,}") |> 
+        str_extract(data_id_lc, "10\\.\\d+|10\\d{4,}") |> 
           str_replace("^10(\\d{4,})$", "10.\\1"),
         "/osf.io/",
         slug
         ),
-      str_detect(data_id, "osf\\.io/[A-Za-z0-9]+") & !is.na(slug) ~ paste0("//osf.io/", slug),
+      str_detect(data_id_lc, "osf\\.io/[A-Za-z0-9]+") & !is.na(slug) ~ paste0("//osf.io/", slug),
       .default = data_id_auto_cleaned
     ),
 
@@ -515,8 +551,8 @@ charite_dois_and_ids_3_auto_cleaned <- charite_dois_and_ids_2_in_db |>
   mutate(
     # Step 1: Fix malformed figshare entries without DOI
     data_id_auto_cleaned = case_when(
-      str_detect(data_id, "figshare") &
-        !str_detect(data_id, "10\\.\\d+") ~ data_id_auto_cleaned |>
+      str_detect(data_id_lc, "figshare") &
+        !str_detect(data_id_lc, "10\\.\\d+") ~ data_id_auto_cleaned |>
           str_replace(".*(?=figshare\\.com)", "//"),          # Normalize to start at figshare.com
       .default = data_id_auto_cleaned
     )
@@ -524,47 +560,52 @@ charite_dois_and_ids_3_auto_cleaned <- charite_dois_and_ids_2_in_db |>
   mutate(
     # Step 2: Extract valid DOI if present in figshare entry
     data_id_auto_cleaned = case_when(
-      str_detect(data_id, "figshare") &
-        str_detect(data_id, "10\\.\\d+") ~ str_extract(
-          data_id,
+      str_detect(data_id_lc, "figshare") &
+        str_detect(data_id_lc, "10\\.\\d+") ~ str_extract(
+          data_id_lc,
           "10\\.\\d{4,9}/[^\\s/]+"                            # Extracts full DOI, avoids trailing slashes/spaces
         ),
       .default = data_id_auto_cleaned
     )
   ) |>
-  relocate(data_id_auto_cleaned, slug, dataset_for_matching, .after = data_id) # relocate m_val
+  relocate(data_id_auto_cleaned, slug, dataset_for_matching, .after = data_id_lc) # relocate autp_cleaned
+
+
+
 
 # save
-save_cr(charite_dois_and_ids_3_auto_cleaned, file = file.path(here(
+save_cr(numbat_da_dois_and_ids_3_auto_cleaned, file = file.path(here(
   "data",
   "wrangling_steps",
   "charite",
-  "charite_dois_and_ids_3_auto_cleaned.RData")))
+  "numbat_da_dois_and_ids_3_auto_cleaned.RData")))
 
-# Check which and if there are any identifiers to manual validate
-
-charite_dois_and_ids_6_m_val_done <- read.csv(
-  file.path(here("data", "verification", "m_val", "charite_dois_and_ids_6_m_val_done.csv")),
-  header = TRUE,
-  sep = ",") # load previous m_val
-
-with_new_ids_to_val_v1_to_edit <- charite_dois_and_ids_3_auto_cleaned |> 
-  left_join(charite_dois_and_ids_6_m_val_done |> select(doi, data_id, data_id_m_val, validated, Category),
-  by = c("doi", "data_id")
-) |> # join existing prior validation
-  relocate(data_id_m_val, .after = slug)
-
-with_new_ids_to_val_v1_to_edit |> dplyr::filter(is.na(validated) | is.na(Category)) |> View()
-
-# There are several, so I will export to a csv to fill them:
-write_csv_cr(
-  with_new_ids_to_val_v1_to_edit,
-  file = here("data",
-              "verification",
-              "m_val",
-              "with_new_ids_to_val_v1_to_edit.csv"),
-  row.names = FALSE
-) # as csv
+# ARCHIVE of updating manual validation:
+#
+# # Check which and if there are any identifiers to manual validate
+# 
+# numbat_da_dois_and_ids_6_m_val_done <- read.csv(
+#   file.path(here("data", "verification", "m_val", "charite_dois_and_ids_6_m_val_done.csv")),
+#   header = TRUE,
+#   sep = ",") # load previous m_val
+# 
+# with_new_ids_to_val_v1_to_edit <- numbat_da_dois_and_ids_3_auto_cleaned |> 
+#   left_join(numbat_da_dois_and_ids_6_m_val_done |> select(doi, data_id, data_id_m_val, validated, Category),
+#   by = c("doi", "data_id")
+# ) |> # join existing prior validation
+#   relocate(data_id_m_val, .after = slug)
+# 
+# with_new_ids_to_val_v1_to_edit |> dplyr::filter(is.na(validated) | is.na(Category)) |> View()
+# 
+# # There are several, so I will export to a csv to fill them:
+# write_csv_cr(
+#   with_new_ids_to_val_v1_to_edit,
+#   file = here("data",
+#               "verification",
+#               "m_val",
+#               "with_new_ids_to_val_v1_to_edit.csv"),
+#   row.names = FALSE
+# ) # as csv
 ```
 
 # 4. Load Manually Validated Identifiers
@@ -574,46 +615,48 @@ write_csv_cr(
 # The manual validation process was done in a separate file and resulted in the file:
   # Manual validation of accession numbers extraction function for charite papers.csv
 
-# So in this chunk we will load the most recent .csv file from the manual validation directory and assign it to "charite_dois_and_ids_clean_manually_validated", and then wrangle it to show the manual validation process.
+# So in this chunk we will load the most recent .csv file from the manual validation directory and assign it to "numbat_da_dois_and_ids_clean_manually_validated", and then wrangle it to show the manual validation process.
 
-# 1. Load "charite_dois_and_ids_6_m_val_done.csv"
+# 1. Load "numbat_da_dois_and_ids_5_m_val_joined_done.csv"
 
-charite_dois_and_ids_4_m_val_done <- read.csv(
-  file.path(here("data", "verification", "m_val", "with_new_ids_to_val_v1.csv")),
+numbat_da_dois_and_ids_4_m_val_done <- read.csv(
+  file.path(here("data", "verification", "m_val", "numbat_da_dois_and_ids_5_m_val_joined_done.csv")),
   header = TRUE,
   sep = ",")
 
 # save as RData
-save_cr(charite_dois_and_ids_4_m_val_done,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_4_m_val_done.RData")))
+save_cr(numbat_da_dois_and_ids_4_m_val_done,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_5_m_val_joined_done.RData")))
 
 # 2. Get only relevant cases to match with DCC
 
 # create a column with the most standardized data_id
-charite_dois_and_ids_5_id_coalesced <- charite_dois_and_ids_4_m_val_done |> 
+numbat_da_dois_and_ids_5_id_coalesced <- numbat_da_dois_and_ids_4_m_val_done |> 
   mutate(dataset_for_matching =
-           coalesce(dataset_for_matching, na_if(data_id_m_val, ""), data_id_auto_cleaned))
+           coalesce(dataset_for_matching,     # Keep existing dataset_for_matching (if not NA)
+                    na_if(data_id_m_val, ""), # Otherwise, use data_id_m_val, but only if it’s not empty ("")
+                    data_id_auto_cleaned))    # Otherwise, fall back to data_id_auto_cleaned
 
-save_cr(charite_dois_and_ids_5_id_coalesced,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_5_id_coalesced.RData"))) # as RData
+save_cr(numbat_da_dois_and_ids_5_id_coalesced,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_5_id_coalesced.RData"))) # as RData
 
 # get only relevant cases: doi, acc_nr, gen_rep
-charite_dois_and_ids_6_for_matching <- charite_dois_and_ids_5_id_coalesced |>
+numbat_da_dois_and_ids_6_for_matching <- numbat_da_dois_and_ids_5_id_coalesced |>
   dplyr::filter(
     Category %in% c("doi", "acc_nr")
     | (Category == "url" & is_gen_rep == TRUE)) 
 
 # Save: This file will be loaded in charite_loading_and_preprocessing.qmd!
 
-save_cr(charite_dois_and_ids_6_for_matching,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_6_for_matching.RData"))) # as RData
+save_cr(numbat_da_dois_and_ids_6_for_matching,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_6_for_matching.RData"))) # as RData
 
 write_csv_cr(
-  charite_dois_and_ids_6_for_matching,
+  numbat_da_dois_and_ids_6_for_matching,
   file = here("data",
               "verification",
               "m_val",
-              "charite_dois_and_ids_6_for_matching.csv"),
+              "numbat_da_dois_and_ids_6_for_matching.csv"),
   row.names = FALSE
 ) # as csv
 
@@ -647,7 +690,7 @@ secondary_ids <- read.csv(
   sep = ",")
 
 # add
-charite_dois_and_ids_7_w_sec_id <- charite_dois_and_ids_6_for_matching |> 
+numbat_da_dois_and_ids_7_w_sec_id <- numbat_da_dois_and_ids_6_for_matching |> 
   left_join(secondary_ids |> 
               dplyr::filter(!is.na(secondary_study_accession)
                             & !secondary_study_accession == ""),
@@ -656,26 +699,26 @@ charite_dois_and_ids_7_w_sec_id <- charite_dois_and_ids_6_for_matching |>
   relocate(data_id_secondary, .after = dataset_for_matching)
 
 # save
-save_cr(charite_dois_and_ids_7_w_sec_id,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_7_w_sec_id.RData")))
+save_cr(numbat_da_dois_and_ids_7_w_sec_id,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_7_w_sec_id.RData")))
 
 # add a column with 2nd numbat entry for cases with more than one form of id for same doi in numbat
 
-charite_dois_and_ids_8_wide <- charite_dois_and_ids_7_w_sec_id |>
+numbat_da_dois_and_ids_8_wide <- numbat_da_dois_and_ids_7_w_sec_id |>
   group_by(dataset_for_matching) |>
   arrange(dataset_for_matching) |>
 
   # First entry (keep all original columns, rename data_identifier)
   slice_head(n = 1) |>
-  rename(data_identifier_orig_1st_entry = data_identifier_orig) |>
+  rename(data_identifier_orig_1st_entry = data_identifier) |>
 
   # Join second entry from same group
   left_join(
-    charite_dois_and_ids_7_w_sec_id |>
+    numbat_da_dois_and_ids_7_w_sec_id |>
       group_by(dataset_for_matching) |>
       arrange(dataset_for_matching) |>
       slice_tail(n = 1) |>
-      select(dataset_for_matching, data_identifier_orig_2nd_entrie = data_identifier_orig),
+      select(dataset_for_matching, data_identifier_orig_2nd_entrie = data_identifier),
     by = "dataset_for_matching"
   ) |>
 
@@ -691,8 +734,8 @@ charite_dois_and_ids_8_wide <- charite_dois_and_ids_7_w_sec_id |>
 
 # Save for matching with DCC
 
-save_cr(charite_dois_and_ids_8_wide,
-        file = file.path(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_8_wide.RData")))
+save_cr(numbat_da_dois_and_ids_8_wide,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_8_wide.RData")))
 ```
 
 # 5. Matching DCC and Charite Lists by Dataset Identifiers
@@ -703,7 +746,7 @@ The matching was done by joining the two lists by the **identifier** columns. Th
 
 ```{r Matching manually validated Charite list with DCC}
 
-# Load charite_dois_and_ids_manually_valditaed.RData
+# Load numbat_da_dois_and_ids_manually_valditaed.RData
 
 load(here("data",
           "wrangling_steps",
@@ -715,11 +758,11 @@ load(here("data",
 load(here("data",
           "wrangling_steps",
           "charite",
-          "charite_dois_and_ids_8_wide.RData"))
+          "numbat_da_dois_and_ids_8_wide.RData"))
 
 # Primary id join (by dataset_for_matching)
 
-joined_primary <- charite_dois_and_ids_8_wide |>
+joined_primary <- numbat_da_dois_and_ids_8_wide |>
   inner_join(
     DCC_corpus_11_std_lbl,
     by = "dataset_for_matching",
@@ -729,7 +772,7 @@ joined_primary <- charite_dois_and_ids_8_wide |>
 
 # Secondary id join (by data_id_secondary, and only if not NA and not already matched)
 
-joined_secondary <- charite_dois_and_ids_8_wide |>
+joined_secondary <- numbat_da_dois_and_ids_8_wide |>
   dplyr::filter(!is.na(data_id_secondary)) |> # exclude NAs
   anti_join(joined_primary, by = "dataset_for_matching") |> # get only rows that didn't match with primary id
   inner_join(
