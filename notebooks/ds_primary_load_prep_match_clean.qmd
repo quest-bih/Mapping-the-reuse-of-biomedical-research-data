@@ -570,9 +570,6 @@ numbat_da_dois_and_ids_3_auto_cleaned <- numbat_da_dois_and_ids_2_in_db |>
   ) |>
   relocate(data_id_auto_cleaned, slug, dataset_for_matching, .after = data_id_lc) # relocate autp_cleaned
 
-
-
-
 # save
 save_cr(numbat_da_dois_and_ids_3_auto_cleaned, file = file.path(here(
   "data",
@@ -619,48 +616,33 @@ save_cr(numbat_da_dois_and_ids_3_auto_cleaned, file = file.path(here(
 
 # 1. Load "numbat_da_dois_and_ids_5_m_val_joined_done.csv"
 
-numbat_da_dois_and_ids_4_m_val_done <- read.csv(
+numbat_da_dois_and_ids_5_m_val_joined_done <- read.csv(
   file.path(here("data", "verification", "m_val", "numbat_da_dois_and_ids_5_m_val_joined_done.csv")),
   header = TRUE,
   sep = ",")
 
 # save as RData
-save_cr(numbat_da_dois_and_ids_4_m_val_done,
+save_cr(numbat_da_dois_and_ids_5_m_val_joined_done,
         file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_5_m_val_joined_done.RData")))
 
-# 2. Get only relevant cases to match with DCC
+# 2. Get cleanest identifier
 
 # create a column with the most standardized data_id
-numbat_da_dois_and_ids_5_id_coalesced <- numbat_da_dois_and_ids_4_m_val_done |> 
+numbat_da_dois_and_ids_6_id_coalesced <- numbat_da_dois_and_ids_5_m_val_joined_done |> 
   mutate(dataset_for_matching =
            coalesce(dataset_for_matching,     # Keep existing dataset_for_matching (if not NA)
                     na_if(data_id_m_val, ""), # Otherwise, use data_id_m_val, but only if it’s not empty ("")
                     data_id_auto_cleaned))    # Otherwise, fall back to data_id_auto_cleaned
 
-save_cr(numbat_da_dois_and_ids_5_id_coalesced,
-        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_5_id_coalesced.RData"))) # as RData
 
-# get only relevant cases: doi, acc_nr, gen_rep
-numbat_da_dois_and_ids_6_for_matching <- numbat_da_dois_and_ids_5_id_coalesced |>
-  dplyr::filter(
-    Category %in% c("doi", "acc_nr")
-    | (Category == "url" & is_gen_rep == TRUE)) 
+numbat_da_dois_and_ids_6_id_coalesced |> dplyr::filter(is.na(dataset_for_matching)) |> View() # check
 
-# Save: This file will be loaded in charite_loading_and_preprocessing.qmd!
+save_cr(numbat_da_dois_and_ids_6_id_coalesced,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_6_id_coalesced.RData"))) # as RData
 
-save_cr(numbat_da_dois_and_ids_6_for_matching,
-        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_6_for_matching.RData"))) # as RData
+# 3. Add secondary identifier for the same dataset, where it exists
 
-write_csv_cr(
-  numbat_da_dois_and_ids_6_for_matching,
-  file = here("data",
-              "verification",
-              "m_val",
-              "numbat_da_dois_and_ids_6_for_matching.csv"),
-  row.names = FALSE
-) # as csv
-
-# add secondary identifier, where it exists
+# Notice: "https://physionet.org/content/ptb-xl/1.0.1/" had more than one secondary identifier, so they were already added as rows, and not as values in "data_id_secondary".
 
 # # load latest id metadata file
 # load_latest_metadata_update()
@@ -690,7 +672,7 @@ secondary_ids <- read.csv(
   sep = ",")
 
 # add
-numbat_da_dois_and_ids_7_w_sec_id <- numbat_da_dois_and_ids_6_for_matching |> 
+numbat_da_dois_and_ids_7_w_sec_id <- numbat_da_dois_and_ids_6_id_coalesced |> 
   left_join(secondary_ids |> 
               dplyr::filter(!is.na(secondary_study_accession)
                             & !secondary_study_accession == ""),
@@ -702,40 +684,46 @@ numbat_da_dois_and_ids_7_w_sec_id <- numbat_da_dois_and_ids_6_for_matching |>
 save_cr(numbat_da_dois_and_ids_7_w_sec_id,
         file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_7_w_sec_id.RData")))
 
-# add a column with 2nd numbat entry for cases with more than one form of id for same doi in numbat
+# 4. Add a column with 2nd numbat entry for cases with more than one form of id for same doi ** in numbat **
 
-numbat_da_dois_and_ids_8_wide <- numbat_da_dois_and_ids_7_w_sec_id |>
-  group_by(dataset_for_matching) |>
-  arrange(dataset_for_matching) |>
+# This step was done only for documentation purposes.
+# Several numbat entries had more than 1 id per doi+id case.
+# This id led to the exact same dataset, and was just written a bit differently,
+# which led to an artificial inflation of the number of cases.
+# So here I'll move the 2nd entry into its own column, so that unique doi+id pairs would be reflected in the table.
 
-  # First entry (keep all original columns, rename data_identifier)
-  slice_head(n = 1) |>
-  rename(data_identifier_orig_1st_entry = data_identifier) |>
-
-  # Join second entry from same group
-  left_join(
+numbat_da_dois_and_ids_8_w_numbat_2nd <- numbat_da_dois_and_ids_7_w_sec_id |>
+  dplyr::left_join(
+    # find the 2nd numbat entry of same doi+dataset_for_matching row (for numbat sources only)
     numbat_da_dois_and_ids_7_w_sec_id |>
-      group_by(dataset_for_matching) |>
-      arrange(dataset_for_matching) |>
-      slice_tail(n = 1) |>
-      select(dataset_for_matching, data_identifier_orig_2nd_entrie = data_identifier),
-    by = "dataset_for_matching"
+      dplyr::filter(source == "numbat") |>
+      dplyr::select(doi, data_identifier, dataset_for_matching) |>
+      dplyr::group_by(doi, dataset_for_matching) |>
+      dplyr::filter(n() > 1) |>          # only groups with >1 row
+      dplyr::slice(2) |>                 # get second row from each group
+      dplyr::ungroup() |>
+      dplyr::rename(data_identifier_2nd_numbat_entry = data_identifier),
+    by = c("doi", "dataset_for_matching")
   ) |>
+  dplyr::filter(data_identifier_2nd_numbat_entry != data_identifier
+                |is.na(data_identifier_2nd_numbat_entry)) |> # clean up resulting duplicates
+  relocate(data_identifier_2nd_numbat_entry, .after = data_identifier)
 
-  # Remove second entry if it's a duplicate of the first
-  mutate(
-    data_identifier_orig_2nd_entrie = case_when(
-      data_identifier_orig_1st_entry == data_identifier_orig_2nd_entrie ~ NA_character_,
-      TRUE ~ data_identifier_orig_2nd_entrie
-    )
-  ) |>
-  ungroup() |> 
-  relocate(data_identifier_orig_2nd_entrie, .after = data_identifier_orig_1st_entry)
+# save
+save_cr(numbat_da_dois_and_ids_8_w_numbat_2nd,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_8_w_numbat_2nd.RData")))
+
+
+# _9: pair doi_no_ver_info;dataset_for_matching
+
+numbat_da_dois_and_ids_9_clean_pairs <- numbat_da_dois_and_ids_8_w_numbat_2nd |> 
+  mutate(doi_id_clean_pair = paste(doi_no_ver_info, dataset_for_matching, sep = ";"))
 
 # Save for matching with DCC
+save_cr(numbat_da_dois_and_ids_9_clean_pairs,
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData")))
 
-save_cr(numbat_da_dois_and_ids_8_wide,
-        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_8_wide.RData")))
+
 ```
 
 # 5. Matching DCC and Charite Lists by Dataset Identifiers
