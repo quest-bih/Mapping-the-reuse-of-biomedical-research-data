@@ -313,4 +313,35 @@ save_path <- file.path(here("data",
 save(authors_position_to_join, file = save_path)
 
 
-  
+# DCC 25.08.2025 ---------------------------------------------------------------------
+
+
+dfs <- list(df)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "dcc_doi_metadata_v2.RData"))
+
+save(final_results, file = save_path)
+
+
+# Charite 25.08.2025 ---------------------------------------------------------------------
+
+
+dfs <- list(df)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "charite_doi_metadata_v2.RData"))
+
+save(final_results, file = save_path)

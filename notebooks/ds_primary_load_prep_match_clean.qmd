@@ -746,21 +746,21 @@ load(here("data",
 load(here("data",
           "wrangling_steps",
           "charite",
-          "numbat_da_dois_and_ids_8_wide.RData"))
+          "numbat_da_dois_and_ids_9_clean_pairs.RData"))
 
 # Primary id join (by dataset_for_matching)
 
-joined_primary <- numbat_da_dois_and_ids_8_wide |>
+numbat_da_dcc_joined_primary <- numbat_da_dois_and_ids_9_clean_pairs |>
   inner_join(
     DCC_corpus_11_std_lbl,
     by = "dataset_for_matching",
     suffix = c("_charite", "_dcc")
   ) |> 
-  mutate(primary = TRUE)
+  mutate(primary = TRUE) # tag id matches
 
 # Secondary id join (by data_id_secondary, and only if not NA and not already matched)
 
-joined_secondary <- numbat_da_dois_and_ids_8_wide |>
+numbat_da_dcc_joined_secondary <- numbat_da_dois_and_ids_9_clean_pairs |>
   dplyr::filter(!is.na(data_id_secondary)) |> # exclude NAs
   anti_join(joined_primary, by = "dataset_for_matching") |> # get only rows that didn't match with primary id
   inner_join(
@@ -770,14 +770,16 @@ joined_secondary <- numbat_da_dois_and_ids_8_wide |>
   )
 
 # Combine both
-dcc_charite_joined <- joined_primary |>
+numbat_da_dcc_joined <- joined_primary |>
   bind_rows(joined_secondary) |> 
   mutate(primary = case_when(
     is.na(primary) ~ FALSE,
-    .default = primary))
+    .default = primary)) #tag secondary id matches
+
+# maybe do "detected" already here?
 
 # Save
-save_cr(dcc_charite_joined, file = file.path(here("data", "processed","dcc_charite_joined", "dcc_charite_joined.RData")))
+save_cr(numbat_da_dcc_joined, file = file.path(here("data", "processed","numbat_da_dcc_joined", "numbat_da_dcc_joined")))
 
 rm(DCC_corpus_11_std_lbl) # clean up
 ```
@@ -816,13 +818,9 @@ The exclusion steps are illustrated in **Figure 1.** below, followed by the clea
 
 ### 1. Initial cleaning and exclusion
 
-# Check if there are still any relevant columns with upper case
-dcc_charite_joined |> summarise(across(everything(), ~ any(str_detect(as.character(.), "[A-Z]")))) |> View()
-# "publisher" is still uppercased, but I'll leave it for now
-
 # 1. Add a "detected_data_id" column
 
-dcc_charite_joined_1_det_id <- dcc_charite_joined |>
+numbat_da_dcc_joined_1_det_id <- numbat_da_dcc_joined |>
     mutate(
     detected_id = case_when(
       primary ~ dataset_for_matching,
@@ -832,17 +830,17 @@ dcc_charite_joined_1_det_id <- dcc_charite_joined |>
   relocate(detected_id, .after = data_id_secondary)
 
 # save
-save_cr(dcc_charite_joined_1_det_id, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                  "dcc_charite_joined_1_det_id.RData")))
+save_cr(numbat_da_dcc_joined_1_det_id, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                  "numbat_da_dcc_joined_1_det_id.RData")))
 
 # 2. Remove self-citations
 
-dcc_charite_joined_2_rm_self <- dcc_charite_joined_1_det_id |> 
+numbat_da_dcc_joined_2_rm_self <- numbat_da_dcc_joined_1_det_id |> 
   dplyr::filter(doi_charite != doi_dcc)
 
 # save
-save_cr(dcc_charite_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                       "dcc_charite_joined_2_rm_self.RData")))
+save_cr(numbat_da_dcc_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "numbat_da_dcc_joined_2_rm_self.RData")))
 
 ### 2. Excluding authors overlap:
 
@@ -883,27 +881,102 @@ load(here("data", "verification", "metadata matched", "dcc_doi_metadata_v1.RData
 
 # Join info into dcc-charite list
 
-dcc_charite_joined_3_au_info <- dcc_charite_joined_2_rm_self |> 
+numbat_da_dcc_joined_3_au_info <- numbat_da_dcc_joined_2_rm_self |> 
   left_join(charite_doi_metadata, by = "doi_charite", suffix = c("", "_charite")) |> 
   left_join(dcc_doi_metadata, by = "doi_dcc", suffix = c("", "_dcc"))
 
 # Check for blanks & NAs in metadata
 
-dcc_charite_joined_3_au_info |> dplyr::filter(publication_year_charite == ""
+numbat_da_dcc_joined_3_au_info |> dplyr::filter(publication_year_charite == ""
                                               | authors_charite == ""
                                               | publication_year_dcc == ""
                                               | authors_dcc == "") |>
   View() # no blanks
 
-dcc_charite_joined_3_au_info |> dplyr::filter(is.na(publication_year_charite)
+numbat_da_dcc_joined_3_au_info |> dplyr::filter(is.na(publication_year_charite)
                                               | is.na(authors_charite)
                                               | is.na(publication_year_dcc)
                                               | is.na(authors_dcc)) |>
-  View() # No NAs
+  View() # There were NAs for Charite and for DCC papers
+
+
+# Create csv files for extracting year and authors info in a separate script
+# (offline check verified that where authors are missing, publication year is missing as well)
+
+dcc_dois_for_au_and_year_info_25082025 <- numbat_da_dcc_joined_3_au_info |>
+  dplyr::filter(is.na(authors_dcc)) |>
+  select(doi_dcc) |>
+  distinct() # get dcc
+
+charite_dois_for_au_and_year_info_25082025 <- numbat_da_dcc_joined_3_au_info |>
+  dplyr::filter(is.na(authors_charite)) |>
+  select(doi_charite) |>
+  distinct() # get charite
+
+
+write_csv_cr(dcc_dois_for_au_and_year_info_25082025, file = file.path(here("data",
+                                                            "verification",
+                                                            "metadata matched",
+                                                            "dois to get info of",
+                                                            "dcc_dois_for_au_and_year_info_25082025.csv")),
+             row.names = FALSE) # save as csv: charite
+
+write_csv_cr(charite_dois_for_au_and_year_info_25082025, file = file.path(here("data",
+                                                            "verification",
+                                                            "metadata matched",
+                                                            "dois to get info of",
+                                                            "charite_dois_for_au_and_year_info_25082025.csv")),
+             row.names = FALSE) # save as csv: charite
+
+# I then ran "Openalex_authors_and_years_extraction" script.
+
+# Join back authors and years V2 (V22 is only added cases that weren't in V1):
+
+# Get authors and years info V2 (25.08.2025):
+
+  # Get authors and years info:
+
+  load(here("data",
+            "verification",
+            "metadata matched",
+            "charite_doi_metadata_v2.RData")) # load charite
+
+  charite_dois_metadata_v2 <- final_results # assign
+
+  load(here("data",
+            "verification",
+            "metadata matched",
+            "dcc_doi_metadata_v2.RData")) # load dcc
+
+  dcc_dois_metadata_v2 <- final_results # assign
+
+  rm(final_results) # clean up
+
+# Prepare both metadata lists before joining
+
+charite_dois_metadata_v2 <- charite_dois_metadata_v2 |>
+  rename(doi_charite = doi) |> # rename column
+  mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/")) # remove prefix
+
+dcc_dois_metadata_v2 <- dcc_dois_metadata_v2 |>
+  rename(doi_dcc = doi) |> # rename column
+  mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/")) # remove prefix
+
+# Join info into dcc-charite matched list
+
+numbat_da_dcc_joined_3_au_info <- numbat_da_dcc_joined_3_au_info |> 
+  left_join(charite_dois_metadata_v2, by = c("doi_lc" = "doi_charite")) |> 
+  mutate(authors_charite = coalesce(authors_charite, authors),
+         publication_year_charite = coalesce(publication_year_charite, publication_year)) |> 
+  select(-c(authors, publication_year)) |> 
+  left_join(dcc_dois_metadata_v2, by = "doi_dcc") |> 
+  mutate(authors_dcc = coalesce(authors_dcc, authors),
+         publication_year_dcc = coalesce(publication_year_dcc, publication_year)) |>
+  select(-c(authors, publication_year))
 
 # save
-save_cr(dcc_charite_joined_3_au_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                       "dcc_charite_joined_3_au_info.RData")))
+save_cr(numbat_da_dcc_joined_3_au_info, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                       "numbat_da_dcc_joined_3_au_info.RData")))
 
 # Remove cases with author overlap:
 
@@ -915,11 +988,11 @@ no_common_element <- function(x, y) {
 }
 
 # Apply the filter using the function to create a matched list with no "Author Overlap"
-dcc_charite_joined_4_rm_au_ov <- dcc_charite_joined_3_au_info  |> 
+numbat_da_dcc_joined_4_rm_au_ov <- numbat_da_dcc_joined_3_au_info  |> 
   dplyr::filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
   distinct(doi_charite, dataset_for_matching, doi_dcc, .keep_all = TRUE)
 
 # save
-save_cr(dcc_charite_joined_4_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
-                                                        "dcc_charite_joined_4_rm_au_ov.RData")))
+save_cr(numbat_da_dcc_joined_4_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_charite",
+                                                        "numbat_da_dcc_joined_4_rm_au_ov.RData")))
 ```
