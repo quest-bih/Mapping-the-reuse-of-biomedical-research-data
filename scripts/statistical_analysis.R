@@ -218,6 +218,27 @@ tibble(
   `p value` = p_fdr
 )
 
+#####
+
+# actualy use this below for the analysis I think:
+#
+# if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+# library(pacman)
+# pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, lsr)
+# 
+# data <- read.csv("C:/AVIHAY/disc_approach_sankey_data.csv", sep = ";")
+# 
+# cont_tbl <- data |> 
+#   select(Discipline, Approach, value) |>
+#   pivot_wider(names_from = Approach, values_from = value) |>
+#   column_to_rownames("Discipline") |>
+#   as.matrix()
+# 
+# chisq.test(cont_tbl) # global
+# 
+# fisher.test(cont_tbl, simulate.p.value = TRUE, B = 10000) # verify with fisher
+# 
+# cramersV(cont_tbl) # ES
 
 # 2.datasets age-citations relationship -----------------------------------
 

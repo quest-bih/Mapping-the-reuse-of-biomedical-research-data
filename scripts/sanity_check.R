@@ -100,7 +100,7 @@ dcc_ds_and_added_joined_4_rm_au_ov |>
   distinct() |>
   dplyr::filter(!dataset_for_matching %in% d$dataset_for_matching)
 
-# here I check datasets taht wereare in "charite_dois_ids_distinct" and not in "4_rm_au_ov"
+# here I check datasets that are in "charite_dois_ids_distinct" and not in "4_rm_au_ov"
 in_d_and_not_in_4_rm_au_ov <- d |> 
   select(dataset_for_matching) |> 
   distinct() |>
