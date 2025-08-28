@@ -345,3 +345,19 @@ save_path <- file.path(here("data",
                             "charite_doi_metadata_v2.RData"))
 
 save(final_results, file = save_path)
+
+
+# ds_in_matched_numbat check 27.08.2025 -----------------------------------
+
+dfs <- list(df)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_in_matched_numbat.RData"))
+
+save(final_results, file = save_path)

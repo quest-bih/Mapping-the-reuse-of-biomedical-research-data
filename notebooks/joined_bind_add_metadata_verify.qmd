@@ -1,5 +1,5 @@
 ---
-title: "ds_added_and_datastet_load_prep_match_clean"
+title: "bind the two matched lists into one table and verify"
 date: "today"
 author: "Avihay Cohen"
 format:
@@ -73,17 +73,19 @@ load_latest_metadata_update <- function() {
 load(here("data",
           "wrangling_steps",
           "dcc_charite",
-          "dcc_charite_joined_4_rm_au_ov.RData"))
+          "numbat_da_dcc_joined_4_rm_au_ov.RData"))
 
-dcc_charite_joined_final <- dcc_charite_joined_4_rm_au_ov
+dcc_numbat_da_joined_final <- numbat_da_dcc_joined_4_rm_au_ov
 
 # load joined dcc datastet and added
 load(here("data",
           "wrangling_steps",
           "dcc_datastet_and_added",
-          "dcc_ds_and_added_joined_4_rm_au_ov.RData")) # CHANGE TO THE MOST RECENT!
+          "dcc_ds_and_added_joined_6_harm.RData"))
 
-dcc_ds_joined_final <- dcc_ds_and_added_joined_4_rm_au_ov
+dcc_ds_added_joined_final <- dcc_ds_and_added_joined_6_harm
+
+rm(numbat_da_dcc_joined_4_rm_au_ov, dcc_ds_and_added_joined_6_harm)
 
 ```
 
@@ -91,77 +93,251 @@ dcc_ds_joined_final <- dcc_ds_and_added_joined_4_rm_au_ov
 
 ```{r Bind}
 
-# 1. Prepare for binding
+# 1. prepare for binding
 
-# Get column names that exist only in each joined list
+# # check cols type
+# str(dcc_numbat_da_joined_final)
+# str(dcc_ds_added_joined_final)
 
-only_in_dcc_ds <- setdiff(colnames(dcc_ds_joined_final),
-                          colnames(dcc_charite_joined_final))
-
-only_in_dcc_charite <- setdiff(colnames(dcc_charite_joined_final),
-                               colnames(dcc_ds_joined_final))
-
-# View different column names between the lists
-tibble(
-  # left column: values only in dcc_ds, padded with NA if dcc_charite has more entries
-  dcc_ds_joined_final = c(only_in_dcc_ds, rep(NA, max(0, length(only_in_dcc_charite) - length(only_in_dcc_ds)))),
-  # right column: opposite
-  dcc_charite_joined_final     = c(only_in_dcc_charite, rep(NA, max(0, length(only_in_dcc_ds) - length(only_in_dcc_charite))))
-) |> View()
-
-# Rename columns in dcc_ds to match dcc_charite columns (just because their were named first)
-
-dcc_ds_for_binding <- dcc_ds_joined_final |> 
-  rename(
-    
-    # renaming columns to the dcc_charite column names (which will merge them when binding)
-    doi_charite = doi_datastet_and_added, # the col "doi_no_ver_info" will be relevant only for numbat
-    data_identifier_orig_1st_entry = context, # for ds it's "context". For numbat it's original typed-in id
-    slug_charite = slug_datastet_and_added,
-    data_id_m_val = m_val,
-    data_id_source = source_datastet_and_added,
-    publication_year_charite = publication_year_datastet_and_added,
-    authors_charite = authors_datastet_and_added,
-
-    
-    # renaming columns in order to keep their source apparent
-    doi_year_from_datastet = year, # to mark that this column originated from Datastet source file
-    category = Category, # just lower-casing
-    originally_detected_id_for_added = detected_id # relevant only in case an additional id was matched
-    ) |> 
-  select(-validate) # in the matched list (and only there), all values are TRUE anyway 
-
-# So the columns that are relevant only for numbat + data articles, and kept with their names:
-# data_id_secondary, data_access, in_dashboard, doi_no_ver_info 
-
-# And columns that are relevant only for datastet + added, and kept with their names:
-# added_id
-  
-dcc_charite_for_binding <- dcc_charite_joined_final |> 
-    rename(
-      data_id_source = source_charite, # renaming was done in ds_added as well
-      category = Category, # just lower-casing
-      extracted_id = data_id,  # in ds it's extracted from "contex". in numnbat - first processing of typed-in
-      detected_in_dcc = detected_id) |> # relevant only in case an where there were primary and secondary ids
-
-   mutate(in_numbat_or_data_articles = TRUE) |> # adding "TRUE" to this column which originated from datastet_and_added
-   select(-c(validated, # all values are TRUE anyway
-          listed_in_numbat_output, # relevant only for data articles values and values here are all FALSE
-          data_identifier_orig_2nd_entrie)) # in the matched list (and only there), this column is the same as 1st_entry
-          
-# 2. Bind
+# convert "validated" to chr
+dcc_numbat_da_joined_final_for_binding <- dcc_numbat_da_joined_final |> mutate(validated = as.character(validated))
 
 dcc_detected_ids_all_sources <- bind_rows(
-  dcc_charite_for_binding,
-  dcc_ds_for_binding
+  dcc_numbat_da_joined_final_for_binding,
+  dcc_ds_added_joined_final
 )
 
 # save
 save_cr(dcc_detected_ids_all_sources, file = file.path(here("data", "wrangling_steps", "all_sources_binded",
-                                                        "dcc_detected_ids_all_sources_1_binded.RData")))
+                                                        "dcc_detected_ids_all_sources.RData")))
+
+rm(dcc_ds_added_joined_final, dcc_numbat_da_joined_final, dcc_numbat_da_joined_final_for_binding) # clean up
 ```
 
-# 3. Add Metadata
+# 3. Add DataStet doi+ids that have ids that already matched as Numbat / Data articles ids
+
+Currently the binded list contains: 1. numbat and DA matches 2. DataStet and added identifiers that WEREN'T matched as numbat identifiers
+
+So I'd like to add a "duplication" to the list, so that it'll also contain DataStet and added identifiers that were already a match in numbat/DA. That way I could see the overlapping between the sources (importantly, only for matched cases! We don't have the data for unmatched DataStet, so we won't examine the overlap).
+
+In order to do that, I'll bind cases from Numbat/DA that we now know that they're in the DCC, because they matched as DataStet and added ids.
+
+```{r}
+
+# 1. Load data
+
+# load all extracted DataStet and added ids
+
+load(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_3_lbl.RData"))
+ds_added_extracted_ids <- added_and_ds_for_matching_3_lbl
+rm(added_and_ds_for_matching_3_lbl)
+
+# load matched numbat_da ids
+
+load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_4_rm_au_ov.RData"))
+numbat_da_matched_ids <- numbat_da_dcc_joined_4_rm_au_ov
+rm(numbat_da_dcc_joined_4_rm_au_ov)
+
+# 2. Plan
+
+# My question is:
+# which ds_added_extracted_ids are in numbat_da_dcc_joined_4_rm_au_ov?
+
+# For that, the following 7 steps are needed:
+
+  # 1. From ALL ds+added extracted ids (before cleaning and matching), get only the ones that matched with DCC as Numbat IDs
+
+  # 2. Harmonize the resulting table to fit dcc_detected_ids_all_sources
+
+  # 3. Join DCC columns only into this table from dcc_detected_ids_all_sources, based on detected_id, since it already has charite
+  #    info, but DOIs could be different. This is basically another "DCC" match, but with already-known matches.
+
+  # 4. Join "authors_charite" and "publication_year_charite" colulmns, but this time based on the DOI
+
+  # 5. Run OpenAlex to complete missing authors and years for charite
+
+  # 6. Exclude author overlap
+
+  # 7. Bind table with dcc_detected_ids_all_sources. This will create duplication of ids, but with source = datastet/added, and   
+  #    Charite DOIs that could be the same or different
+
+# The reason for the gradual join process is that some ids could have different charite DOIs. So if we join only by id, then joined doi info could be wrong, and if we join by doi+id pair, we will lose records where ids had different dois.
+
+# 1. From ALL ds+added extracted ids (before cleaning and matching), get only the ones that matched with DCC as Numbat IDs
+
+ds_added_in_matched_numbat <- ds_added_extracted_ids |>
+  dplyr::filter(dataset_for_matching %in% numbat_da_matched_ids$detected_id) |> # get detected ( = id / secondary) numbat_da ids only
+  distinct() |> 
+  mutate(source = "datastet_in_numbat") # just to make sure I can view it separately
+
+# 2. Harmonize the resulting table to fit dcc_detected_ids_all_sources
+
+# The "Charite" cols need to be harmonized (reference code is in ds_added... qmd):
+
+ds_added_in_matched_numbat_1_harm <- ds_added_in_matched_numbat |> 
+  
+  # Rename columns
+  rename(
+    doi_charite = doi, # doi charite
+    slug_charite = slug, # slug charite
+    data_id_m_val = m_val,
+    detected_in_numbat_originally_only_for_added = detected_id, # to make it clear that it's the originally detected id from numbat, and only for added cases
+    source_charite = source, # manual validation
+    validated = validate) |>  # correcting a typo
+  # 
+  mutate(
+    data_identifier = coalesce(extracted_id, added_id), # so for numbad+da it's typed-in id, and for ds+added it's the extracted from datastet or the typed in additional id
+    doi_lc = doi_charite, # all dois are already lowercased
+    doi_no_ver_info = str_remove(doi_charite, "\\.[0-9]$"), # remove version information from DOIs
+    data_id_lc = tolower(data_identifier), # added were not lowered yet
+    detected_id = dataset_for_matching,  # there was no secondary id to match in ds+added ,so it's the same column
+    doi_id_orig_pair = paste(doi_charite, data_identifier, sep = ";"), # orig doi+id pair
+    doi_id_lc_pair_for_joining = paste(doi_lc, data_id_lc, sep = ";"), # lc doi+id pair (will be the same as orig pair for datastet cases)
+    doi_id_clean_pair = paste(doi_no_ver_info, detected_id, sep = ";")) |> # clean doi+id pair
+  
+  # remove non-relevant columns
+  select(-c(year, # derived from an internal categorization in the team, so not relevant and not accurate
+                  # (publication_year_charite from Openalex is the accurate one)
+            context, # not relevant, could always by rejoined later
+            extracted_id, # coalesced into data_identifier
+            added_id, # coalesced into data_identifier
+            in_numbat_or_data_articles)) # primary = in_numbat_or_data_articles, so it's redundant
+
+
+# 3. Now that we have the "charite" columns, we'll join the DCC columns as well into this table from dcc_detected_ids_all_sources, based on detected_id, since it already has charite info, but DOIs could be different
+
+# 3.1 Check which columns to join
+
+# table to join to (from here: ds_in_nb for Datastet (and added) matches that was also in Numbat)
+colnames(ds_added_in_matched_numbat_1_harm) 
+
+# table to join from (from here: all_s for all sources)
+colnames(dcc_detected_ids_all_sources)
+
+# columns in ds_in_nb but not in all_s
+setdiff(colnames(ds_added_in_matched_numbat_1_harm),
+        colnames(dcc_detected_ids_all_sources)) # as expected, all cols are included
+
+# columns in all_s but not in ds_in_nb
+setdiff(colnames(dcc_detected_ids_all_sources),
+        colnames(ds_added_in_matched_numbat_1_harm)) # as expected, some columns are missing
+
+# 3.2 Create a vector of columns to select from all_s in order to join them into ds_in_nb by id:
+
+# * these columns have to not do anything with the charite doi!
+# * the list is based on the "setdiff" above
+
+cols_to_join_id <- c(
+  
+  # these 2 below belong to numbat extractions, so they're not relevant. info will still exist for same ids where source="numbat".
+  # In the ds_in_nb table it'll just be NAs and that's ok.
+  # "data_identifier_2nd_numbat_entry",
+  # "data_id_secondary",
+  "data_access",
+  
+  # doi-relevant column below to join later
+  # "in_dashboard",
+  
+  # these 3 cols below are relevant only for source = "data articles"
+  # "numbat_id_of_da_id",
+  # "numbat_id_of_da_id_lc",
+  # "listed_in_numbat_output",
+  
+  # from here on it's DCC columns
+  "id",
+  "created",
+  "updated",
+  "repository",
+  "publisher",
+  "journal",
+  "title",
+  "dataset",
+  "data_id_or_acc_nr",
+  "slug_dcc",
+  "doi_dcc",
+  "publishedDate",
+  "source_dcc",
+  "subjects",
+  "affiliations",
+  "affiliationsROR",
+  "funders",
+  "fundersROR",
+  "was_the_id_standardized",
+  "primary",
+  
+  # 2 doi-relevant columns below to join later
+  # "authors_charite",
+  # "publication_year_charite",
+  
+  # again DCC columns
+  "authors_dcc",
+  "publication_year_dcc")
+
+# 3.3 Join these columns from all_s into ds_in_nb by id
+
+# prepare all_s for joining: select detected id and relevant columns from it
+
+dcc_detected_ids_all_sources_for_joining_by_id <- dcc_detected_ids_all_sources |> 
+  dplyr::filter(source_charite %in% c("numbat", "data_articles")) |> 
+  select(detected_id, all_of(cols_to_join_id)) |> 
+  distinct()
+
+# join
+
+ds_added_in_matched_numbat_2_id_cols <- ds_added_in_matched_numbat_1_harm |>
+  left_join(dcc_detected_ids_all_sources_for_joining_by_id, by = "detected_id") |> 
+  distinct()
+
+# 4. Join "authors_charite" and "publication_year_charite" colulmns, but this time based on the DOI
+
+# 4.1 create doi-relevant colnames vector to join
+
+cols_to_join_doi <- c(
+  "in_dashboard",
+  "authors_charite",
+  "publication_year_charite"
+  )
+
+# 4.2 Join these columns from all_s into ds_in_nb by doi
+
+# prepare all_s for joining: select doi and doi-relevant columns from it
+
+dcc_detected_ids_all_sources_for_joining_by_doi <- dcc_detected_ids_all_sources |>
+  dplyr::filter(source_charite %in% c("numbat", "data_articles")) |> 
+  select(doi_charite, all_of(cols_to_join_doi)) |> 
+  distinct()
+
+# join
+
+ds_added_in_matched_numbat_3_doi_cols <- ds_added_in_matched_numbat_2_id_cols |>
+  left_join(dcc_detected_ids_all_sources_for_joining_by_doi, by = "doi_charite") |> 
+  distinct()
+
+# 5. Run OpenAlex to complete missing authors and years for charite
+
+
+
+# 6. Exclude author overlap
+
+
+
+# 7. Bind table with dcc_detected_ids_all_sources. This will create duplication of ids, but with source = datastet/added, and Charite DOIs that could be the same or different
+
+
+
+# So now dcc_detected_ids_all_sources_1_dup really has all sources.
+# For example: write detected_id where source=datastet_in_numbat and its doi there vs its doi in source=numbat)
+
+```
+
+# 4. Remove matched "additional ids" if they are already matched numbat original ids with the same doi_charite as numbat? check if I want to do that
+
+```{r}
+
+
+```
+
+# 5. Add Metadata
 
 ```{r Add metadata}
 
@@ -171,7 +347,7 @@ dcc_detected_ids_numbat <- dcc_detected_ids_all_sources |>
   dplyr::filter(data_id_source %in% c("numbat", "data_articles"))
 
 # Add metadata: 
-# data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
+# dataset year, data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
 
 # load metadata file
 load_latest_metadata_update()

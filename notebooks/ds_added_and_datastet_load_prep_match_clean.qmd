@@ -268,8 +268,8 @@ added_and_ds_for_matching_3_lbl <- added_and_ds_for_matching_2_rm_exc |>
   ) |>
   mutate(
     in_numbat_or_data_articles = dataset_for_matching %in% c(
-      charite_dois_and_ids_8_wide$dataset_for_matching,
-      charite_dois_and_ids_8_wide$data_id_secondary
+      numbat_da_dois_and_ids_9_clean_pairs$dataset_for_matching,
+      numbat_da_dois_and_ids_9_clean_pairs$data_id_secondary
     )
   ) |> 
   rename(validate = valid)
@@ -442,7 +442,7 @@ save_cr(dcc_ds_and_added_joined_2_rm_non_ids, file = file.path(here("data","wran
 
 # NOTE: these csvs were actually written before removing non-ids, so there might be irrelevant cases there, but it shouldn't matter when joining them into "dcc_ds_and_added_joined_3_au_info".
 
-ds_and_added_dois_distinct <- dcc_ds_and_added_joined_2_rm_self |> 
+ds_and_added_dois_distinct <- dcc_ds_and_added_joined_1_rm_self |> 
   select(doi_datastet_and_added) |> 
   distinct()
 
@@ -454,7 +454,7 @@ write_csv_cr(ds_and_addde_dois_distinct, file = file.path(here("data",
               row.names = FALSE)
 
 
-dcc_of_ds_and_addde_dois_distinct <- dcc_ds_and_added_joined_2_rm_self |> 
+dcc_of_ds_and_addde_dois_distinct <- dcc_ds_and_added_joined_1_rm_self |> 
   select(doi_dcc) |> 
   distinct()
 
@@ -588,6 +588,8 @@ charite_dois_ids_distinct_filled_1_od_ids |> dplyr::filter(`ignore - already in 
 # Only one case to consolidate! 10.1038/s41467-020-20850-5 err194147
 
 # keep only relevant cases in matched list
+
+
 dcc_ds_and_added_joined_5_od_ids <- dcc_ds_and_added_joined_4_rm_au_ov |> 
   dplyr::filter(
     dataset_for_matching %in% charite_dois_ids_distinct_filled_1_od_ids$dataset_for_matching)
@@ -603,6 +605,8 @@ colnames(dcc_ds_and_added_joined_5_od_ids) # check colnames
 str(dcc_ds_and_added_joined_5_od_ids) # check values
 any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$doi_datastet_and_added)) # check if dois are lower cased: yes
 any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$extracted_id)) # check if ids are lower cased: yes
+
+load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_4_rm_au_ov.RData"))
 colnames(numbat_da_dcc_joined_4_rm_au_ov) # for reference
 
 # Harmonize
@@ -647,9 +651,6 @@ dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_5_od_ids |>
             extracted_id, # coalesced into data_identifier
             added_id, # coalesced into data_identifier
             in_numbat_or_data_articles)) |> # primary = in_numbat_or_data_articles, so it's redundant
-  relocate(
-    
-  )
 
 # Check:
 
@@ -725,5 +726,4 @@ setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
 # save
 save_cr(dcc_ds_and_added_joined_6_harm, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
                                                         "dcc_ds_and_added_joined_6_harm.RData")))
-
 ```
