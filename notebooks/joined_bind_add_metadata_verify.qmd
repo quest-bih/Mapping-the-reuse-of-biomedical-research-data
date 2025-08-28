@@ -169,7 +169,14 @@ rm(numbat_da_dcc_joined_4_rm_au_ov)
 ds_added_in_matched_numbat <- ds_added_extracted_ids |>
   dplyr::filter(dataset_for_matching %in% numbat_da_matched_ids$detected_id) |> # get detected ( = id / secondary) numbat_da ids only
   distinct() |> 
-  mutate(source = "datastet_in_numbat") # just to make sure I can view it separately
+  mutate(source = case_when(
+    source == "datastet" ~ "datastet_in_numbat",
+    .default = "additional_ids_in_numbat")) # just to make sure I can view it separately later
+
+# save
+save_cr(ds_added_in_matched_numbat,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat.RData")))
 
 # 2. Harmonize the resulting table to fit dcc_detected_ids_all_sources
 
@@ -204,6 +211,11 @@ ds_added_in_matched_numbat_1_harm <- ds_added_in_matched_numbat |>
             added_id, # coalesced into data_identifier
             in_numbat_or_data_articles)) # primary = in_numbat_or_data_articles, so it's redundant
 
+
+# save
+save_cr(ds_added_in_matched_numbat_1_harm,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_1_harm.RData")))
 
 # 3. Now that we have the "charite" columns, we'll join the DCC columns as well into this table from dcc_detected_ids_all_sources, based on detected_id, since it already has charite info, but DOIs could be different
 
@@ -289,6 +301,11 @@ ds_added_in_matched_numbat_2_id_cols <- ds_added_in_matched_numbat_1_harm |>
   left_join(dcc_detected_ids_all_sources_for_joining_by_id, by = "detected_id") |> 
   distinct()
 
+# save
+save_cr(ds_added_in_matched_numbat_2_id_cols,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_2_id_cols.RData")))
+
 # 4. Join "authors_charite" and "publication_year_charite" colulmns, but this time based on the DOI
 
 # 4.1 create doi-relevant colnames vector to join
@@ -315,23 +332,34 @@ ds_added_in_matched_numbat_3_doi_cols <- ds_added_in_matched_numbat_2_id_cols |>
   distinct()
 
 
+# save
+save_cr(ds_added_in_matched_numbat_3_doi_cols,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_3_doi_cols.RData")))
+
 # 4.3 remove self-citations
 
 ds_added_in_matched_numbat_4_rm_self <- ds_added_in_matched_numbat_3_doi_cols |>
   dplyr::filter(doi_lc != doi_dcc) |> 
   distinct()
 
+
+# save
+save_cr(ds_added_in_matched_numbat_4_rm_self,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_4_rm_self.RData")))
+
 # 5. Run OpenAlex to complete missing authors and years for charite
 
 # 5.1 Check for blanks and NAs in authors & publication years
 
-ds_added_in_matched_numbat_5_au_info |> dplyr::filter(publication_year_charite == ""
+ds_added_in_matched_numbat_4_rm_self |> dplyr::filter(publication_year_charite == ""
                                               | authors_charite == ""
                                               | publication_year_dcc == ""
                                               | authors_dcc == "") |>
   View() # no blanks
 
-ds_added_in_matched_numbat_5_au_info |> dplyr::filter(is.na(publication_year_charite)
+ds_added_in_matched_numbat_4_rm_self |> dplyr::filter(is.na(publication_year_charite)
                                               | is.na(authors_charite)
                                               | is.na(publication_year_dcc)
                                               | is.na(authors_dcc)) |>
@@ -385,6 +413,11 @@ ds_added_in_matched_numbat_5_au_info <- ds_added_in_matched_numbat_4_rm_self |>
 
 # NAs and Blanks were checked again and none were found.
 
+# save
+save_cr(ds_added_in_matched_numbat_5_au_info,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_5_au_info.RData")))
+
 # 6. Exclude author overlap
 
 # Function to check if there are no common elements between two semicolon-separated strings
@@ -399,36 +432,10 @@ ds_added_in_matched_numbat_6_rm_au_ov <- ds_added_in_matched_numbat_5_au_info  |
   dplyr::filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
   distinct()
 
-
-# save
-save_cr(ds_added_in_matched_numbat,
-        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
-                              "ds_added_in_matched_numbat.RData")))
-# save
-save_cr(ds_added_in_matched_numbat_1_harm,
-        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
-                              "ds_added_in_matched_numbat_1_harm.RData")))
-# save
-save_cr(ds_added_in_matched_numbat_2_id_cols,
-        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
-                              "ds_added_in_matched_numbat_2_id_cols.RData")))
-# save
-save_cr(ds_added_in_matched_numbat_3_doi_cols,
-        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
-                              "ds_added_in_matched_numbat_3_doi_cols.RData")))
-# save
-save_cr(ds_added_in_matched_numbat_4_rm_self,
-        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
-                              "ds_added_in_matched_numbat_4_rm_self.RData")))
-# save
-save_cr(ds_added_in_matched_numbat_5_au_info,
-        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
-                              "ds_added_in_matched_numbat_5_au_info.RData")))
 # save
 save_cr(ds_added_in_matched_numbat_6_rm_au_ov,
         file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
                               "ds_added_in_matched_numbat_6_rm_au_ov.RData")))
-
 
 # 7. Bind table with dcc_detected_ids_all_sources. This will create duplication of ids, but with source = datastet/added, and Charite DOIs that could be the same or different
 
@@ -441,10 +448,11 @@ save_cr(dcc_detected_ids_all_sources_1_dup,
                               "dcc_detected_ids_all_sources_1_dup.RData")))
 
 # So now dcc_detected_ids_all_sources_1_dup really has all sources.
-  
+
+
 # For example, in the view below you can see that the same id appears once as a datastet source (which is also in numbat) and once as a numbat source. and the datastet source has an additional doi_charite that derives from the datastet extractions, which is exactly what we want to see in this table.
 
-dcc_detected_ids_all_sources_1_dup  |>
+dcc_detected_ids_all_sources_2_src_fix  |>
   group_by(detected_id) |>
   dplyr::filter(
     n_distinct(doi_lc) > 1,                                   # different DOIs
@@ -455,12 +463,92 @@ dcc_detected_ids_all_sources_1_dup  |>
   dplyr::filter(detected_id == "gse132662") |> # focus on one id case
   View()
 
-# of course, gse132662 will not appear under source = datastet, which excludes numbat cases.
+# of course, gse132662 will not appear under source = datastet_not_in_numbat, which excludes numbat cases.
 ```
 
-# 4. Remove matched "additional ids" if they are already matched numbat original ids with the same doi_charite as numbat? check if I want to do that
+# 4. Remove matched "additional ids" if they are already matched numbat original ids with the same doi_charite as numbat
 
 ```{r}
+
+# I would like to remove matched "additional ids" cases that are already matched as numbat original ids
+# and have the same doi_charite in both sources, because in this case there shouldn't be a duplication. 
+
+# 1. Check if I even have these cases.
+
+# Let's start with additional_ids_in_numbat, that should have different DOIS than the ids with source = numbat
+
+# how many distinct additional_ids_in_numbat are there?
+
+dcc_detected_ids_all_sources_1_dup |> 
+  dplyr::filter(source_charite == "additional_ids_in_numbat") |> 
+  select(detected_id) |> 
+  distinct() |> View()
+  nrow() # by detected
+
+dcc_detected_ids_all_sources_1_dup |> 
+  dplyr::filter(source_charite == "additional_ids_in_numbat") |> 
+  select(dataset_for_matching) |> 
+  distinct() |> # by for_matching
+  nrow()
+
+dcc_detected_ids_all_sources_1_dup |> 
+  dplyr::filter(source_charite == "additional_ids_in_numbat") |> 
+  select(data_identifier) |> 
+  distinct() |> # by data_identifier
+  nrow()
+
+# now are their dois different than those from numbat?
+
+dcc_detected_ids_all_sources_1_dup |> 
+  dplyr::filter(source_charite %in% c("additional_ids_in_numbat", "numbat")) |> 
+  select(source_charite, doi_lc, data_identifier, dataset_for_matching, detected_id) |> 
+  distinct() |> 
+  View()
+
+# Some are, some are not!
+
+# verify the ones that I should keep:
+dcc_detected_ids_all_sources_1_dup |> 
+  dplyr::filter(source_charite %in% c("additional_ids_in_numbat", "numbat")) |> 
+  select(source_charite, doi_lc, detected_id) |> 
+  distinct() |> 
+  dplyr::filter(detected_id %in% c(
+    "gse148729",
+    "gse162208",
+    "phs000431")) |> 
+  View()
+
+# Conclusion:
+
+# Remove the cases below:
+# ids from source "additional_ids_in_numbat" that have the same doi as their "numbat" source.
+
+
+dcc_detected_ids_all_sources_2_rm_ad_ov <- dcc_detected_ids_all_sources_1_dup |> 
+  dplyr::filter(
+    !(source_charite == "additional_ids_in_numbat"
+    & detected_id %in% c(
+      "gse21687",
+      "gse28019",
+      "gse64415",
+      "gse90805",
+      "phs000101",
+      "phs001672")))
+
+# save
+save_cr(dcc_detected_ids_all_sources_2_rm_ad_ov,
+        file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+                              "dcc_detected_ids_all_sources_2_rm_ad_ov.RData")))
+
+# And finally, double check that I don't have any of the "additional_id" (that are not in numbat) that have the same duplication:
+
+dcc_detected_ids_all_sources_2_rm_ad_ov |> 
+  dplyr::filter(source_charite == "additional_ids") |>
+  select(dataset_for_matching, detected_in_numbat_originally_only_for_added) |> distinct() |>
+  mutate(added_is_orig = detected_in_numbat_originally_only_for_added %in% dataset_for_matching) |> 
+  distinct() |>
+  dplyr::filter(added_is_orig == "TRUE") |> 
+  nrow() # as expected, they are exclusive (number of "TRUE" added_is_orig = 0)
 
 
 ```

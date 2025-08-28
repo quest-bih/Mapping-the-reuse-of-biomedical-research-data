@@ -627,7 +627,7 @@ dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_5_od_ids |>
   
   # 
   mutate(
-    data_identifier = coalesce(extracted_id, added_id), # so for numbad+da it's typed-in id, and for ds+added it's the extracted from datastet or the typed in additional id
+    data_identifier = coalesce(extracted_id, added_id), # so for numbat+da it's typed-in id, and for ds+added it's the extracted from datastet or the typed in additional id
     doi_lc = doi_charite, # all dois are already lowercased
     doi_no_ver_info = str_remove(doi_charite, "\\.[0-9]$"), # remove version information from DOIs
     data_id_lc = tolower(data_identifier), # added were not lowered yet
