@@ -358,6 +358,24 @@ final_results <- map_dfr(dfs, process_dataframe)
 save_path <- file.path(here("data",
                             "verification",
                             "metadata matched",
-                            "ds_in_matched_numbat.RData"))
+                            "ds_and_added",
+                            "ds_and_in_matched_numbat.RData"))
+
+save(final_results, file = save_path)
+
+
+# ds_in_matched_numbat before binding 28.08.2025 --------------------------
+
+dfs <- list(df)
+
+# Apply function to each dataframe and bind results together
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_and_added",
+                            "ds_and_added_in_matched_numbat_dois_metadata_v1.RData"))
 
 save(final_results, file = save_path)

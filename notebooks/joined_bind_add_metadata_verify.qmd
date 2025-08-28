@@ -149,10 +149,11 @@ rm(numbat_da_dcc_joined_4_rm_au_ov)
 
   # 2. Harmonize the resulting table to fit dcc_detected_ids_all_sources
 
-  # 3. Join DCC columns only into this table from dcc_detected_ids_all_sources, based on detected_id, since it already has charite
-  #    info, but DOIs could be different. This is basically another "DCC" match, but with already-known matches.
+  # 3. Join DCC columns only into this table from dcc_detected_ids_all_sources, based on detected_id, since it   already has charite info, but DOIs could be different. This is basically another "DCC" match, but with already-known matches.
 
   # 4. Join "authors_charite" and "publication_year_charite" colulmns, but this time based on the DOI
+  
+  #    I'll also REMOVE SELF-CITATION at the end of this step.
 
   # 5. Run OpenAlex to complete missing authors and years for charite
 
@@ -313,21 +314,148 @@ ds_added_in_matched_numbat_3_doi_cols <- ds_added_in_matched_numbat_2_id_cols |>
   left_join(dcc_detected_ids_all_sources_for_joining_by_doi, by = "doi_charite") |> 
   distinct()
 
+
+# 4.3 remove self-citations
+
+ds_added_in_matched_numbat_4_rm_self <- ds_added_in_matched_numbat_3_doi_cols |>
+  dplyr::filter(doi_lc != doi_dcc) |> 
+  distinct()
+
 # 5. Run OpenAlex to complete missing authors and years for charite
 
+# 5.1 Check for blanks and NAs in authors & publication years
 
+ds_added_in_matched_numbat_5_au_info |> dplyr::filter(publication_year_charite == ""
+                                              | authors_charite == ""
+                                              | publication_year_dcc == ""
+                                              | authors_dcc == "") |>
+  View() # no blanks
+
+ds_added_in_matched_numbat_5_au_info |> dplyr::filter(is.na(publication_year_charite)
+                                              | is.na(authors_charite)
+                                              | is.na(publication_year_dcc)
+                                              | is.na(authors_dcc)) |>
+  View() # some expected NAs for charite year+authors
+
+# 5.1 # prepare dois df for openalex authors extraction script (only for charite, as dcc is already filled)
+
+ds_and_added_in_matched_numbat_dois_distinct <- ds_added_in_matched_numbat_4_rm_self |> 
+  select(doi_charite) |> 
+  distinct()
+
+write_csv_cr(ds_and_added_in_matched_numbat_dois_distinct, file = file.path(here("data",
+                                                     "verification",
+                                                     "metadata matched",
+                                                     "ds_and_added",
+                                                     "ds_and_added_in_matched_numbat_dois_distinct.csv")),
+              row.names = FALSE)
+
+# 5.2 I then ran Openalex extraction script (section: ds_in_matched_numbat before binding 28.08.2025).
+
+# 5.3 Get authors and years info:
+
+load(here("data",
+          "verification",
+          "metadata matched",
+          "ds_and_added",
+          "ds_and_added_in_matched_numbat_dois_metadata_v1.RData")) # load charite
+
+ds_and_added_in_matched_numbat_dois_metadata <- final_results # assign
+
+# 5.4 prepare for joining
+
+ds_and_added_in_matched_numbat_dois_metadata <- ds_and_added_in_matched_numbat_dois_metadata |>
+  rename(doi_charite = doi,
+         publication_year_charite = publication_year,
+         authors_charite = authors) |> # rename column
+  mutate(doi_charite = str_remove(doi_charite, "^https://doi.org/")) # remove prefix
+
+# 5.5 join info into dcc-charite list
+
+ds_added_in_matched_numbat_5_au_info <- ds_added_in_matched_numbat_4_rm_self |> 
+  left_join(ds_and_added_in_matched_numbat_dois_metadata,
+            by = "doi_charite") |> 
+  mutate(authors_charite = coalesce(authors_charite.x, authors_charite.y),
+         publication_year_charite = coalesce(publication_year_charite.x, publication_year_charite.y)) |> 
+  select(-c(
+    authors_charite.x,
+    authors_charite.y,
+    publication_year_charite.x,
+    publication_year_charite.y))
+
+# NAs and Blanks were checked again and none were found.
 
 # 6. Exclude author overlap
 
+# Function to check if there are no common elements between two semicolon-separated strings
+no_common_element <- function(x, y) {
+  x_split <- str_split(x, ";")[[1]] # Split column x by semicolons
+  y_split <- str_split(y, ";")[[1]] # Split column y by semicolons
+  length(intersect(x_split, y_split)) == 0 # TRUE if no common elements
+}
+
+# Apply the filter using the function to create a matched list with no "Author Overlap"
+ds_added_in_matched_numbat_6_rm_au_ov <- ds_added_in_matched_numbat_5_au_info  |> 
+  dplyr::filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
+  distinct()
+
+
+# save
+save_cr(ds_added_in_matched_numbat,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat.RData")))
+# save
+save_cr(ds_added_in_matched_numbat_1_harm,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_1_harm.RData")))
+# save
+save_cr(ds_added_in_matched_numbat_2_id_cols,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_2_id_cols.RData")))
+# save
+save_cr(ds_added_in_matched_numbat_3_doi_cols,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_3_doi_cols.RData")))
+# save
+save_cr(ds_added_in_matched_numbat_4_rm_self,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_4_rm_self.RData")))
+# save
+save_cr(ds_added_in_matched_numbat_5_au_info,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_5_au_info.RData")))
+# save
+save_cr(ds_added_in_matched_numbat_6_rm_au_ov,
+        file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
+                              "ds_added_in_matched_numbat_6_rm_au_ov.RData")))
 
 
 # 7. Bind table with dcc_detected_ids_all_sources. This will create duplication of ids, but with source = datastet/added, and Charite DOIs that could be the same or different
 
+dcc_detected_ids_all_sources_1_dup <- dcc_detected_ids_all_sources |> 
+  bind_rows(ds_added_in_matched_numbat_6_rm_au_ov) # no need to distinct (checked)
 
+# save
+save_cr(dcc_detected_ids_all_sources_1_dup,
+        file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+                              "dcc_detected_ids_all_sources_1_dup.RData")))
 
 # So now dcc_detected_ids_all_sources_1_dup really has all sources.
-# For example: write detected_id where source=datastet_in_numbat and its doi there vs its doi in source=numbat)
+  
+# For example, in the view below you can see that the same id appears once as a datastet source (which is also in numbat) and once as a numbat source. and the datastet source has an additional doi_charite that derives from the datastet extractions, which is exactly what we want to see in this table.
 
+dcc_detected_ids_all_sources_1_dup  |>
+  group_by(detected_id) |>
+  dplyr::filter(
+    n_distinct(doi_lc) > 1,                                   # different DOIs
+    any(source_charite == "datastet_in_numbat"),              # from source datastet_in_numbat
+    any(source_charite == "numbat")                           # from source numbat
+  ) |>
+  ungroup() |> # see all such cases
+  dplyr::filter(detected_id == "gse132662") |> # focus on one id case
+  View()
+
+# of course, gse132662 will not appear under source = datastet, which excludes numbat cases.
 ```
 
 # 4. Remove matched "additional ids" if they are already matched numbat original ids with the same doi_charite as numbat? check if I want to do that

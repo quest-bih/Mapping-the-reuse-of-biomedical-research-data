@@ -930,7 +930,7 @@ write_csv_cr(charite_dois_for_au_and_year_info_25082025, file = file.path(here("
 
 # I then ran "Openalex_authors_and_years_extraction" script.
 
-# Join back authors and years V2 (V22 is only added cases that weren't in V1):
+# Join back authors and years V2 (V2 is only added cases that weren't in V1):
 
 # Get authors and years info V2 (25.08.2025):
 
