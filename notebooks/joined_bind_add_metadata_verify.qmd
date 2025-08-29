@@ -452,7 +452,7 @@ save_cr(dcc_detected_ids_all_sources_1_dup,
 
 # For example, in the view below you can see that the same id appears once as a datastet source (which is also in numbat) and once as a numbat source. and the datastet source has an additional doi_charite that derives from the datastet extractions, which is exactly what we want to see in this table.
 
-dcc_detected_ids_all_sources_2_src_fix  |>
+dcc_detected_ids_all_sources_1_dup  |>
   group_by(detected_id) |>
   dplyr::filter(
     n_distinct(doi_lc) > 1,                                   # different DOIs
@@ -550,10 +550,66 @@ dcc_detected_ids_all_sources_2_rm_ad_ov |>
   dplyr::filter(added_is_orig == "TRUE") |> 
   nrow() # as expected, they are exclusive (number of "TRUE" added_is_orig = 0)
 
+```
+
+# 5.  Remove several cases where doi_dcc+detected is actually doi_lc (charite)+dataset_for_matching, just from another row
+
+```{r}
+
+# TO DO: document the check, the reason for it, what was done in the check, and what did I find out.
+
+charite_dois_distinct_all_sources <- 
+  numbat_da_dois_and_ids_9_clean_pairs |> 
+  select(doi_lc, dataset_for_matching) |> 
+  bind_rows(
+   added_and_ds_for_matching_4_rm_exist |>
+     mutate(doi_lc = tolower(doi)) |> 
+     select(doi_lc, dataset_for_matching)
+  ) |> 
+  mutate(charite_lc_pair = paste(doi_lc, dataset_for_matching, sep = ";")) |> 
+  select(charite_lc_pair) |> 
+  distinct()
+
+dcc_det_pair_is_charite_for_matching_pair <- dcc_detected_ids_all_sources_2_rm_ad_ov |>
+  mutate(dcc_lc_pair = paste(doi_dcc, detected_id, sep = ";")) |> 
+  dplyr::filter(dcc_lc_pair %in% charite_dois_distinct_all_sources$charite_lc_pair) |> 
+  select(doi_lc, detected_id, doi_dcc) |> 
+  distinct()
+
+check <- numbat_da_dois_and_ids_9_clean_pairs |> 
+  select(doi_lc, dataset_for_matching) |> 
+  bind_rows(
+    added_and_ds_for_matching_4_rm_exist |>
+      mutate(doi_lc = tolower(doi)) |> 
+      select(doi_lc, dataset_for_matching)
+  ) |>
+  distinct()
+
+# Remove cases:
+
+dcc_detected_ids_all_sources_3_rm_dcc_is_ch <- dcc_detected_ids_all_sources_2_rm_ad_ov |> 
+  dplyr::filter(
+    !(
+      (doi_lc == "10.1186/s12961-022-00841-2"   &  detected_id == "pxd018230"    &  doi_dcc == "10.3390/cancers13051097")
+    | (doi_lc == "10.1155/2020/5943014"         &  detected_id == "gse85047"     &  doi_dcc == "10.1038/s41467-023-36735-2")
+    | (doi_lc == "10.1038/s41467-023-36735-2"   &  detected_id ==   "gse85047"   &  doi_dcc ==        "10.1155/2020/5943014")
+    | (doi_lc == "10.1038/s41596-019-0251-6"    &  detected_id ==  "gse90496"    &  doi_dcc == "10.1007/s00401-020-02250-7")
+    | (doi_lc == "10.1111/nan.12741"            &  detected_id ==  "gse90496"    &  doi_dcc == "10.1007/s00401-020-02250-7")
+    | (doi_lc == "10.1371/journal.pcbi.1010031" &  detected_id ==    "gse99933"  &  doi_dcc ==  "10.1038/s41467-022-30438-w")))
+
+
+# save
+save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
+        file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+                              "dcc_detected_ids_all_sources_3_rm_dcc_is_ch.RData")))
+
+
+# Notice: the couunt of IDs won't change, becuase they are being cited by other papers and they belong to other charite papers that are not in the dcc paper column. So the only thing that will change is that 5 distinct doi_dcc records will be removed from the dcc papers count.
+
 
 ```
 
-# 5. Add Metadata
+# 6. Add Metadata
 
 ```{r Add metadata}
 
