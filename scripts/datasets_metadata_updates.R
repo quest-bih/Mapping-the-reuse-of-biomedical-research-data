@@ -650,29 +650,124 @@ datasets_metadata_master_updated_012 <- datasets_metadata_master_updated_012 |>
 metadata_update(datasets_metadata_master_updated_012) # call function to save as csv, xlsx, rda
 
 
-# 013: rejoin to latest numbat+DA -----------------------------------------
+# 013: Restructure and rejoin all metadata again -----------------------------------------
 
-# from sources: 012, matched metadata, non-matched metadata
+# from sources: numbat+da matched, numbat+da non-matched, 012, dataset+added matched
 
 # how it all started:
 # https://docs.google.com/document/d/1y-WVv9rrwy8d1KOzKG1u0WTiAtZoCfu3qTcl2y_sjGw/edit?tab=t.0#bookmark=id.40nwpc5w2tl
 
-# So I'm actually going to change the structure of the file so that it'll match the numbat+DA file that is being matched with DCC
+# So I'm actually going to change the structure of the file so that I'll have everything documented in every column
 
-# get _8_wide:
+# 1. Load final detected ids list from all sources (these are only the matched ones)
 
-# prepare non_matched for joining
+# 1.1 load and inspect reference tables
 
-# join non-matched
+# load final matched list (datastet+added are already all matched)
+load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_2_rm_ad_ov.RData"))
 
-# prepare matched for joining
+# make sure that it also has the same structure as "numbat for matching":
 
-# join matched
+load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData")) # load
+setdiff(names(numbat_da_dois_and_ids_9_clean_pairs), names(dcc_detected_ids_all_sources_2_rm_ad_ov)) # check
+
+# all_sources has all of numbat. just have to add "_charite" suffix to "doi"    "slug"   "source" cols (later)
+
+# 1.2 create the metadata 013 table structure from all_sources
+
+# it basically means removing all dcc cols and labeling everything as "in_dcc" = "TRUE":
+
+colnames(dcc_detected_ids_all_sources_2_rm_ad_ov) # check cols to know which to remove
+
+# create new metadata table structure
+datasets_metadata_master_new_structure_matched_only <- dcc_detected_ids_all_sources_2_rm_ad_ov |> 
+  select(-c(id:primary), -c(authors_dcc, publication_year_dcc)) |> 
+  mutate(in_dcc = "TRUE") |> # label that these are cases that were matched (detected) in DCC
+  distinct()
+
+# 2. Bind the non-matched numbat+da entries as well
+
+# 2.1 prepare "numbat for matching" for binding
+numbat_da_non_matched_for_binding <- numbat_da_dois_and_ids_9_clean_pairs |> 
+  rename(doi_charite = doi, slug_charite = slug, source_charite = source) |> # rename cols
+  # (by the way, filtering by orig_pairs actually results in 3 extra ids that ARE a match, just with other dois)
+  dplyr::filter(!dataset_for_matching %in% datasets_metadata_master_new_structure_matched_only$detected_id
+                & !data_id_secondary %in% datasets_metadata_master_new_structure_matched_only$detected_id) |> # get non-matched
+  mutate(in_dcc = "FALSE") |> # label as non-matched
+  mutate(validated = as.character(validated)) # convert col type
+
+numbat_da_non_matched_for_binding |> distinct() |> nrow() # check
+
+# 2.2 bind matched and non-matched
+
+datasets_metadata_master_new_structure_all <- datasets_metadata_master_new_structure_matched_only |> 
+  bind_rows(numbat_da_non_matched_for_binding)
+
+# verify that orig and clean pairs are identical to the existing doi+id cols (orig and clean)
+
+# orig
+datasets_metadata_master_new_structure_all |> 
+  select(doi_charite, data_identifier, doi_id_orig_pair) |> # select doi, id, pair
+  mutate(check = paste(doi_charite, data_identifier, sep = ";")) |> # make a new pair
+  mutate(is_equal = doi_id_orig_pair == check) |> # compare pairs
+  dplyr::filter(is_equal = FALSE) |># remove non-matched pairs
+  View() # identical
+
+# clean
+datasets_metadata_master_new_structure_all |> 
+  select(doi_no_ver_info, detected_id, doi_id_clean_pair) |>
+  mutate(check = paste(doi_no_ver_info, doi_no_ver_info, sep = ";")) |> 
+  mutate(is_equal = doi_id_clean_pair == check) |>
+  dplyr::filter(is_equal = FALSE) |> 
+  View() # yes
+
+
+# 2. add metadata
+
+
+# 2.1 write down which to add first (by date updated and reliability):
+
+
+
+# numbat+da matched, numbat+da non-matched, 012, dataset+added matched
+
+# 2.3 join
+
+# prepare for joining
+
+# join 
+
+# 2.4 join
+
+# prepare  for joining
+
+# join 
+
+# 2.5 join
+
+# prepare  for joining
+
+# 2.6 join
+
+# join 
+
+# 2.7 join
+
+# prepare  for joining
+
+# join 
+
+# 2.7 join
 
 # prepare 012 for joining - get only pairs that don't already have metadata!
 
 # join 012
 
+# 3. add Category col so that it'll have an original category column (by data_identifier) and detected category column (by detectged_id)
+
+
+
+# 
 
   # check that there are no inconsistencies:
   wide_paired <- charite_dois_and_ids_8_wide |> 

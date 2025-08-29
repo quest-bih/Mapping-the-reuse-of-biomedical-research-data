@@ -2,14 +2,10 @@
 
 # get dois+ids distinct
 
-dcc_detected_ids_all_sources_2_rm_ad_ov_for_reuse_check <- dcc_detected_ids_all_sources_2_rm_ad_ov |> 
-  select(doi_charite,
-         doi_lc,
-         data_identifier,
-         data_id_lc,
-         data_id_secondary,
+dcc_detected_ids_all_sources_2_rm_ad_ov |> 
+  select(doi_no_ver_info,
          detected_id) |> 
-  distinct()
+  distinct() |> nrow()
 
 
 dcc_detected_charite_ids_for_reuse_check <- dcc_detected_ids_all_sources_2_rm_ad_ov_for_reuse_check
