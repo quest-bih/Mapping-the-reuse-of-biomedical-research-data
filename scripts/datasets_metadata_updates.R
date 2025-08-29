@@ -664,12 +664,12 @@ metadata_update(datasets_metadata_master_updated_012) # call function to save as
 # 1.1 load and inspect reference tables
 
 # load final matched list (datastet+added are already all matched)
-load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_2_rm_ad_ov.RData"))
+load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_3_rm_dcc_is_ch.RData"))
 
 # make sure that it also has the same structure as "numbat for matching":
 
 load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData")) # load
-setdiff(names(numbat_da_dois_and_ids_9_clean_pairs), names(dcc_detected_ids_all_sources_2_rm_ad_ov)) # check
+setdiff(names(numbat_da_dois_and_ids_9_clean_pairs), names(dcc_detected_ids_all_sources_3_rm_dcc_is_ch)) # check
 
 # all_sources has all of numbat. just have to add "_charite" suffix to "doi"    "slug"   "source" cols (later)
 
@@ -677,10 +677,10 @@ setdiff(names(numbat_da_dois_and_ids_9_clean_pairs), names(dcc_detected_ids_all_
 
 # it basically means removing all dcc cols and labeling everything as "in_dcc" = "TRUE":
 
-colnames(dcc_detected_ids_all_sources_2_rm_ad_ov) # check cols to know which to remove
+colnames(dcc_detected_ids_all_sources_3_rm_dcc_is_ch) # check cols to know which to remove
 
 # create new metadata table structure
-datasets_metadata_master_new_structure_matched_only <- dcc_detected_ids_all_sources_2_rm_ad_ov |> 
+datasets_metadata_master_new_structure_matched_only <- dcc_detected_ids_all_sources_3_rm_dcc_is_ch |> 
   select(-c(id:primary), -c(authors_dcc, publication_year_dcc)) |> 
   mutate(in_dcc = "TRUE") |> # label that these are cases that were matched (detected) in DCC
   distinct()
@@ -688,20 +688,32 @@ datasets_metadata_master_new_structure_matched_only <- dcc_detected_ids_all_sour
 # 2. Bind the non-matched numbat+da entries as well
 
 # 2.1 prepare "numbat for matching" for binding
-numbat_da_non_matched_for_binding <- numbat_da_dois_and_ids_9_clean_pairs |> 
-  rename(doi_charite = doi, slug_charite = slug, source_charite = source) |> # rename cols
+numbat_da_non_matched_for_binding <- numbat_da_dois_and_ids_9_clean_pairs  |> 
+  rename(
+    doi_charite = doi,
+    slug_charite = slug,
+    source_charite = source
+  )  |> # rename cols
+  dplyr::filter(
+    !(dataset_for_matching %in% datasets_metadata_master_new_structure_matched_only$detected_id
+      | data_id_secondary %in% datasets_metadata_master_new_structure_matched_only$detected_id)
+  ) |> # get non-matched
   # (by the way, filtering by orig_pairs actually results in 3 extra ids that ARE a match, just with other dois)
-  dplyr::filter(!dataset_for_matching %in% datasets_metadata_master_new_structure_matched_only$detected_id
-                & !data_id_secondary %in% datasets_metadata_master_new_structure_matched_only$detected_id) |> # get non-matched
   mutate(in_dcc = "FALSE") |> # label as non-matched
   mutate(validated = as.character(validated)) # convert col type
 
-numbat_da_non_matched_for_binding |> distinct() |> nrow() # check
+# check distinct
+numbat_da_non_matched_for_binding |> distinct() |> nrow() # good
 
 # 2.2 bind matched and non-matched
 
 datasets_metadata_master_new_structure_all <- datasets_metadata_master_new_structure_matched_only |> 
   bind_rows(numbat_da_non_matched_for_binding)
+
+# check nrow matched + non-matched
+nrow(datasets_metadata_master_new_structure_matched_only) + nrow(numbat_da_non_matched_for_binding) # good
+# check distinct
+datasets_metadata_master_new_structure_all |> distinct() |> nrow() # good
 
 # verify that orig and clean pairs are identical to the existing doi+id cols (orig and clean)
 
@@ -710,64 +722,181 @@ datasets_metadata_master_new_structure_all |>
   select(doi_charite, data_identifier, doi_id_orig_pair) |> # select doi, id, pair
   mutate(check = paste(doi_charite, data_identifier, sep = ";")) |> # make a new pair
   mutate(is_equal = doi_id_orig_pair == check) |> # compare pairs
-  dplyr::filter(is_equal = FALSE) |># remove non-matched pairs
-  View() # identical
+  dplyr::filter(is_equal = FALSE) # remove non-matched pairs
 
 # clean
 datasets_metadata_master_new_structure_all |> 
   select(doi_no_ver_info, detected_id, doi_id_clean_pair) |>
   mutate(check = paste(doi_no_ver_info, doi_no_ver_info, sep = ";")) |> 
   mutate(is_equal = doi_id_clean_pair == check) |>
-  dplyr::filter(is_equal = FALSE) |> 
-  View() # yes
+  dplyr::filter(is_equal = FALSE)
 
+# both types of pair identical.
+
+save_cr(datasets_metadata_master_new_structure_all,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_structure_all.RData")))
+
+# clean up
+rm(
+  datasets_metadata_master_new_structure_matched_only,
+  numbat_da_dois_and_ids_9_clean_pairs,
+  numbat_da_non_matched_for_binding,
+  dcc_detected_ids_all_sources_3_rm_dcc_is_ch)
 
 # 2. add metadata
 
-
 # 2.1 write down which to add first (by date updated and reliability):
 
+# numbat+da matched, numbat+da non-matched sample, 012, dataset+added matched
 
+# Best order to add by:
+# dataset+added matched (verified lately)
+# numbat+da matched (verified as well)
+# numbat+da non-matched sample (200) (verified lately)
+# previous metadata = 012: only for cases that are still missing for some reason
 
-# numbat+da matched, numbat+da non-matched, 012, dataset+added matched
+# 2.3 Join dataset+added matched
 
-# 2.3 join
+# load metadata filled file (code copied from ds_added qmd)
+datastet_and_added_matched_metatdata <- read_excel(here("data",
+                                                    "verification",
+                                                    "datastet_and_added_summarised",
+                                                    "datastet_and_added_filled_raw",
+                                                    "charite_dois_ids_distinct_v9.xlsx"))
+
+# get only relevant cases
+datastet_and_added_matched_metatdata_1_od_ids <- datastet_and_added_matched_metatdata |>
+  dplyr::filter(is_dataset == "y") |> # get only verified datasets
+  dplyr::filter(`data authorship` %in% c("own data", "data authorship")) # get only OD datasets
+
+rm(datastet_and_added_matched_metatdata)
 
 # prepare for joining
 
-# join 
+colnames(datastet_and_added_matched_metatdata_1_od_ids) # check colnames
+any(grepl("[A-Z]", datastet_and_added_matched_metatdata_1_od_ids$doi_datastet_and_added)) # doi is already lowercase 
+datastet_and_added_matched_metatdata_1_od_ids |> select(doi_datastet_and_added) |> distinct() |> View() # doi is already no_ver_info
 
-# 2.4 join
+
+ds_add_match_metadata_for_joining <- datastet_and_added_matched_metatdata_1_od_ids |> 
+  rename(
+    doi_no_ver_info = doi_datastet_and_added,
+    data_availability_statement = DAS,
+    human_data = human,
+    covid_related = covid,
+    charite_id_year = year,
+    data_access_temp_check = `data access`
+  ) |> 
+  mutate(
+    doi_id_clean_pair = paste(doi_no_ver_info, dataset_for_matching, sep = ";")) |> 
+  select(
+    doi_id_clean_pair,
+    data_availability_statement,
+    human_data,
+    covid_related,
+    charite_id_year,
+    license,
+    data_access_temp_check
+  )
+  
+# join by clean_pair
+
+datasets_metadata_master_new_st_all_1_ds_ad <- datasets_metadata_master_new_structure_all |> 
+  left_join(ds_add_match_metadata_for_joining, by = "doi_id_clean_pair")
+
+# verify that data_access from the 2 sources is the same
+datasets_metadata_master_new_st_all_1_ds_ad |> dplyr::filter(data_access != data_access_temp_check) # yes
+
+# save
+save_cr(datasets_metadata_master_new_st_all_1_ds_ad,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_1_ds_ad.RData")))
+
+# clean up
+rm(datastet_and_added_matched_metatdata_1_od_ids, ds_add_match_metadata_for_joining)
+
+# 2.4 Join numbat+da matched
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# prepare  for joining
+colnames(datasets_metadata_master_updated_012) # check colnames
+any(grepl("[A-Z]", datasets_metadata_master_updated_012$dataset_for_matching)) # verifying dataset_for_matching
+datasets_metadata_master_updated_012 |> select(doi_no_ver_info) |> distinct() |> View() # verifying doi_no_ver_info
+
+datasets_metadata_master_updated_012_for_joining <- datasets_metadata_master_updated_012 |> 
+  rename(data_access_temp_check = data_access) |> 
+  mutate(
+    doi_id_clean_pair = paste(doi_no_ver_info, dataset_for_matching, sep = ";")) |> 
+  select(
+    doi_id_clean_pair,
+    data_availability_statement,
+    human_data,
+    covid_related,
+    charite_id_year,
+    license,
+    data_access_temp_check
+  ) |>
+  dplyr::filter(
+    !is.na(data_availability_statement),
+    !is.na(human_data),
+    !is.na(covid_related),
+    !is.na(charite_id_year),
+    !is.na(license)
+  ) |> 
+  distinct()
+  
+# join by clean_pair
+
+datasets_metadata_master_new_st_all_2_num_da <- datasets_metadata_master_new_st_all_1_ds_ad |> 
+  left_join(datasets_metadata_master_updated_012_for_joining,
+            by = "doi_id_clean_pair",
+            suffix = c("", ".new")) |> 
+  mutate(
+    data_availability_statement = coalesce(data_availability_statement, data_availability_statement.new),
+    human_data = coalesce(human_data, human_data.new),
+    covid_related = coalesce(covid_related, covid_related.new),
+    charite_id_year = coalesce(charite_id_year, charite_id_year.new),
+    license = coalesce(license, license.new)
+  ) |> 
+  select(-ends_with(".new"))
+
+# verify that data_access from the 2 sources is the same
+datasets_metadata_master_new_st_all_2_num_da |> dplyr::filter(data_access != data_access_temp_check) # yes
+
+# save
+save_cr(datasets_metadata_master_new_st_all_2_num_da,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_2_num_da.RData")))
+
+# clean up
+rm(datasets_metadata_master_updated_012, datasets_metadata_master_updated_012_for_joining)
+
+# 2.5 Join numbat+da non-matched sample (200)
+
+# load
 
 # prepare  for joining
 
-# join 
 
-# 2.5 join
+# 2.6 Join previous metadata - 012
 
-# prepare  for joining
-
-# 2.6 join
+# load
 
 # join 
 
-# 2.7 join
 
-# prepare  for joining
-
-# join 
-
-# 2.7 join
-
-# prepare 012 for joining - get only pairs that don't already have metadata!
-
-# join 012
-
-# 3. add Category col so that it'll have an original category column (by data_identifier) and detected category column (by detectged_id)
-
-
-
+# 3. Resolve case:
+# datasets_metadata_master_new_st_all_2_num_da$detected_id == "10.18112/openneuro.ds001226"
 # 
+
+# 3. add a Category col so that it'll have an original category column (by data_identifier) and detected category column (by detectged_id)
+
+
+
+# 4. check for inconsistencies (different metadata for same dataset)
 
   # check that there are no inconsistencies:
   wide_paired <- charite_dois_and_ids_8_wide |> 
