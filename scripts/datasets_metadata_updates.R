@@ -808,6 +808,9 @@ datasets_metadata_master_new_st_all_1_ds_ad <- datasets_metadata_master_new_stru
 # verify that data_access from the 2 sources is the same
 datasets_metadata_master_new_st_all_1_ds_ad |> dplyr::filter(data_access != data_access_temp_check) # yes
 
+datasets_metadata_master_new_st_all_1_ds_ad <- datasets_metadata_master_new_st_all_1_ds_ad |> 
+  select(-data_access_temp_check)
+
 # save
 save_cr(datasets_metadata_master_new_st_all_1_ds_ad,
         file = file.path(here("data", "verification", "metadata_new_structure",
@@ -863,6 +866,9 @@ datasets_metadata_master_new_st_all_2_num_da <- datasets_metadata_master_new_st_
   ) |> 
   select(-ends_with(".new"))
 
+# "10.18112/openneuro.ds001226" appears twice in 012 with 2 license values (pretty much the same, but not identical).
+# I will resolve it later in this code.
+
 # verify that data_access from the 2 sources is the same
 datasets_metadata_master_new_st_all_2_num_da |> dplyr::filter(data_access != data_access_temp_check) # yes
 
@@ -871,56 +877,193 @@ save_cr(datasets_metadata_master_new_st_all_2_num_da,
         file = file.path(here("data", "verification", "metadata_new_structure",
                               "datasets_metadata_master_new_st_all_2_num_da.RData")))
 
+# Some metadata wasn't joined because some ids have different dois for same ids in different sources:
+datasets_metadata_master_new_st_all_2_num_da |>
+  dplyr::filter(in_dcc == "TRUE") |> 
+  dplyr::filter(
+    is.na(data_availability_statement)
+    | is.na(human_data)
+    | is.na(covid_related)
+    | is.na(charite_id_year)
+    | is.na(license)
+  ) |> 
+  select(detected_id, source_charite) |> 
+  distinct() |> 
+  View()
+
+# add last matched that weren't joined because of different source for the same id
+
+# create table to match
+remaining_matched_ids_for_joining <- datasets_metadata_master_new_st_all_2_num_da |>
+  dplyr::filter(in_dcc == "TRUE") |> 
+  dplyr::filter(
+    is.na(human_data)
+    | is.na(covid_related)
+    | is.na(charite_id_year)
+    | is.na(license)
+  ) |> 
+  select(detected_id) |> 
+  distinct() |>
+  left_join(datasets_metadata_master_new_st_all_2_num_da |> 
+              select(detected_id,
+                     human_data,
+                     covid_related,
+                     charite_id_year,
+                     license) |> 
+              distinct(), by = "detected_id") |> 
+  # remove NA duplicates
+  dplyr::group_by(detected_id) |>
+  dplyr::slice_max(rowSums(!is.na(across(everything()))), n = 1) |>
+  dplyr::ungroup() |> 
+  distinct(detected_id, .keep_all = TRUE) # remove duplicat ids with same metadata that is just written differently
+
+# join
+datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources <- datasets_metadata_master_new_st_all_2_num_da |> 
+  left_join(remaining_matched_ids_for_joining, by = "detected_id",
+            suffix = c("", ".new")) |> 
+  mutate(
+    human_data = coalesce(human_data, human_data.new),
+    covid_related = coalesce(covid_related, covid_related.new),
+    charite_id_year = coalesce(charite_id_year, charite_id_year.new),
+    license = coalesce(license, license.new)
+  ) |> 
+  select(-ends_with(".new"))
+
+# check DAS, that wasn't joined initially, because it is related to the doi
+
+check <- datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources |>
+  dplyr::filter(in_dcc == "TRUE") |> 
+  dplyr::filter(
+    is.na(data_availability_statement)
+    | is.na(human_data)
+    | is.na(covid_related)
+    | is.na(charite_id_year)
+    | is.na(license)
+  ) |> 
+  select(detected_id) |> 
+  distinct()
+
+datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources |> 
+  dplyr::filter(detected_id %in% check$detected_id) |> 
+  select(doi_charite, detected_id, data_availability_statement, source_charite) |> 
+  distinct() |> 
+  View()
+
+# prepare a table to complete DAS with, since different DOIS for same id exist, and for them DAS wasn't extracted
+
+# save
+save_cr(datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources.RData")))
+
 # clean up
-rm(datasets_metadata_master_updated_012, datasets_metadata_master_updated_012_for_joining)
+rm(datasets_metadata_master_updated_012,
+   datasets_metadata_master_updated_012_for_joining,
+   check,
+   remaining_matched_ids_for_joining)
 
 # 2.5 Join numbat+da non-matched sample (200)
 
-# load
+# load 200 non matched filled
+
+sample_200_non_matched_ids <- read_excel(here("data",
+                                              "verification",
+                                              "metadata all",
+                                              "datasets_metadata_master_updated",
+                                              "filled tables",
+                                              "sample_200_ids_no_citation_v14.xlsx"))
+
 
 # prepare  for joining
 
+colnames(sample_200_non_matched_ids)
+any(grepl("[A-Z]", sample_200_non_matched_ids$doi)) # doi is already lowercase
+any(grepl("[A-Z]", sample_200_non_matched_ids$data_id_merged)) # verifying dataset_for_matching: one is not lowered!
 
-# 2.6 Join previous metadata - 012
 
-# load
+sample_200_non_matched_ids_for_joining <- sample_200_non_matched_ids |> 
+  rename(dataset_for_matching = data_id_merged,
+         doi_lc = doi,
+         data_availability_statement = `dataset mentioned in DAS`,
+         covid_related = covid,
+         human_data = `human data`,
+         data_access_temp_check = data_access) |> 
+  mutate(dataset_for_matching = tolower(dataset_for_matching),
+         doi_id_lc_pair_for_joining = paste(doi_lc, dataset_for_matching, sep = ";")) |> # make a new pair
+  select(doi_id_lc_pair_for_joining,
+         data_availability_statement,
+         human_data,
+         covid_related,
+         charite_id_year,
+         license,
+         data_access_temp_check) |> # values are already distcint
+  mutate(across(everything(), as.character)) # original values are sometimes 0 / 1
 
-# join 
 
+# join by lc_pair
+
+datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources |> 
+  mutate(charite_id_year = as.character(charite_id_year)) |> # convert to chr
+  left_join(sample_200_non_matched_ids_for_joining,
+            by = "doi_id_lc_pair_for_joining",
+            suffix = c("", ".new")) |> 
+  mutate(
+    data_availability_statement = coalesce(data_availability_statement, data_availability_statement.new),
+    human_data = coalesce(human_data, human_data.new),
+    covid_related = coalesce(covid_related, covid_related.new),
+    charite_id_year = coalesce(charite_id_year, charite_id_year.new),
+    license = coalesce(license, license.new)
+  ) |> 
+  select(-ends_with(".new"))
+
+
+# check data access values match
+datasets_metadata_master_new_st_all_2_num_da |> dplyr::filter(data_access != data_access_temp_check) # yes
+
+datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_master_new_st_all_4_non_matched |> 
+  select(-data_access_temp_check)
+
+# save
+save_cr(datasets_metadata_master_new_st_all_4_non_matched,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_4_non_matched.RData")))
 
 # 3. Resolve case:
 # datasets_metadata_master_new_st_all_2_num_da$detected_id == "10.18112/openneuro.ds001226"
+
+
+# 4. add metadata to case (I should have it from data articles and or numbat original extractions):
+# 10.13026/x4td-x982
+
+# 5. add a Category col so that it'll have an original category column (by data_identifier) and detected category column (by detectged_id)
+
+
+
+# # 6. check for inconsistencies (different metadata for same dataset)
 # 
-
-# 3. add a Category col so that it'll have an original category column (by data_identifier) and detected category column (by detectged_id)
-
-
-
-# 4. check for inconsistencies (different metadata for same dataset)
-
-  # check that there are no inconsistencies:
-  wide_paired <- charite_dois_and_ids_8_wide |> 
-    mutate(
-      paired = paste(trimws(doi), trimws(dataset_for_matching), sep = ";"),
-      source = "wide"
-    ) |> 
-    select(paired, source) |> 
-    distinct()
-  
-  metadata_paired <- datasets_metadata_master_updated_013 |> 
-    mutate(
-      paired = paste(trimws(doi_charite), trimws(dataset_for_matching), sep = ";"),
-      source = "meta"
-    ) |> 
-    select(paired, source) |> 
-    distinct()
-  
-  wide_paired |> 
-    bind_rows(metadata_paired) |> 
-    add_count(paired, name = "n") |> 
-    dplyr::filter(n == 1) |> 
-    separate(paired, into = c("doi", "id"), sep = ";") |> 
-    View()
-
-# save
-metadata_update(datasets_metadata_master_updated_013) # call function to save as csv, xlsx, rda
+#   # check that there are no inconsistencies:
+#   wide_paired <- charite_dois_and_ids_8_wide |> 
+#     mutate(
+#       paired = paste(trimws(doi), trimws(dataset_for_matching), sep = ";"),
+#       source = "wide"
+#     ) |> 
+#     select(paired, source) |> 
+#     distinct()
+#   
+#   metadata_paired <- datasets_metadata_master_updated_013 |> 
+#     mutate(
+#       paired = paste(trimws(doi_charite), trimws(dataset_for_matching), sep = ";"),
+#       source = "meta"
+#     ) |> 
+#     select(paired, source) |> 
+#     distinct()
+#   
+#   wide_paired |> 
+#     bind_rows(metadata_paired) |> 
+#     add_count(paired, name = "n") |> 
+#     dplyr::filter(n == 1) |> 
+#     separate(paired, into = c("doi", "id"), sep = ";") |> 
+#     View()
+# 
+# # save
+# metadata_update(datasets_metadata_master_updated_013) # call function to save as csv, xlsx, rda
