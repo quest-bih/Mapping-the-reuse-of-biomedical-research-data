@@ -188,26 +188,32 @@ any(grepl("[A-Z]", charite_dois_and_ids_4_m_val_done$doi)) # original doesn't ha
 any(grepl("[A-Z]", numbat_da_dois_and_ids_3_auto_cleaned$data_id_lc)) # new doesn't have, as expected
 any(grepl("[A-Z]", charite_dois_and_ids_4_m_val_done$data_id)) # original also doesn't, as expected
 
-# So I'll pair (and then join) by doi_cl and 
+# So I'll pair (and then join) by doi_lc and 
 
 # add paired auto-cleaned for latest manual validation
 
 charite_dois_and_ids_4_m_val_done_for_joining_1 <- charite_dois_and_ids_4_m_val_done|>
-  mutate(doi_id_lc_pair_for_joining = paste(doi, data_id, sep = ";")) |> # pair lower case doi-id
+  mutate(doi_id_lc_pair = paste(doi, data_id, sep = ";")) |> # pair lower case doi-id
   distinct()
 
 numbat_da_dois_and_ids_3_auto_cleaned_for_joining <- numbat_da_dois_and_ids_3_auto_cleaned|>
-  mutate(doi_id_lc_pair_for_joining = paste(doi, data_id_lc, sep = ";")) |> # pair lower case doi-id
+  mutate(doi_id_lc_pair = paste(tolower(doi), data_id_lc, sep = ";")) |> # pair lower case doi-id
   distinct()
 
 
 # prepare latest manual validation for joining
 
 colnames(charite_dois_and_ids_4_m_val_done_for_joining_1) # check which columns to keep
+colnames(numbat_da_dois_and_ids_3_auto_cleaned_for_joining) # check which columns to keep
+
+
+any(grepl("[A-Z]", charite_dois_and_ids_4_m_val_done_for_joining_1$doi_id_lc_pair))
+any(grepl("[A-Z]", numbat_da_dois_and_ids_3_auto_cleaned_for_joining$doi_id_lc_pair))
+
 
 charite_dois_and_ids_4_m_val_done_for_joining_2 <- charite_dois_and_ids_4_m_val_done_for_joining_1 |>
   select(
-    doi_id_lc_pair_for_joining,
+    doi_id_lc_pair,
     data_id_m_val,
     validated,
     Category,
@@ -217,10 +223,10 @@ charite_dois_and_ids_4_m_val_done_for_joining_2 <- charite_dois_and_ids_4_m_val_
 
 numbat_da_dois_and_ids_4_m_val_joined <- numbat_da_dois_and_ids_3_auto_cleaned_for_joining |>
   left_join(charite_dois_and_ids_4_m_val_done_for_joining_2,
-            by = "doi_id_lc_pair_for_joining") |>
+            by = "doi_id_lc_pair") |>
   relocate(data_id_m_val, .after = slug) |>
   relocate(doi_id_orig_pair, .after = is_gen_rep) |>
-  relocate(doi_id_lc_pair_for_joining, .after = doi_id_orig_pair)
+  relocate(doi_id_lc_pair, .after = doi_id_orig_pair)
   
 # check if there's anything else to add
 numbat_da_dois_and_ids_4_m_val_joined |> dplyr::filter(
@@ -234,6 +240,8 @@ numbat_da_dois_and_ids_4_m_val_joined |> dplyr::filter(
 # save
 save_cr(numbat_da_dois_and_ids_4_m_val_joined,
         file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_4_m_val_joined_in_progress.RData")))
+
+
 
 # Write a csv for documentation
 
@@ -261,3 +269,89 @@ write_csv_cr(
 # From here, return to "charite_loading_and_preprocessing.qmd" to get the relevant cases from
 # "numbat_da_dois_and_ids_5_m_val_joined_done.csv"
 # it's saved there as an RData object as well ("numbat_da_dois_and_ids_5_m_val_joined_done.RData")
+
+# I changed the column name manutlly from doi_id_lc_pair_for_joining to doi_id_lc_pair
+# and then here I'll just tolower the doi_id_lc_pair values, which were not lowered in
+# the original script above. I fixed it in the script and made sure that the cases
+# before and after the fix are identical. All that changed is the column name and the
+# values' tolower.
+
+temp_4 <- read.csv(
+  file.path(here("data", "verification", "m_val", "numbat_da_dois_and_ids_4_m_val_joined_in_progress.csv")),
+  header = TRUE) |> 
+  mutate(doi_id_lc_pair = tolower(doi_id_lc_pair))
+
+temp_5 <- read.csv(
+  file.path(here("data", "verification", "m_val", "numbat_da_dois_and_ids_5_m_val_joined_done.csv")),
+  header = TRUE) |> 
+  mutate(doi_id_lc_pair = tolower(doi_id_lc_pair))
+
+# check that aside from this column temp_5 is identical to _5_m_val_done:
+
+check <- numbat_da_dois_and_ids_4_m_val_joined |> select(doi_id_orig_pair)
+check_4 <- temp_4 |> select(doi_id_orig_pair)
+check_5 <- temp_5 |> select(doi_id_orig_pair)
+
+identical(check, numbat_da_dois_and_ids_4_m_val_joined |> select(doi_id_orig_pair))
+identical(check_4, temp_4 |> select(doi_id_orig_pair))
+identical(check_5, temp_5 |> select(doi_id_orig_pair))
+
+check_44 <- check_4 |> select(doi_id_orig_pair) |> arrange(doi_id_orig_pair)
+check_55 <- check_5 |> select(doi_id_orig_pair) |> arrange(doi_id_orig_pair)
+
+t_44 <- numbat_da_dois_and_ids_4_m_val_joined |> select(doi_id_orig_pair) |> arrange(doi_id_orig_pair)
+
+identical(check_44$doi_id_orig_pair, t_44$doi_id_orig_pair)
+identical(check_55$doi_id_orig_pair, t_44$doi_id_orig_pair)
+
+anti_join(check_44, t_44 |> select(doi_id_orig_pair)) |> View()
+anti_join(check_55, t_44 |> select(doi_id_orig_pair)) |> View()
+
+# reweite the csvs with the correct col names and lowercase values:
+
+# Write a csv for documentation
+
+numbat_da_dois_and_ids_4_m_val_joined_in_progress <- temp_4
+
+write_csv_cr(
+  numbat_da_dois_and_ids_4_m_val_joined_in_progress,
+  file = here("data",
+              "verification",
+              "m_val",
+              "numbat_da_dois_and_ids_4_m_val_joined_in_progress.csv"),
+  row.names = FALSE
+)
+
+# Write another copy of it - this is the file you should work on!
+
+numbat_da_dois_and_ids_5_m_val_joined_done <- temp_5
+
+write_csv_cr(
+  temp_5,
+  file = here("data",
+              "verification",
+              "m_val",
+              "numbat_da_dois_and_ids_5_m_val_joined_done.csv"),
+  row.names = FALSE
+)
+
+# Last verification:
+
+load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_5_m_val_joined_done.RData"))
+
+new_5_done <- read.csv(
+  file.path(here("data", "verification", "m_val", "numbat_da_dois_and_ids_5_m_val_joined_done.csv")),
+  header = TRUE,
+  sep = ",")
+
+any(grepl("[A-Z]", new_5_done$doi_id_lc_pair)) # original also doesn't, as expected
+any(grepl("[A-Z]", old_5_done$doi_id_lc_pair_for_joining)) # original also doesn't, as expected
+
+
+old_5_done <- numbat_da_dois_and_ids_5_m_val_joined_done |> 
+  rename(doi_id_lc_pair = doi_id_lc_pair_for_joining) |> 
+  mutate(doi_id_lc_pair = tolower(doi_id_lc_pair))
+
+identical(new_5_done, old_5_done)
+
+# Identical. No problems.

@@ -306,7 +306,7 @@ save_cr(ds_added_in_matched_numbat_2_id_cols,
         file = file.path(here("data", "wrangling_steps", "ds_added_in_matched_numbat",
                               "ds_added_in_matched_numbat_2_id_cols.RData")))
 
-# 4. Join "authors_charite" and "publication_year_charite" colulmns, but this time based on the DOI
+# 4. Join "authors_charite" and "publication_year_charite" columns, but this time based on the DOI
 
 # 4.1 create doi-relevant colnames vector to join
 
@@ -552,7 +552,7 @@ dcc_detected_ids_all_sources_2_rm_ad_ov |>
 
 ```
 
-# 5.  Remove several cases where doi_dcc+detected is actually doi_lc (charite)+dataset_for_matching, just from another row
+# 5. Remove several cases where doi_dcc+detected is actually doi_lc (charite)+dataset_for_matching, just from another row
 
 ```{r}
 
@@ -589,7 +589,7 @@ check <- numbat_da_dois_and_ids_9_clean_pairs |>
 
 dcc_detected_ids_all_sources_3_rm_dcc_is_ch <- dcc_detected_ids_all_sources_2_rm_ad_ov |> 
   dplyr::filter(
-    !(
+    !(f
       (doi_lc == "10.1186/s12961-022-00841-2"   &  detected_id == "pxd018230"    &  doi_dcc == "10.3390/cancers13051097")
     | (doi_lc == "10.1155/2020/5943014"         &  detected_id == "gse85047"     &  doi_dcc == "10.1038/s41467-023-36735-2")
     | (doi_lc == "10.1038/s41467-023-36735-2"   &  detected_id ==   "gse85047"   &  doi_dcc ==        "10.1155/2020/5943014")
@@ -605,8 +605,6 @@ save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
 
 
 # Notice: the couunt of IDs won't change, becuase they are being cited by other papers and they belong to other charite papers that are not in the dcc paper column. So the only thing that will change is that 5 distinct doi_dcc records will be removed from the dcc papers count.
-
-
 ```
 
 # 6. Add Metadata

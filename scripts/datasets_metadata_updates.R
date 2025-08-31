@@ -989,7 +989,7 @@ sample_200_non_matched_ids_for_joining <- sample_200_non_matched_ids |>
          human_data = `human data`,
          data_access_temp_check = data_access) |> 
   mutate(dataset_for_matching = tolower(dataset_for_matching),
-         doi_id_lc_pair_for_joining = paste(doi_lc, dataset_for_matching, sep = ";")) |> # make a new pair
+         doi_id_lc_for_matching = paste(doi_lc, dataset_for_matching, sep = ";")) |> # doi lc ; dataset_for_matching (since there's no detected here)
   select(doi_id_lc_pair_for_joining,
          data_availability_statement,
          human_data,
@@ -1002,10 +1002,18 @@ sample_200_non_matched_ids_for_joining <- sample_200_non_matched_ids |>
 
 # join by lc_pair
 
-datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources |> 
+##### 
+# datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources$doi_id_lc_pair_for_joining
+# is NOT REALLY TOLOWERED!
+# so first lower it and name it "doi_id_lc_pair" (I've checked backwards thoroughly and it doesn't change anything in the results until now).
+#####
+
+
+datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources |>
+  mutate(doi_id_lc_pair_for_matching = paste(doi_lc, dataset_for_matching, sep = ";")) |> # make a new pair
   mutate(charite_id_year = as.character(charite_id_year)) |> # convert to chr
   left_join(sample_200_non_matched_ids_for_joining,
-            by = "doi_id_lc_pair_for_joining",
+            by = "doi_id_lc_pair_for_matching",
             suffix = c("", ".new")) |> 
   mutate(
     data_availability_statement = coalesce(data_availability_statement, data_availability_statement.new),
@@ -1028,42 +1036,188 @@ save_cr(datasets_metadata_master_new_st_all_4_non_matched,
         file = file.path(here("data", "verification", "metadata_new_structure",
                               "datasets_metadata_master_new_st_all_4_non_matched.RData")))
 
-# 3. Resolve case:
-# datasets_metadata_master_new_st_all_2_num_da$detected_id == "10.18112/openneuro.ds001226"
+# 3. Resolve case: # datasets_metadata_master_new_st_all_4_non_matched$detected_id == "10.18112/openneuro.ds001226"
+
+# make sure it is an exact duplicat besides the "licesne" values which actually mean the same:
+datasets_metadata_master_new_st_all_4_non_matched |> 
+  dplyr::filter(detected_id == "10.18112/openneuro.ds001226") |> 
+  select(-license) |> 
+  distinct() |> 
+  nrow() # 2 with license col, 1 w/o license col
+
+# remove the "TRUE" one, since the other one is "CCO" - more information about the license type
+
+# get row
+row_to_remove <- datasets_metadata_master_new_st_all_4_non_matched |> 
+  dplyr::filter(detected_id == "10.18112/openneuro.ds001226" & license == "TRUE")
+  
+# remove
+datasets_metadata_master_new_st_all_5_dedup <- datasets_metadata_master_new_st_all_4_non_matched |> 
+  anti_join(row_to_remove, by = c("detected_id", "license"))
+  
+# save
+save_cr(datasets_metadata_master_new_st_all_5_dedup,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_5_dedup.RData")))
+
+# 4. manually add metadata to detected_id = 10.13026/x4td-x982:
+
+# metadata was taken from: here("data/raw/charite/data_articles_AI_2025_05_14.csv")
+
+datasets_metadata_master_new_st_all_6_man <- datasets_metadata_master_new_st_all_5_dedup |> 
+  mutate(
+    charite_id_year = case_when(
+      detected_id == "10.13026/x4td-x982" ~ "2020"),
+    license = case_when(
+      detected_id == "10.13026/x4td-x982" ~ "CC-BY"),
+    human_data = case_when(
+     detected_id == "10.13026/x4td-x982" ~ "TRUE"),
+    covid_related = case_when(
+      detected_id == "10.13026/x4td-x982" ~ "FALSE"))
+
+# save
+save_cr(datasets_metadata_master_new_st_all_6_man,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_6_man.RData")))
+
+# 5. categorization of ids:
+
+  # Plan:
+  # 1. add "is_detected_id_doi" to detected only
+  # 2. verify is_gen_rep (change values if necessary)
+  # 3. verify Category for original ids (so matched + non matched) (change values if necessary)
+
+# 1. add "is_detected_id_doi" to detected only
+
+# overview
+datasets_metadata_master_new_st_all_6_man |> 
+  select(detected_id) |> 
+  distinct() |> 
+  View()
+
+datasets_6_in_progress_is_doi <- datasets_metadata_master_new_st_all_6_man |> 
+  mutate(
+    is_detected_id_doi = case_when(
+      is.na(detected_id) ~ NA_character_,
+      grepl("^10\\.", detected_id) ~ "TRUE",
+      .default = "FALSE"
+    )
+  )
 
 
-# 4. add metadata to case (I should have it from data articles and or numbat original extractions):
-# 10.13026/x4td-x982
+# 2. verify is_gen_rep (change values if necessary)
 
-# 5. add a Category col so that it'll have an original category column (by data_identifier) and detected category column (by detectged_id)
+# overview
+datasets_6_in_progress_is_doi |> 
+  select(dataset_for_matching, is_gen_rep) |> 
+  distinct() |>
+  arrange(is_gen_rep, dataset_for_matching) |> 
+  View()
+
+
+# st001673 should be "FALSE", but other than that everything looks fine.
+
+# change "st001673"
+datasets_6_in_progress_is_gen_rep <- datasets_6_in_progress_is_doi |> 
+  mutate(is_gen_rep = as.character(is_gen_rep)) |> # I'll also convert it to chr while I'm at it
+  dplyr::mutate(
+    is_gen_rep = case_when(
+      dataset_for_matching == "st001673" ~ "FALSE",
+      .default = is_gen_rep))
+
+# 3. verify Category for dataset_for_matching ids (so matched + non matched) (change Category values if necessary)
+
+# overview
+
+# matched
+datasets_6_in_progress_is_gen_rep |> 
+  dplyr::filter(in_dcc == "TRUE") |> 
+  select(data_id_lc, data_id_secondary, dataset_for_matching, detected_id, Category) |> 
+  distinct() |> 
+  View() # looks fine
+
+# non-matched (acc_nr)
+datasets_6_in_progress_is_gen_rep |> 
+  dplyr::filter(in_dcc == "FALSE") |> 
+  select(data_id_lc, data_id_secondary, dataset_for_matching, Category) |> 
+  distinct() |> 
+  dplyr::filter(Category == "acc_nr") |> 
+  View() # looks fine
+
+  # non-matched (rest of values)
+datasets_6_in_progress_is_gen_rep |> 
+  dplyr::filter(in_dcc == "FALSE") |> 
+  select(data_id_lc, data_id_secondary, dataset_for_matching, Category) |> 
+  distinct() |>
+  dplyr::filter(Category != "acc_nr") |> 
+  View() # looks fine. "url" osfs were also in the numbat list to match with DCC.
+  
+
+datasets_metadata_master_new_st_all_7_is_doi <- datasets_6_in_progress_is_gen_rep
+
+# save
+save_cr(datasets_metadata_master_new_st_all_7_is_doi,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_7_is_doi.RData")))
+
+# 6. quality assurance
+
+# 1. check inconsistencies in metadata
+
+# without DAS
+datasets_metadata_master_new_st_all_7_is_doi |>
+  dplyr::group_by(detected_id) |>
+  dplyr::summarise(
+    # for each column, check if there is more than 1 unique value
+    across(
+      c(human_data, covid_related, charite_id_year, license),
+      ~ n_distinct(.) > 1,     # TRUE = inconsistent within group
+      .names = "check_{.col}"  # Name output columns like: check_human_data, etc.
+    )
+  ) |>
+  dplyr::filter(if_any(starts_with("check_"), ~ .)) |> 
+  View() # no issues
+
+# only DAS
+datasets_metadata_master_new_st_all_7_is_doi |>
+  dplyr::group_by(detected_id) |>
+  dplyr::summarise(
+    across(data_availability_statement,
+      ~ n_distinct(.) > 1,
+      .names = "check_{.col}"
+    )
+  ) |>
+  dplyr::filter(if_any(starts_with("check_"), ~ .)) |> 
+  View()
+
+# 2. check that doi id pairs are the real doi and id cols
+
+datasets_metadata_master_new_st_all_7_is_doi |>
+  mutate(
+    # Combine doi_charite and data_identifier with a semicolon
+    doi_id_orig_check = paste(doi_charite, data_identifier, sep = ";"),
+    
+    # Combine doi_lc and dataset_for_matching
+    doi_id_lc_check = paste(doi_lc, dataset_for_matching, sep = ";"),
+    
+    # Combine doi_no_ver_info and dataset_for_matching
+    doi_id_clean_check = paste(doi_no_ver_info, dataset_for_matching, sep = ";"),
+    
+    # Compare pasted versions to reference columns
+    doi_id_orig_match = doi_id_orig_check == doi_id_orig_pair,
+    doi_id_lc_match = doi_id_lc_check == doi_id_lc_pair_for_joining,
+    doi_id_clean_match = doi_id_clean_check == doi_id_clean_pair
+  ) |> 
+  dplyr::filter(
+    doi_id_orig_match == FALSE |
+      doi_id_lc_match == FALSE |
+      doi_id_clean_match == FALSE
+  ) |> 
+  View()
 
 
 
-# # 6. check for inconsistencies (different metadata for same dataset)
-# 
-#   # check that there are no inconsistencies:
-#   wide_paired <- charite_dois_and_ids_8_wide |> 
-#     mutate(
-#       paired = paste(trimws(doi), trimws(dataset_for_matching), sep = ";"),
-#       source = "wide"
-#     ) |> 
-#     select(paired, source) |> 
-#     distinct()
-#   
-#   metadata_paired <- datasets_metadata_master_updated_013 |> 
-#     mutate(
-#       paired = paste(trimws(doi_charite), trimws(dataset_for_matching), sep = ";"),
-#       source = "meta"
-#     ) |> 
-#     select(paired, source) |> 
-#     distinct()
-#   
-#   wide_paired |> 
-#     bind_rows(metadata_paired) |> 
-#     add_count(paired, name = "n") |> 
-#     dplyr::filter(n == 1) |> 
-#     separate(paired, into = c("doi", "id"), sep = ";") |> 
-#     View()
-# 
-# # save
-# metadata_update(datasets_metadata_master_updated_013) # call function to save as csv, xlsx, rda
+
+
+# save
+metadata_update(datasets_metadata_master_updated_013) # call function to save as csv, xlsx, rda
