@@ -612,7 +612,7 @@ save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
 ```{r Add metadata}
 
 # Add metadata: 
-# dataset year, data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
+# dataset year, license, human/not, covid/not, doi/acc_n, DAS (repository & data access are already in _all_sources)
 
 # load metadata file
 load_latest_metadata_update()
@@ -658,7 +658,72 @@ save_cr(dcc_detected_ids_all_sources_4_w_metadata, file = file.path(here("data",
 
 ```
 
-# 4. Verify Results
+# 7. Add missing repository values for matched cases
+
+```{r}
+
+# check which cases are missing
+missing_cases <- dcc_detected_ids_all_sources_4_w_metadata |> 
+  select(detected_id, repository) |> 
+  distinct() |> 
+  dplyr::filter(repository == "")
+
+
+dcc_detected_ids_all_sources_5_add_rep <- dcc_detected_ids_all_sources_4_w_metadata |> 
+  mutate(repository =
+           case_when(
+             detected_id == "up000005640" ~ "uniprot",
+             detected_id == "phs000101" ~ "ncbi dbgap",
+             .default = repository
+           ))
+
+# save
+save_cr(dcc_detected_ids_all_sources_5_add_rep, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_5_add_rep.RData")))
+```
+
+# 8. change several cases from "datastet" to "datastet_in_additional_ids" 
+
+```{r}
+
+# some "datastet" are actually in "additional_ids" (only 2 unique ids)
+# so here I'll change them to "datastet_in_additional_ids"
+
+  # # check which ids:
+  # 
+  # df_multi_source <- t |>
+  #   select(detected_id, source_charite) |>
+  #   distinct() |>
+  #   group_by(detected_id) |>
+  #   summarise(n_sources = n_distinct(source_charite), .groups = "drop") |>
+  #   dplyr::filter(n_sources > 1) 
+  # 
+  # t |>
+  #   select(detected_id, source_charite) |>
+  #   distinct() |>
+  #   semi_join(df_multi_source, by = "detected_id") |> View()
+  # 
+  # # these: c("gse99933", "gse90496")
+  # 
+  # verify that it's "datastet" that's supposed to be "datastet_in_additional_ids":
+  # 
+  # pool_to_detected_from <- dcc_detected_ids_all_sources_5_add_rep |> 
+  # select(detected_id, source_charite, doi_dcc) |> 
+  # dplyr::filter(detected_id %in% c("gse90496", "gse99933")) |> 
+  # distinct()
+
+dcc_detected_ids_all_sources_6_src_fix <- dcc_detected_ids_all_sources_5_add_rep |>
+  mutate(
+    source_charite = case_when(
+      detected_id %in% c("gse99933", "gse90496")
+      & source_charite == "datastet"
+      ~ "datastet_in_additional_ids",
+      .default = source_charite))
+
+# save
+save_cr(dcc_detected_ids_all_sources_6_src_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_src_fix.RData")))
+```
+
+# 9. Verify Results
 
 ```{r Verify results}
 

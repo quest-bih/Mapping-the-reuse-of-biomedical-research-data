@@ -20,13 +20,15 @@ pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, h
 
 # Load tables for plots
 
-load(here("data", "tables_for_plots", "combined_count_tibbles.RData")) # fig-distinct-numbers
+load(here("data", "tables_for_plots", "combined_long_counts.RData")) # fig-distinct-numbers
 
 load(here("data", "tables_for_plots", "ds_freq.RData"))                # fig-datasets-freq-dist
 
 load(here("data", "tables_for_plots", "rep_dt.RData"))                 # fig-repo-dist
 
-load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_agg.RData")) # fig-ref-by-year
+load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_agg_top_4.RData")) # fig-ref-by-year-top-4
+
+load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_agg_top_7.RData")) # fig-ref-by-year-top-7
 
 load(here("data", "tables_for_plots", "links_all.RData")) # fig-datasets-properties
 
@@ -38,9 +40,7 @@ load(here("data", "tables_for_plots", "dcc_years_dist_for_plot.RData")) # fig-dc
 
 load(here("data", "tables_for_plots", "rep_for_plot.RData")) # fig-dcc-rep
 
-load(here("data", "tables_for_plots", "ds_tagged.RData")) # fig-age-citation
-
-# load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-age-citation
+load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-venn-ids
 
 
 ```
@@ -58,36 +58,116 @@ load(here("data", "tables_for_plots", "ds_tagged.RData")) # fig-age-citation
 #| fig.height: 8
 #| fig.width: 10
 
-combined_count_tibbles |>
-  ggplot(aes(x = tibble_source, y = value, fill = variable)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           color = "black") +
-  # geom_bar(stat = "identity", fill = "gray30",
-  #          alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
-  geom_text(aes(label = value), 
-            vjust = -0.5, 
-            size = 6, 
-            color = "black") +
-  facet_wrap(~variable, scales = "free") +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-  scale_fill_manual(values = c(
-    "Mentioning Articles" = "#80CBC4",
-    "Mentioned Datasets" = "#C1E8E1"
-  )) +
-  theme_classic() +
-  theme(
-    legend.position = "none",
-    axis.title.x = element_text(size = 16, color = "black"),
-    axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
-    axis.text.x = element_text(size = 16, color = "black", angle = 45, hjust = 1),     # diagonal x labels
-    axis.text.y = element_text(size = 14, color = "black"),
-    strip.text = element_text(size = 16, color = "black", margin = margin(b = 10), vjust = -0.5)
+combined_long_counts_labeled <- combined_long_counts |>
+  group_by(dataset, Type) |>
+  arrange(desc(source_charite), .by_group = TRUE) |>
+  mutate(
+    y_label = cumsum(Count) - Count / 2  # center of each stacked segment
+  ) |>
+  ungroup()
+
+
+# Plot
+ggplot(combined_long_counts, aes(x = Type, y = Count, fill = source_charite)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.6) +
+  geom_text(
+    data = combined_long_counts_labeled,
+    aes(
+      x = as.numeric(factor(Type)) + label_nudge,
+      y = y_label,
+      label = Count
+    ),
+    size = 5,
+    color = "black"
   ) +
+  facet_wrap(~dataset, labeller = labeller(
+    dataset = c(
+      dcc_summary = "Excluding author overlap cases",
+      dcc_au_ov = "Including author overlap cases\n(for numbat & data articles only)"
+    )
+  )) +
+  scale_x_discrete(labels = c(
+    distinct_detected_id = "Datasets",
+    distinct_doi_dcc = "Mentions"
+  )) +
   labs(
     x = "",
-    y = "Count"
+    y = "Count",
+    fill = "Source",
+    title = "Number of datasets detected with number of mentioning papers, by source"
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(size = 16, color = "black"),
+    axis.text.y = element_text(size = 14, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    strip.text = element_text(size = 12, color = "black"),
+    legend.title = element_text(size = 14, face = "bold", color = "black"),
+    legend.text = element_text(size = 12, color = "black")
   )
+# 
+# 
+# combined_count_tibbles |>
+#   ggplot(aes(x = tibble_source, y = value, fill = variable)) +
+#   geom_bar(stat = "identity",
+#            position = "dodge",
+#            color = "black") +
+#   # geom_bar(stat = "identity", fill = "gray30",
+#   #          alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
+#   geom_text(aes(label = value), 
+#             vjust = -0.5, 
+#             size = 6, 
+#             color = "black") +
+#  # facet_wrap(~variable, scales = "free") +
+#   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+#   scale_fill_manual(values = c(
+#     "Mentioning Articles" = "#80CBC4",
+#     "Mentioned Datasets" = "#C1E8E1"
+#   )) +
+#   theme_classic() +
+#   theme(
+#     legend.position = "none",
+#     axis.title.x = element_text(size = 16, color = "black"),
+#     axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
+#     axis.text.x = element_text(size = 16, color = "black", angle = 45, hjust = 1),     # diagonal x labels
+#     axis.text.y = element_text(size = 14, color = "black"),
+#     strip.text = element_text(size = 16, color = "black", margin = margin(b = 10), vjust = -0.5)
+#   ) +
+#   labs(
+#     x = "",
+#     y = "Count"
+#   )
+
+# combined_count_tibbles |>
+#   ggplot(aes(x = tibble_source, y = value, fill = variable)) +
+#   geom_bar(stat = "identity",
+#            position = "dodge",
+#            color = "black") +
+#   # geom_bar(stat = "identity", fill = "gray30",
+#   #          alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
+#   geom_text(aes(label = value), 
+#             vjust = -0.5, 
+#             size = 6, 
+#             color = "black") +
+#   facet_wrap(~variable, scales = "free") +
+#   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+#   scale_fill_manual(values = c(
+#     "Mentioning Articles" = "#80CBC4",
+#     "Mentioned Datasets" = "#C1E8E1"
+#   )) +
+#   theme_classic() +
+#   theme(
+#     legend.position = "none",
+#     axis.title.x = element_text(size = 16, color = "black"),
+#     axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
+#     axis.text.x = element_text(size = 16, color = "black", angle = 45, hjust = 1),     # diagonal x labels
+#     axis.text.y = element_text(size = 14, color = "black"),
+#     strip.text = element_text(size = 16, color = "black", margin = margin(b = 10), vjust = -0.5)
+#   ) +
+#   labs(
+#     x = "",
+#     y = "Count"
+#   )
 ```
 
 # Distribution Frequency of Datasets References
@@ -177,8 +257,8 @@ rep_dt |>
             hjust = -0.2,
             size = 6, color = "black") +
   scale_y_log10(
-    breaks = c(1, 3, 10, 30, 100, 300),
-    labels = c(1, 3, 10, 30, 100, 300),
+    breaks = c(1, 3, 10, 30, 100, 300, 1000),
+    labels = c(1, 3, 10, 30, 100, 300, 1000),
     expand = expansion(mult = c(0.02, 0.15))
   ) +
   coord_flip() +
@@ -197,27 +277,27 @@ rep_dt |>
 
 ```
 
-# Datasets References by Year
+# Datasets References by Year: TOP 4
 
 ```{r}
-#| label: fig-ref-by-year
-#| fig-cap: Datasets References by Year
+#| label: fig-ref-by-year-top-4
+#| fig-cap: Datasets References by Year Top 4
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
 
-year_dcc_dt_all_for_plot_agg |> 
-  ggplot(aes(x = factor(publication_year_dcc), fill = factor(detected_in_dcc))) +
+year_dcc_dt_all_for_plot_agg_top_4 |> 
+  ggplot(aes(x = factor(publication_year_dcc), fill = factor(detected_id))) +
   geom_bar(stat = "identity",
            position = "stack",
            aes(y = count)) +
 geom_text(
-  data = year_dcc_dt_all_for_plot_agg |>
+  data = year_dcc_dt_all_for_plot_agg_top_4 |>
     group_by(publication_year_dcc) |>
     dplyr::filter(!(publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count))),  # Exclude text labels only for specific years
   aes(y = count, label = count),
   position = position_stack(vjust = 0.5),
-  size = 6) +
+  size = 4) +
   labs(
     x = "Year",
     y = "Count",
@@ -227,11 +307,49 @@ geom_text(
   scale_fill_manual(values = c("#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
   theme_classic() +
   theme(
-    legend.position = "none",
+    #legend.position = "none",
     axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
     axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
     axis.text.y = element_text(size = 16, color = "black"),
-    axis.text.x = element_text(size = 16, color = "black")
+    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
+    )
+```
+
+# Datasets References by Year: TOP 7
+
+```{r}
+#| label: fig-ref-by-year-top-7
+#| fig-cap: Datasets References by Year Top 7
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+year_dcc_dt_all_for_plot_agg_top_7 |> 
+  ggplot(aes(x = factor(publication_year_dcc), fill = factor(detected_id))) +
+  geom_bar(stat = "identity",
+           position = "stack",
+           aes(y = count)) +
+geom_text(
+  data = year_dcc_dt_all_for_plot_agg_top_7 |>
+    group_by(publication_year_dcc) |>
+    dplyr::filter(!(publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count))),  # Exclude text labels only for specific years
+  aes(y = count, label = count),
+  position = position_stack(vjust = 0.5),
+  size = 4) +
+  labs(
+    x = "Year",
+    y = "Count",
+    fill = "Accession Number"
+  ) +
+  scale_x_discrete(labels = function(x) ifelse(x == "<=2012", expression("\u2264"~2012), x)) +
+  scale_fill_manual(values = c("#C3B1E1", "#F9DC5C", "#FFB6B9", "#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
+  theme_classic() +
+  theme(
+    #legend.position = "none",
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 16, color = "black"),
+    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
     )
 ```
 
@@ -299,72 +417,13 @@ plot_Sankey <- function(links, ...) {
 
 # Plot
 
-plot_Sankey(links_all, sinksRight = FALSE, fontSize = 21)
+plot_Sankey(links_all, sinksRight = FALSE, fontSize = 18)
 
-s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 21)
+s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 18)
 
 saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sankey_interactive_plot.html"), selfcontained = TRUE)
 
 
-```
-
-# Datasets and Citing Papers Publication Years
-
-```{r}
-#| label: fig-age-citation
-#| fig-cap: Datasets and Citing Papers Publication Years
-#| fig-format: png
-#| fig.height: 8
-#| fig.width: 10
-
-# add headers
-
-ggplot(ds_tagged, aes(x = factor(ds_age_when_cited), y = n_citations)) +
-  
-  # Boxplot
-  geom_boxplot(outlier.shape = NA, fill = "lightgray") +
-  
-  # # Lines connecting repeated datasets
-  # geom_line(
-  #   data = dplyr::filter(ds_tagged, has_line),
-  #   aes(group = detected_in_dcc, color = detected_in_dcc),
-  #   linewidth = 0.6,
-  #   alpha = 0.7,
-  #   show.legend = FALSE
-  # ) +
-  
-  # Points without jitter (for repeated datasets)
-  geom_point(
-    data = dplyr::filter(ds_tagged, has_line),
-    aes(color = detected_in_dcc),
-    size = 2,
-    alpha = 0.7,
-    show.legend = FALSE
-  ) +
-  
-  # Jittered points for unique datasets (safer width via geom_jitter)
-  geom_jitter(
-    data = dplyr::filter(ds_tagged, !has_line),
-    width = 0.3,  # better horizontal separation
-    color = "black",
-    size = 2,
-    alpha = 0.7
-  ) +
-  
-  # Mean (blue dot)
-  stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "blue") +
-  
-  # Median (red line)
-  stat_summary(fun = median, geom = "point", shape = 95, size = 6, color = "red") +
-  
-  # Theme
-  labs(
-    title = "Citations by Dataset Age",
-    x = "Dataset Age (Years)",
-    y = "Number of Citations (Log Scale)"
-  ) +
-  scale_y_log10() +
-  theme_classic()
 ```
 
 # DCC Publication years distribution
@@ -447,18 +506,18 @@ geom_text(aes(y = n + 2, label = perc),
 # Sources of Identifiers
 
 ```{r}
-# #| label: fig-venn-ids
-# #| fig-cap: Sources of Matched Identifiers
-# #| fig-format: png
-# #| fig.height: 8
-# #| fig.width: 10
-# 
-# setlist <- id_source_for_venn |>
-#   distinct(detected_in_dcc, data_id_source) |>  # avoid duplicates
-#   group_by(data_id_source) |>
-#   summarise(items = list(detected_in_dcc)) |>
-#   deframe()
-# 
-# # Plot Venn
-# ggvenn(setlist)
+#| label: fig-venn-ids
+#| fig-cap: Sources of Matched Identifiers
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+setlist <- id_source_for_venn |>
+  distinct(detected_id, source_charite) |>  # avoid duplicates
+  group_by(source_charite) |>
+  summarise(items = list(detected_id)) |>
+  deframe()
+
+# Plot Venn
+ggvenn(setlist)
 ```

@@ -65,14 +65,33 @@ datasets_metadata_master_latest <- load_latest_metadata_update() # call function
 
 # Load _3 for counting with author overlap:
 
-load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_3_au_info.RData"))
+load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_3_au_info.RData"))
 
 load(here("data", "wrangling_steps", "all_sources_binded",                                                      
-          "dcc_detected_ids_numbat_w_metadata_2_metadata.RData"))
+          "dcc_detected_ids_all_sources_6_src_fix.RData"))
 
-dcc_charite_joined_final <- dcc_detected_ids_numbat_w_metadata |> 
-  dplyr::filter(data_id_source == "numbat")
-rm(dcc_detected_ids_numbat_w_metadata)
+# create a table with no overlapping sources
+dcc_charite_joined_final_no_source_overlap <- dcc_detected_ids_all_sources_6_src_fix |> 
+  dplyr::filter(
+    # exclude datastet+additional that are already in numbat
+    source_charite %in% c(
+      "data_articles", # there is one that is "in numbat as well", but with a different ID, so no numbat match with it
+      "numbat",
+      "additional_ids",
+      "datastet")) |> 
+    mutate(
+    # data_availability_statement = case_when(
+    #   data_availability_statement %in% c("TRUE", "yes") ~ "TRUE",
+    #   .default = "FALSE"),
+    license_for_analysis = case_when(
+      license %in% c("CC0", "CC BY", "cc-by", " CC BY-NC-SA", "cc0") ~ "TRUE",
+      .default = "FALSE"
+    ))
+
+dcc_charite_joined_final_dup_sources <- dcc_detected_ids_all_sources_6_src_fix
+
+
+rm(dcc_detected_ids_all_sources_6_src_fix)
 ```
 
 <br>
@@ -82,102 +101,164 @@ rm(dcc_detected_ids_numbat_w_metadata)
 <br>
 
 ```{r fig-distinct-numbers-prep}
-# 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)
 
-counts_final <- tibble(
-  `Mentioning Articles` = dcc_charite_joined_final |> select(doi_dcc) |> distinct() |> nrow(),
-  `Charité Articles` = dcc_charite_joined_final |> select(doi_charite) |> distinct() |> nrow(),
-  `Mentioned Datasets` = dcc_charite_joined_final |> select(detected_in_dcc) |> distinct() |> nrow()
-)
+dcc_summary <- dcc_charite_joined_final_no_source_overlap |>
+  select(source_charite, detected_id, doi_dcc) |> 
+  group_by(source_charite) |> 
+  summarise(
+    distinct_detected_id = n_distinct(detected_id),
+    distinct_doi_dcc = n_distinct(doi_dcc),
+    .groups = "drop"
+  )
 
-# 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
+dcc_au_ov <- numbat_da_dcc_joined_3_au_info |>
+  select(source_charite, detected_id, doi_dcc) |> 
+  group_by(source_charite) |> 
+  summarise(
+    distinct_detected_id = n_distinct(detected_id),
+    distinct_doi_dcc = n_distinct(doi_dcc),
+    .groups = "drop"
+  ) |> 
+  bind_rows(
+    dcc_summary |>
+      dplyr::filter(
+        source_charite %in% c("additional_ids", "datastet")))
 
-# I'll use dcc_charite_joined_3_au_info to count, since it is one step before excluding author overlap cases.
 
-# However, I need to *exclude* cases where the author overlap is a result of the same paper that is present once as a preprint (as "doi_charite") and once as a publication (as "doi_dcc").
+# Prepare data
+dcc_summary_long <- dcc_summary |>
+  mutate(dataset = "dcc_summary") |>
+  pivot_longer(cols = starts_with("distinct_"),
+               names_to = "Type",
+               values_to = "Count")
 
-# So I'll first create a table with the cases suspected of being preprint-publication cases and check them for author overlap:
+dcc_au_ov_long <- dcc_au_ov |>
+  mutate(dataset = "dcc_au_ov") |>
+  pivot_longer(cols = starts_with("distinct_"),
+               names_to = "Type",
+               values_to = "Count")
 
-dcc_charite_blank_journals <- dcc_charite_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
-  dplyr::filter(journal == "") |> # get only cases where there's no journal information, because most of them are preprint cases
-  rowwise()  |> 
+combined_long_counts <- bind_rows(dcc_summary_long, dcc_au_ov_long) |> 
   mutate(
-    common_au = {
-      common <- intersect(
-        str_split(authors_dcc, ";")[[1]], 
-        str_split(authors_charite, ";")[[1]]
-      )
-      if (length(common) > 0) paste(common, collapse = ";") else NA
-    }
-  ) |>
-  ungroup() # check for author overlap in these cases only
+    label_nudge = case_when(
+      #Type == "distinct_detected_id" & source_charite == "numbat" ~ -0.15,
+      #Type == "distinct_detected_id" & source_charite == "datastet" ~ 0,
+      Type == "distinct_detected_id" & source_charite == "data_articles" ~ -0.15,
+      Type == "distinct_detected_id" & source_charite == "additional_ids" ~ 0.15,
+      .default = 0  # no nudge for other bars
+    )
+  )
 
-# Then I'll verify that I should keep cases with partial overlap, since they are presumably cases of author overlap which are not a result of preprint-publication relation:
-
-  # # Get partial overlap cases
-  #
-  # dcc_charite_blank_journals |>
-  #   dplyr::filter(!is.na(common_au)) |> # remove cases where there's no overlap at all (they are irrelevant for this table in any case)
-  #   dplyr::filter(authors_dcc != common_au) |> # remove cases where there's a full overlap
-  #   ungroup() |>
-  #   View()
-  #
-  # # I've checked each one manually and they are indeed not preprints - so they will be included in the "matched-with-author-overlap".
-
-# Now I'll manually check the full (exact) overlap cases - these are suspected to be preprints:
-
-dcc_charite_blank_journals_exact_overlap <- dcc_charite_blank_journals |>
-  dplyr::filter(authors_dcc == common_au) |> # get cases with full overlap out of journal == ""
-  select(doi_charite, doi_dcc) |>
-  distinct()
-
-# Results (distinct): 4 preprints, 2 datasets in doi_dcc(!). So those should be removed from "with-author-overlap".
-# Note: they are already removed from the final matched list, because of the exact author overlap.
-
-# Now I'll look for author overlap cases in general:
-
-dcc_charite_all_exact_overlap <- dcc_charite_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
-  dplyr::filter(authors_dcc == authors_charite) |> 
-  select(doi_charite, doi_dcc) |> 
-  distinct()
-
-# I've checked them manually as well, and they are also preprints-publications (10.1016/j.dib.2021.107320 is actually a data article under doi_dcc). So they should also be removed.
-
-# Now I'll bind _all_exact_overlap cases with _blank_journals_exact_overlap cases, to create a table with preprint-publication cases to remove from matched-list-including-overlap
-
-cases_to_remove <- dcc_charite_blank_journals_exact_overlap |> 
-    bind_rows(dcc_charite_all_exact_overlap) |> 
-  distinct()
-
-# Remove those preprint-publication cases
-
-dcc_charite_joined_w_au_ov <- dcc_charite_joined_3_au_info |> 
-  anti_join(cases_to_remove, by = c("doi_charite", "doi_dcc")) 
-
-# Get counts
-
-counts_w_au_ov <- tibble(
-  `Mentioning Articles` = dcc_charite_joined_w_au_ov |> select(doi_dcc) |> distinct() |> nrow(),
-  `Charité Articles` = dcc_charite_joined_w_au_ov |> select(doi_charite) |> distinct() |> nrow(),
-  `Mentioned Datasets` = dcc_charite_joined_w_au_ov |> select(detected_id) |> distinct() |> nrow()
-)
-
-# Prepare count tibbles (with and without author overlap cases) for plotting
-
-combined_count_tibbles <- counts_final |>
-  bind_rows(counts_w_au_ov,
-            .id = "tibble_source") |>
-  select(-`Charité Articles`) |> 
-  mutate(tibble_source = recode(tibble_source,
-                                "1" = "No Author Overlap",
-                                "2" = "Inc. Author Overlap")) |> 
-  pivot_longer(cols = -tibble_source, names_to = "variable", values_to = "value") |> 
-  mutate(variable = fct_reorder(variable, value, .desc = TRUE))
 
 # save as RData
-save_cr(combined_count_tibbles, file = file.path(here("data",
+save_cr(combined_long_counts, file = file.path(here("data",
                                                       "tables_for_plots",
-                                                      "combined_count_tibbles.RData")))
+                                                      "combined_long_counts.RData")))
+
+
+
+
+# 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)
+
+# counts_final <- tibble(
+#   `Mentioning Articles` = dcc_charite_joined_final_no_source_overlap |> select(doi_dcc) |> distinct() |> nrow(),
+#   `Charité Articles` = dcc_charite_joined_final_no_source_overlap |> select(doi_charite) |> distinct() |> nrow(),
+#   `Mentioned Datasets` = dcc_charite_joined_final_no_source_overlap |> select(detected_id) |> distinct() |> nrow()
+# )
+# 
+# # save as RData
+# save_cr(combined_count_tibbles, file = file.path(here("data",
+#                                                       "tables_for_plots",
+#                                                       "combined_count_tibbles.RData")))
+
+# # 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
+# 
+# # I'll use numbat_da_dcc_joined_3_au_info to count, since it is one step before excluding author overlap cases.
+# 
+# # However, I need to *exclude* cases where the author overlap is a result of the same paper that is present once as a preprint (as "doi_charite") and once as a publication (as "doi_dcc").
+# 
+# # So I'll first create a table with the cases suspected of being preprint-publication cases and check them for author overlap:
+# 
+# dcc_charite_blank_journals <- numbat_da_dcc_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
+#   dplyr::filter(journal == "") |> # get only cases where there's no journal information, because most of them are preprint cases
+#   rowwise()  |> 
+#   mutate(
+#     common_au = {
+#       common <- intersect(
+#         str_split(authors_dcc, ";")[[1]], 
+#         str_split(authors_charite, ";")[[1]]
+#       )
+#       if (length(common) > 0) paste(common, collapse = ";") else NA
+#     }
+#   ) |>
+#   ungroup() # check for author overlap in these cases only
+# 
+# # Then I'll verify that I should keep cases with partial overlap, since they are presumably cases of author overlap which are not a result of preprint-publication relation:
+# 
+#   # Get partial overlap cases
+# 
+#   dcc_charite_blank_journals |>
+#     dplyr::filter(!is.na(common_au)) |> # remove cases where there's no overlap at all (they are irrelevant for this table in any case)
+#     dplyr::filter(authors_dcc != common_au) |> # remove cases where there's a full overlap
+#     ungroup() |>
+#     View()
+# 
+#   # I've checked each one manually and they are indeed not preprints - so they will be included in the "matched-with-author-overlap".
+# 
+# # Now I'll manually check the full (exact) overlap cases - these are suspected to be preprints:
+# 
+# dcc_charite_blank_journals_exact_overlap <- dcc_charite_blank_journals |>
+#   dplyr::filter(authors_dcc == common_au) |> # get cases with full overlap out of journal == ""
+#   select(doi_charite, doi_dcc) |>
+#   distinct()
+# 
+# # Results (distinct): 4 preprints, 2 datasets in doi_dcc(!). So those should be removed from "with-author-overlap".
+# # Note: they are already removed from the final matched list, because of the exact author overlap.
+# 
+# # Now I'll look for author overlap cases in general:
+# 
+# dcc_charite_all_exact_overlap <- numbat_da_dcc_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
+#   dplyr::filter(authors_dcc == authors_charite) |> 
+#   select(doi_charite, doi_dcc) |> 
+#   distinct()
+# 
+# # I've checked them manually as well, and they are also preprints-publications (10.1016/j.dib.2021.107320 is actually a data article under doi_dcc). So they should also be removed.
+# 
+# # Now I'll bind _all_exact_overlap cases with _blank_journals_exact_overlap cases, to create a table with preprint-publication cases to remove from matched-list-including-overlap
+# 
+# cases_to_remove <- dcc_charite_blank_journals_exact_overlap |> 
+#     bind_rows(dcc_charite_all_exact_overlap) |> 
+#   distinct()
+# 
+# # Remove those preprint-publication cases
+# 
+# dcc_charite_joined_w_au_ov <- numbat_da_dcc_joined_3_au_info |> 
+#   anti_join(cases_to_remove, by = c("doi_charite", "doi_dcc")) 
+# 
+# # Get counts
+# 
+# counts_w_au_ov <- tibble(
+#   `Mentioning Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_dcc) |> distinct() |> nrow(),
+#   `Charité Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_charite) |> distinct() |> nrow(),
+#   `Mentioned Datasets` = numbat_da_dcc_joined_3_au_info |> select(detected_id) |> distinct() |> nrow()
+# )
+# 
+# # Prepare count tibbles (with and without author overlap cases) for plotting
+# 
+# combined_count_tibbles <- counts_final |>
+#   bind_rows(counts_w_au_ov,
+#             .id = "tibble_source") |>
+#   select(-`Charité Articles`) |>
+#   mutate(tibble_source = recode(tibble_source,
+#                                 "1" = "No Author Overlap",
+#                                 "2" = "Inc. Author Overlap")) |>
+#   pivot_longer(cols = -tibble_source, names_to = "variable", values_to = "value") |>
+#   mutate(variable = fct_reorder(variable, value, .desc = TRUE))
+
+# # save as RData
+# save_cr(combined_count_tibbles, file = file.path(here("data",
+#                                                       "tables_for_plots",
+#                                                       "combined_count_tibbles.RData")))
 
 
 ```
@@ -186,8 +267,8 @@ save_cr(combined_count_tibbles, file = file.path(here("data",
 
 ```{r fig-datasets-freq-dist-prep}
 
-ds_freq <- dcc_charite_joined_final |>
-  group_by(detected_in_dcc) |>
+ds_freq <- dcc_charite_joined_final_no_source_overlap |>
+  group_by(detected_id) |>
   summarise(n = n())
 
 # save as RData
@@ -200,7 +281,7 @@ save_cr(ds_freq, file = file.path(here("data",
 
 ```{r fig-repo-dist-prep}
 
-rep_dt <- dcc_charite_joined_final |> 
+rep_dt <- dcc_charite_joined_final_no_source_overlap |> 
    mutate(repository = case_when(
     repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "ncbi dbgap",
     repository == "figshare" ~ "figshare",
@@ -211,9 +292,10 @@ rep_dt <- dcc_charite_joined_final |>
     repository == "european nucleotide archive" ~ "ena",
     repository == "the protein data bank" ~ "pdb",
     repository %in% c("elsevier data repository", "elsevier bv") ~ "elsevier",
+    repository == "the electron microscopy data bank (emdb)" ~ "emdb",
+    repository == "the international genome sample resource" ~ "igsr",
     .default = repository)) |>  # shorten rep names for a nicer appearance
-  select(repository, detected_in_dcc, doi_dcc) |> 
-  distinct() |> 
+  select(repository, doi_dcc) |>
   group_by(repository) |> 
   summarise(n = n()) |> 
   arrange(desc(n))
@@ -230,31 +312,52 @@ save_cr(rep_dt, file = file.path(here("data",
 
 ```{r fig-ref-by-year-prep}
 
-year_dcc_dt_all <- dcc_charite_joined_final |>
-  select(doi_dcc, detected_in_dcc, publication_year_dcc) |> 
+year_dcc_dt_all <- dcc_charite_joined_final_no_source_overlap |>
+  select(doi_dcc, detected_id, publication_year_dcc) |> 
   distinct() |> 
-  count(detected_in_dcc, sort = TRUE)
+  count(detected_id, sort = TRUE)
 
 year_dcc_dt_all_for_plot <- year_dcc_dt_all |>
-  inner_join(dcc_charite_joined_final, by = "detected_in_dcc")
+  inner_join(dcc_charite_joined_final_no_source_overlap, by = "detected_id")
 
-year_dcc_dt_all_for_plot_agg <- year_dcc_dt_all_for_plot |> 
+top_7 <- year_dcc_dt_all |> select(detected_id) |> slice(1:7)
+top_4 <- year_dcc_dt_all |> select(detected_id) |> slice(1:4)
+
+year_dcc_dt_all_for_plot_agg_top_4 <- year_dcc_dt_all_for_plot |> 
   mutate(
-    detected_in_dcc = case_when(
-      !detected_in_dcc %in% c("6y2e", "gse14764", "gse148729", "gse55235") ~ "Others",
-      .default = detected_in_dcc),
+    detected_id = case_when(
+      !detected_id %in% top_4$detected_id ~ "Others",
+      .default = detected_id),
     publication_year_dcc = as.character(publication_year_dcc),
     publication_year_dcc = case_when(
       publication_year_dcc %in% c("2009", "2010", "2011", "2012") ~ "<=2012",
       .default = publication_year_dcc)) |> 
-  group_by(detected_in_dcc, publication_year_dcc) |> 
+  group_by(detected_id, publication_year_dcc) |> 
   summarise(count = n(), .groups = "drop") |> 
   dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
 
 # save as RData
-save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
+save_cr(year_dcc_dt_all_for_plot_agg_top_4, file = file.path(here("data",
                                                             "tables_for_plots",
-                                                            "year_dcc_dt_all_for_plot_agg.RData")))
+                                                            "year_dcc_dt_all_for_plot_agg_top_4.RData")))
+
+year_dcc_dt_all_for_plot_agg_top_7 <- year_dcc_dt_all_for_plot |> 
+  mutate(
+    detected_id = case_when(
+      !detected_id %in% top_7$detected_id ~ "Others",
+      .default = detected_id),
+    publication_year_dcc = as.character(publication_year_dcc),
+    publication_year_dcc = case_when(
+      publication_year_dcc %in% c("2009", "2010", "2011", "2012") ~ "<=2012",
+      .default = publication_year_dcc)) |> 
+  group_by(detected_id, publication_year_dcc) |> 
+  summarise(count = n(), .groups = "drop") |> 
+  dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
+
+# save as RData
+save_cr(year_dcc_dt_all_for_plot_agg_top_7, file = file.path(here("data",
+                                                            "tables_for_plots",
+                                                            "year_dcc_dt_all_for_plot_agg_top_7.RData")))
 
 ```
 
@@ -264,14 +367,14 @@ save_cr(year_dcc_dt_all_for_plot_agg, file = file.path(here("data",
 
 # Prepare table for sankey:
 
-dcc_charite_for_sankey <- dcc_charite_joined_final |>
-  select(detected_in_dcc, orig_id_is_doi, license_for_analysis, data_access, covid_related, repository) |>
+dcc_charite_for_sankey <- dcc_charite_joined_final_no_source_overlap |>
+  select(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) |>
   distinct()
 
 # Create links
 
 links_ac_lic <- dcc_charite_for_sankey |>
-  mutate(source = case_when(orig_id_is_doi == "FALSE" ~ "Accession Number",
+  mutate(source = case_when(is_detected_id_doi == "FALSE" ~ "Accession Number",
                             .default = "DOI"),
          target = case_when(license_for_analysis == "TRUE" ~ "CC License",
                             license_for_analysis == "FALSE" ~ "No CC License",
@@ -284,7 +387,7 @@ links_lic_access <- dcc_charite_for_sankey |>
   mutate(source = case_when(license_for_analysis == "TRUE" ~ "CC License",
                             license_for_analysis == "FALSE" ~ "No CC License",
                             .default = "license not checked yet"),
-         target = case_when(data_access == "yes" ~ "Full Access",
+         target = case_when(data_access == "yes" ~ "Open Data",
                             data_access == "restricted" ~ "Restricted Access",
                             .default = "access not checked yet")) |>
   count(source, target) |>
@@ -292,7 +395,7 @@ links_lic_access <- dcc_charite_for_sankey |>
   as.data.frame()
 
 links_access_rep <- dcc_charite_for_sankey |>
-  mutate(source = case_when(data_access == "yes" ~ "Full Access",
+  mutate(source = case_when(data_access == "yes" ~ "Open Data",
                             data_access == "restricted" ~ "Restricted Access",
                             .default = "access not checked yet"),
          target = case_when(
@@ -311,6 +414,8 @@ links_access_rep <- dcc_charite_for_sankey |>
            repository == "uniprot" ~ "Uniprot",
            repository == "zenodo" ~ "Zenodo",
            repository == "harvard dataverse" ~ "Harvard Dataverse",
+           repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+           repository == "the international genome sample resource" ~ "IGSR",
            .default = repository)) |>
   count(source, target) |>
   rename(value = n) |>
@@ -333,6 +438,8 @@ links_rep_covid <- dcc_charite_for_sankey |>
            repository == "uniprot" ~ "Uniprot",
            repository == "zenodo" ~ "Zenodo",
            repository == "harvard dataverse" ~ "Harvard Dataverse",
+           repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+           repository == "the international genome sample resource" ~ "IGSR",
            .default = repository),
          target = case_when(covid_related == "TRUE" ~ "Covid Related",
                             covid_related == "FALSE" ~ "Not Covid Related",
@@ -347,48 +454,6 @@ links_all <- bind_rows(links_ac_lic, links_lic_access, links_access_rep, links_r
 save_cr(links_all, file = file.path(here("data",
                                          "tables_for_plots",
                                          "links_all.RData")))
-
-```
-
-# Datasets and Citing Papers Publication Years
-
-For 2020-2022: we want to show if mentionings are increasing over time (where the baseline timepoint is the dataset’s publication year).
-
-So I could plot 1/2/3 years difference on x axis, and then how many mentions for each dataset. Try to normalize so that we could really see the change throughout the years
-
-```{r Datasets and Citing Papers Publication Years, echo=FALSE}
-
-# get data
-ds_age_cit_cor_prep <- dcc_charite_joined_final |>
-  select(detected_in_dcc, doi_dcc, publication_year_dcc, charite_id_year) |>
-  dplyr::filter(charite_id_year > 2019) |>
-  mutate(ds_age_when_cited = publication_year_dcc - charite_id_year) |>
-  count(ds_age_when_cited, detected_in_dcc, name = "n_citations") |>
-  dplyr::filter(ds_age_when_cited >= 0)
-
-# get only datasets that are cited at every age:
-# ds_age_cit_cor_prep_filtered <- ds_age_cit_cor_prep |>
-#   group_by(detected_in_dcc) |>
-#   dplyr::filter(all(0:3 %in% ds_age_when_cited)) |>
-#   ungroup()
-
-
-# tag datasets that appear more than once (for line connection)
-ds_tagged <- ds_age_cit_cor_prep |>
-  dplyr::group_by(detected_in_dcc) |>
-  dplyr::mutate(n_instances = dplyr::n()) |>
-  dplyr::ungroup() |>
-  dplyr::mutate(has_line = n_instances > 1)
-
-# save as RData
-save_cr(ds_age_cit_cor_prep, file = file.path(here("data",
-                                         "tables_for_plots",
-                                         "ds_age_cit_cor_prep.RData")))
-
-# save as RData
-save_cr(ds_tagged, file = file.path(here("data",
-                                         "tables_for_plots",
-                                         "ds_tagged.RData")))
 
 ```
 
@@ -412,7 +477,7 @@ Create a table like in the reference pic that I took, with: Dimensions of metada
 
 # not_mentioned_years <- datasets_metadata_master_latest |> 
 #   dplyr::filter(in_dcc == "FALSE") |> 
-#   select(charite_id_year, detected_in_dcc) |> 
+#   select(charite_id_year, detected_id) |> 
 #   distinct() |> 
 #   group_by(charite_id_year) |> 
 #   summarise(n = n())
@@ -421,19 +486,30 @@ Create a table like in the reference pic that I took, with: Dimensions of metada
 # Sources of Identifiers
 
 ```{r}
-# id_source_for_venn <- dcc_charite_joined_final |> 
-#   select(detected_in_dcc, data_id_source)
-# 
-# # venn_input_for_debugging <- id_source_for_venn |>
-# #   distinct(detected_in_dcc, data_id_source) |>  # remove duplicate rows
-# #   pivot_wider(names_from = data_id_source, values_from = data_id_source,
-# #               values_fn = length, values_fill = 0) |>
-# #   mutate(across(-detected_in_dcc, ~ .x > 0)) # create a TRUE/FALSE matrix for debugging
-# 
-# # save as RData
-# save_cr(id_source_for_venn, file = file.path(here("data",
-#                                          "tables_for_plots",
-#                                          "id_source_for_venn.RData")))
+
+id_source_for_venn <- dcc_charite_joined_final_dup_sources |>
+  bind_rows(
+    dcc_charite_joined_final_dup_sources |> 
+      slice_head(n = 2) |> 
+      mutate(source_charite = "data_articles_in_numbat")) |> 
+  select(detected_id, source_charite) |> 
+  distinct() |> 
+  dplyr::filter(source_charite != "additional_ids_in_numbat") |> 
+  mutate(source_charite = case_when(
+    source_charite %in% c("numbat", "additional_ids", "data_articles_in_numbat") ~ "Numbat (and additional)",
+    source_charite %in% c("datastet", "datastet_in_additional_ids", "datastet_in_numbat") ~ "DataStet",
+    source_charite %in% c("data_articles") ~ "Data Articles",
+    .default = source_charite))
+
+venn_input_for_debugging <- id_source_for_venn |>
+  pivot_wider(names_from = source_charite, values_from = source_charite,
+              values_fn = length, values_fill = 0) |>
+  mutate(across(-detected_id, ~ .x > 0)) # create a TRUE/FALSE matrix for debugging
+
+# save as RData
+save_cr(id_source_for_venn, file = file.path(here("data",
+                                         "tables_for_plots",
+                                         "id_source_for_venn.RData")))
 ```
 
 # Exclusion Steps
