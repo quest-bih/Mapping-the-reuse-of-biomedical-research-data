@@ -611,11 +611,6 @@ save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
 
 ```{r Add metadata}
 
-### FOR NOW, I'LL WORK ONLY ON NUMBAT + DA. ONCE I GET THE DS+ADDED OD LIST, I'LL FILTER IN THE DS QMD AND RUN THIS QMD AGAIN.
-
-dcc_detected_ids_numbat <- dcc_detected_ids_all_sources |> 
-  dplyr::filter(data_id_source %in% c("numbat", "data_articles"))
-
 # Add metadata: 
 # dataset year, data access, license, human/not, covid/not, doi/acc_n, repository, is in DAS
 
@@ -624,65 +619,42 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_for_joining <- datasets_metadata_master_updated_012 |>
-  select(doi_charite,
-         dataset_for_matching,
-         data_id_source,
-         listed_in_numbat_output,
-         data_access,
+metadata_matched_for_joining <- datasets_metadata_master_updated_013 |>
+  select(doi_id_clean_pair,
          license,
          human_data,
          covid_related,
-         orig_id_is_doi,
-         repository,
+         is_detected_id_doi,
          data_availability_statement,
-         charite_id_year
-         )
+         charite_id_year) |> 
+  distinct()
 
 # add to _joined
-dcc_detected_ids_numbat_w_metadata <- dcc_detected_ids_numbat |>
-  select(-data_id_source) |> # metadata master file has the most updated values
-  left_join(metadata_for_joining,
-            by = c("doi_charite", "dataset_for_matching")) |> 
-  mutate(
-    repository = coalesce(repository.y, repository.x),
-    data_access = coalesce(data_access.y, data_access.x) # get new value unless the new value is NA, then fall back to old value
-  ) |>
-  select(
-    -repository.y, -repository.x,
-    -data_access.y, -data_access.x)
+dcc_detected_ids_all_sources_4_w_metadata <- dcc_detected_ids_all_sources_3_rm_dcc_is_ch |>
+  left_join(metadata_matched_for_joining,
+            by = "doi_id_clean_pair")
+
+# # initially, the join included these cols as well, but they were removed from 013 since they were identical to _all_sources 
+# dcc_detected_ids_all_sources_4_w_metadata |> dplyr::filter(data_access != data_access.new) |> View()
+# dcc_detected_ids_all_sources_4_w_metadata |> dplyr::filter(dataset_for_matching != dataset_for_matching.new) |> View()
+# dcc_detected_ids_all_sources_4_w_metadata |> dplyr::filter(is_gen_rep != is_gen_rep.new) |> View()
+
+# dcc_detected_ids_all_sources_4_w_metadata |> select(ends_with(".new")) |> View() # no duplicated cols then.
 
 # check
-dcc_detected_ids_numbat_w_metadata |> 
+dcc_detected_ids_all_sources_4_w_metadata |> 
   dplyr::filter(
     is.na(data_access)
     | is.na(license)
     | is.na(human_data)
     | is.na(covid_related)
-    | is.na(orig_id_is_doi)
+    | is.na(is_detected_id_doi)
     | is.na(repository)
-  ) |>  View()
+  ) |>  View() # no NAs in matched
 
-# Add coluns for analysis
-
-dcc_detected_ids_numbat_w_metadata <- dcc_detected_ids_numbat_w_metadata |> 
-  mutate(
-    das_for_analysis = case_when(
-      is.na(data_availability_statement) ~ NA_character_,
-      data_availability_statement %in% c("TRUE", "yes") ~ "TRUE",
-      .default = "FALSE"
-    ),
-    license_for_analysis = case_when(
-      is.na(license) ~ NA_character_,
-      license %in% c("CC0", "cc0", "CC BY", "cc-by", "CC BY-NC", "CC BY;CC0", "CC BY-NC-SA", "CC BY-NC-ND", "GNU GPLv3", "MIT", "GNU") ~ "TRUE",
-      .default = "FALSE"
-    )
-  )
 
 # save
-save_cr(dcc_detected_ids_numbat_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded",
-                                                        "dcc_detected_ids_numbat_w_metadata_2_metadata.RData")))
-# NOTE! THIS IS ONLY NUMBAT FOR NOW!
+save_cr(dcc_detected_ids_all_sources_4_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_4_w_metadata.RData")))
 
 ```
 
@@ -693,20 +665,16 @@ save_cr(dcc_detected_ids_numbat_w_metadata, file = file.path(here("data", "wrang
 
 # 1. Check for contradictory datastet metadata for the same charite id
 
-dcc_detected_ids_all_sources |> 
-  select(doi_charite, doi_year_from_datastet) |>
-  distinct() |> 
-  group_by(doi_charite) |> 
-  summarise(n = n()) |> 
-  dplyr::filter(n>1) |> 
-  View()
-
-
-```
-
-# 5. Create Results Tables
-
-```{r Create results tables}
-
-
+dcc_detected_ids_all_sources_4_w_metadata |>
+  select(doi_id_orig_pair,
+         license,
+         human_data,
+         covid_related,
+         is_detected_id_doi,
+         data_availability_statement,
+         charite_id_year) |>
+  group_by(doi_id_orig_pair) |>
+  summarise(across(everything(), ~ n_distinct(.x)), .groups = "drop") |>
+  dplyr::filter(if_any(-doi_id_orig_pair, ~ .x > 1)) |>
+  View() # no contradictions
 ```

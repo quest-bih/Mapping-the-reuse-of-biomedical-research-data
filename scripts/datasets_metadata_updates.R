@@ -915,7 +915,7 @@ remaining_matched_ids_for_joining <- datasets_metadata_master_new_st_all_2_num_d
   dplyr::group_by(detected_id) |>
   dplyr::slice_max(rowSums(!is.na(across(everything()))), n = 1) |>
   dplyr::ungroup() |> 
-  distinct(detected_id, .keep_all = TRUE) # remove duplicat ids with same metadata that is just written differently
+  distinct(detected_id, .keep_all = TRUE) # remove duplicate ids with same metadata that is just written differently
 
 # join
 datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources <- datasets_metadata_master_new_st_all_2_num_da |> 
@@ -964,6 +964,15 @@ rm(datasets_metadata_master_updated_012,
 
 # 2.5 Join numbat+da non-matched sample (200)
 
+  
+  ##### 
+  # datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources$doi_id_lc_pair_for_joining
+  # is NOT REALLY TOLOWERED! and it's supposed to be doi_lc+data_id_lc.
+  # But in the join below I'll join by doi_id_lc_for_matching: doi_lc+dataset_for_matching,
+  # since these are the common columns between sample-200 and datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources.
+  # so first lower it and name it "doi_id_lc_pair" (I've checked backwards thoroughly and it doesn't change anything in the results until now).
+  #####
+
 # load 200 non matched filled
 
 sample_200_non_matched_ids <- read_excel(here("data",
@@ -974,46 +983,65 @@ sample_200_non_matched_ids <- read_excel(here("data",
                                               "sample_200_ids_no_citation_v14.xlsx"))
 
 
+# check that all of the 200-sample is in _3_
+sample_200_non_matched_ids |> select(data_id_merged) |>
+  rename(dataset_for_matching = data_id_merged) |> 
+  mutate(dataset_for_matching = tolower(dataset_for_matching)) |> 
+  dplyr::filter(!dataset_for_matching %in% datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources$dataset_for_matching) |> 
+  View() # there are osf and figshare cases with different format. I'll handle it below while preparing the df for joining
+
 # prepare  for joining
 
 colnames(sample_200_non_matched_ids)
 any(grepl("[A-Z]", sample_200_non_matched_ids$doi)) # doi is already lowercase
 any(grepl("[A-Z]", sample_200_non_matched_ids$data_id_merged)) # verifying dataset_for_matching: one is not lowered!
 
-
+# I will use "dataset_for_matching", which will be a fit version of "data_id_merged". of course there is no "detected_id" in non-matched.
 sample_200_non_matched_ids_for_joining <- sample_200_non_matched_ids |> 
-  rename(dataset_for_matching = data_id_merged,
-         doi_lc = doi,
+  rename(doi_lc = doi, # already lowercase
          data_availability_statement = `dataset mentioned in DAS`,
          covid_related = covid,
          human_data = `human data`,
          data_access_temp_check = data_access) |> 
-  mutate(dataset_for_matching = tolower(dataset_for_matching),
-         doi_id_lc_for_matching = paste(doi_lc, dataset_for_matching, sep = ";")) |> # doi lc ; dataset_for_matching (since there's no detected here)
-  select(doi_id_lc_pair_for_joining,
+  mutate(dataset_for_matching = tolower(data_id_merged), # tolower in order to join succesfully
+         dataset_for_matching = case_when(
+           # match osf cases to the "dataset_for_matching" format:
+           str_detect(data_id_merged, "osf.io/") ~ paste0(
+             "osf_", str_extract(data_id_merged, "(?<=osf\\.io/)[a-z0-9]+")
+           ),
+           
+           # in the sample-200 files there were some wrongly formatted figshare cases. return them to the right format:
+           data_id_merged == "10.6084/m9.figshare.12054234" ~ "//figshare.com/articles/dataset/association_of_suicidal_behavior_with_exposure_to_suicide_and_suicide_attempt_a_systematic_review_and_multilevel_meta-analysis/12054234?file=22151703",
+           data_id_merged == "10.6084/m9.figshare.14383401" ~ "//figshare.com/articles/dataset/raw_data_of_all_mrsa_outbreak_reports_included_/14383401",
+           data_id_merged == "10.6084/m9.figshare.14831532" ~ "//figshare.com/articles/dataset/raw_data_of_the_lipidomics_experiments_including_sample_identifiers_/14831532",
+           data_id_merged == "10.6084/m9.figshare.16806162" ~ "//figshare.com/articles/dataset/dataset_1_/16806162",
+           
+           # Default fallback — leave as is
+           .default = dataset_for_matching)) |> 
+  mutate(doi_id_lc_for_matching = paste(doi_lc, dataset_for_matching, sep = ";")) |> # doi lc ; dataset_for_matching (since there's no detected here)
+  select(doi_id_lc_for_matching,
          data_availability_statement,
          human_data,
          covid_related,
          charite_id_year,
          license,
          data_access_temp_check) |> # values are already distcint
-  mutate(across(everything(), as.character)) # original values are sometimes 0 / 1
+  mutate(across(everything(), as.character)) # original values are sometimes 0 / 1)
 
+# prepare datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources for matching
 
-# join by lc_pair
+any(grepl("[A-Z]", datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources$doi_lc)) # lc
+any(grepl("[A-Z]", datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources$dataset_for_matching)) # lc
 
-##### 
-# datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources$doi_id_lc_pair_for_joining
-# is NOT REALLY TOLOWERED!
-# so first lower it and name it "doi_id_lc_pair" (I've checked backwards thoroughly and it doesn't change anything in the results until now).
-#####
+datasets_metadata_3_for_matching <- datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources |> 
+  mutate(doi_id_lc_for_matching = paste(doi_lc, dataset_for_matching, sep = ";")) # doi lc ; dataset_for_matching (since there's no detected here)
+  
+# join by doi_id_lc_for_matching
 
-
-datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_master_new_st_all_3_self_join_for_same_ids_dif_sources |>
-  mutate(doi_id_lc_pair_for_matching = paste(doi_lc, dataset_for_matching, sep = ";")) |> # make a new pair
+datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_3_for_matching |>
   mutate(charite_id_year = as.character(charite_id_year)) |> # convert to chr
   left_join(sample_200_non_matched_ids_for_joining,
-            by = "doi_id_lc_pair_for_matching",
+            by = "doi_id_lc_for_matching",
             suffix = c("", ".new")) |> 
   mutate(
     data_availability_statement = coalesce(data_availability_statement, data_availability_statement.new),
@@ -1024,9 +1052,8 @@ datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_master_ne
   ) |> 
   select(-ends_with(".new"))
 
-
-# check data access values match
-datasets_metadata_master_new_st_all_2_num_da |> dplyr::filter(data_access != data_access_temp_check) # yes
+# check that data access values match
+datasets_metadata_master_new_st_all_4_non_matched |> dplyr::filter(data_access != data_access_temp_check) # yes
 
 datasets_metadata_master_new_st_all_4_non_matched <- datasets_metadata_master_new_st_all_4_non_matched |> 
   select(-data_access_temp_check)
@@ -1038,12 +1065,18 @@ save_cr(datasets_metadata_master_new_st_all_4_non_matched,
 
 # 3. Resolve case: # datasets_metadata_master_new_st_all_4_non_matched$detected_id == "10.18112/openneuro.ds001226"
 
-# make sure it is an exact duplicat besides the "licesne" values which actually mean the same:
+# make sure it is an exact duplication besides the "licesne" values which actually mean the same:
+datasets_metadata_master_new_st_all_4_non_matched |> 
+  dplyr::filter(detected_id == "10.18112/openneuro.ds001226") |> 
+  select(license) |> 
+  distinct() |> 
+  nrow() # 2 with license col
+
 datasets_metadata_master_new_st_all_4_non_matched |> 
   dplyr::filter(detected_id == "10.18112/openneuro.ds001226") |> 
   select(-license) |> 
   distinct() |> 
-  nrow() # 2 with license col, 1 w/o license col
+  nrow() # 1 w/o license col
 
 # remove the "TRUE" one, since the other one is "CCO" - more information about the license type
 
@@ -1067,13 +1100,13 @@ save_cr(datasets_metadata_master_new_st_all_5_dedup,
 datasets_metadata_master_new_st_all_6_man <- datasets_metadata_master_new_st_all_5_dedup |> 
   mutate(
     charite_id_year = case_when(
-      detected_id == "10.13026/x4td-x982" ~ "2020"),
+      detected_id == "10.13026/x4td-x982" ~ "2020", .default = charite_id_year),
     license = case_when(
-      detected_id == "10.13026/x4td-x982" ~ "CC-BY"),
+      detected_id == "10.13026/x4td-x982" ~ "CC-BY", .default = license),
     human_data = case_when(
-     detected_id == "10.13026/x4td-x982" ~ "TRUE"),
+     detected_id == "10.13026/x4td-x982" ~ "TRUE", .default = human_data),
     covid_related = case_when(
-      detected_id == "10.13026/x4td-x982" ~ "FALSE"))
+      detected_id == "10.13026/x4td-x982" ~ "FALSE", .default = covid_related))
 
 # save
 save_cr(datasets_metadata_master_new_st_all_6_man,
@@ -1162,7 +1195,7 @@ save_cr(datasets_metadata_master_new_st_all_7_is_doi,
 
 # 6. quality assurance
 
-# 1. check inconsistencies in metadata
+# 6.1. check inconsistencies in metadata
 
 # without DAS
 datasets_metadata_master_new_st_all_7_is_doi |>
@@ -1190,34 +1223,106 @@ datasets_metadata_master_new_st_all_7_is_doi |>
   dplyr::filter(if_any(starts_with("check_"), ~ .)) |> 
   View()
 
-# 2. check that doi id pairs are the real doi and id cols
+# 6.2. check that doi id orig and clean pairs are the real doi and id cols
 
 datasets_metadata_master_new_st_all_7_is_doi |>
   mutate(
     # Combine doi_charite and data_identifier with a semicolon
     doi_id_orig_check = paste(doi_charite, data_identifier, sep = ";"),
     
-    # Combine doi_lc and dataset_for_matching
-    doi_id_lc_check = paste(doi_lc, dataset_for_matching, sep = ";"),
-    
     # Combine doi_no_ver_info and dataset_for_matching
     doi_id_clean_check = paste(doi_no_ver_info, dataset_for_matching, sep = ";"),
     
     # Compare pasted versions to reference columns
     doi_id_orig_match = doi_id_orig_check == doi_id_orig_pair,
-    doi_id_lc_match = doi_id_lc_check == doi_id_lc_pair_for_joining,
     doi_id_clean_match = doi_id_clean_check == doi_id_clean_pair
   ) |> 
   dplyr::filter(
     doi_id_orig_match == FALSE |
-      doi_id_lc_match == FALSE |
       doi_id_clean_match == FALSE
   ) |> 
   View()
 
 
+# 6.3. check that all non-matched 200 are here with metadata
+
+datasets_metadata_master_new_st_all_7_is_doi |> 
+  dplyr::filter(in_dcc == "FALSE") |> 
+  dplyr::filter(!is.na(covid_related)) |> 
+  View() # yes
 
 
+
+# 7. standardize metadata values (e.g. "0"/"1" should be "FALSE"/"TRUE")
+
+# overview
+str(datasets_metadata_master_new_st_all_7_is_doi$charite_id_year)
+datasets_metadata_master_new_st_all_7_is_doi |> select(charite_id_year) |> unique()
+datasets_metadata_master_new_st_all_7_is_doi |> select(data_availability_statement) |> unique()
+datasets_metadata_master_new_st_all_7_is_doi |> select(license) |> unique()
+datasets_metadata_master_new_st_all_7_is_doi |> select(covid_related) |> unique()
+datasets_metadata_master_new_st_all_7_is_doi |> select(human_data) |> unique()
+datasets_metadata_master_new_st_all_7_is_doi |> select(data_access) |> unique()
+datasets_metadata_master_new_st_all_7_is_doi |> select(is_detected_id_doi) |> unique()
+
+# recode values
+
+datasets_metadata_master_new_st_all_8_std <- datasets_metadata_master_new_st_all_7_is_doi |> 
+  mutate(
+    # DAS
+    data_availability_statement = 
+      case_when(
+        data_availability_statement %in% c("yes", "y", "1") ~ "TRUE",
+        data_availability_statement %in% c("no", "data_ref_not_in_das", "data not in DAS", "0") ~ "FALSE",
+        .default = data_availability_statement),
+    # license
+    license = 
+      case_when(
+        license %in% c("no license", "no", "0") ~ "FALSE",
+        .default = license),
+    # covid_related
+    covid_related = 
+      case_when(
+        covid_related %in% c("yes", "1") ~ "TRUE",
+        covid_related %in% c("no", "n", "0") ~ "FALSE",
+        .default = covid_related),
+    # human_data
+    human_data = 
+      case_when(
+        human_data %in% c("yes", "y", "1") ~ "TRUE",
+        human_data %in% c("no", "0") ~ "FALSE",
+        .default = human_data))
+             
+    
+
+# check again:
+datasets_metadata_master_new_st_all_8_std |> select(charite_id_year) |> unique()
+datasets_metadata_master_new_st_all_8_std |> select(data_availability_statement) |> unique()
+datasets_metadata_master_new_st_all_8_std |> select(license) |> unique()
+datasets_metadata_master_new_st_all_8_std |> select(covid_related) |> unique()
+datasets_metadata_master_new_st_all_8_std |> select(human_data) |> unique()
+datasets_metadata_master_new_st_all_8_std |> select(data_access) |> unique()
+datasets_metadata_master_new_st_all_8_std |> select(is_detected_id_doi) |> unique()
+
+# save
+save_cr(datasets_metadata_master_new_st_all_8_std,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_8_std.RData")))
+
+
+# remove authors and publication year of doi_charite
+# I already have them in "all_sources" (the df which the metadata will be joined to)
+# and "authors" had a value that was too long to save as xlsx
+
+datasets_metadata_master_new_st_all_9_done <- datasets_metadata_master_new_st_all_8_std |> 
+  select(-c(authors_charite, publication_year_charite))
+  
+# save: this will become 013 below
+save_cr(datasets_metadata_master_new_st_all_9_done,
+        file = file.path(here("data", "verification", "metadata_new_structure",
+                              "datasets_metadata_master_new_st_all_9_done.RData")))
+
+datasets_metadata_master_updated_013 <- datasets_metadata_master_new_st_all_9_done
 
 # save
 metadata_update(datasets_metadata_master_updated_013) # call function to save as csv, xlsx, rda
