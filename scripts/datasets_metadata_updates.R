@@ -1355,3 +1355,35 @@ datasets_metadata_master_updated_014 <- datasets_metadata_master_updated_013 |>
 
 # save
 metadata_update(datasets_metadata_master_updated_014) # call function to save as csv, xlsx, rda
+
+
+# 015: fix DAS issue ------------------------------------------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# explain the issue
+
+lastest_metadata_file |>
+  dplyr::select(
+    doi_charite,
+    dataset_for_matching,
+    data_availability_statement,
+    source_charite,
+    in_dcc
+  ) |>
+  dplyr::group_by(dataset_for_matching) |>
+  dplyr::filter(
+    dplyr::n_distinct(doi_charite, na.rm = TRUE) > 1 &
+      dplyr::n_distinct(data_availability_statement, na.rm = TRUE) > 1
+  ) |>
+  dplyr::ungroup() |> 
+  View()
+
+
+# fix
+
+
+
+# save
+metadata_update(datasets_metadata_master_updated_015) # call function to save as csv, xlsx, rda

@@ -44,6 +44,9 @@ load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-venn-id
 
 load(here("data", "tables_for_plots", "not_mentioned_years.RData")) # fig-non-years
 
+load(here("data", "tables_for_plots", "rep_dt_ds.RData")) # fig-repo-dist-ds
+
+
 
 
 
@@ -361,7 +364,7 @@ rep_dt |>
     expand = expansion(mult = c(0.02, 0.15))
   ) +
   coord_flip() +
-  labs(x = "Repository", y = "Number of Mentions (log scale)") +
+  labs(x = "Repository", y = "Number of Mentions (Log Scale)") +
   theme_classic() +
   theme(
     legend.position = "none",
@@ -655,4 +658,44 @@ not_mentioned_years |>
         axis.title.y = element_text(size = 22, color = "black",  margin = margin(r = 12)),
         axis.text.x = element_text(size = 16, color = "black"),
         axis.text.y = element_text(size = 16, color = "black"))
+```
+
+# Distribution of Datasets Across Repositories
+
+```{r}
+#| label: fig-repo-dist-ds
+#| fig-cap: Distribution of References Across Repositories
+#| fig-format: png
+#| fig.height: 10
+#| fig.width: 10
+
+# log scale
+
+rep_dt_ds |>
+  ggplot(aes(x = reorder(repository, n), y = n)) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           fill = "#80CBC4") +
+  geom_text(aes(y = n, label = n),
+            hjust = -0.2,
+            size = 6, color = "black") +
+  scale_y_log10(
+    breaks = c(1, 3, 10, 30, 100),
+    labels = c(1, 3, 10, 30, 100),
+    expand = expansion(mult = c(0.02, 0.15))
+  ) +
+  coord_flip() +
+  labs(x = "Repository", y = "Number of Datasets (Log Scale)") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 20, color = "black"),
+    axis.text.x = element_text(size = 20, color = "black"),
+    panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
+    panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
+    panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
+  )
+
 ```
