@@ -535,6 +535,46 @@ save_cr(id_source_for_venn, file = file.path(here("data",
                                          "id_source_for_venn.RData")))
 ```
 
+# Distribution of Datasets Across Repositories
+
+```{r fig-repo-dist-prep}
+
+rep_dt_ds <- dcc_charite_joined_final_no_source_overlap |> 
+   mutate(repository = case_when(
+     repository %in% c("ncbi dbgap",
+                             "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
+           repository == "figshare" ~ "Figshare",
+           repository == "the european genome-phenome archive(ega)" ~ "EGA",
+           repository == "gene expression omnibus (geo)" ~ "GEO",
+           repository == "pride proteomics identification database" ~ "PRIDE",
+           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+           repository == "european nucleotide archive" ~ "ENA",
+           repository == "the protein data bank" ~ "PDB",
+           repository == "mendeley" ~ "Mendeley",
+           repository == "bioproject" ~ "Bioproject",
+           repository == "arrayexpress" ~ "Arrayexpress",
+           repository == "openneuro" ~ "Openneuro",
+           repository == "uniprot" ~ "Uniprot",
+           repository == "zenodo" ~ "Zenodo",
+           repository == "harvard dataverse" ~ "Harvard Dataverse",
+           repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+           repository == "the international genome sample resource" ~ "IGSR",
+           repository == "the international genome sample resource" ~ "IGSR",
+           repository == "physionet" ~ "Physionet",
+    .default = repository)) |>  # shorten rep names for a nicer appearance
+  select(repository, detected_id) |>
+  group_by(repository) |> 
+  summarise(n = n_distinct(detected_id)) |> 
+  arrange(desc(n))
+
+
+# save as RData
+save_cr(rep_dt_ds, file = file.path(here("data",
+                                       "tables_for_plots",
+                                       "rep_dt_ds.RData")))
+
+```
+
 # Exclusion Steps
 
 ```{r}

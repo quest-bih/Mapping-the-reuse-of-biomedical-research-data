@@ -2,6 +2,8 @@
 # Then it checks if "charite_dois_ids_distinct.xlsx" mistakenly included author overlap cases - it did!
 # Then it writes a new version to to exclude author overlap cases.
 
+library(writexl)            
+
 # load numbat for matching and numbat matched
 load(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_8_wide.RData"))
 load(here("data", "wrangling_steps", "dcc_charite", "dcc_charite_joined_4_rm_au_ov.RData"))
