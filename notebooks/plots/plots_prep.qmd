@@ -68,10 +68,10 @@ datasets_metadata_master_latest <- load_latest_metadata_update() # call function
 load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_3_au_info.RData"))
 
 load(here("data", "wrangling_steps", "all_sources_binded",                                                      
-          "dcc_detected_ids_all_sources_6_src_fix.RData"))
+          "dcc_detected_ids_all_sources_7_rep_fix.RData"))
 
 # create a table with no overlapping sources
-dcc_charite_joined_final_no_source_overlap <- dcc_detected_ids_all_sources_6_src_fix |> 
+dcc_charite_joined_final_no_source_overlap <- dcc_detected_ids_all_sources_7_rep_fix |> 
   dplyr::filter(
     # exclude datastet+additional that are already in numbat
     source_charite %in% c(
@@ -88,10 +88,10 @@ dcc_charite_joined_final_no_source_overlap <- dcc_detected_ids_all_sources_6_src
       .default = "FALSE"
     ))
 
-dcc_charite_joined_final_dup_sources <- dcc_detected_ids_all_sources_6_src_fix
+dcc_charite_joined_final_dup_sources <- dcc_detected_ids_all_sources_7_rep_fix
 
 
-rm(dcc_detected_ids_all_sources_6_src_fix)
+rm(dcc_detected_ids_all_sources_7_rep_fix)
 ```
 
 <br>
@@ -369,12 +369,6 @@ save_cr(year_dcc_dt_all_for_plot_agg_top_7, file = file.path(here("data",
 
 dcc_charite_for_sankey <- dcc_charite_joined_final_no_source_overlap |>
   select(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) |>
-  mutate(repository = case_when(repository %in% c("elsevier data repository", "elsevier bv", "mendeley")
-                                ~ "Mendeley", .default = repository),
-         covid_related = case_when(detected_id == "mt108784"
-                                   ~ "TRUE", .default = covid_related),
-         repository = case_when(detected_id == "ng00075"
-                                ~ "european nucleotide archive", .default = repository)) |> 
   distinct()
 
 # Create links
@@ -405,7 +399,8 @@ links_access_rep <- dcc_charite_for_sankey |>
                             data_access == "restricted" ~ "Restricted Access",
                             .default = "access not checked yet"),
          target = case_when(
-           repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+           repository %in% c("ncbi dbgap",
+                             "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
            repository == "figshare" ~ "Figshare",
            repository == "the european genome-phenome archive(ega)" ~ "EGA",
            repository == "gene expression omnibus (geo)" ~ "GEO",
@@ -413,7 +408,7 @@ links_access_rep <- dcc_charite_for_sankey |>
            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
            repository == "european nucleotide archive" ~ "ENA",
            repository == "the protein data bank" ~ "PDB",
-           repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "Mendeley",
+           repository == "mendeley" ~ "Mendeley",
            repository == "bioproject" ~ "Bioproject",
            repository == "arrayexpress" ~ "Arrayexpress",
            repository == "openneuro" ~ "Openneuro",
@@ -422,6 +417,8 @@ links_access_rep <- dcc_charite_for_sankey |>
            repository == "harvard dataverse" ~ "Harvard Dataverse",
            repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
            repository == "the international genome sample resource" ~ "IGSR",
+           repository == "the international genome sample resource" ~ "IGSR",
+           repository == "physionet" ~ "Physionet",
            .default = repository)) |>
   count(source, target) |>
   rename(value = n) |>
@@ -429,7 +426,8 @@ links_access_rep <- dcc_charite_for_sankey |>
 
 links_rep_covid <- dcc_charite_for_sankey |>
   mutate(source = case_when(
-           repository == "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)" ~ "NCBI dbGaP",
+                   repository %in% c("ncbi dbgap",
+                             "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
            repository == "figshare" ~ "Figshare",
            repository == "the european genome-phenome archive(ega)" ~ "EGA",
            repository == "gene expression omnibus (geo)" ~ "GEO",
@@ -437,7 +435,7 @@ links_rep_covid <- dcc_charite_for_sankey |>
            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
            repository == "european nucleotide archive" ~ "ENA",
            repository == "the protein data bank" ~ "PDB",
-           repository %in% c("elsevier data repository", "elsevier bv", "mendeley") ~ "Mendeley",
+           repository == "mendeley" ~ "Mendeley",
            repository == "bioproject" ~ "Bioproject",
            repository == "arrayexpress" ~ "Arrayexpress",
            repository == "openneuro" ~ "Openneuro",
@@ -446,6 +444,8 @@ links_rep_covid <- dcc_charite_for_sankey |>
            repository == "harvard dataverse" ~ "Harvard Dataverse",
            repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
            repository == "the international genome sample resource" ~ "IGSR",
+           repository == "the international genome sample resource" ~ "IGSR",
+           repository == "physionet" ~ "Physionet",
            .default = repository),
          target = case_when(covid_related == "TRUE" ~ "Covid Related",
                             covid_related == "FALSE" ~ "Not Covid Related",

@@ -604,7 +604,7 @@ save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
                               "dcc_detected_ids_all_sources_3_rm_dcc_is_ch.RData")))
 
 
-# Notice: the couunt of IDs won't change, becuase they are being cited by other papers and they belong to other charite papers that are not in the dcc paper column. So the only thing that will change is that 5 distinct doi_dcc records will be removed from the dcc papers count.
+# Notice: the count of IDs won't change, because they are being cited by other papers and they belong to other charite papers that are not in the dcc paper column. So the only thing that will change is that 5 distinct doi_dcc records will be removed from the dcc papers count.
 ```
 
 # 6. Add Metadata
@@ -619,7 +619,7 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_matched_for_joining <- datasets_metadata_master_updated_013 |>
+metadata_matched_for_joining <- datasets_metadata_master_updated_014 |>
   select(doi_id_clean_pair,
          license,
          human_data,
@@ -641,7 +641,7 @@ dcc_detected_ids_all_sources_4_w_metadata <- dcc_detected_ids_all_sources_3_rm_d
 
 # dcc_detected_ids_all_sources_4_w_metadata |> select(ends_with(".new")) |> View() # no duplicated cols then.
 
-# check
+# check NAs
 dcc_detected_ids_all_sources_4_w_metadata |> 
   dplyr::filter(
     is.na(data_access)
@@ -652,6 +652,16 @@ dcc_detected_ids_all_sources_4_w_metadata |>
     | is.na(repository)
   ) |>  View() # no NAs in matched
 
+# check Blanks
+dcc_detected_ids_all_sources_4_w_metadata |> 
+  dplyr::filter(
+    data_access == ""
+    | license == ""
+    | human_data == ""
+    | covid_related == ""
+    | is_detected_id_doi == ""
+    | repository == ""
+  ) |>  View() # some repositories are missing and will be completed in the next step
 
 # save
 save_cr(dcc_detected_ids_all_sources_4_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_4_w_metadata.RData")))
@@ -681,9 +691,12 @@ dcc_detected_ids_all_sources_5_add_rep <- dcc_detected_ids_all_sources_4_w_metad
 save_cr(dcc_detected_ids_all_sources_5_add_rep, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_5_add_rep.RData")))
 ```
 
-# 8. change several cases from "datastet" to "datastet_in_additional_ids" 
+# 8. Verify results and correct data if needed
 
 ```{r}
+
+
+# 1. Change several cases from "datastet" to "datastet_in_additional_ids"
 
 # some "datastet" are actually in "additional_ids" (only 2 unique ids)
 # so here I'll change them to "datastet_in_additional_ids"
@@ -721,25 +734,34 @@ dcc_detected_ids_all_sources_6_src_fix <- dcc_detected_ids_all_sources_5_add_rep
 
 # save
 save_cr(dcc_detected_ids_all_sources_6_src_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_src_fix.RData")))
-```
-
-# 9. Verify Results
-
-```{r Verify results}
 
 
-# 1. Check for contradictory datastet metadata for the same charite id
+# 2. Check for contradictory datastet metadata for the same charite id
 
-dcc_detected_ids_all_sources_4_w_metadata |>
-  select(doi_id_orig_pair,
+dcc_detected_ids_all_sources_6_src_fix |>
+  select(detected_id,
          license,
          human_data,
          covid_related,
          is_detected_id_doi,
          data_availability_statement,
-         charite_id_year) |>
-  group_by(doi_id_orig_pair) |>
+         charite_id_year,
+         repository) |>
+  group_by(detected_id) |>
   summarise(across(everything(), ~ n_distinct(.x)), .groups = "drop") |>
-  dplyr::filter(if_any(-doi_id_orig_pair, ~ .x > 1)) |>
-  View() # no contradictions
+  dplyr::filter(if_any(-detected_id, ~ .x > 1)) |>
+  View() # some repositories are different for the same id
+
+# Note that repository actually belongs to dcc columns, but I'll fix it anyway:
+
+dcc_detected_ids_all_sources_7_rep_fix <- dcc_detected_ids_all_sources_6_src_fix |> 
+  mutate(repository = case_when(repository %in% c("elsevier data repository", "elsevier bv", "mendeley")
+                                ~ "mendeley",
+                                detected_id == "ng00075" ~ "dss NIAGADS",
+                                .default = repository))
+
+# save
+save_cr(dcc_detected_ids_all_sources_7_rep_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_7_rep_fix.RData")))
+
+
 ```

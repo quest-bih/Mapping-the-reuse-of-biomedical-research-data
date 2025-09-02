@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Avihay Cohen">
-<meta name="dcterms.date" content="2025-09-01">
+<meta name="dcterms.date" content="2025-09-02">
 
 <title>plots</title>
 <style>
@@ -3106,7 +3106,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 1, 2025</p>
+      <p class="date">September 2, 2025</p>
     </div>
   </div>
   
@@ -3120,8 +3120,8 @@ vertical-align: -.125em;
 
 <div class="cell">
 <div class="cell-output cell-output-stderr">
-<pre><code>✅ Loaded: datasets_metadata_master_updated_013
-Next file version: datasets_metadata_master_updated_014</code></pre>
+<pre><code>✅ Loaded: datasets_metadata_master_updated_014
+Next file version: datasets_metadata_master_updated_015</code></pre>
 </div>
 </div>
 <p><br></p>
@@ -3426,7 +3426,7 @@ Next file version: datasets_metadata_master_updated_014</code></pre>
 <span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi reference sequence database&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI RefSeq&quot;</span>,</span>
 <span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;european nucleotide archive&quot;</span> <span class="sc">~</span> <span class="st">&quot;ENA&quot;</span>,</span>
 <span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the protein data bank&quot;</span> <span class="sc">~</span> <span class="st">&quot;PDB&quot;</span>,</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;elsevier data repository&quot;</span>, <span class="st">&quot;elsevier bv&quot;</span>, <span class="st">&quot;mendeley&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Mendeley&quot;</span>,</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;mendeley&quot;</span> <span class="sc">~</span> <span class="st">&quot;Mendeley&quot;</span>,</span>
 <span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;bioproject&quot;</span> <span class="sc">~</span> <span class="st">&quot;Bioproject&quot;</span>,</span>
 <span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;arrayexpress&quot;</span> <span class="sc">~</span> <span class="st">&quot;Arrayexpress&quot;</span>,</span>
 <span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;openneuro&quot;</span> <span class="sc">~</span> <span class="st">&quot;Openneuro&quot;</span>,</span>
@@ -3484,14 +3484,21 @@ Next file version: datasets_metadata_master_updated_014</code></pre>
 <h1>Non mentioned datasets: publication years of datasets over time</h1>
 <p>(for this I need dataset_master)</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">##### Get the data from the 200 sampled!</span></span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the data from the 200 sampled</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># not_mentioned_years &lt;- datasets_metadata_master_latest |&gt; </span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   dplyr::filter(in_dcc == &quot;FALSE&quot;) |&gt; </span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   select(charite_id_year, detected_id) |&gt; </span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   distinct() |&gt; </span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   group_by(charite_id_year) |&gt; </span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   summarise(n = n())</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>not_mentioned_years <span class="ot">&lt;-</span> datasets_metadata_master_latest <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(in_dcc <span class="sc">==</span> <span class="st">&quot;FALSE&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(covid_related)) <span class="sc">|&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(charite_id_year, dataset_for_matching) <span class="sc">|&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(charite_id_year)) <span class="sc">|&gt;</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(charite_id_year) <span class="sc">|&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>())</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(not_mentioned_years, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;tables_for_plots&quot;</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;not_mentioned_years.RData&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="sources-of-identifiers" class="level1">

@@ -1326,3 +1326,32 @@ datasets_metadata_master_updated_013 <- datasets_metadata_master_new_st_all_9_do
 
 # save
 metadata_update(datasets_metadata_master_updated_013) # call function to save as csv, xlsx, rda
+
+
+# 014: correct mt108784 to covid_related = "TRUE" ------------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+
+# check where there's more than 1 metadata value for the same dataset:
+datasets_metadata_master_updated_013 |>
+  select(detected_id,
+         license,
+         human_data,
+         covid_related,
+         is_detected_id_doi,
+         data_availability_statement # will be taken care of separately, if it will be a problem
+         # charite_id_year, # was checked in joined_bind qmd and was ok
+         #repository # will be checked and corrected in joined_bind qmd
+  ) |> 
+  group_by(detected_id) |>
+  summarise(across(everything(), n_distinct), .groups = "drop") |>
+  dplyr::filter(if_any(-detected_id, ~ . > 1)) |> 
+  View()
+
+datasets_metadata_master_updated_014 <- datasets_metadata_master_updated_013 |> 
+  mutate(covid_related = case_when(detected_id == "mt108784" ~ "TRUE", .default = covid_related))
+
+# save
+metadata_update(datasets_metadata_master_updated_014) # call function to save as csv, xlsx, rda

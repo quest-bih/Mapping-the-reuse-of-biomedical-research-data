@@ -349,10 +349,7 @@ References
 
 **Note:** This is the distribution of repositories in the DCC
 
-
 {{< embed notebooks/plots/plots.qmd#fig-non-years >}}
-
-
 
 {{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
 

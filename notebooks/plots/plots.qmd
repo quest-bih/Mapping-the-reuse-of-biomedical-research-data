@@ -174,7 +174,6 @@ ggplot(combined_long_counts, aes(x = Type, y = Count, fill = source_charite)) +
 #   )
 ```
 
-
 # Distinct Number of Papers and Datasets Found in the DCC: Pie Charts
 
 ```{r}
@@ -657,5 +656,3 @@ not_mentioned_years |>
         axis.text.x = element_text(size = 16, color = "black"),
         axis.text.y = element_text(size = 16, color = "black"))
 ```
-
-
