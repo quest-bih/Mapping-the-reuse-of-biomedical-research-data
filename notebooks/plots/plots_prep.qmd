@@ -369,6 +369,12 @@ save_cr(year_dcc_dt_all_for_plot_agg_top_7, file = file.path(here("data",
 
 dcc_charite_for_sankey <- dcc_charite_joined_final_no_source_overlap |>
   select(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) |>
+  mutate(repository = case_when(repository %in% c("elsevier data repository", "elsevier bv", "mendeley")
+                                ~ "Mendeley", .default = repository),
+         covid_related = case_when(detected_id == "mt108784"
+                                   ~ "TRUE", .default = covid_related),
+         repository = case_when(detected_id == "ng00075"
+                                ~ "european nucleotide archive", .default = repository)) |> 
   distinct()
 
 # Create links
