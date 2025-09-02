@@ -42,6 +42,10 @@ load(here("data", "tables_for_plots", "rep_for_plot.RData")) # fig-dcc-rep
 
 load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-venn-ids
 
+load(here("data", "tables_for_plots", "not_mentioned_years.RData")) # fig-non-years
+
+
+
 
 ```
 
@@ -168,6 +172,102 @@ ggplot(combined_long_counts, aes(x = Type, y = Count, fill = source_charite)) +
 #     x = "",
 #     y = "Count"
 #   )
+```
+
+
+# Distinct Number of Papers and Datasets Found in the DCC: Pie Charts
+
+```{r}
+#| label: fig-distinct-numbers-pie
+#| fig-cap: Distinct Number of Papers and Datasets in Found in the DCC
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+#| 
+
+# Prepare data: each facet (dataset × Type) should be a complete pie
+pie_data <- combined_long_counts |>
+  dplyr::filter(
+    (dataset == "dcc_summary" & Type %in% c("distinct_detected_id", "distinct_doi_dcc")) |
+      (dataset == "dcc_au_ov" & Type %in% c("distinct_detected_id", "distinct_doi_dcc"))
+  ) |>
+  dplyr::group_by(dataset, Type) |>
+  dplyr::mutate(
+    total = sum(Count),
+    Count_norm = Count / total,
+    label = as.character(Count)
+  )
+
+# For totals (n = ...)
+totals <- pie_data |>
+  dplyr::summarise(total = unique(total), .groups = "drop")
+
+# Facet label mappings
+dataset_labels <- c(
+  "dcc_summary" = "No Author Overlap",
+  "dcc_au_ov"   = "With Author Overlap"
+)
+type_labels <- c(
+  "distinct_detected_id" = "Datasets",
+  "distinct_doi_dcc"     = "Mentions"
+)
+
+facet_labs <- labeller(
+  dataset = as_labeller(dataset_labels),
+  Type = as_labeller(type_labels)
+)
+
+# Legend label mappings
+legend_labels <- c(
+  "additional_ids" = "Additional Extractions",
+  "data_articles"  = "Data Articles",
+  "numbat"         = "Manual Extractions",
+  "datastet"       = "DataStet Extractions"
+)
+
+# Custom color mapping: define exactly which color for each source_charite
+palette_colors <- c(
+  "additional_ids" = "#e64b35",   # red
+  "data_articles"  = "#4dbbd5",   # blue
+  "numbat"         = "#00a087",   # green
+  "datastet"       = "#f39b7f"    # purple
+)
+
+
+ggplot(pie_data, aes(x = "", y = Count_norm, fill = source_charite)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  geom_text(
+    aes(label = label),
+    position = position_stack(vjust = 0.5),
+    color = "black",
+    size = 5
+  ) +
+  # Add totals (n=...)
+  geom_text(
+    data = totals,
+    aes(label = paste0("n = ", total)),
+    x = 1.6,            # center horizontally
+    y = 1.5,          # vertical offset (higher = above the pie)
+    inherit.aes = FALSE,
+    size = 5,
+    fontface = "bold"
+  ) +
+  facet_grid(Type ~ dataset, labeller = facet_labs) +
+  scale_fill_manual(
+    name = "Source",        # legend title
+    values = palette_colors,
+    labels = legend_labels  # custom legend texts
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme_void() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    legend.title = element_text(size = 16, , face = "bold"),
+    legend.text = element_text(size = 14)
+  )
+
+
 ```
 
 # Distribution Frequency of Datasets References
@@ -519,5 +619,43 @@ setlist <- id_source_for_venn |>
   deframe()
 
 # Plot Venn
-ggvenn(setlist)
+ggvenn(
+  setlist,
+  set_name_size = 10,  # size of group labels
+  text_size = 6,       # size of counts
+  fill_color   = c("#E6E6E6", "#A6CEE3", "#B2DF8A"),  # light grey, blue, green
+  stroke_color = "black",                             # circle outlines
+)
 ```
+
+# Publication Years of Non-matched Datasets (Sample of 200 Datasets)
+
+```{r}
+#| label: fig-non-years
+#| fig-cap: Publication Years of Non-matched Datasets (N=200)
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+not_mentioned_years |>
+  ggplot(aes(x = reorder(charite_id_year, charite_id_year), y = n)) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           color = "black",
+               fill = "lightgrey") +
+  geom_text(aes(y = n + 2,
+                label = n),
+            vjust = 1,
+            hjust = 0.5,
+            size = 6,
+            color = "black") +
+  labs(x = "Year", y = "Number of Datasets") +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 22, color = "black",  margin = margin(t = 12)),
+        axis.title.y = element_text(size = 22, color = "black",  margin = margin(r = 12)),
+        axis.text.x = element_text(size = 16, color = "black"),
+        axis.text.y = element_text(size = 16, color = "black"))
+```
+
+
