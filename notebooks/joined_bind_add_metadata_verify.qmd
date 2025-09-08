@@ -619,7 +619,7 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_matched_for_joining <- datasets_metadata_master_updated_014 |>
+metadata_matched_for_joining <- datasets_metadata_master_updated_016 |>
   select(doi_id_clean_pair,
          license,
          human_data,
@@ -695,58 +695,10 @@ save_cr(dcc_detected_ids_all_sources_5_add_rep, file = file.path(here("data", "w
 
 ```{r}
 
+# 1. Check for contradictory repository for the same charite id
 
-# 1. Change several cases from "datastet" to "datastet_in_additional_ids"
-
-# some "datastet" are actually in "additional_ids" (only 2 unique ids)
-# so here I'll change them to "datastet_in_additional_ids"
-
-  # # check which ids:
-  # 
-  # df_multi_source <- t |>
-  #   select(detected_id, source_charite) |>
-  #   distinct() |>
-  #   group_by(detected_id) |>
-  #   summarise(n_sources = n_distinct(source_charite), .groups = "drop") |>
-  #   dplyr::filter(n_sources > 1) 
-  # 
-  # t |>
-  #   select(detected_id, source_charite) |>
-  #   distinct() |>
-  #   semi_join(df_multi_source, by = "detected_id") |> View()
-  # 
-  # # these: c("gse99933", "gse90496")
-  # 
-  # verify that it's "datastet" that's supposed to be "datastet_in_additional_ids":
-  # 
-  # pool_to_detected_from <- dcc_detected_ids_all_sources_5_add_rep |> 
-  # select(detected_id, source_charite, doi_dcc) |> 
-  # dplyr::filter(detected_id %in% c("gse90496", "gse99933")) |> 
-  # distinct()
-
-dcc_detected_ids_all_sources_6_src_fix <- dcc_detected_ids_all_sources_5_add_rep |>
-  mutate(
-    source_charite = case_when(
-      detected_id %in% c("gse99933", "gse90496")
-      & source_charite == "datastet"
-      ~ "datastet_in_additional_ids",
-      .default = source_charite))
-
-# save
-save_cr(dcc_detected_ids_all_sources_6_src_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_src_fix.RData")))
-
-
-# 2. Check for contradictory datastet metadata for the same charite id
-
-dcc_detected_ids_all_sources_6_src_fix |>
-  select(detected_id,
-         license,
-         human_data,
-         covid_related,
-         is_detected_id_doi,
-         data_availability_statement,
-         charite_id_year,
-         repository) |>
+dcc_detected_ids_all_sources_5_add_rep |>
+  select(detected_id, repository) |>
   group_by(detected_id) |>
   summarise(across(everything(), ~ n_distinct(.x)), .groups = "drop") |>
   dplyr::filter(if_any(-detected_id, ~ .x > 1)) |>
@@ -754,14 +706,14 @@ dcc_detected_ids_all_sources_6_src_fix |>
 
 # Note that repository actually belongs to dcc columns, but I'll fix it anyway:
 
-dcc_detected_ids_all_sources_7_rep_fix <- dcc_detected_ids_all_sources_6_src_fix |> 
+dcc_detected_ids_all_sources_6_rep_fix <- dcc_detected_ids_all_sources_5_add_rep |> 
   mutate(repository = case_when(repository %in% c("elsevier data repository", "elsevier bv", "mendeley")
                                 ~ "mendeley",
                                 detected_id == "ng00075" ~ "dss NIAGADS",
                                 .default = repository))
 
 # save
-save_cr(dcc_detected_ids_all_sources_7_rep_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_7_rep_fix.RData")))
+save_cr(dcc_detected_ids_all_sources_6_rep_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_rep_fix.RData")))
 
 
 ```
