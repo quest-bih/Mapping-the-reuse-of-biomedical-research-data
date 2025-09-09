@@ -489,7 +489,7 @@ ggplot(variant_1_stacked) +
     x = "Year",
     y = "Count",
     fill = "Accession Number",
-    title = "Descending Count in Each Year. Text of Count <5 is Omitted"
+    title = "Descending count within each year. Text of count<5 is omitted."
   ) +
   theme_classic() +
   theme(
@@ -549,7 +549,7 @@ ggplot(variant_2_stacked) +
     x = "Year",
     y = "Count",
     fill = "Accession Number",
-    title = "Others Bottom, Ascending Count. Text of Count <5 is Omitted"
+    title = "`Others` is at the bottom, then ascending count for top 7. Text of count<5 is omitted."
   ) +
   theme_classic() +
   theme(
@@ -627,7 +627,7 @@ geom_text(
     x = "Year",
     y = "Count",
     fill = "Accession Number",
-    title = "Descending Count in Each Year. All Counts Texts."
+    title = "Descending count within each year. All counts texts are included."
   ) +
   theme_classic() +
   theme(
@@ -687,7 +687,7 @@ geom_text(
     x = "Year",
     y = "Count",
     fill = "Accession Number",
-    title = "Others Bottom, Ascending Count. All Counts Texts."
+    title = "`Others` is at the bottom, then ascending count for top 7. All counts texts are included."
   ) +
   theme_classic() +
   theme(
@@ -1005,7 +1005,7 @@ not_mentioned_years |>
 
 ```{r}
 #| label: fig-repo-dist-ds
-#| fig-cap: Distribution of References Across Repositories
+#| fig-cap: Distribution of Datasets Across Repositories
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10

@@ -365,9 +365,15 @@ References
 
 **Note:** These are the number of mentions that each repository has. The total sum includes cases where several papers mentioned the same dataset, cases where several datasets were mentioned in the same paper, and 1 to 1 relationships (which were the majority of cases).
 
+{{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds >}}
+
+**References by year: Top 7 mentioned datasets and others**
+<br>
+Below are 4 alternatives:
+
 {{< embed notebooks/plots/plots.qmd#fig-ref-by-year-top-7 >}}
 
-**Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot <br> 3. Years 2023-2024 are not shown in the plot, and that's why the total number of mentions is lower than in other plots.
+<!-- **Update Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot <br> 3. Years 2023-2024 are not shown in the plot, and that's why the total number of mentions is lower than in other plots. -->
 
 {{< embed notebooks/plots/plots.qmd#fig-dcc-rep >}}
 
