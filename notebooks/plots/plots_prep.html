@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Avihay Cohen">
-<meta name="dcterms.date" content="2025-09-02">
+<meta name="dcterms.date" content="2025-09-09">
 
 <title>plots</title>
 <style>
@@ -3106,7 +3106,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 2, 2025</p>
+      <p class="date">September 9, 2025</p>
     </div>
   </div>
   
@@ -3120,8 +3120,8 @@ vertical-align: -.125em;
 
 <div class="cell">
 <div class="cell-output cell-output-stderr">
-<pre><code>✅ Loaded: datasets_metadata_master_updated_014
-Next file version: datasets_metadata_master_updated_015</code></pre>
+<pre><code>✅ Loaded: datasets_metadata_master_updated_016
+Next file version: datasets_metadata_master_updated_017</code></pre>
 </div>
 </div>
 <p><br></p>
@@ -3129,7 +3129,7 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <h1>Distinct Number of Papers and Datasets Found in the DCC - prep</h1>
 <p><br></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dcc_summary <span class="ot">&lt;-</span> dcc_charite_joined_final_no_source_overlap <span class="sc">|&gt;</span></span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dcc_summary <span class="ot">&lt;-</span> detected_no_sources_overlap <span class="sc">|&gt;</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(source_charite, detected_id, doi_dcc) <span class="sc">|&gt;</span> </span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(source_charite) <span class="sc">|&gt;</span> </span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
@@ -3188,9 +3188,9 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)</span></span>
 <span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="co"># counts_final &lt;- tibble(</span></span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co">#   `Mentioning Articles` = dcc_charite_joined_final_no_source_overlap |&gt; select(doi_dcc) |&gt; distinct() |&gt; nrow(),</span></span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="co">#   `Charité Articles` = dcc_charite_joined_final_no_source_overlap |&gt; select(doi_charite) |&gt; distinct() |&gt; nrow(),</span></span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="co">#   `Mentioned Datasets` = dcc_charite_joined_final_no_source_overlap |&gt; select(detected_id) |&gt; distinct() |&gt; nrow()</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co">#   `Mentioning Articles` = detected_no_sources_overlap |&gt; select(doi_dcc) |&gt; distinct() |&gt; nrow(),</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="co">#   `Charité Articles` = detected_no_sources_overlap |&gt; select(doi_charite) |&gt; distinct() |&gt; nrow(),</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="co">#   `Mentioned Datasets` = detected_no_sources_overlap |&gt; select(detected_id) |&gt; distinct() |&gt; nrow()</span></span>
 <span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co"># )</span></span>
 <span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="co"># # save as RData</span></span>
@@ -3291,7 +3291,7 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <section id="distribution-frequency-of-datasets-references" class="level1">
 <h1>Distribution Frequency of Datasets References</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ds_freq <span class="ot">&lt;-</span> dcc_charite_joined_final_no_source_overlap <span class="sc">|&gt;</span></span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ds_freq <span class="ot">&lt;-</span> detected_no_sources_overlap <span class="sc">|&gt;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(detected_id) <span class="sc">|&gt;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>())</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -3304,7 +3304,7 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <section id="distribution-of-references-across-repositories" class="level1">
 <h1>Distribution of References Across Repositories</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rep_dt <span class="ot">&lt;-</span> dcc_charite_joined_final_no_source_overlap <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rep_dt <span class="ot">&lt;-</span> detected_no_sources_overlap <span class="sc">|&gt;</span> </span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">repository =</span> <span class="fu">case_when</span>(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>     repository <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;ncbi dbgap&quot;</span>,</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)&quot;</span>) <span class="sc">~</span> <span class="st">&quot;NCBI dbGaP&quot;</span>,</span>
@@ -3342,34 +3342,34 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <section id="datasets-references-by-year" class="level1">
 <h1>Datasets References by Year</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>year_dcc_dt_all <span class="ot">&lt;-</span> dcc_charite_joined_final_no_source_overlap <span class="sc">|&gt;</span></span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>year_dcc_dt_all <span class="ot">&lt;-</span> detected_no_sources_overlap <span class="sc">|&gt;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(doi_dcc, detected_id, publication_year_dcc) <span class="sc">|&gt;</span> </span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(detected_id, <span class="at">sort =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>year_dcc_dt_all_for_plot <span class="ot">&lt;-</span> year_dcc_dt_all <span class="sc">|&gt;</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(dcc_charite_joined_final_no_source_overlap, <span class="at">by =</span> <span class="st">&quot;detected_id&quot;</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(detected_no_sources_overlap, <span class="at">by =</span> <span class="st">&quot;detected_id&quot;</span>)</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>top_7 <span class="ot">&lt;-</span> year_dcc_dt_all <span class="sc">|&gt;</span> <span class="fu">select</span>(detected_id) <span class="sc">|&gt;</span> <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>top_4 <span class="ot">&lt;-</span> year_dcc_dt_all <span class="sc">|&gt;</span> <span class="fu">select</span>(detected_id) <span class="sc">|&gt;</span> <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># top_4 &lt;- year_dcc_dt_all |&gt; select(detected_id) |&gt; slice(1:4)</span></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>year_dcc_dt_all_for_plot_agg_top_4 <span class="ot">&lt;-</span> year_dcc_dt_all_for_plot <span class="sc">|&gt;</span> </span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">detected_id =</span> <span class="fu">case_when</span>(</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span>detected_id <span class="sc">%in%</span> top_4<span class="sc">$</span>detected_id <span class="sc">~</span> <span class="st">&quot;Others&quot;</span>,</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> detected_id),</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">publication_year_dcc =</span> <span class="fu">as.character</span>(publication_year_dcc),</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">publication_year_dcc =</span> <span class="fu">case_when</span>(</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      publication_year_dcc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;2009&quot;</span>, <span class="st">&quot;2010&quot;</span>, <span class="st">&quot;2011&quot;</span>, <span class="st">&quot;2012&quot;</span>) <span class="sc">~</span> <span class="st">&quot;&lt;=2012&quot;</span>,</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> publication_year_dcc)) <span class="sc">|&gt;</span> </span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(detected_id, publication_year_dcc) <span class="sc">|&gt;</span> </span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span>publication_year_dcc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;2023&quot;</span>, <span class="st">&quot;2024&quot;</span>))</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(year_dcc_dt_all_for_plot_agg_top_4, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>                                                            <span class="st">&quot;tables_for_plots&quot;</span>,</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>                                                            <span class="st">&quot;year_dcc_dt_all_for_plot_agg_top_4.RData&quot;</span>)))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># year_dcc_dt_all_for_plot_agg_top_4 &lt;- year_dcc_dt_all_for_plot |&gt; </span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   mutate(</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#     detected_id = case_when(</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">#       !detected_id %in% top_4$detected_id ~ &quot;Others&quot;,</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">#       .default = detected_id),</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">#     publication_year_dcc = as.character(publication_year_dcc),</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">#     publication_year_dcc = case_when(</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">#       publication_year_dcc %in% c(&quot;2009&quot;, &quot;2010&quot;, &quot;2011&quot;, &quot;2012&quot;) ~ &quot;&lt;=2012&quot;,</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">#       .default = publication_year_dcc)) |&gt; </span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">#   group_by(detected_id, publication_year_dcc) |&gt; </span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co">#   summarise(count = n(), .groups = &quot;drop&quot;) |&gt; </span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co">#   dplyr::filter(!publication_year_dcc %in% c(&quot;2023&quot;, &quot;2024&quot;))</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="co"># # save as RData</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co"># save_cr(year_dcc_dt_all_for_plot_agg_top_4, file = file.path(here(&quot;data&quot;,</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co">#                                                             &quot;tables_for_plots&quot;,</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co">#                                                             &quot;year_dcc_dt_all_for_plot_agg_top_4.RData&quot;)))</span></span>
 <span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>year_dcc_dt_all_for_plot_agg_top_7 <span class="ot">&lt;-</span> year_dcc_dt_all_for_plot <span class="sc">|&gt;</span> </span>
 <span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -3378,7 +3378,7 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> detected_id),</span>
 <span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">publication_year_dcc =</span> <span class="fu">as.character</span>(publication_year_dcc),</span>
 <span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">publication_year_dcc =</span> <span class="fu">case_when</span>(</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>      publication_year_dcc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;2009&quot;</span>, <span class="st">&quot;2010&quot;</span>, <span class="st">&quot;2011&quot;</span>, <span class="st">&quot;2012&quot;</span>) <span class="sc">~</span> <span class="st">&quot;&lt;=2012&quot;</span>,</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>      publication_year_dcc <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;2005&quot;</span>, <span class="st">&quot;2006&quot;</span>, <span class="st">&quot;2007&quot;</span>, <span class="st">&quot;2008&quot;</span>, <span class="st">&quot;2009&quot;</span>, <span class="st">&quot;2010&quot;</span>, <span class="st">&quot;2011&quot;</span>, <span class="st">&quot;2012&quot;</span>) <span class="sc">~</span> <span class="st">&quot;&lt;=2012&quot;</span>,</span>
 <span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> publication_year_dcc)) <span class="sc">|&gt;</span> </span>
 <span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(detected_id, publication_year_dcc) <span class="sc">|&gt;</span> </span>
 <span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>) <span class="sc">|&gt;</span> </span>
@@ -3395,7 +3395,7 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare table for sankey:</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>dcc_charite_for_sankey <span class="ot">&lt;-</span> dcc_charite_joined_final_no_source_overlap <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>dcc_charite_for_sankey <span class="ot">&lt;-</span> detected_no_sources_overlap <span class="sc">|&gt;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) <span class="sc">|&gt;</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
@@ -3519,9 +3519,9 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <section id="sources-of-identifiers" class="level1">
 <h1>Sources of Identifiers</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>id_source_for_venn <span class="ot">&lt;-</span> dcc_charite_joined_final_dup_sources <span class="sc">|&gt;</span></span>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>id_source_for_venn <span class="ot">&lt;-</span> detected_with_dup_sources <span class="sc">|&gt;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    dcc_charite_joined_final_dup_sources <span class="sc">|&gt;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    detected_with_dup_sources <span class="sc">|&gt;</span> </span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">source_charite =</span> <span class="st">&quot;data_articles_in_numbat&quot;</span>)) <span class="sc">|&gt;</span> </span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(detected_id, source_charite) <span class="sc">|&gt;</span> </span>
@@ -3542,6 +3542,44 @@ Next file version: datasets_metadata_master_updated_015</code></pre>
 <span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(id_source_for_venn, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
 <span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;tables_for_plots&quot;</span>,</span>
 <span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">&quot;id_source_for_venn.RData&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="distribution-of-datasets-across-repositories" class="level1">
+<h1>Distribution of Datasets Across Repositories</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rep_dt_ds <span class="ot">&lt;-</span> detected_no_sources_overlap <span class="sc">|&gt;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">repository =</span> <span class="fu">case_when</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>     repository <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;ncbi dbgap&quot;</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)&quot;</span>) <span class="sc">~</span> <span class="st">&quot;NCBI dbGaP&quot;</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;figshare&quot;</span> <span class="sc">~</span> <span class="st">&quot;Figshare&quot;</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the european genome-phenome archive(ega)&quot;</span> <span class="sc">~</span> <span class="st">&quot;EGA&quot;</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;gene expression omnibus (geo)&quot;</span> <span class="sc">~</span> <span class="st">&quot;GEO&quot;</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;pride proteomics identification database&quot;</span> <span class="sc">~</span> <span class="st">&quot;PRIDE&quot;</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;ncbi reference sequence database&quot;</span> <span class="sc">~</span> <span class="st">&quot;NCBI RefSeq&quot;</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;european nucleotide archive&quot;</span> <span class="sc">~</span> <span class="st">&quot;ENA&quot;</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the protein data bank&quot;</span> <span class="sc">~</span> <span class="st">&quot;PDB&quot;</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;mendeley&quot;</span> <span class="sc">~</span> <span class="st">&quot;Mendeley&quot;</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;bioproject&quot;</span> <span class="sc">~</span> <span class="st">&quot;Bioproject&quot;</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;arrayexpress&quot;</span> <span class="sc">~</span> <span class="st">&quot;Arrayexpress&quot;</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;openneuro&quot;</span> <span class="sc">~</span> <span class="st">&quot;Openneuro&quot;</span>,</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;uniprot&quot;</span> <span class="sc">~</span> <span class="st">&quot;Uniprot&quot;</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;zenodo&quot;</span> <span class="sc">~</span> <span class="st">&quot;Zenodo&quot;</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;harvard dataverse&quot;</span> <span class="sc">~</span> <span class="st">&quot;Harvard Dataverse&quot;</span>,</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the electron microscopy data bank (emdb)&quot;</span> <span class="sc">~</span> <span class="st">&quot;EMDB&quot;</span>,</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the international genome sample resource&quot;</span> <span class="sc">~</span> <span class="st">&quot;IGSR&quot;</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;the international genome sample resource&quot;</span> <span class="sc">~</span> <span class="st">&quot;IGSR&quot;</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>           repository <span class="sc">==</span> <span class="st">&quot;physionet&quot;</span> <span class="sc">~</span> <span class="st">&quot;Physionet&quot;</span>,</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> repository)) <span class="sc">|&gt;</span>  <span class="co"># shorten rep names for a nicer appearance</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(repository, detected_id) <span class="sc">|&gt;</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(repository) <span class="sc">|&gt;</span> </span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n_distinct</span>(detected_id)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n))</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="co"># save as RData</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="fu">save_cr</span>(rep_dt_ds, <span class="at">file =</span> <span class="fu">file.path</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">&quot;tables_for_plots&quot;</span>,</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">&quot;rep_dt_ds.RData&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="exclusion-steps" class="level1">

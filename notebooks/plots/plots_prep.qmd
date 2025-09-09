@@ -12,7 +12,7 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, fs)
 
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
@@ -67,11 +67,37 @@ datasets_metadata_master_latest <- load_latest_metadata_update() # call function
 
 load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_3_au_info.RData"))
 
-load(here("data", "wrangling_steps", "all_sources_binded",                                                      
-          "dcc_detected_ids_all_sources_7_rep_fix.RData"))
+# Load latest all_sources
 
-# create a table with no overlapping sources
-dcc_charite_joined_final_no_source_overlap <- dcc_detected_ids_all_sources_7_rep_fix |> 
+# get file names
+files <- dir_ls(
+  here("data",
+       "wrangling_steps",
+       "all_sources_binded"),
+  regexp = "dcc_detected_ids_all_sources_\\d+.*\\.RData$")
+
+# get numbers index
+nums  <- str_extract(files, "\\d+") |> as.integer()
+
+# get file names
+files <- dir_ls(
+  here("data", "wrangling_steps", "all_sources_binded"),
+  regexp = "dcc_detected_ids_all_sources_\\d+.*\\.RData$"
+)
+
+# get numbers index
+nums <- str_extract(basename(files), "(?<=dcc_detected_ids_all_sources_)\\d+") |> as.integer()
+
+# get latest file
+latest_file <- files[which.max(nums)]
+
+# load into environment and pull the object into detected
+env <- new.env()
+obj_names <- load(latest_file, envir = env)
+detected <- env[[obj_names[1]]]
+
+# Create a table with no overlapping sources
+detected_no_sources_overlap <- detected |> 
   dplyr::filter(
     # exclude datastet+additional that are already in numbat
     source_charite %in% c(
@@ -88,10 +114,8 @@ dcc_charite_joined_final_no_source_overlap <- dcc_detected_ids_all_sources_7_rep
       .default = "FALSE"
     ))
 
-dcc_charite_joined_final_dup_sources <- dcc_detected_ids_all_sources_7_rep_fix
+detected_with_dup_sources <- detected
 
-
-rm(dcc_detected_ids_all_sources_7_rep_fix)
 ```
 
 <br>
@@ -102,7 +126,7 @@ rm(dcc_detected_ids_all_sources_7_rep_fix)
 
 ```{r fig-distinct-numbers-prep}
 
-dcc_summary <- dcc_charite_joined_final_no_source_overlap |>
+dcc_summary <- detected_no_sources_overlap |>
   select(source_charite, detected_id, doi_dcc) |> 
   group_by(source_charite) |> 
   summarise(
@@ -161,9 +185,9 @@ save_cr(combined_long_counts, file = file.path(here("data",
 # 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)
 
 # counts_final <- tibble(
-#   `Mentioning Articles` = dcc_charite_joined_final_no_source_overlap |> select(doi_dcc) |> distinct() |> nrow(),
-#   `Charité Articles` = dcc_charite_joined_final_no_source_overlap |> select(doi_charite) |> distinct() |> nrow(),
-#   `Mentioned Datasets` = dcc_charite_joined_final_no_source_overlap |> select(detected_id) |> distinct() |> nrow()
+#   `Mentioning Articles` = detected_no_sources_overlap |> select(doi_dcc) |> distinct() |> nrow(),
+#   `Charité Articles` = detected_no_sources_overlap |> select(doi_charite) |> distinct() |> nrow(),
+#   `Mentioned Datasets` = detected_no_sources_overlap |> select(detected_id) |> distinct() |> nrow()
 # )
 # 
 # # save as RData
@@ -267,7 +291,7 @@ save_cr(combined_long_counts, file = file.path(here("data",
 
 ```{r fig-datasets-freq-dist-prep}
 
-ds_freq <- dcc_charite_joined_final_no_source_overlap |>
+ds_freq <- detected_no_sources_overlap |>
   group_by(detected_id) |>
   summarise(n = n())
 
@@ -279,9 +303,9 @@ save_cr(ds_freq, file = file.path(here("data",
 
 # Distribution of References Across Repositories
 
-```{r fig-repo-dist-prep}
+```{r fig-repo-dist-ref-prep}
 
-rep_dt <- dcc_charite_joined_final_no_source_overlap |> 
+rep_dt <- detected_no_sources_overlap |> 
    mutate(repository = case_when(
      repository %in% c("ncbi dbgap",
                              "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
@@ -321,34 +345,34 @@ save_cr(rep_dt, file = file.path(here("data",
 
 ```{r fig-ref-by-year-prep}
 
-year_dcc_dt_all <- dcc_charite_joined_final_no_source_overlap |>
+year_dcc_dt_all <- detected_no_sources_overlap |>
   select(doi_dcc, detected_id, publication_year_dcc) |> 
   distinct() |> 
   count(detected_id, sort = TRUE)
 
 year_dcc_dt_all_for_plot <- year_dcc_dt_all |>
-  inner_join(dcc_charite_joined_final_no_source_overlap, by = "detected_id")
+  inner_join(detected_no_sources_overlap, by = "detected_id")
 
 top_7 <- year_dcc_dt_all |> select(detected_id) |> slice(1:7)
-top_4 <- year_dcc_dt_all |> select(detected_id) |> slice(1:4)
+# top_4 <- year_dcc_dt_all |> select(detected_id) |> slice(1:4)
 
-year_dcc_dt_all_for_plot_agg_top_4 <- year_dcc_dt_all_for_plot |> 
-  mutate(
-    detected_id = case_when(
-      !detected_id %in% top_4$detected_id ~ "Others",
-      .default = detected_id),
-    publication_year_dcc = as.character(publication_year_dcc),
-    publication_year_dcc = case_when(
-      publication_year_dcc %in% c("2009", "2010", "2011", "2012") ~ "<=2012",
-      .default = publication_year_dcc)) |> 
-  group_by(detected_id, publication_year_dcc) |> 
-  summarise(count = n(), .groups = "drop") |> 
-  dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
-
-# save as RData
-save_cr(year_dcc_dt_all_for_plot_agg_top_4, file = file.path(here("data",
-                                                            "tables_for_plots",
-                                                            "year_dcc_dt_all_for_plot_agg_top_4.RData")))
+# year_dcc_dt_all_for_plot_agg_top_4 <- year_dcc_dt_all_for_plot |> 
+#   mutate(
+#     detected_id = case_when(
+#       !detected_id %in% top_4$detected_id ~ "Others",
+#       .default = detected_id),
+#     publication_year_dcc = as.character(publication_year_dcc),
+#     publication_year_dcc = case_when(
+#       publication_year_dcc %in% c("2009", "2010", "2011", "2012") ~ "<=2012",
+#       .default = publication_year_dcc)) |> 
+#   group_by(detected_id, publication_year_dcc) |> 
+#   summarise(count = n(), .groups = "drop") |> 
+#   dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
+# 
+# # save as RData
+# save_cr(year_dcc_dt_all_for_plot_agg_top_4, file = file.path(here("data",
+#                                                             "tables_for_plots",
+#                                                             "year_dcc_dt_all_for_plot_agg_top_4.RData")))
 
 year_dcc_dt_all_for_plot_agg_top_7 <- year_dcc_dt_all_for_plot |> 
   mutate(
@@ -357,7 +381,7 @@ year_dcc_dt_all_for_plot_agg_top_7 <- year_dcc_dt_all_for_plot |>
       .default = detected_id),
     publication_year_dcc = as.character(publication_year_dcc),
     publication_year_dcc = case_when(
-      publication_year_dcc %in% c("2009", "2010", "2011", "2012") ~ "<=2012",
+      publication_year_dcc %in% c("2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012") ~ "<=2012",
       .default = publication_year_dcc)) |> 
   group_by(detected_id, publication_year_dcc) |> 
   summarise(count = n(), .groups = "drop") |> 
@@ -376,7 +400,7 @@ save_cr(year_dcc_dt_all_for_plot_agg_top_7, file = file.path(here("data",
 
 # Prepare table for sankey:
 
-dcc_charite_for_sankey <- dcc_charite_joined_final_no_source_overlap |>
+dcc_charite_for_sankey <- detected_no_sources_overlap |>
   select(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) |>
   distinct()
 
@@ -510,9 +534,9 @@ save_cr(not_mentioned_years, file = file.path(here("data",
 
 ```{r}
 
-id_source_for_venn <- dcc_charite_joined_final_dup_sources |>
+id_source_for_venn <- detected_with_dup_sources |>
   bind_rows(
-    dcc_charite_joined_final_dup_sources |> 
+    detected_with_dup_sources |> 
       slice_head(n = 2) |> 
       mutate(source_charite = "data_articles_in_numbat")) |> 
   select(detected_id, source_charite) |> 
@@ -537,9 +561,9 @@ save_cr(id_source_for_venn, file = file.path(here("data",
 
 # Distribution of Datasets Across Repositories
 
-```{r fig-repo-dist-prep}
+```{r fig-repo-dist-id-prep}
 
-rep_dt_ds <- dcc_charite_joined_final_no_source_overlap |> 
+rep_dt_ds <- detected_no_sources_overlap |> 
    mutate(repository = case_when(
      repository %in% c("ncbi dbgap",
                              "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",

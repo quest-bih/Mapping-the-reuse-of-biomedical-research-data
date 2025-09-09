@@ -357,10 +357,6 @@ References
 
 **Note:** Counts distinct mentioning papers and detected ids, with and without author overlap cases.
 
-{{< embed notebooks/plots/plots.qmd#fig-distinct-numbers-pie >}}
-
-**Note:** Same retuls, but in pie chart
-
 {{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
 
 **Note:** Counts how many mentions are there for each dataset. The labels over the bars sum to 89, which is the distinct number of datasets detected in DCC.
@@ -368,8 +364,6 @@ References
 {{< embed notebooks/plots/plots.qmd#fig-repo-dist >}}
 
 **Note:** These are the number of mentions that each repository has. The total sum includes cases where several papers mentioned the same dataset, cases where several datasets were mentioned in the same paper, and 1 to 1 relationships (which were the majority of cases).
-
-{{< embed notebooks/plots/plots.qmd#fig-ref-by-year-top-4 >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-ref-by-year-top-7 >}}
 

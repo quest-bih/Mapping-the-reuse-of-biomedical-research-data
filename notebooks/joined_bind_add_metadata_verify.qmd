@@ -621,6 +621,7 @@ load_latest_metadata_update()
 
 metadata_matched_for_joining <- datasets_metadata_master_updated_016 |>
   select(doi_id_clean_pair,
+         source_charite,
          license,
          human_data,
          covid_related,
@@ -632,7 +633,9 @@ metadata_matched_for_joining <- datasets_metadata_master_updated_016 |>
 # add to _joined
 dcc_detected_ids_all_sources_4_w_metadata <- dcc_detected_ids_all_sources_3_rm_dcc_is_ch |>
   left_join(metadata_matched_for_joining,
-            by = "doi_id_clean_pair")
+            by = "doi_id_clean_pair") |> 
+  rename(source_charite = source_charite.y) |> 
+  select(-source_charite.x)
 
 # # initially, the join included these cols as well, but they were removed from 013 since they were identical to _all_sources 
 # dcc_detected_ids_all_sources_4_w_metadata |> dplyr::filter(data_access != data_access.new) |> View()
