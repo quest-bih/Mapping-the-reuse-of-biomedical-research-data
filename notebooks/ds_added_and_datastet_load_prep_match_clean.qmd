@@ -96,10 +96,30 @@ added_ids <- added_ids_orig |>
   )) |> # manually remove version info
   mutate(source = "additional_ids") |> 
   select(-`...5`) |> 
-  dplyr::filter(detected_id != data_id_auto_cleaned) |> # remove cases where detected = added
   dplyr::filter(!data_id_auto_cleaned %in% c("", " ", "0", "null", "na")) |> # remove invalid values
   dplyr::filter(!is.na(data_id_auto_cleaned)) |>
+  distinct()
+
+# remove added ids ("data_id_auto_cleaned") that already exist as detected_ids of numbat with the same doi of numbat's detected_id
+added_ids <- added_ids |>
+  dplyr::anti_join(
+    new |> dplyr::select(detected_id, doi) |> dplyr::rename(data_id_auto_cleaned = detected_id),
+    by = c("data_id_auto_cleaned", "doi")) |> 
   distinct() 
+
+  # # a simplified example of the last step, for clarification:
+  # df <- tibble::tibble(
+  #   col1 = c("a", "a", "b", "b", "b", "c", "c", "d", "e", "f", "g"),
+  #   col2 = c("p", "o", "a", "h", "j", "x", "z", "i", "i", "d", "a"),
+  #   doi1 = c("1", "1", "2", "2", "2", "3", "3", "4", "5", "6", "1"),
+  # )
+  # 
+  # # remove added (col2) if they exist with the same doi under detected in numbat (col1)
+  # df_filtered <- df |>
+  #   dplyr::anti_join(
+  #     df |> dplyr::select(col1, doi1) |> dplyr::rename(col2 = col1),
+  #     by = c("col2", "doi1")
+  #   )
 
 # DataStet
 
@@ -167,7 +187,7 @@ save_cr(added_and_ds_m_val_v1_done,
 # 2. Label NAs as "TRUE" under "valid" column and filter out "FALSE"
 
 added_and_ds_for_matching_1_t <- added_and_ds_m_val_v1_done |> 
-  mutate(valid = case_when(is.na(valid) ~ TRUE, .default = valid)) |> # relable "NA"s as "TRUE"
+  mutate(valid = case_when(is.na(valid) ~ TRUE, .default = valid)) |> # relabel "NA"s as "TRUE"
   mutate(valid = as.character(valid)) |> # convert to chr
   dplyr::filter(valid == "TRUE") # get only "TRUE"
 
@@ -175,7 +195,7 @@ save_cr(added_and_ds_for_matching_1_t,
         file = file.path(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_1_t.RData"))) # as RData
 
 
-# 3. coaslece into dataset_for_matching and remove trails and versions
+# 3. coaslesce into dataset_for_matching and remove trails and versions
 
   # versions removal:
   #

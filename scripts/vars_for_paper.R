@@ -56,15 +56,15 @@ load_latest_metadata_update <- function() {
   invisible(get(loaded_vars[1], envir = .GlobalEnv))
 }
 
-# 2. Create Variables  ----------------------------------------------------
+# 2. Get results files ----------------------------------------------------
 
 # Load relevant tables to extract variables from
 
-# Metadata
+# 1. Metadata
 
 metadata <- load_latest_metadata_update()
 
-# Matched:
+# 2. Matched:
 
 # get file names
 files <- dir_ls(
@@ -83,31 +83,51 @@ env <- new.env()
 obj_names <- load(latest_file, envir = env)
 detected <- env[[obj_names[1]]]
 
-results <- tibble(
+# 3. For matching
+
+## 3.1 Numbat + DA
+load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData"))
+
+num_for_match <- numbat_da_dois_and_ids_9_clean_pairs |> 
+  dplyr::filter(source == "numbat")
+
+da_for_match <- numbat_da_dois_and_ids_9_clean_pairs |> 
+  dplyr::filter(source == "data_articles")
+
+## 3.2 Additional IDs
+load(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_4_rm_exist.RData"))
+
+ad_for_match <- added_and_ds_for_matching_4_rm_exist |> 
+  dplyr::filter(source == "additional_ids")
+
+# 3. Build results table --------------------------------------------------
+
+res <- tibble(
   value = c(
+    "placeholder",
     "ds_matched_ids_count_dist_no_overlap",
     "n_matched_ids_count_dist_no_overlap",
     "da_matched_ids_count_dist_no_overlap",
     "all_matched_ids_count_dist_no_overlap",
-    
-    "ds_matched_dois_count_dist_no_overlap",
-    "n_matched_dois_count_dist_no_overlap",
-    "da_matched_dois_count_dist_no_overlap",
-    "all_matched_dois_count_dist_no_overlap",
     
     "ds_non_matched_ids_count_dist_no_overlap",
     "n_non_matched_ids_count_dist_no_overlap",
     "da_non_matched_ids_count_dist_no_overlap",
     "all_non_matched_ids_count_dist_no_overlap",
     
-    "ds_non_matched_dois_count_dist_no_overlap",
-    "n_non_matched_dois_count_dist_no_overlap",
-    "da_non_matched_dois_count_dist_no_overlap",
-    "all_non_matched_dois_count_dist_no_overlap",
+    "n_max_mentions_of_single_id",
+    "all_ids_with_1_mention_count_dist",
+    "n_ids_with_1_mention_count_dist",
     
-    "max_mentions_of_single_id",
-    "all_ids_with_1_mention_count_dist"),
-    # 
+    "n_ids_for_match_count",
+    "n_2nd_for_match_count",
+    "da_for_match_count",
+    "ad_for_match_count",
+    
+    "n_dois_for_match",
+    "da_dois_for_match",
+    "ad_dois_for_match",
+    "n_mentions"),
     # "all_matched_mentions_count_dist_no_overlap_geo",
     # "all_matched_mentions_dist_no_overlap_gen_rep",
     # "all_matched_mentions_dist_no_overlap_disp_rep",
@@ -116,41 +136,54 @@ results <- tibble(
     # "all_matched_ids_dist_no_overlap_gen_rep",
     # "all_matched_ids_dist_no_overlap_disp_rep"),
   count = c(
+    999,
     detected |> dplyr::filter(source_charite == "datastet") |> select(detected_id) |> distinct() |> nrow(),
     detected |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> select(detected_id) |> distinct() |> nrow(),
     detected |> dplyr::filter(source_charite == "data_articles") |> select(detected_id) |> distinct() |> nrow(),
     detected |> select(detected_id) |> distinct() |> nrow(),
     
-    detected |> dplyr::filter(source_charite == "datastet") |> select(doi_no_ver_info) |> distinct() |> nrow(),
-    detected |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> select(doi_no_ver_info) |> distinct() |> nrow(),
-    detected |> dplyr::filter(source_charite == "data_articles") |> select(doi_no_ver_info) |> distinct() |> nrow(),
-    detected |> dplyr::filter(source_charite %in% c("datastet", "numbat", "additional_ids", "data_articles")) |> select(doi_no_ver_info) |> distinct() |> nrow(),
-
     metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite == "datastet") |> select(dataset_for_matching) |> distinct() |> nrow(),
     metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite %in% c("numbat", "additional_ids")) |> select(dataset_for_matching) |> distinct() |> nrow(),
     metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite == "data_articles") |> select(dataset_for_matching) |> distinct() |> nrow(),
     metadata |> dplyr::filter(in_dcc == "FALSE") |> select(dataset_for_matching) |> distinct() |> nrow(),
     
-    metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite == "datastet") |> select(doi_charite) |> distinct() |> nrow(),
-    metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite %in% c("numbat", "additional_ids")) |> select(doi_charite) |> distinct() |> nrow(),
-    metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite == "data_articles") |> select(doi_charite) |> distinct() |> nrow(),
-    metadata |> dplyr::filter(in_dcc == "FALSE") |> select(doi_charite) |> distinct() |> nrow(),
+    detected |>
+      dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> 
+      distinct(detected_id, doi_dcc) |>
+      count(detected_id, name = "n_citations") |>
+      arrange(desc(n_citations)) |>
+      slice(1) |>
+      pull(n_citations),
     
-    detected |> count(detected_id, sort = TRUE) |> slice_max(n, n = 1, with_ties = FALSE) |> pull(n),
-    detected |> count(detected_id) |> dplyr::filter(n == 1) |> nrow()
+    detected |>
+      distinct(detected_id, doi_dcc) |>
+      count(detected_id, name = "n_citations") |>
+      dplyr::filter(n_citations == 1) |>
+      nrow(),
+    
+    detected |>
+      dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> 
+      distinct(detected_id, doi_dcc) |>
+      count(detected_id, name = "n_citations") |>
+      dplyr::filter(n_citations == 1) |>
+      nrow(),
+      
+    num_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),
+    num_for_match |> select(data_id_secondary) |> dplyr::filter(!is.na(data_id_secondary)) |> distinct() |> nrow(),
+    
+    da_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),
+    ad_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),
+    
+    num_for_match |> dplyr::filter(source == "numbat") |> select(doi) |> distinct() |> nrow(),
+    da_for_match |> dplyr::filter(source == "data_articles") |> select(doi) |> distinct() |> nrow(),
+    ad_for_match |> dplyr::filter(source == "additional_ids") |> select(doi) |> distinct() |> nrow(),
+    detected |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> distinct(detected_id, doi_dcc) |> nrow()
   )
 )
 
+res <- res |> pivot_wider(names_from = value, values_from = count) |> mutate(placeholder = "__")
 
-# set output folder
-output_dir <- here("data", "inputs_for_quick_render", "for_index")
-
-# save as variables
-results |>
-  pivot_longer(everything(), names_to = "var", values_to = "val") |>
-  pwalk(\(var, val) {
-    val_env <- rlang::env()
-    rlang::env_bind(val_env, !!var := val)
-    save_cr(list = var, envir = val_env,
-            file = here("data", "inputs_for_quick_render", "for_index", paste0(var, ".RData")))
-  })
+# save as RData
+save_cr(res, file = file.path(here("data",
+                                   "inputs_for_quick_render",
+                                   "res.RData")))

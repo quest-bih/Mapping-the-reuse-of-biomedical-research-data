@@ -1356,51 +1356,7 @@ datasets_metadata_master_updated_014 <- datasets_metadata_master_updated_013 |>
 # save
 metadata_update(datasets_metadata_master_updated_014) # call function to save as csv, xlsx, rda
 
-# 015: fix source_charite values ------------------------------------------
-
-# load
-load_latest_metadata_update() # call function to load latest version
-
-# 1. Change several cases from "datastet" to "datastet_in_additional_ids"
-
-# some "datastet" are actually in "additional_ids" (only 2 unique ids)
-# so here I'll change them to "datastet_in_additional_ids"
-
-# check which ids:
-
-df_multi_source <- datasets_metadata_master_updated_014 |>
-  select(detected_id, source_charite) |>
-  distinct() |>
-  group_by(detected_id) |>
-  summarise(n_sources = n_distinct(source_charite), .groups = "drop") |>
-  dplyr::filter(n_sources > 1)
-
-datasets_metadata_master_updated_014 |>
-  select(detected_id, source_charite) |>
-  distinct() |>
-  semi_join(df_multi_source, by = "detected_id") |> View()
-
-# these: c("gse99933", "gse90496")
-
-# verify that it's "datastet" that's supposed to be "datastet_in_additional_ids":
-
-pool_to_detected_from <- datasets_metadata_master_updated_014 |>
-select(detected_id, source_charite) |>
-dplyr::filter(detected_id %in% c("gse90496", "gse99933")) |>
-distinct()
-
-datasets_metadata_master_updated_015 <- datasets_metadata_master_updated_014 |>
-  mutate(
-    source_charite = case_when(
-      detected_id %in% c("gse99933", "gse90496")
-      & source_charite == "datastet"
-      ~ "datastet_in_additional_ids",
-      .default = source_charite))
-
-# save
-metadata_update(datasets_metadata_master_updated_015) # call function to save as csv, xlsx, rda
-
-# 016: fix DAS issue ------------------------------------------------------
+# 015: fix DAS issue ------------------------------------------------------
 
 # Tasks:
 #   1. Mutate these values: "No_statement_no_data, yes_statement_no_data" to FASLE (so that there's only TRUE/FALSE values)
@@ -1418,12 +1374,12 @@ load_latest_metadata_update() # call function to load latest version
 # 1. Mutate these values: "no_statement_no_data, yes_statement_no_data" to FASLE (so that there's only TRUE/FALSE values)
 
 # check:
-datasets_metadata_master_updated_015 |> 
+datasets_metadata_master_updated_014 |> 
   select(data_availability_statement) |> 
   unique()
 
 # change:
-datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_015 |> 
+datasets_metadata_master_updated_015 <- datasets_metadata_master_updated_014 |> 
   mutate(
     das_for_analysis = 
       case_when(data_availability_statement %in% c("no_statement_no_data", "yes_statement_no_data")
@@ -1431,13 +1387,13 @@ datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_015 |>
                 .default = data_availability_statement))
 
 # verify:
-datasets_metadata_master_updated_016 |> 
+datasets_metadata_master_updated_015 |> 
   select(das_for_analysis) |> 
   unique() # good
 
 # 2. The second issue is that for the same id there are multiple DAS values, because it appears in multiple Charité papers:
 
-datasets_metadata_master_updated_016 |>
+datasets_metadata_master_updated_015 |>
   dplyr::select(
     doi_no_ver_info, # was verified against doi_charite that it gives the same results
     dataset_for_matching,
@@ -1468,7 +1424,7 @@ datasets_metadata_master_updated_016 |>
 # So below I'll set these values for every occurence of
 # gse160097, gse90496, mt108784, prjna540738 ad gse84795 under dataset_for_matching:
 
-datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_016 |> 
+datasets_metadata_master_updated_015 <- datasets_metadata_master_updated_015 |> 
   mutate(
     das_for_analysis = # mutate a column dor analysis
       case_when(
@@ -1479,7 +1435,7 @@ datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_016 |>
         .default = data_availability_statement))
 
 # verify:
-datasets_metadata_master_updated_016 |>
+datasets_metadata_master_updated_015 |>
   dplyr::select(
     doi_no_ver_info, 
     dataset_for_matching,
@@ -1496,4 +1452,53 @@ datasets_metadata_master_updated_016 |>
   View()
 
 # save
+metadata_update(datasets_metadata_master_updated_015) # call function to save as csv, xlsx, rda
+
+
+# 016: add license_for_analysis again --------------------------------------
+
+# licesne_for_analysis should be added here
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_015 |> 
+  mutate(
+    license_for_analysis = case_when(
+      license %in% c("CC0", "CC BY", "cc-by", " CC BY-NC-SA", "cc0", "CC-BY", "CC BY-NC-SA", "CC BY-NC-ND") ~ "TRUE",
+      license %in% c("FALSE", "data use agreement", "bespoke use terms", "EMBL-EBI", "DUC", "DUL, DUC", "DTA", "other (open)") ~ "FALSE",
+      .default = license
+    ))
+
+datasets_metadata_master_updated_016 |> select(license_for_analysis) |> unique() # check
+
+# save
 metadata_update(datasets_metadata_master_updated_016) # call function to save as csv, xlsx, rda
+
+# 017: remove trailing ws -------------------------------------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# check where
+cols_with_trailing_ws <- datasets_metadata_master_updated_016 |>
+  dplyr::select(where(is.character)) |>
+  dplyr::summarise(
+    dplyr::across(everything(), ~ any(stringr::str_detect(., "\\s+$")))
+  ) |>
+  tidyr::pivot_longer(everything(), names_to = "column", values_to = "has_trailing_ws") |>
+  dplyr::filter(has_trailing_ws) |>
+  dplyr::pull(column)
+
+# remove
+datasets_metadata_master_updated_017 <- datasets_metadata_master_updated_016 |>
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::all_of(cols_with_trailing_ws),
+      ~ stringr::str_replace(., "\\s+$", "")
+    )
+  )
+
+# save
+metadata_update(datasets_metadata_master_updated_017) # call function to save as csv, xlsx, rda
+

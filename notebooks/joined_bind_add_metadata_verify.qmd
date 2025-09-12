@@ -607,7 +607,86 @@ save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
 # Notice: the count of IDs won't change, because they are being cited by other papers and they belong to other charite papers that are not in the dcc paper column. So the only thing that will change is that 5 distinct doi_dcc records will be removed from the dcc papers count.
 ```
 
-# 6. Add Metadata
+# 9. remove trailing whitespaces
+
+```{r remove ws}
+
+# check where
+cols_with_trailing_ws <- dcc_detected_ids_all_sources_3_rm_dcc_is_ch |>
+  dplyr::select(where(is.character)) |>
+  dplyr::summarise(
+    dplyr::across(everything(), ~ any(stringr::str_detect(., "\\s+$")))
+  ) |>
+  tidyr::pivot_longer(everything(), names_to = "column", values_to = "has_trailing_ws") |>
+  dplyr::filter(has_trailing_ws) |>
+  dplyr::pull(column)
+
+# remove
+dcc_detected_ids_all_sources_4_rm_ws <- dcc_detected_ids_all_sources_3_rm_dcc_is_ch |>
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::all_of(cols_with_trailing_ws),
+      ~ stringr::str_replace(., "\\s+$", "")
+    )
+  )
+
+# save
+save_cr(dcc_detected_ids_all_sources_4_rm_ws,
+        file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+                              "dcc_detected_ids_all_sources_4_rm_ws.RData")))
+
+```
+
+# 7. Update Source values
+
+```{r update source_charite values}
+
+# ##### FIX CODE BELOW TO FIT THIS QMD. THE CODE BELOW IS REFERRING DATASET_METADATA FILE #####
+# 
+# # 1. Change several cases from "datastet" to "datastet_in_additional_ids"
+# 
+# # some "datastet" are actually in "additional_ids" (only 2 unique ids)
+# # so here I'll change them to "datastet_in_additional_ids"
+# 
+# # check which ids:
+# 
+# df_multi_source <- dcc_detected_ids_all_sources_4_rm_ws |>
+#   select(detected_id, source_charite) |>
+#   distinct() |>
+#   group_by(detected_id) |>
+#   summarise(n_sources = n_distinct(source_charite), .groups = "drop") |>
+#   dplyr::filter(n_sources > 1)
+# 
+# # check which detected_ids exist in multi_source
+# dcc_detected_ids_all_sources_4_rm_ws |>
+#   select(detected_id, source_charite) |>
+#   distinct() |>
+#   semi_join(df_multi_source, by = "detected_id") |> View()
+# 
+# # these: c("gse99933", "gse90496")
+# 
+# # verify that it's "datastet" that's supposed to be "datastet_in_additional_ids":
+# 
+# pool_to_detected_from <- dcc_detected_ids_all_sources_4_rm_ws |>
+# select(detected_id, source_charite) |>
+# dplyr::filter(detected_id %in% c("gse90496", "gse99933")) |>
+# distinct()
+# 
+# new_check <- dcc_detected_ids_all_sources_4_rm_ws |>
+#   mutate(
+#     source_charite = case_when(
+#       detected_id %in% c("gse99933", "gse90496")
+#       & source_charite == "datastet"
+#       ~ "datastet_in_additional_ids",
+#       .default = source_charite))
+# 
+# save_cr(dcc_detected_ids_all_sources_4_rm_ws,
+#         file = file.path(here("data", "wrangling_steps", "all_sources_binded",
+#                               "dcc_detected_ids_all_sources_4_rm_ws.RData")))
+
+```
+
+# 8. Add Metadata
 
 ```{r Add metadata}
 
@@ -619,23 +698,22 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_matched_for_joining <- datasets_metadata_master_updated_016 |>
+metadata_matched_for_joining <- datasets_metadata_master_updated_017 |>
   select(doi_id_clean_pair,
-         source_charite,
          license,
          human_data,
          covid_related,
          is_detected_id_doi,
          data_availability_statement,
+         das_for_analysis,
+         license_for_analysis,
          charite_id_year) |> 
   distinct()
 
 # add to _joined
 dcc_detected_ids_all_sources_4_w_metadata <- dcc_detected_ids_all_sources_3_rm_dcc_is_ch |>
   left_join(metadata_matched_for_joining,
-            by = "doi_id_clean_pair") |> 
-  rename(source_charite = source_charite.y) |> 
-  select(-source_charite.x)
+            by = "doi_id_clean_pair")
 
 # # initially, the join included these cols as well, but they were removed from 013 since they were identical to _all_sources 
 # dcc_detected_ids_all_sources_4_w_metadata |> dplyr::filter(data_access != data_access.new) |> View()
@@ -715,8 +793,14 @@ dcc_detected_ids_all_sources_6_rep_fix <- dcc_detected_ids_all_sources_5_add_rep
                                 detected_id == "ng00075" ~ "dss NIAGADS",
                                 .default = repository))
 
+# check
+dcc_detected_ids_all_sources_6_rep_fix |>
+  select(detected_id, repository) |>
+  group_by(detected_id) |>
+  summarise(across(everything(), ~ n_distinct(.x)), .groups = "drop") |>
+  dplyr::filter(if_any(-detected_id, ~ .x > 1)) |>
+  View() # good
+
 # save
 save_cr(dcc_detected_ids_all_sources_6_rep_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_rep_fix.RData")))
-
-
 ```
