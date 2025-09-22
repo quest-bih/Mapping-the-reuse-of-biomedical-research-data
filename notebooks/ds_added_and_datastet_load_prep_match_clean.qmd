@@ -100,27 +100,6 @@ added_ids <- added_ids_orig |>
   dplyr::filter(!is.na(data_id_auto_cleaned)) |>
   distinct()
 
-# remove added ids ("data_id_auto_cleaned") that already exist as detected_ids of numbat with the same doi of numbat's detected_id
-added_ids <- added_ids |>
-  dplyr::anti_join(
-    new |> dplyr::select(detected_id, doi) |> dplyr::rename(data_id_auto_cleaned = detected_id),
-    by = c("data_id_auto_cleaned", "doi")) |> 
-  distinct() 
-
-  # # a simplified example of the last step, for clarification:
-  # df <- tibble::tibble(
-  #   col1 = c("a", "a", "b", "b", "b", "c", "c", "d", "e", "f", "g"),
-  #   col2 = c("p", "o", "a", "h", "j", "x", "z", "i", "i", "d", "a"),
-  #   doi1 = c("1", "1", "2", "2", "2", "3", "3", "4", "5", "6", "1"),
-  # )
-  # 
-  # # remove added (col2) if they exist with the same doi under detected in numbat (col1)
-  # df_filtered <- df |>
-  #   dplyr::anti_join(
-  #     df |> dplyr::select(col1, doi1) |> dplyr::rename(col2 = col1),
-  #     by = c("col2", "doi1")
-  #   )
-
 # DataStet
 
 datastet_ids <- datastet_ids_orig |> 
@@ -226,47 +205,32 @@ save_cr(added_and_ds_for_matching_1_t,
   # phs000007.v30.p11
 
 added_and_ds_for_matching_2_rm_exc <- added_and_ds_for_matching_1_t |>
+  # convert blanks and "NA"s to true NAs
   mutate(
-    dataset_for_matching = case_when(
-      # 1. Keep existing value if not NA
-      !is.na(dataset_for_matching) ~ dataset_for_matching,
+    dataset_for_matching = dataset_for_matching |> na_if("NA") |> na_if(""),
+    m_val                = m_val                |> na_if("NA") |> na_if("")) |> 
+  # coalesce to dataset_for_matching
+  mutate(
+    dataset_for_matching = 
+    coalesce(dataset_for_matching, m_val, data_id_auto_cleaned))
 
-      # 2. Use m_val if dataset_for_matching is NA and m_val is not empty or NA
-      is.na(dataset_for_matching) & !is.na(m_val) & m_val != "" ~ m_val,
-
-      # 3. Otherwise: clean data_id_auto_cleaned and strip version suffixes
-      .default = data_id_auto_cleaned |>
-        str_replace_all(",", ".") |>            # replace commas with dots
-        str_trim() |>                           # trim spaces
-        str_remove_all("\\s") |>                # remove internal spaces
-        str_remove_all("[()]+") |>              # remove parentheses
-        str_remove_all("[/\\.]+$") |>           # remove trailing slashes or dots
-        # Remove version info at end of string
-        str_remove("(\\.\\d+)$") |>             # remove trailing .digit
-        str_remove("(?<!^10)\\.\\d+$") |>       # remove .digits if not starting with 10.
-        str_remove("(?<!^10)\\.v\\d+$") |>      # remove .v{digit} if not starting with 10.
-        str_remove("\\.v\\d+\\.\\d+\\.\\d+$") |> # remove .vX.Y.Z
-        str_remove("\\.v\\d+\\.p\\d+$")          # remove .vX.pY
-    )
-  )
-
-  # # Check:
+  # #Verification:
+  # 
+  # # Make sure there are no NAs in dataset_for_matching
+  # 
   # added_and_ds_for_matching_2_rm_exc |>
-  #   dplyr::filter(
-  #     str_detect(
-  #       dataset_for_matching,
-  #       regex(
-  #         paste0(
-  #           "\\.\\d+$",                         # ends with .digit
-  #           "|(?<!^10)\\.\\d+$",               # .digits, but not if starts with 10.
-  #           "|(?<!^10)\\.v\\d+$",              # .vDigit, but not if starts with 10.
-  #           "|\\.v\\d+\\.\\d+\\.\\d+$",        # .vX.Y.Z
-  #           "|\\.v\\d+\\.p\\d+$"               # .vX.pY
-  #         )
-  #       )
-  #     )
-  #   ) |> View()
-
+  #   dplyr::filter(is.na(dataset_for_matching)) # ok.
+  # 
+  # # Manually inspect values
+  # 
+  # added_and_ds_for_matching_2_rm_exc |> select(dataset_for_matching) |> distinct() |> View() # ok.
+  # 
+  # # Check for WS
+  # 
+  # added_and_ds_for_matching_2_rm_exc |>
+  #   select(dataset_for_matching) |>
+  #   dplyr::filter(str_detect(dataset_for_matching, "\\s")) |>
+  #   distinct() # 2 cases that are not relevant
 
 # save
 save_cr(added_and_ds_for_matching_2_rm_exc,
@@ -274,6 +238,8 @@ save_cr(added_and_ds_for_matching_2_rm_exc,
 
 
 # 4. categorize doi / acc_nr; add col "Category" and "is_gen_rep"; label if already exists in numbat/DA; rename "valid" to "validated"; 
+
+load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData")) # load numbat-for-matching
 
 added_and_ds_for_matching_3_lbl <- added_and_ds_for_matching_2_rm_exc |> 
   mutate(
@@ -436,25 +402,6 @@ write_csv_cr(charite_dois_ids_distinct, file = file.path(here("data",
                                                      "datastet_and_added_summarised",
                                                      "charite_dois_ids_distinct.csv")),
               row.names = FALSE)
-
-# load labeled list 
-
-dois_ids_grouped_filled <- here("data", "verification", "datastet_and_added_summarised", "charite_dois_ids_grouped_filled.xlsx") |>
-  read_excel()
-
-# create a subset to filter by
-
-real_ids <- dois_ids_grouped_filled |> 
-  dplyr::filter(is_dataset == "y") |> 
-  select(dataset_for_matching)
-
-# exclude cases by labeled list
-
-dcc_ds_and_added_joined_2_rm_non_ids <- dcc_ds_and_added_joined_1_rm_self |> 
-  dplyr::filter(dataset_for_matching %in% real_ids$dataset_for_matching)
-
-# save
-save_cr(dcc_ds_and_added_joined_2_rm_non_ids, file = file.path(here("data","wrangling_steps", "dcc_datastet_and_added", "dcc_ds_and_added_joined_2_rm_non_ids.RData")))
 
 ### 3. Adding authors and years metadata:
 
@@ -746,4 +693,316 @@ setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
 # save
 save_cr(dcc_ds_and_added_joined_6_harm, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
                                                         "dcc_ds_and_added_joined_6_harm.RData")))
+```
+
+# 7. Add previously missed cases 
+
+```{r add missed cases}
+
+# Due to a coalesce error in the original qmd (chunk 4.3), some cases were not included in the list to match with DCC.
+# In the current qmd, these cases were added until section 6.2, included (right before adding authors information).
+
+# In the chunk below I'll repeat section 6.3 until the end of section 6 - only for these added cases.
+
+# Then I'll bind the previous list (dcc_ds_and_added_joined_6_harm.RData) with the new cases
+
+# Then I'll send it to Evgeny and Blanka to fill  the metadata for the added cases only.
+
+### 3. Adding authors and years metadata:
+
+# prepare dois dfs for openalex authors extraction script
+
+# NOTE: these csvs were actually written before removing non-ids, so there might be irrelevant cases there, but it shouldn't matter when joining them into "dcc_ds_and_added_joined_3_au_info".
+
+# get only missed cases
+missed_cases <- dcc_ds_and_added_joined_1_rm_self |> 
+  dplyr::filter(!dataset_for_matching %in% charite_dois_ids_distinct_filled$dataset_for_matching) |> 
+  distinct()
+
+missed_ds_and_added_dois_distinct <- missed_cases |> 
+  select(doi_datastet_and_added) |> 
+  distinct()
+
+write_csv_cr(missed_ds_and_added_dois_distinct, file = file.path(here("data",
+                                                     "verification",
+                                                     "metadata matched",
+                                                     "ds_and_added",
+                                                     "missed_ds_and_added_dois_distinct.csv")),
+              row.names = FALSE)
+
+
+missed_dcc_of_ds_and_addde_dois_distinct <- missed_cases |> 
+  select(doi_dcc) |> 
+  distinct()
+
+write_csv_cr(missed_dcc_of_ds_and_addde_dois_distinct, file = file.path(here("data",
+                                                     "verification",
+                                                     "metadata matched",
+                                                     "ds_and_added",
+                                                     "missed_dcc_of_ds_and_addde_dois_distinct.csv")),
+              row.names = FALSE)
+
+# I then ran the OpenAlex dois metadata function to get their authors and years info. Below I'm loading the results of this run.
+
+# Get authors and years info:
+
+load(here("data",
+          "verification",
+          "metadata matched",
+          "ds_and_added",
+          "missed_ds_and_added_metadata.RData")) # load charite
+
+missed_ds_and_added_dois_metadata <- final_results # assign
+
+load(here("data",
+          "verification",
+          "metadata matched",
+          "ds_and_added",
+          "missed_dcc_of_ds_and_added_metadata.RData")) # load dcc
+
+missed_dcc_of_ds_and_added_dois_metadata <- final_results # assign
+
+rm(final_results) # clean up
+
+# Prepare both metadata lists before joining
+
+missed_ds_and_added_dois_metadata <- missed_ds_and_added_dois_metadata |>
+  rename(doi_datastet_and_added = doi) |> # rename column
+  mutate(doi_datastet_and_added = str_remove(doi_datastet_and_added, "^https://doi.org/")) # remove prefix
+  
+missed_dcc_of_ds_and_added_dois_metadata <- missed_dcc_of_ds_and_added_dois_metadata |> 
+  rename(doi_dcc = doi) |> # rename column
+  mutate(doi_dcc = str_remove(doi_dcc, "^https://doi.org/")) # remove prefix
+
+# Join info into dcc-charite list
+
+missed_cases_1_au_info <- missed_cases |> 
+  left_join(missed_ds_and_added_dois_metadata, by = "doi_datastet_and_added", suffix = c("", "_datastet_and_added")) |> 
+  left_join(missed_dcc_of_ds_and_added_dois_metadata, by = "doi_dcc", suffix = c("", "_dcc")) |> 
+  rename(publication_year_datastet_and_added = publication_year,
+         authors_datastet_and_added = authors)
+
+# Check for blanks & NAs in metadata
+
+missed_cases_1_au_info |> dplyr::filter(publication_year_datastet_and_added == ""
+                                              | authors_datastet_and_added == ""
+                                              | publication_year_dcc == ""
+                                              | authors_dcc == "") |>
+  View() # no blanks
+
+missed_cases_1_au_info |> dplyr::filter(is.na(publication_year_datastet_and_added)
+                                              | is.na(authors_datastet_and_added)
+                                              | is.na(publication_year_dcc)
+                                              | is.na(authors_dcc)) |>
+  View() # There is one NA, but it was found to be with author overlap upon manual inspection 
+
+# remove case:
+
+missed_cases_1_au_info <- missed_cases_1_au_info |> 
+  dplyr::filter(!is.na(authors_datastet_and_added))
+
+
+# check again
+missed_cases_1_au_info |> dplyr::filter(is.na(publication_year_datastet_and_added)
+                                              | is.na(authors_datastet_and_added)
+                                              | is.na(publication_year_dcc)
+                                              | is.na(authors_dcc)) |>
+  View() # no NAs
+
+# save
+save_cr(missed_cases_1_au_info, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "missed_cases_1_au_info.RData")))
+
+### 4. Excluding cases with authors overlap:
+
+# Function to check if there are no common elements between two semicolon-separated strings
+no_common_element <- function(x, y) {
+  x_split <- str_split(x, ";")[[1]] # Split column x by semicolons
+  y_split <- str_split(y, ";")[[1]] # Split column y by semicolons
+  length(intersect(x_split, y_split)) == 0 # TRUE if no common elements
+}
+
+# Apply the filter using the function to create a matched list with no "Author Overlap"
+missed_cases_2_rm_au_ov <- missed_cases_1_au_info  |> 
+  dplyr::filter(map2_lgl(authors_datastet_and_added, authors_dcc, no_common_element)) |> 
+  distinct(doi_datastet_and_added, dataset_for_matching, doi_dcc, .keep_all = TRUE)
+
+# save
+save_cr(missed_cases_2_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "missed_cases_2_rm_au_ov.RData")))
+
+
+# Write an xlsx file (Writing the xlsx file was done in the script sanity_check.R) to fill with the following info:
+# 1. is it a real dataset
+# 2. is the dataset open-data
+# 3. metadata for relevant cases
+
+# That xlsx file excluded numbat+da matched cases and the 200 sampled non-matched, but it also includes non-matched that were'nt sampled/
+
+# 5. Excluding non-ids and non-OD cases from the matched list
+
+# Load info from the filled "charite_dois_ids_distinct_v1.xlsx" file
+
+  # NOTE: this file includes some redundant cases:
+  # These are the NA cases that were removed in _joined_3_au_info (but only after creating the xlsx file).
+  # It's not relevant or changing anything, since these cases don't exist in _joined_4_rm_au_ov, and therefore will be ignored in the left     join. It just created a bit of extra work for the extractors, unfortunately.
+
+charite_dois_ids_distinct_filled <- read_excel(here("data",
+                                                    "verification",
+                                                    "datastet_and_added_summarised",
+                                                    "datastet_and_added_filled_raw",
+                                                    "charite_dois_ids_distinct_v9.xlsx"))
+
+# get only relevant cases
+
+charite_dois_ids_distinct_filled_1_od_ids <- charite_dois_ids_distinct_filled |>
+  dplyr::filter(is_dataset == "y") |> # get only verified datasets
+  dplyr::filter(`data authorship` %in% c("own data", "data authorship")) # get only OD datasets
+
+# check for discrepancies
+charite_dois_ids_distinct_filled_1_od_ids |> dplyr::filter(`ignore - already in numbat and wasn't detected in dcc` == "TRUE")
+# Only one case to consolidate! 10.1038/s41467-020-20850-5 err194147
+
+# keep only relevant cases in matched list
+
+
+dcc_ds_and_added_joined_5_od_ids <- dcc_ds_and_added_joined_4_rm_au_ov |> 
+  dplyr::filter(
+    dataset_for_matching %in% charite_dois_ids_distinct_filled_1_od_ids$dataset_for_matching)
+
+# save
+save_cr(dcc_ds_and_added_joined_5_od_ids, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_ds_and_added_joined_5_od_ids.RData")))
+
+# 6. Harmonizing: restructure table do fit "numbat_da_dcc_joined_4_rm_au_ov", rename columns, transform values
+
+# Overview
+colnames(dcc_ds_and_added_joined_5_od_ids) # check colnames
+str(dcc_ds_and_added_joined_5_od_ids) # check values
+any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$doi_datastet_and_added)) # check if dois are lower cased: yes
+any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$extracted_id)) # check if ids are lower cased: yes
+
+load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_4_rm_au_ov.RData"))
+colnames(numbat_da_dcc_joined_4_rm_au_ov) # for reference
+
+# Harmonize
+dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_5_od_ids |> 
+  
+  # Rename columns
+  rename(
+    doi_charite = doi_datastet_and_added, # doi charite
+    publication_year_charite = publication_year_datastet_and_added, # pub year of doi charite
+    authors_charite = authors_datastet_and_added,
+    slug_charite = slug_datastet_and_added, # slug charite
+    data_id_m_val = m_val,
+    detected_in_numbat_originally_only_for_added = detected_id, # to make it clear that it's the originally detected id from numbat, and only for added cases
+    source_charite = source_datastet_and_added, # manual validation
+    validated = validate) |>  # correcting a typo
+  
+     
+  
+  # 
+  mutate(
+    data_identifier = coalesce(extracted_id, added_id), # so for numbat+da it's typed-in id, and for ds+added it's the extracted from datastet or the typed in additional id
+    doi_lc = doi_charite, # all dois are already lowercased
+    doi_no_ver_info = str_remove(doi_charite, "\\.[0-9]$"), # remove version information from DOIs
+    data_id_lc = tolower(data_identifier), # added were not lowered yet
+    detected_id = dataset_for_matching,  # there was no secondary id to match in ds+added ,so it's the same column
+    doi_id_orig_pair = paste(doi_charite, data_identifier, sep = ";"), # orig doi+id pair
+    doi_id_lc_pair_for_joining = paste(doi_lc, data_id_lc, sep = ";"), # lc doi+id pair (will be the same as orig pair for datastet cases)
+    doi_id_clean_pair = paste(doi_no_ver_info, detected_id, sep = ";"), # clean doi+id pair
+    
+    # These columns are not relevant for datastet & added:
+    data_identifier_2nd_numbat_entry = NA, 
+    data_id_secondary = NA,
+    numbat_id_of_da_id = NA, 
+    numbat_id_of_da_id_lc = NA,
+    listed_in_numbat_output = NA # relevant only for Data Articles
+  ) |> 
+  
+  # remove non-relevant columns
+  select(-c(year, # derived from an internal categorization in the team, so not relevant and not accurate
+                  # (publication_year_charite from Openalex is the accurate one)
+            context, # not relevant, could always by rejoined lated
+            extracted_id, # coalesced into data_identifier
+            added_id, # coalesced into data_identifier
+            in_numbat_or_data_articles)) |> # primary = in_numbat_or_data_articles, so it's redundant
+
+# Check:
+
+  # columns in ds not in numbat
+setdiff(colnames(dcc_ds_and_added_joined_6_harm),
+        colnames(numbat_da_dcc_joined_4_rm_au_ov)) # will be automatically added when binding them, not relevant for numbat
+
+# columns in numbat not in ds
+setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
+        colnames(dcc_ds_and_added_joined_6_harm)) # I will add these values below, before binding
+
+
+# get "in dashboard" and "data_access" values, then left_join to get them into the table
+
+# A. Dashboard:
+
+  # Load dois that are in the dashboard
+
+  dashboard_dois <- read.csv(
+    file.path(here("data", "verification", "inclusion-info-charite", "dashboard_metrics.csv")),
+    header = TRUE,
+    sep = ",") |> 
+    mutate(doi = gsub("\\+", "/", doi)) |> 
+    mutate(doi_lc = tolower(doi)) # create doi column with lowercase
+  
+  dashboard_dois_dedup <- dashboard_dois |> group_by(doi_lc) |> slice(1) |> ungroup() # deduplicate dois
+  
+  # Load list of DOIs to exclude from a second source (for having no Charité affiliation)
+  
+  # The list was derived from filtering "Publikationsdatensatz Charité_2023_241119VN.xlsx"
+  # (in the same folder) to only "Keine_Charite_Affiliation = ja"
+  
+  dois_to_exclude <- read.csv(
+    file.path(here("data",
+                   "verification",
+                   "inclusion-info-charite",
+                   "DOIs_to_exclude_from_charite_list.csv")),
+    header = TRUE,
+    sep = ",") |> 
+    rename(doi = DOI) |> 
+    mutate(doi_lc = tolower(doi)) # create doi column with lowercase
+
+  # Label if doi is in the dashboard
+
+  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
+    mutate(in_dashboard = case_when(
+      doi_lc %in% dashboard_dois_dedup$doi_lc
+      |doi_no_ver_info %in% dashboard_dois_dedup$doi_lc
+      ~ TRUE,
+      .default = FALSE))
+    
+  # Exclude any DOI that has no affiliation to Charité, according to a second source
+  
+  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
+    dplyr::filter(!doi_lc %in% dois_to_exclude$doi_lc)
+    
+# As expected, all DOIs are in the dashboard and none had do be excluded according to the second source
+
+# B. Data Access
+    
+  # prepare df for joining
+  
+  charite_dois_ids_distinct_filled_1_od_ids_for_joining <- charite_dois_ids_distinct_filled_1_od_ids |> 
+    select(dataset_for_matching, `data access`) |> 
+    rename(data_access = `data access`) |> 
+    distinct()
+  
+  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
+    left_join(charite_dois_ids_distinct_filled_1_od_ids_for_joining, by = "dataset_for_matching")
+      
+  
+
+# save
+save_cr(dcc_ds_and_added_joined_6_harm, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_ds_and_added_joined_6_harm.RData")))
+
+
+
 ```

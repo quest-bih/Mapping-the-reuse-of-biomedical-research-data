@@ -630,10 +630,9 @@ save_cr(numbat_da_dois_and_ids_5_m_val_joined_done,
 # create a column with the most standardized data_id
 numbat_da_dois_and_ids_6_id_coalesced <- numbat_da_dois_and_ids_5_m_val_joined_done |> 
   mutate(dataset_for_matching =
-           coalesce(dataset_for_matching,     # Keep existing dataset_for_matching (if not NA)
-                    na_if(data_id_m_val, ""), # Otherwise, use data_id_m_val, but only if it’s not empty ("")
-                    data_id_auto_cleaned))    # Otherwise, fall back to data_id_auto_cleaned
-
+           coalesce(dataset_for_matching,      # Keep existing dataset_for_matching (if not NA)
+                    na_if(data_id_m_val, ""),  # Otherwise, use data_id_m_val, but only if it’s not empty ("")
+                    data_id_auto_cleaned))     # Otherwise, fall back to data_id_auto_cleaned
 
 numbat_da_dois_and_ids_6_id_coalesced |> dplyr::filter(is.na(dataset_for_matching)) |> View() # check
 
@@ -707,17 +706,24 @@ numbat_da_dois_and_ids_8_w_numbat_2nd <- numbat_da_dois_and_ids_7_w_sec_id |>
   ) |>
   dplyr::filter(data_identifier_2nd_numbat_entry != data_identifier
                 |is.na(data_identifier_2nd_numbat_entry)) |> # clean up resulting duplicates
-  relocate(data_identifier_2nd_numbat_entry, .after = data_identifier)
+  relocate(data_identifier_2nd_numbat_entry, .after = data_identifier) |>
+  # Remove white spaces from both clean identifiers columns
+  mutate(
+    dataset_for_matching = stringr::str_remove_all(dataset_for_matching, "\\s"),
+    data_id_secondary   = stringr::str_remove_all(data_id_secondary, "\\s")
+  )
+
 
 # save
 save_cr(numbat_da_dois_and_ids_8_w_numbat_2nd,
         file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_8_w_numbat_2nd.RData")))
 
-
-# _9: pair doi_no_ver_info;dataset_for_matching
+# _9: pair doi_no_ver_info;dataset_for_matching and create a column with this pair+source
 
 numbat_da_dois_and_ids_9_clean_pairs <- numbat_da_dois_and_ids_8_w_numbat_2nd |> 
-  mutate(doi_id_clean_pair = paste(doi_no_ver_info, dataset_for_matching, sep = ";"))
+  mutate(doi_id_clean_pair = paste(doi_no_ver_info, dataset_for_matching, sep = ";"),
+         doi_id_clean_pair_with_source = paste(doi_no_ver_info, dataset_for_matching, source, sep = ";")
+  )
 
 # Save for matching with DCC
 save_cr(numbat_da_dois_and_ids_9_clean_pairs,
@@ -762,7 +768,7 @@ numbat_da_dcc_joined_primary <- numbat_da_dois_and_ids_9_clean_pairs |>
 
 numbat_da_dcc_joined_secondary <- numbat_da_dois_and_ids_9_clean_pairs |>
   dplyr::filter(!is.na(data_id_secondary)) |> # exclude NAs
-  anti_join(joined_primary, by = "dataset_for_matching") |> # get only rows that didn't match with primary id
+  anti_join(numbat_da_dcc_joined_primary, by = "dataset_for_matching") |> # get only rows that didn't match with primary id
   inner_join(
     DCC_corpus_11_std_lbl,
     by = c("data_id_secondary" = "dataset_for_matching"),
@@ -770,13 +776,11 @@ numbat_da_dcc_joined_secondary <- numbat_da_dois_and_ids_9_clean_pairs |>
   )
 
 # Combine both
-numbat_da_dcc_joined <- joined_primary |>
-  bind_rows(joined_secondary) |> 
+numbat_da_dcc_joined <- numbat_da_dcc_joined_primary |>
+  bind_rows(numbat_da_dcc_joined_secondary) |> 
   mutate(primary = case_when(
     is.na(primary) ~ FALSE,
-    .default = primary)) #tag secondary id matches
-
-# maybe do "detected" already here?
+    .default = primary)) # tag secondary id matches
 
 # Save
 save_cr(numbat_da_dcc_joined, file = file.path(here("data", "processed","numbat_da_dcc_joined", "numbat_da_dcc_joined")))
