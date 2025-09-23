@@ -372,6 +372,19 @@ dcc_ds_and_added_joined_1_rm_self <- dcc_ds_and_added_joined |>
 save_cr(dcc_ds_and_added_joined_1_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
                                                        "dcc_ds_and_added_joined_1_rm_self.RData")))
 
+```
+
+# DO NOT RUN THE CHUNK BELOW!
+
+It was written and ran on an older version of "dcc_ds_and_added_joined_1_rm_self" to create "dcc_ds_and_added_joined_5_od_ids".
+The newer version of "dcc_ds_and_added_joined_1_rm_self" contains cases that were not detected before because of an error.
+
+On the chunk after the chunk below, I will get the relevant missing cases and bind them to "dcc_ds_and_added_joined_5_od_ids" to create "_6_w_missed". I'll then continue to harmonize "_6_w_missed" to create "_7_harm".
+
+Documentation:
+
+```{r}
+
 ### 2. Initial exclusion of cases that are clearly not datasets
 
 # create a list of detected values to verify
@@ -532,7 +545,7 @@ save_cr(dcc_ds_and_added_joined_4_rm_au_ov, file = file.path(here("data", "wrang
 
 # 5. Excluding non-ids and non-OD cases from the matched list
 
-# Load info from the filled "charite_dois_ids_distinct_v1.xlsx" file
+# Load info from the filled "charite_dois_ids_distinct_v9.xlsx" file
 
   # NOTE: this file includes some redundant cases:
   # These are the NA cases that were removed in _joined_3_au_info (but only after creating the xlsx file).
@@ -565,134 +578,6 @@ dcc_ds_and_added_joined_5_od_ids <- dcc_ds_and_added_joined_4_rm_au_ov |>
 save_cr(dcc_ds_and_added_joined_5_od_ids, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
                                                         "dcc_ds_and_added_joined_5_od_ids.RData")))
 
-# 6. Harmonizing: restructure table do fit "numbat_da_dcc_joined_4_rm_au_ov", rename columns, transform values
-
-# Overview
-colnames(dcc_ds_and_added_joined_5_od_ids) # check colnames
-str(dcc_ds_and_added_joined_5_od_ids) # check values
-any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$doi_datastet_and_added)) # check if dois are lower cased: yes
-any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$extracted_id)) # check if ids are lower cased: yes
-
-load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_4_rm_au_ov.RData"))
-colnames(numbat_da_dcc_joined_4_rm_au_ov) # for reference
-
-# Harmonize
-dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_5_od_ids |> 
-  
-  # Rename columns
-  rename(
-    doi_charite = doi_datastet_and_added, # doi charite
-    publication_year_charite = publication_year_datastet_and_added, # pub year of doi charite
-    authors_charite = authors_datastet_and_added,
-    slug_charite = slug_datastet_and_added, # slug charite
-    data_id_m_val = m_val,
-    detected_in_numbat_originally_only_for_added = detected_id, # to make it clear that it's the originally detected id from numbat, and only for added cases
-    source_charite = source_datastet_and_added, # manual validation
-    validated = validate) |>  # correcting a typo
-  
-     
-  
-  # 
-  mutate(
-    data_identifier = coalesce(extracted_id, added_id), # so for numbat+da it's typed-in id, and for ds+added it's the extracted from datastet or the typed in additional id
-    doi_lc = doi_charite, # all dois are already lowercased
-    doi_no_ver_info = str_remove(doi_charite, "\\.[0-9]$"), # remove version information from DOIs
-    data_id_lc = tolower(data_identifier), # added were not lowered yet
-    detected_id = dataset_for_matching,  # there was no secondary id to match in ds+added ,so it's the same column
-    doi_id_orig_pair = paste(doi_charite, data_identifier, sep = ";"), # orig doi+id pair
-    doi_id_lc_pair_for_joining = paste(doi_lc, data_id_lc, sep = ";"), # lc doi+id pair (will be the same as orig pair for datastet cases)
-    doi_id_clean_pair = paste(doi_no_ver_info, detected_id, sep = ";"), # clean doi+id pair
-    
-    # These columns are not relevant for datastet & added:
-    data_identifier_2nd_numbat_entry = NA, 
-    data_id_secondary = NA,
-    numbat_id_of_da_id = NA, 
-    numbat_id_of_da_id_lc = NA,
-    listed_in_numbat_output = NA # relevant only for Data Articles
-  ) |> 
-  
-  # remove non-relevant columns
-  select(-c(year, # derived from an internal categorization in the team, so not relevant and not accurate
-                  # (publication_year_charite from Openalex is the accurate one)
-            context, # not relevant, could always by rejoined lated
-            extracted_id, # coalesced into data_identifier
-            added_id, # coalesced into data_identifier
-            in_numbat_or_data_articles)) |> # primary = in_numbat_or_data_articles, so it's redundant
-
-# Check:
-
-  # columns in ds not in numbat
-setdiff(colnames(dcc_ds_and_added_joined_6_harm),
-        colnames(numbat_da_dcc_joined_4_rm_au_ov)) # will be automatically added when binding them, not relevant for numbat
-
-# columns in numbat not in ds
-setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
-        colnames(dcc_ds_and_added_joined_6_harm)) # I will add these values below, before binding
-
-
-# get "in dashboard" and "data_access" values, then left_join to get them into the table
-
-# A. Dashboard:
-
-  # Load dois that are in the dashboard
-
-  dashboard_dois <- read.csv(
-    file.path(here("data", "verification", "inclusion-info-charite", "dashboard_metrics.csv")),
-    header = TRUE,
-    sep = ",") |> 
-    mutate(doi = gsub("\\+", "/", doi)) |> 
-    mutate(doi_lc = tolower(doi)) # create doi column with lowercase
-  
-  dashboard_dois_dedup <- dashboard_dois |> group_by(doi_lc) |> slice(1) |> ungroup() # deduplicate dois
-  
-  # Load list of DOIs to exclude from a second source (for having no Charité affiliation)
-  
-  # The list was derived from filtering "Publikationsdatensatz Charité_2023_241119VN.xlsx"
-  # (in the same folder) to only "Keine_Charite_Affiliation = ja"
-  
-  dois_to_exclude <- read.csv(
-    file.path(here("data",
-                   "verification",
-                   "inclusion-info-charite",
-                   "DOIs_to_exclude_from_charite_list.csv")),
-    header = TRUE,
-    sep = ",") |> 
-    rename(doi = DOI) |> 
-    mutate(doi_lc = tolower(doi)) # create doi column with lowercase
-
-  # Label if doi is in the dashboard
-
-  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
-    mutate(in_dashboard = case_when(
-      doi_lc %in% dashboard_dois_dedup$doi_lc
-      |doi_no_ver_info %in% dashboard_dois_dedup$doi_lc
-      ~ TRUE,
-      .default = FALSE))
-    
-  # Exclude any DOI that has no affiliation to Charité, according to a second source
-  
-  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
-    dplyr::filter(!doi_lc %in% dois_to_exclude$doi_lc)
-    
-# As expected, all DOIs are in the dashboard and none had do be excluded according to the second source
-
-# B. Data Access
-    
-  # prepare df for joining
-  
-  charite_dois_ids_distinct_filled_1_od_ids_for_joining <- charite_dois_ids_distinct_filled_1_od_ids |> 
-    select(dataset_for_matching, `data access`) |> 
-    rename(data_access = `data access`) |> 
-    distinct()
-  
-  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
-    left_join(charite_dois_ids_distinct_filled_1_od_ids_for_joining, by = "dataset_for_matching")
-      
-  
-
-# save
-save_cr(dcc_ds_and_added_joined_6_harm, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
-                                                        "dcc_ds_and_added_joined_6_harm.RData")))
 ```
 
 # 7. Add previously missed cases 
@@ -711,8 +596,6 @@ save_cr(dcc_ds_and_added_joined_6_harm, file = file.path(here("data", "wrangling
 ### 3. Adding authors and years metadata:
 
 # prepare dois dfs for openalex authors extraction script
-
-# NOTE: these csvs were actually written before removing non-ids, so there might be irrelevant cases there, but it shouldn't matter when joining them into "dcc_ds_and_added_joined_3_au_info".
 
 # get only missed cases
 missed_cases <- dcc_ds_and_added_joined_1_rm_self |> 
@@ -831,62 +714,41 @@ missed_cases_2_rm_au_ov <- missed_cases_1_au_info  |>
 save_cr(missed_cases_2_rm_au_ov, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
                                                         "missed_cases_2_rm_au_ov.RData")))
 
+# check that missed and _5_od_ids have the same colnames before binding
+setdiff(colnames(missed_cases_2_rm_au_ov),
+        colnames(dcc_ds_and_added_joined_5_od_ids))
 
-# Write an xlsx file (Writing the xlsx file was done in the script sanity_check.R) to fill with the following info:
-# 1. is it a real dataset
-# 2. is the dataset open-data
-# 3. metadata for relevant cases
+setdiff(colnames(dcc_ds_and_added_joined_5_od_ids),
+        colnames(missed_cases_2_rm_au_ov))
 
-# That xlsx file excluded numbat+da matched cases and the 200 sampled non-matched, but it also includes non-matched that were'nt sampled/
+# Bind missed cases to _5_joined_od_ids
 
-# 5. Excluding non-ids and non-OD cases from the matched list
-
-# Load info from the filled "charite_dois_ids_distinct_v1.xlsx" file
-
-  # NOTE: this file includes some redundant cases:
-  # These are the NA cases that were removed in _joined_3_au_info (but only after creating the xlsx file).
-  # It's not relevant or changing anything, since these cases don't exist in _joined_4_rm_au_ov, and therefore will be ignored in the left     join. It just created a bit of extra work for the extractors, unfortunately.
-
-charite_dois_ids_distinct_filled <- read_excel(here("data",
-                                                    "verification",
-                                                    "datastet_and_added_summarised",
-                                                    "datastet_and_added_filled_raw",
-                                                    "charite_dois_ids_distinct_v9.xlsx"))
-
-# get only relevant cases
-
-charite_dois_ids_distinct_filled_1_od_ids <- charite_dois_ids_distinct_filled |>
-  dplyr::filter(is_dataset == "y") |> # get only verified datasets
-  dplyr::filter(`data authorship` %in% c("own data", "data authorship")) # get only OD datasets
-
-# check for discrepancies
-charite_dois_ids_distinct_filled_1_od_ids |> dplyr::filter(`ignore - already in numbat and wasn't detected in dcc` == "TRUE")
-# Only one case to consolidate! 10.1038/s41467-020-20850-5 err194147
-
-# keep only relevant cases in matched list
-
-
-dcc_ds_and_added_joined_5_od_ids <- dcc_ds_and_added_joined_4_rm_au_ov |> 
-  dplyr::filter(
-    dataset_for_matching %in% charite_dois_ids_distinct_filled_1_od_ids$dataset_for_matching)
+dcc_ds_and_added_joined_6_w_missed <- dcc_ds_and_added_joined_5_od_ids |> 
+  bind_rows(missed_cases_2_rm_au_ov)
 
 # save
-save_cr(dcc_ds_and_added_joined_5_od_ids, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
-                                                        "dcc_ds_and_added_joined_5_od_ids.RData")))
+save_cr(dcc_ds_and_added_joined_6_w_missed, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_ds_and_added_joined_6_w_missed.RData")))
+
+```
+
+# Now I'll harmonize dcc_ds_and_added_joined_6_w_missed
+
+```{r}
 
 # 6. Harmonizing: restructure table do fit "numbat_da_dcc_joined_4_rm_au_ov", rename columns, transform values
 
 # Overview
-colnames(dcc_ds_and_added_joined_5_od_ids) # check colnames
-str(dcc_ds_and_added_joined_5_od_ids) # check values
-any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$doi_datastet_and_added)) # check if dois are lower cased: yes
-any(grepl("[A-Z]", dcc_ds_and_added_joined_5_od_ids$extracted_id)) # check if ids are lower cased: yes
+colnames(dcc_ds_and_added_joined_6_w_missed) # check colnames
+str(dcc_ds_and_added_joined_6_w_missed) # check values
+any(grepl("[A-Z]", dcc_ds_and_added_joined_6_w_missed$doi_datastet_and_added)) # check if dois are lower cased: yes
+any(grepl("[A-Z]", dcc_ds_and_added_joined_6_w_missed$extracted_id)) # check if ids are lower cased: yes
 
 load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_4_rm_au_ov.RData"))
 colnames(numbat_da_dcc_joined_4_rm_au_ov) # for reference
 
 # Harmonize
-dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_5_od_ids |> 
+dcc_ds_and_added_joined_7_harm <- dcc_ds_and_added_joined_6_w_missed |> 
   
   # Rename columns
   rename(
@@ -911,6 +773,7 @@ dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_5_od_ids |>
     doi_id_orig_pair = paste(doi_charite, data_identifier, sep = ";"), # orig doi+id pair
     doi_id_lc_pair_for_joining = paste(doi_lc, data_id_lc, sep = ";"), # lc doi+id pair (will be the same as orig pair for datastet cases)
     doi_id_clean_pair = paste(doi_no_ver_info, detected_id, sep = ";"), # clean doi+id pair
+    doi_id_clean_pair_with_source = paste(doi_no_ver_info, detected_id, source_charite, sep = ";"), # clean doi+id+source
     
     # These columns are not relevant for datastet & added:
     data_identifier_2nd_numbat_entry = NA, 
@@ -927,16 +790,17 @@ dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_5_od_ids |>
             extracted_id, # coalesced into data_identifier
             added_id, # coalesced into data_identifier
             in_numbat_or_data_articles)) |> # primary = in_numbat_or_data_articles, so it's redundant
+  relocate(doi_id_clean_pair_with_source, .after = "listed_in_numbat_output")
 
 # Check:
 
   # columns in ds not in numbat
-setdiff(colnames(dcc_ds_and_added_joined_6_harm),
+setdiff(colnames(dcc_ds_and_added_joined_7_harm),
         colnames(numbat_da_dcc_joined_4_rm_au_ov)) # will be automatically added when binding them, not relevant for numbat
 
 # columns in numbat not in ds
 setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
-        colnames(dcc_ds_and_added_joined_6_harm)) # I will add these values below, before binding
+        colnames(dcc_ds_and_added_joined_7_harm)) # I will add these values below, before binding
 
 
 # get "in dashboard" and "data_access" values, then left_join to get them into the table
@@ -971,7 +835,7 @@ setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
 
   # Label if doi is in the dashboard
 
-  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
+  dcc_ds_and_added_joined_7_harm <- dcc_ds_and_added_joined_7_harm |> 
     mutate(in_dashboard = case_when(
       doi_lc %in% dashboard_dois_dedup$doi_lc
       |doi_no_ver_info %in% dashboard_dois_dedup$doi_lc
@@ -980,7 +844,7 @@ setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
     
   # Exclude any DOI that has no affiliation to Charité, according to a second source
   
-  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
+  dcc_ds_and_added_joined_7_harm <- dcc_ds_and_added_joined_7_harm |> 
     dplyr::filter(!doi_lc %in% dois_to_exclude$doi_lc)
     
 # As expected, all DOIs are in the dashboard and none had do be excluded according to the second source
@@ -994,15 +858,47 @@ setdiff(colnames(numbat_da_dcc_joined_4_rm_au_ov),
     rename(data_access = `data access`) |> 
     distinct()
   
-  dcc_ds_and_added_joined_6_harm <- dcc_ds_and_added_joined_6_harm |> 
+  dcc_ds_and_added_joined_7_harm <- dcc_ds_and_added_joined_7_harm |> 
     left_join(charite_dois_ids_distinct_filled_1_od_ids_for_joining, by = "dataset_for_matching")
       
-  
+
+    # # Make sure that old _harm and new _harm are the same except for the missing cases that were added and the new doi-id-source col:
+    #   
+    # check <- dcc_ds_and_added_joined_7_harm |> 
+    #   dplyr::filter(
+    #     !dataset_for_matching %in% c(
+    #       "10.5",                      
+    #       "10.17863/cam.23511",
+    #       "10.17863/cam.87955",        
+    #       "10.5281/zenodo.2529950",
+    #       "10.6084/m9.figshare.915436",
+    #       "10.6084/m9.figshare.915436",
+    #       "10.6084/m9.figshare.915436",
+    #       "10.6084/m9.figshare.915436"))
+    # 
+    # 
+    # waldo::compare(dcc_ds_and_added_joined_6_harm, check, max_diffs = Inf)
+    # 
+    #  
+    # Identical! Here is the compare output for documentation:
+    #
+    # `old` is length 49
+    # `new` is length 50
+    # 
+    #      names(old)                | names(new)                          
+    # [45] "numbat_id_of_da_id"      | "numbat_id_of_da_id"            [45]
+    # [46] "numbat_id_of_da_id_lc"   | "numbat_id_of_da_id_lc"         [46]
+    # [47] "listed_in_numbat_output" | "listed_in_numbat_output"       [47]
+    # [48] "in_dashboard"            - "doi_id_clean_pair_with_source" [48]
+    # [49] "data_access"             - "in_dashboard"                  [49]
+    #                                - "data_access"                   [50]
+    # 
+    # `old$doi_id_clean_pair_with_source` is absent
+    # `new$doi_id_clean_pair_with_source` is a character vector ('10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1uxs;additional_ids', ...)
+
 
 # save
-save_cr(dcc_ds_and_added_joined_6_harm, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
-                                                        "dcc_ds_and_added_joined_6_harm.RData")))
-
-
-
+save_cr(dcc_ds_and_added_joined_7_harm, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_ds_and_added_joined_7_harm.RData")))
 ```
+
