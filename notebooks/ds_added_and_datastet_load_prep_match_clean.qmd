@@ -376,10 +376,9 @@ save_cr(dcc_ds_and_added_joined_1_rm_self, file = file.path(here("data", "wrangl
 
 # DO NOT RUN THE CHUNK BELOW!
 
-It was written and ran on an older version of "dcc_ds_and_added_joined_1_rm_self" to create "dcc_ds_and_added_joined_5_od_ids".
-The newer version of "dcc_ds_and_added_joined_1_rm_self" contains cases that were not detected before because of an error.
+It was written and ran on an older version of "dcc_ds_and_added_joined_1_rm_self" to create "dcc_ds_and_added_joined_5_od_ids". The newer version of "dcc_ds_and_added_joined_1_rm_self" contains cases that were not detected before because of an error.
 
-On the chunk after the chunk below, I will get the relevant missing cases and bind them to "dcc_ds_and_added_joined_5_od_ids" to create "_6_w_missed". I'll then continue to harmonize "_6_w_missed" to create "_7_harm".
+On the chunk after the chunk below, I will get the relevant missing cases and bind them to "dcc_ds_and_added_joined_5_od_ids" to create "\_6_w_missed". I'll then continue to harmonize "\_6_w_missed" to create "\_7_harm".
 
 Documentation:
 
@@ -580,7 +579,7 @@ save_cr(dcc_ds_and_added_joined_5_od_ids, file = file.path(here("data", "wrangli
 
 ```
 
-# 7. Add previously missed cases 
+# 7. Add previously missed cases
 
 ```{r add missed cases}
 
@@ -902,3 +901,20 @@ save_cr(dcc_ds_and_added_joined_7_harm, file = file.path(here("data", "wrangling
                                                         "dcc_ds_and_added_joined_7_harm.RData")))
 ```
 
+# Exclude several cases that were found out to be reuse
+
+```{r}
+
+
+dcc_ds_and_added_joined_8_ex <- dcc_ds_and_added_joined_7_harm |> 
+  dplyr::filter(
+    !detected_id %in% c(
+      "10.5281/zenodo.2529950",
+      "10.6084/m9.figshare.915436",
+      "10.6084/m9.figshare.915436"))
+
+# save
+save_cr(dcc_ds_and_added_joined_8_ex, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",
+                                                        "dcc_ds_and_added_joined_8_ex.RData")))
+
+```
