@@ -567,8 +567,7 @@ dcc_detected_ids_all_sources_1_dup  |>
 
 # TO DO: document the check, the reason for it, what was done in the check, and what did I find out.
 
-charite_dois_distinct_all_sources <- 
-  numbat_da_dois_and_ids_9_clean_pairs |> 
+charite_dois_distinct_for_matching_all_sources <- numbat_da_dois_and_ids_9_clean_pairs |> 
   select(doi_lc, dataset_for_matching) |> 
   bind_rows(
    added_and_ds_for_matching_4_rm_exist |>
@@ -579,10 +578,10 @@ charite_dois_distinct_all_sources <-
   select(charite_lc_pair) |> 
   distinct()
 
-dcc_det_pair_is_charite_for_matching_pair <- dcc_detected_ids_all_sources_2_rm_ad_ov |>
+dcc_det_pair_is_charite_for_matching_pair <- dcc_detected_ids_all_sources_1_dup |>
   mutate(dcc_lc_pair = paste(doi_dcc, detected_id, sep = ";")) |> 
-  dplyr::filter(dcc_lc_pair %in% charite_dois_distinct_all_sources$charite_lc_pair) |> 
-  select(doi_lc, detected_id, doi_dcc) |> 
+  dplyr::filter(dcc_lc_pair %in% charite_dois_distinct_for_matching_all_sources$charite_lc_pair) |> 
+  select(doi_lc, detected_id, doi_dcc, dcc_lc_pair) |> 
   distinct()
 
 check <- numbat_da_dois_and_ids_9_clean_pairs |> 
@@ -596,21 +595,21 @@ check <- numbat_da_dois_and_ids_9_clean_pairs |>
 
 # Remove cases:
 
-dcc_detected_ids_all_sources_3_rm_dcc_is_ch <- dcc_detected_ids_all_sources_2_rm_ad_ov |> 
+dcc_detected_ids_all_sources_2_rm_dcc_is_ch <- dcc_detected_ids_all_sources_1_dup |> 
   dplyr::filter(
-    !(f
-      (doi_lc == "10.1186/s12961-022-00841-2"   &  detected_id == "pxd018230"    &  doi_dcc == "10.3390/cancers13051097")
-    | (doi_lc == "10.1155/2020/5943014"         &  detected_id == "gse85047"     &  doi_dcc == "10.1038/s41467-023-36735-2")
-    | (doi_lc == "10.1038/s41467-023-36735-2"   &  detected_id ==   "gse85047"   &  doi_dcc ==        "10.1155/2020/5943014")
+    !(
+      (doi_lc == "10.1186/s12961-022-00841-2"   &  detected_id ==  "pxd018230"   &  doi_dcc == "10.3390/cancers13051097")
+    | (doi_lc == "10.1155/2020/5943014"         &  detected_id ==  "gse85047"    &  doi_dcc == "10.1038/s41467-023-36735-2")
+    | (doi_lc == "10.1038/s41467-023-36735-2"   &  detected_id ==  "gse85047"    &  doi_dcc == "10.1155/2020/5943014")
     | (doi_lc == "10.1038/s41596-019-0251-6"    &  detected_id ==  "gse90496"    &  doi_dcc == "10.1007/s00401-020-02250-7")
     | (doi_lc == "10.1111/nan.12741"            &  detected_id ==  "gse90496"    &  doi_dcc == "10.1007/s00401-020-02250-7")
-    | (doi_lc == "10.1371/journal.pcbi.1010031" &  detected_id ==    "gse99933"  &  doi_dcc ==  "10.1038/s41467-022-30438-w")))
+    | (doi_lc == "10.1371/journal.pcbi.1010031" &  detected_id ==  "gse99933"    &  doi_dcc == "10.1038/s41467-022-30438-w")))
 
 
 # save
-save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
+save_cr(dcc_detected_ids_all_sources_2_rm_dcc_is_ch,
         file = file.path(here("data", "wrangling_steps", "all_sources_binded",
-                              "dcc_detected_ids_all_sources_3_rm_dcc_is_ch.RData")))
+                              "dcc_detected_ids_all_sources_2_rm_dcc_is_ch.RData")))
 
 
 # Notice: the count of IDs won't change, because they are being cited by other papers and they belong to other charite papers that are not in the dcc paper column. So the only thing that will change is that 5 distinct doi_dcc records will be removed from the dcc papers count.
@@ -621,13 +620,13 @@ save_cr(dcc_detected_ids_all_sources_3_rm_dcc_is_ch,
 ```{r}
 
 # check which cases are missing
-missing_cases <- dcc_detected_ids_all_sources_1_dup |> 
+missing_cases <- dcc_detected_ids_all_sources_2_rm_dcc_is_ch |> 
   select(detected_id, repository) |> 
   distinct() |> 
   dplyr::filter(repository == "")
 
 
-dcc_detected_ids_all_sources_4_add_rep <- dcc_detected_ids_all_sources_3_rm_ws |> 
+dcc_detected_ids_all_sources_3_add_rep <- dcc_detected_ids_all_sources_2_rm_dcc_is_ch |> 
   mutate(repository =
            case_when(
              detected_id == "up000005640" ~ "uniprot",
@@ -636,7 +635,7 @@ dcc_detected_ids_all_sources_4_add_rep <- dcc_detected_ids_all_sources_3_rm_ws |
            ))
 
 # save
-save_cr(dcc_detected_ids_all_sources_4_add_rep, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_4_add_rep.RData")))
+save_cr(dcc_detected_ids_all_sources_3_add_rep, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_3_add_rep.RData")))
 ```
 
 # 6. Verify results and correct data if needed
@@ -645,7 +644,7 @@ save_cr(dcc_detected_ids_all_sources_4_add_rep, file = file.path(here("data", "w
 
 # 1. Check for contradictory repository for the same charite id
 
-dcc_detected_ids_all_sources_4_add_rep |>
+dcc_detected_ids_all_sources_3_add_rep |>
   select(detected_id, repository) |>
   group_by(detected_id) |>
   summarise(across(everything(), ~ n_distinct(.x)), .groups = "drop") |>
@@ -654,14 +653,14 @@ dcc_detected_ids_all_sources_4_add_rep |>
 
 # Note that repository actually belongs to dcc columns, but I'll fix it anyway:
 
-dcc_detected_ids_all_sources_5_rep_fix <- dcc_detected_ids_all_sources_4_add_rep |> 
+dcc_detected_ids_all_sources_4_rep_fix <- dcc_detected_ids_all_sources_3_add_rep |> 
   mutate(repository = case_when(repository %in% c("elsevier data repository", "elsevier bv", "mendeley")
                                 ~ "mendeley",
                                 detected_id == "ng00075" ~ "dss NIAGADS",
                                 .default = repository))
 
 # check
-dcc_detected_ids_all_sources_5_rep_fix |>
+dcc_detected_ids_all_sources_4_rep_fix |>
   select(detected_id, repository) |>
   group_by(detected_id) |>
   summarise(across(everything(), ~ n_distinct(.x)), .groups = "drop") |>
@@ -669,9 +668,8 @@ dcc_detected_ids_all_sources_5_rep_fix |>
   View() # good
 
 # save
-save_cr(dcc_detected_ids_all_sources_5_rep_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_5_rep_fix.RData")))
+save_cr(dcc_detected_ids_all_sources_4_rep_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_4_rep_fix.RData")))
 ```
-
 
 # 8. Add Metadata
 
@@ -698,19 +696,19 @@ metadata_matched_for_joining <- datasets_metadata_master_updated_017 |>
   distinct()
 
 # add to _joined
-dcc_detected_ids_all_sources_6_w_metadata <- dcc_detected_ids_all_sources_5_rep_fix |>
+dcc_detected_ids_all_sources_5_w_metadata <- dcc_detected_ids_all_sources_4_rep_fix |>
   left_join(metadata_matched_for_joining,
             by = "doi_id_clean_pair")
 
 # # initially, the join included these cols as well, but they were removed from 013 since they were identical to _all_sources 
-# dcc_detected_ids_all_sources_6_w_metadata |> dplyr::filter(data_access != data_access.new) |> View()
-# dcc_detected_ids_all_sources_6_w_metadata |> dplyr::filter(dataset_for_matching != dataset_for_matching.new) |> View()
-# dcc_detected_ids_all_sources_6_w_metadata |> dplyr::filter(is_gen_rep != is_gen_rep.new) |> View()
+# dcc_detected_ids_all_sources_5_w_metadata |> dplyr::filter(data_access != data_access.new) |> View()
+# dcc_detected_ids_all_sources_5_w_metadata |> dplyr::filter(dataset_for_matching != dataset_for_matching.new) |> View()
+# dcc_detected_ids_all_sources_5_w_metadata |> dplyr::filter(is_gen_rep != is_gen_rep.new) |> View()
 
-# dcc_detected_ids_all_sources_6_w_metadata |> select(ends_with(".new")) |> View() # no duplicated cols then.
+# dcc_detected_ids_all_sources_5_w_metadata |> select(ends_with(".new")) |> View() # no duplicated cols then.
 
 # check NAs
-dcc_detected_ids_all_sources_6_w_metadata |> 
+dcc_detected_ids_all_sources_5_w_metadata |> 
   dplyr::filter(
     is.na(data_access)
     | is.na(license)
@@ -721,7 +719,7 @@ dcc_detected_ids_all_sources_6_w_metadata |>
   ) |>  View() # no NAs in matched
 
 # check Blanks
-dcc_detected_ids_all_sources_6_w_metadata |> 
+dcc_detected_ids_all_sources_5_w_metadata |> 
   dplyr::filter(
     data_access == ""
     | license == ""
@@ -732,6 +730,6 @@ dcc_detected_ids_all_sources_6_w_metadata |>
   ) |>  View() # some repositories are missing and will be completed in the next step
 
 # save
-save_cr(dcc_detected_ids_all_sources_6_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_w_metadata.RData")))
+save_cr(dcc_detected_ids_all_sources_5_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_5_w_metadata.RData")))
 
 ```
