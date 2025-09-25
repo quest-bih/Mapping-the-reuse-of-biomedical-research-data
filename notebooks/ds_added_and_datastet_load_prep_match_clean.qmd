@@ -911,7 +911,8 @@ dcc_ds_and_added_joined_8_ex <- dcc_ds_and_added_joined_7_harm |>
     !detected_id %in% c(
       "10.5281/zenodo.2529950",
       "10.6084/m9.figshare.915436",
-      "10.6084/m9.figshare.915436"))
+      "10.6084/m9.figshare.915436",
+      "10.5"))
 
 # save
 save_cr(dcc_ds_and_added_joined_8_ex, file = file.path(here("data", "wrangling_steps", "dcc_datastet_and_added",

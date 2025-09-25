@@ -69,7 +69,6 @@ load_latest_metadata_update <- function() {
 
 Notice!
 
-
 ```{r Loading 2 joined lists of 4 sources}
 
 # load joined dcc numbat and data articles
@@ -163,7 +162,7 @@ dcc_ds_added_joined_final <- dcc_ds_and_added_joined_8_ex
 #     dplyr::filter(str_detect(detected_id, "\\s")) |> 
 #     distinct()
   
-rm(numbat_da_dcc_joined_4_rm_au_ov, numbat_da_dois_and_ids_9_clean_pairs, dcc_ds_and_added_joined_8_ex)
+rm(numbat_da_dcc_joined_4_rm_au_ov, dcc_ds_and_added_joined_8_ex)
 
 ```
 
@@ -567,6 +566,9 @@ dcc_detected_ids_all_sources_1_dup  |>
 
 # TO DO: document the check, the reason for it, what was done in the check, and what did I find out.
 
+load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData"))
+load(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_4_rm_exist.RData"))
+
 charite_dois_distinct_for_matching_all_sources <- numbat_da_dois_and_ids_9_clean_pairs |> 
   select(doi_lc, dataset_for_matching) |> 
   bind_rows(
@@ -669,6 +671,66 @@ dcc_detected_ids_all_sources_4_rep_fix |>
 
 # save
 save_cr(dcc_detected_ids_all_sources_4_rep_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_4_rep_fix.RData")))
+
+# 2. Complete "data_access" values
+
+# Check
+dcc_detected_ids_all_sources_4_rep_fix |> 
+  dplyr::filter(is.na(data_access)) |> 
+  View()
+
+# Complete
+# (according to "data\verification\datastet_and_added_summarised\datastet_and_added_filled_raw\charite_dois_ids_distinct_v9.xlsx")
+dcc_detected_ids_all_sources_5_acc <- dcc_detected_ids_all_sources_4_rep_fix |> 
+  mutate(data_access = case_when(
+    detected_id %in% c("10.17863/cam.23511", "10.17863/cam.87955")
+    ~ "yes",
+    .default = data_access))
+
+# save
+save_cr(dcc_detected_ids_all_sources_5_acc, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_5_acc.RData")))
+
+# 3. Verify that doi+id pairs are correct, and fix if needed
+
+# Check which cols to verify
+dcc_detected_ids_all_sources_5_acc |> 
+  dplyr::select(dplyr::contains("pair")) |> 
+  colnames()
+
+# check
+dcc_detected_ids_all_sources_5_acc |> dplyr::filter(doi_id_orig_pair != paste0(doi_charite, ";", data_identifier)) |> View()
+dcc_detected_ids_all_sources_5_acc |> dplyr::filter(doi_id_lc_pair_for_joining != paste0(doi_lc, ";", data_id_lc)) |> View()
+dcc_detected_ids_all_sources_5_acc |> dplyr::filter(doi_id_clean_pair != paste0(doi_no_ver_info, ";", detected_id)) |> View()
+dcc_detected_ids_all_sources_5_acc |> dplyr::filter(doi_id_clean_pair_with_source != paste0(doi_no_ver_info, ";", detected_id, ";", source_charite)) |> View()
+
+# cases where detected id was the secondary id have the wrong clean pairs.
+
+# fix
+
+dcc_detected_ids_all_sources_6_pair_fix <- dcc_detected_ids_all_sources_5_acc |> 
+  mutate(
+    doi_id_clean_pair = 
+      case_when(doi_id_clean_pair == "10.1038/s41586-020-2797-4;prjeb39602"
+                ~ "10.1038/s41586-020-2797-4;erp123138",
+                doi_id_clean_pair == "10.1038/s41591-020-0801-z;prjna589622"
+                ~ "10.1038/s41591-020-0801-z;srp229815",
+                .default = doi_id_clean_pair),
+    doi_id_clean_pair_with_source = 
+      case_when(doi_id_clean_pair_with_source == "10.1038/s41586-020-2797-4;prjeb39602;numbat"
+                ~ "10.1038/s41586-020-2797-4;erp123138;numbat",
+                doi_id_clean_pair_with_source == "10.1038/s41591-020-0801-z;prjna589622;numbat"
+                ~ "10.1038/s41591-020-0801-z;srp229815;numbat",
+                .default = doi_id_clean_pair_with_source))
+
+# # checked:
+# dcc_detected_ids_all_sources_6_pair_fix |> dplyr::filter(doi_id_orig_pair != paste0(doi_charite, ";", data_identifier)) |> View()
+# dcc_detected_ids_all_sources_6_pair_fix |> dplyr::filter(doi_id_lc_pair_for_joining != paste0(doi_lc, ";", data_id_lc)) |> View() # internal and not in use, so doesn't matter
+# dcc_detected_ids_all_sources_6_pair_fix |> dplyr::filter(doi_id_clean_pair != paste0(doi_no_ver_info, ";", detected_id)) |> View()
+# dcc_detected_ids_all_sources_6_pair_fix |> dplyr::filter(doi_id_clean_pair_with_source != paste0(doi_no_ver_info, ";", detected_id, ";", source_charite)) |> View()
+
+# save
+save_cr(dcc_detected_ids_all_sources_6_pair_fix, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_pair_fix.RData")))
+
 ```
 
 # 8. Add Metadata
@@ -727,7 +789,7 @@ dcc_detected_ids_all_sources_5_w_metadata |>
     | covid_related == ""
     | is_detected_id_doi == ""
     | repository == ""
-  ) |>  View() # some repositories are missing and will be completed in the next step
+    ) |>  View()
 
 # save
 save_cr(dcc_detected_ids_all_sources_5_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_5_w_metadata.RData")))

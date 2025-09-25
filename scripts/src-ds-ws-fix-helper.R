@@ -341,6 +341,43 @@ dcc_detected_ids_all_sources_1_dup |>
   dplyr::filter(str_detect(detected_id, "\\s")) |> 
   distinct()
 
+waldo::compare(dcc_detected_ids_all_sources_4_rep_fix, test)
+
+# check ws in latest all_sources:
+dcc_detected_ids_all_sources_5_acc |> 
+  select(data_id_secondary) |> 
+  dplyr::filter(str_detect(data_id_secondary, "\\s")) |> 
+  distinct()
+
+
+dcc_detected_ids_all_sources_5_acc |> 
+  select(dataset_for_matching) |> 
+  dplyr::filter(str_detect(dataset_for_matching, "\\s")) |> 
+  distinct()
+
+dcc_detected_ids_all_sources_5_acc |> 
+  select(detected_id) |> 
+  dplyr::filter(str_detect(detected_id, "\\s")) |> 
+  distinct()
 
 
 # 6. Add new cases to metadata
+
+
+# check ws in latest metadata:
+datasets_metadata_master_updated_017 |> 
+  select(data_id_secondary) |> 
+  dplyr::filter(str_detect(data_id_secondary, "\\s")) |> 
+  distinct()
+
+
+datasets_metadata_master_updated_017 |> 
+  select(dataset_for_matching) |> 
+  dplyr::filter(str_detect(dataset_for_matching, "\\s")) |> 
+  distinct()
+
+datasets_metadata_master_updated_017 |> 
+  select(detected_id) |> 
+  dplyr::filter(str_detect(detected_id, "\\s")) |> 
+  distinct()
+
