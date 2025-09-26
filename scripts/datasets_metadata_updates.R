@@ -1363,7 +1363,7 @@ metadata_update(datasets_metadata_master_updated_014) # call function to save as
 #      (This has been decided after consulting with Evgeny)
 #   2. Resolve contradicting values of DAS for the same identifier
 #     a. find cases with contradictory DAS values for the same identifier
-#     b. set 1 value for each of these cases based on the eraliest charite id year of them
+#     b. set 1 value for each of these cases based on the earliest charite id year of them
 #     c. if something is still missing, send to Blanka
 
 # The new values will be under "das_for_analysis".
@@ -1661,7 +1661,7 @@ datasets_metadata_master_updated_017 |>
   dplyr::filter(in_dcc == "FALSE") |>
   dplyr::filter(source_charite %in% c("datastet_in_numbat", "datastet_in_numbat"))
 
-# bind non-matched cases to 018
+# Bind non-matched cases to 018
 datasets_metadata_master_updated_018 <- test_018_only_matched |> 
   mutate(is_gen_rep = as.character(is_gen_rep)) |> 
   bind_rows(
@@ -1686,33 +1686,28 @@ datasets_metadata_master_updated_017 |>
   # 10.17863/cam.87955 (datastet)
   # 10.6084/m9.figshare.12436517 (datastet - already in numbat)
 
-# 10.6084/m9.figshare.12436517: take info from Numbat:
+# 10.6084/m9.figshare.12436517: take info from Numbat entry of the same ID and DOI:
 
-x <- "10.6084/m9.figshare.12436517"
-y <- "datastet"
-
-# 1. Identify the target column range
-cols_to_fill <- names(target_row)[27:36] # get info from col "in_dcc" until the last col
-
-# 2. Fill only those columns
-filled_subset <- purrr::map2_dfc(
-  target_row[cols_to_fill],
-  donor_row[cols_to_fill],
-  ~ dplyr::coalesce(.x, .y)
-)
-
-# 3. Replace just those columns in the target row
-filled_row <- target_row |> 
-  dplyr::mutate(dplyr::across(
-    all_of(cols_to_fill),
-    ~ filled_subset[[cur_column()]]
-  ))
-
-# 4. Bind back to 018
 datasets_metadata_master_updated_018 <- datasets_metadata_master_updated_018 |> 
-  dplyr::filter(!(detected_id == x & source_charite == y)) |> 
-  dplyr::bind_rows(filled_row)
-
+  mutate(
+    in_dcc = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = in_dcc),
+    data_availability_statement = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = data_availability_statement),
+    human_data = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = human_data),
+    covid_related = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = covid_related),
+    charite_id_year = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "2020", .default = charite_id_year),
+    license = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "CC BY", .default = license),                                
+    is_detected_id_doi = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = is_detected_id_doi),
+    das_for_analysis = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = das_for_analysis),
+    license_for_analysis = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = license_for_analysis))
 
 # and for the other 2 I'll complete the info manually (from _v9)
 
@@ -1788,25 +1783,35 @@ datasets_metadata_master_updated_017 |>
   distinct() |> 
   View()
 
-datasets_metadata_master_updated_017 |> 
+# verify that they actually do have metadata under their numbat entry
+datasets_metadata_master_updated_018 |> 
   dplyr::filter(detected_id %in% which_ids$detected_id) |> 
-  dplyr::filter(!is.na(data_availability_statement)) |> 
-  select(detected_id) |> 
+  select(doi_no_ver_info,
+         detected_id,
+         source_charite,
+         data_availability_statement,
+         das_for_analysis) |> 
   distinct() |> 
-  View()
+  # dplyr::filter(is.na(data_availability_statement) & is.na(das_for_analysis)) |> 
+  # select(detected_id) |> 
+  # distinct() |> 
+  arrange(detected_id, doi_no_ver_info) |> 
+  View() # they do
 
-which_ids |> select(detected_id) |> distinct() |> View()
-
+# verify that they are all "datastet_in_numbat or additional_ids_in_datasete"
 datasets_metadata_master_updated_017 |> 
   dplyr::filter(detected_id %in% which_ids$detected_id) |> 
   select(doi_no_ver_info,
          detected_id,
          source_charite,
-         doi_id_clean_pair,
          data_availability_statement,
          das_for_analysis) |> 
   distinct() |> 
-  View()
+  # dplyr::filter(is.na(data_availability_statement) & is.na(das_for_analysis)) |> 
+  # select(detected_id) |> 
+  # distinct() |> 
+  arrange(detected_id, doi_no_ver_info) |> 
+  View() # they are
 
 # So until now almost everything is completed.
 # I still need to complete DAS and DAS for analysis values, if necessary.
@@ -1816,13 +1821,10 @@ metadata_update(datasets_metadata_master_updated_018) # call function to save as
 
 # 19. Finish completing DAS and das_for_analysis values -------------------
 
-# Here I'll complete DAS and DAS for analysis values, if necessary.
+# Here I'll complete DAS and DAS for analysis values, if necessary, and then choose the earlier DOI to set the DAS value.
 # I'll start with an inspection of the values (take from chunk above).
 
-# for example "10.1155/2020/5943014" is reuse by v_9 and shouldn't be in the matched list.
-# But it has an identifier that matched with from another doi (both datastet non-overlap).
-# so if all missing cases are like that, it just means that I'll leave the NAs like that, since
-# they are not matched and not non-matched! Maybe delete them? I'll see.
+
 
 
 

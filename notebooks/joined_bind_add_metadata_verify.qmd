@@ -745,8 +745,9 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_matched_for_joining <- datasets_metadata_master_updated_017 |>
-  select(doi_id_clean_pair,
+metadata_matched_for_joining <- datasets_metadata_master_updated_018 |>
+  dplyr::filter(in_dcc == "TRUE") |> 
+  select(doi_id_clean_pair_with_source,
          license,
          human_data,
          covid_related,
@@ -758,9 +759,9 @@ metadata_matched_for_joining <- datasets_metadata_master_updated_017 |>
   distinct()
 
 # add to _joined
-dcc_detected_ids_all_sources_5_w_metadata <- dcc_detected_ids_all_sources_4_rep_fix |>
+dcc_detected_ids_all_sources_7_w_metadata <- dcc_detected_ids_all_sources_6_pair_fix |>
   left_join(metadata_matched_for_joining,
-            by = "doi_id_clean_pair")
+            by = "doi_id_clean_pair_with_source")
 
 # # initially, the join included these cols as well, but they were removed from 013 since they were identical to _all_sources 
 # dcc_detected_ids_all_sources_5_w_metadata |> dplyr::filter(data_access != data_access.new) |> View()
@@ -770,7 +771,7 @@ dcc_detected_ids_all_sources_5_w_metadata <- dcc_detected_ids_all_sources_4_rep_
 # dcc_detected_ids_all_sources_5_w_metadata |> select(ends_with(".new")) |> View() # no duplicated cols then.
 
 # check NAs
-dcc_detected_ids_all_sources_5_w_metadata |> 
+dcc_detected_ids_all_sources_7_w_metadata |> 
   dplyr::filter(
     is.na(data_access)
     | is.na(license)
@@ -778,10 +779,12 @@ dcc_detected_ids_all_sources_5_w_metadata |>
     | is.na(covid_related)
     | is.na(is_detected_id_doi)
     | is.na(repository)
-  ) |>  View() # no NAs in matched
+    | is.na(data_availability_statement)
+    | is.na(das_for_analysis)
+  ) |>  View() # no NAs in matched, except das and das for analysis where there's an overlap with numbat (and the values are in numbat, but under different DOIs)
 
 # check Blanks
-dcc_detected_ids_all_sources_5_w_metadata |> 
+dcc_detected_ids_all_sources_7_w_metadata |> 
   dplyr::filter(
     data_access == ""
     | license == ""
@@ -789,9 +792,35 @@ dcc_detected_ids_all_sources_5_w_metadata |>
     | covid_related == ""
     | is_detected_id_doi == ""
     | repository == ""
+    | data_availability_statement == ""
+    | das_for_analysis == ""
     ) |>  View()
 
 # save
-save_cr(dcc_detected_ids_all_sources_5_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_5_w_metadata.RData")))
+save_cr(dcc_detected_ids_all_sources_7_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_7_w_metadata.RData")))
+
+```
+
+# 9. Create a deduplicated version
+
+```{r}
+
+# These datasets of DataStet have an overlap with numbat
+overlaps <- dcc_detected_ids_all_sources_7_w_metadata |> 
+  dplyr::group_by(detected_id) |> 
+  dplyr::filter(dplyr::n_distinct(source_charite) > 1) |> 
+  dplyr::ungroup() |> 
+  dplyr::filter(source_charite %in% c("datastet")) |> 
+  select(doi_no_ver_info, detected_id, source_charite) |> 
+  distinct()
+
+# So I'll remove them, together with datastet:
+
+dcc_detected_ids_all_sources_8_dedup <- dcc_detected_ids_all_sources_7_w_metadata |> 
+  dplyr::anti_join(overlaps, by = c("doi_no_ver_info", "detected_id", "source_charite"))
+  
+# save
+save_cr(dcc_detected_ids_all_sources_8_dedup, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData")))
+
 
 ```
