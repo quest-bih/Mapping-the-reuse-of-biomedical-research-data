@@ -379,3 +379,37 @@ save_path <- file.path(here("data",
                             "ds_and_added_in_matched_numbat_dois_metadata_v1.RData"))
 
 save(final_results, file = save_path)
+
+
+# missed cases of dcc-ds-added --------------------------------------------
+
+# ds and added
+
+dfs <- list(df)
+
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_and_added",
+                            "missed_ds_and_added_metadata.RData"))
+
+save(final_results, file = save_path)
+
+
+# dcc of ds and added
+
+dfs <- list(df)
+
+final_results <- map_dfr(dfs, process_dataframe)
+
+# Save
+save_path <- file.path(here("data",
+                            "verification",
+                            "metadata matched",
+                            "ds_and_added",
+                            "missed_dcc_of_ds_and_added_metadata.RData"))
+
+save(final_results, file = save_path)

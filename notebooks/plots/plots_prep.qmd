@@ -97,22 +97,7 @@ obj_names <- load(latest_file, envir = env)
 detected <- env[[obj_names[1]]]
 
 # Create a table with no overlapping sources
-detected_no_sources_overlap <- detected |> 
-  dplyr::filter(
-    # exclude datastet+additional that are already in numbat
-    source_charite %in% c(
-      "data_articles", # there is one that is "in numbat as well", but with a different ID, so no numbat match with it
-      "numbat",
-      "additional_ids",
-      "datastet")) |> 
-    mutate(
-    # data_availability_statement = case_when(
-    #   data_availability_statement %in% c("TRUE", "yes") ~ "TRUE",
-    #   .default = "FALSE"),
-    license_for_analysis = case_when(
-      license %in% c("CC0", "CC BY", "cc-by", " CC BY-NC-SA", "cc0") ~ "TRUE",
-      .default = "FALSE"
-    ))
+detected_no_sources_overlap <- dcc_detected_ids_all_sources_8_dedup 
 
 detected_with_dup_sources <- detected
 
