@@ -1356,58 +1356,14 @@ datasets_metadata_master_updated_014 <- datasets_metadata_master_updated_013 |>
 # save
 metadata_update(datasets_metadata_master_updated_014) # call function to save as csv, xlsx, rda
 
-# 015: fix source_charite values ------------------------------------------
-
-# load
-load_latest_metadata_update() # call function to load latest version
-
-# 1. Change several cases from "datastet" to "datastet_in_additional_ids"
-
-# some "datastet" are actually in "additional_ids" (only 2 unique ids)
-# so here I'll change them to "datastet_in_additional_ids"
-
-# check which ids:
-
-df_multi_source <- datasets_metadata_master_updated_014 |>
-  select(detected_id, source_charite) |>
-  distinct() |>
-  group_by(detected_id) |>
-  summarise(n_sources = n_distinct(source_charite), .groups = "drop") |>
-  dplyr::filter(n_sources > 1)
-
-datasets_metadata_master_updated_014 |>
-  select(detected_id, source_charite) |>
-  distinct() |>
-  semi_join(df_multi_source, by = "detected_id") |> View()
-
-# these: c("gse99933", "gse90496")
-
-# verify that it's "datastet" that's supposed to be "datastet_in_additional_ids":
-
-pool_to_detected_from <- datasets_metadata_master_updated_014 |>
-select(detected_id, source_charite) |>
-dplyr::filter(detected_id %in% c("gse90496", "gse99933")) |>
-distinct()
-
-datasets_metadata_master_updated_015 <- datasets_metadata_master_updated_014 |>
-  mutate(
-    source_charite = case_when(
-      detected_id %in% c("gse99933", "gse90496")
-      & source_charite == "datastet"
-      ~ "datastet_in_additional_ids",
-      .default = source_charite))
-
-# save
-metadata_update(datasets_metadata_master_updated_015) # call function to save as csv, xlsx, rda
-
-# 016: fix DAS issue ------------------------------------------------------
+# 015: fix DAS issue ------------------------------------------------------
 
 # Tasks:
 #   1. Mutate these values: "No_statement_no_data, yes_statement_no_data" to FASLE (so that there's only TRUE/FALSE values)
 #      (This has been decided after consulting with Evgeny)
 #   2. Resolve contradicting values of DAS for the same identifier
 #     a. find cases with contradictory DAS values for the same identifier
-#     b. set 1 value for each of these cases based on the eraliest charite id year of them
+#     b. set 1 value for each of these cases based on the earliest charite id year of them
 #     c. if something is still missing, send to Blanka
 
 # The new values will be under "das_for_analysis".
@@ -1418,12 +1374,12 @@ load_latest_metadata_update() # call function to load latest version
 # 1. Mutate these values: "no_statement_no_data, yes_statement_no_data" to FASLE (so that there's only TRUE/FALSE values)
 
 # check:
-datasets_metadata_master_updated_015 |> 
+datasets_metadata_master_updated_014 |> 
   select(data_availability_statement) |> 
   unique()
 
 # change:
-datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_015 |> 
+datasets_metadata_master_updated_015 <- datasets_metadata_master_updated_014 |> 
   mutate(
     das_for_analysis = 
       case_when(data_availability_statement %in% c("no_statement_no_data", "yes_statement_no_data")
@@ -1431,13 +1387,13 @@ datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_015 |>
                 .default = data_availability_statement))
 
 # verify:
-datasets_metadata_master_updated_016 |> 
+datasets_metadata_master_updated_015 |> 
   select(das_for_analysis) |> 
   unique() # good
 
 # 2. The second issue is that for the same id there are multiple DAS values, because it appears in multiple Charité papers:
 
-datasets_metadata_master_updated_016 |>
+datasets_metadata_master_updated_015 |>
   dplyr::select(
     doi_no_ver_info, # was verified against doi_charite that it gives the same results
     dataset_for_matching,
@@ -1468,9 +1424,9 @@ datasets_metadata_master_updated_016 |>
 # So below I'll set these values for every occurence of
 # gse160097, gse90496, mt108784, prjna540738 ad gse84795 under dataset_for_matching:
 
-datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_016 |> 
+datasets_metadata_master_updated_015 <- datasets_metadata_master_updated_015 |> 
   mutate(
-    das_for_analysis = # mutate a column dor analysis
+    das_for_analysis = # mutate a column for analysis
       case_when(
         dataset_for_matching %in% c("gse160097", "gse90496", "mt108784", "prjna540738")
         ~ "TRUE",
@@ -1479,7 +1435,7 @@ datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_016 |>
         .default = data_availability_statement))
 
 # verify:
-datasets_metadata_master_updated_016 |>
+datasets_metadata_master_updated_015 |>
   dplyr::select(
     doi_no_ver_info, 
     dataset_for_matching,
@@ -1496,4 +1452,398 @@ datasets_metadata_master_updated_016 |>
   View()
 
 # save
+metadata_update(datasets_metadata_master_updated_015) # call function to save as csv, xlsx, rda
+
+
+# 016: add license_for_analysis again --------------------------------------
+
+# licesne_for_analysis should be added here
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+datasets_metadata_master_updated_016 <- datasets_metadata_master_updated_015 |> 
+  mutate(
+    license_for_analysis = case_when(
+      license %in% c("CC0", "CC BY", "cc-by", " CC BY-NC-SA", "cc0", "CC-BY", "CC BY-NC-SA", "CC BY-NC-ND") ~ "TRUE",
+      license %in% c("FALSE", "data use agreement", "bespoke use terms", "EMBL-EBI", "DUC", "DUL, DUC", "DTA", "other (open)") ~ "FALSE",
+      .default = license
+    ))
+
+datasets_metadata_master_updated_016 |> select(license_for_analysis) |> unique() # check
+
+# save
 metadata_update(datasets_metadata_master_updated_016) # call function to save as csv, xlsx, rda
+
+# 017: remove trailing ws -------------------------------------------------
+
+# load
+load_latest_metadata_update() # call function to load latest version
+
+# check where
+cols_with_trailing_ws <- datasets_metadata_master_updated_016 |>
+  dplyr::select(where(is.character)) |>
+  dplyr::summarise(
+    dplyr::across(everything(), ~ any(stringr::str_detect(., "\\s+$")))
+  ) |>
+  tidyr::pivot_longer(everything(), names_to = "column", values_to = "has_trailing_ws") |>
+  dplyr::filter(has_trailing_ws) |>
+  dplyr::pull(column)
+
+# remove
+datasets_metadata_master_updated_017 <- datasets_metadata_master_updated_016 |>
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::all_of(cols_with_trailing_ws),
+      ~ stringr::str_replace(., "\\s+$", "")
+    )
+  )
+
+# save
+metadata_update(datasets_metadata_master_updated_017) # call function to save as csv, xlsx, rda
+
+
+# 018: Rejoining metadata after src-ds-ws-fix run -------------------------
+
+# numbat+da, ds+added and joined qmd files were executed again
+# in order to fix source and whitespaces issues and in order to add 2 more datastet matches.
+# The structure didn't change much except clean doi;id;source col that was added.
+# So here I'll re-add the metadata
+
+load_latest_metadata_update() # call function to load latest version
+
+# check for ws in latest metadata:
+datasets_metadata_master_updated_017 |> 
+  select(data_id_secondary) |> 
+  dplyr::filter(str_detect(data_id_secondary, "\\s")) |> 
+  distinct()
+
+datasets_metadata_master_updated_017 |> 
+  select(dataset_for_matching) |> 
+  dplyr::filter(str_detect(dataset_for_matching, "\\s")) |> 
+  distinct() # one case of non-matched, which is ok, because it wasn't supposed to match anyway.
+
+datasets_metadata_master_updated_017 |> 
+  select(detected_id) |> 
+  dplyr::filter(str_detect(detected_id, "\\s")) |> 
+  distinct()
+
+# None.
+
+# check for difference in cases between 017 and all_sources_6
+
+load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_6_pair_fix.RData"))
+
+# create a version of 017 without additional_ids_in_numbat and with datastet_in_numbat renamed to datastet and only in dcc
+t_metadata <- datasets_metadata_master_updated_017 |> 
+  dplyr::filter(!is.na(detected_id)) |> 
+  select(doi_no_ver_info, detected_id, source_charite) |> 
+  mutate(source_charite = case_when(source_charite == "datastet_in_numbat" ~ "datastet", .default = source_charite)) |> 
+  dplyr::filter(source_charite != "additional_ids_in_numbat") |> 
+  distinct()
+
+# verify that I can trust in_dcc in the same way I trust !is.na(detected_id)
+# 
+# t_metadata_2 <- datasets_metadata_master_updated_017 |> 
+#   dplyr::filter(in_dcc == "TRUE") |> 
+#   select(doi_no_ver_info, detected_id, source_charite) |> 
+#   mutate(source_charite = case_when(source_charite == "datastet_in_numbat" ~ "datastet", .default = source_charite)) |> 
+#   dplyr::filter(source_charite != "additional_ids_in_numbat") |> 
+#   distinct()
+# 
+# waldo::compare(t_metadata, t_metadata_2)
+# waldo::compare(t_metadata_2, t_metadata)
+#
+# yes.
+
+t_detected <- dcc_detected_ids_all_sources_6_pair_fix |> 
+  select(doi_no_ver_info, detected_id, source_charite) |> 
+  distinct()
+
+
+anti_join(t_metadata, t_detected) |> distinct() |> View()
+anti_join(t_detected, t_metadata) |> distinct() |> View() # only the 3 new datastet cases (1 of them is already in numbat)
+
+waldo::compare(t_metadata, t_detected)
+waldo::compare(t_detected, t_metadata)
+
+
+# Plan:
+
+# So the current 017 includes, according to the inspection above:
+# * detected datastet and additional ids
+# * detected numbat
+# * non-detected numbat (including 200 with metadata)
+#
+# What is supposed to be different from 017 and the newest dcc_detected_ids_all_sources_6_pair_fix cases?
+#
+# * no additional-ids in numbat
+# * datastet in numbat should be datastet
+# +2 datastet cases
+# +1 datastet case that is already in numbat
+#
+# So that means that I have to:
+# 
+# 1. add the 3 datastet cases
+# 2. rename datastet_in_numbat to datastet
+# 3. remove additional_ids_in_numbat cases
+#
+
+# so let's try to make it simple:
+# 1. use all_sources_6's charite cols to join 017
+# 2. manually correct and add according to the 1. 2. 3. just above
+# 3. check differences between 017, 018 and _6
+# 4. bind non-matched from 017
+
+dcc_detected_ids_all_sources_6_for_joining <- dcc_detected_ids_all_sources_6_pair_fix |> 
+  # select only charite columns
+  select(-c(26:49)) |> 
+  distinct()
+
+metadata_017_for_joining <- datasets_metadata_master_updated_017 |>
+  # rename "datastet_in_numbat" source
+  mutate(source_charite = case_when(source_charite == "datastet_in_numbat" ~ "datastet", .default = source_charite)) |> 
+  # exclude "additional_ids_in_numbat" source
+  dplyr::filter(source_charite != "additional_ids_in_numbat") |> 
+  # create clean doi+id+source col for joining
+  mutate(doi_id_clean_pair_with_source =paste(doi_no_ver_info, detected_id, source_charite, sep = ";")) |> 
+  # select only key and metadata columns
+  select(doi_id_clean_pair_with_source, c(26:35)) |> 
+  distinct()
+
+# join
+test_018_only_matched <- dcc_detected_ids_all_sources_6_for_joining |>
+  left_join(metadata_017_for_joining, by = "doi_id_clean_pair_with_source")
+
+# check 018 against _6:
+
+t_md <- test_018_only_matched |> 
+  select(doi_id_clean_pair_with_source) |> 
+  distinct()
+  
+t_as <- dcc_detected_ids_all_sources_6_pair_fix |> 
+  select(doi_id_clean_pair_with_source) |> 
+  distinct()
+
+anti_join(t_md, t_as) |> distinct()
+anti_join(t_as, t_md) |> distinct()
+waldo::compare(t_md, t_as)
+waldo::compare(t_as, t_md)
+
+# matched are correct! good.
+
+# check 017  against _6 (doi_id_clean_pair_with_source)
+t_17 <- datasets_metadata_master_updated_017 |>
+  dplyr::filter(in_dcc == "TRUE") |>
+  mutate(source_charite = case_when(source_charite == "datastet_in_numbat" ~ "datastet", .default = source_charite)) |> 
+  dplyr::filter(source_charite != "additional_ids_in_numbat") |> 
+  mutate(doi_id_clean_pair_with_source =paste(doi_no_ver_info, detected_id, source_charite, sep = ";")) |> 
+  select(doi_id_clean_pair_with_source) |>
+  distinct()
+
+anti_join(t_17, t_as) |> distinct()
+anti_join(t_as, t_17) |> distinct()
+
+waldo::compare(t_17, t_as)
+waldo::compare(t_as, t_17)
+
+setdiff(t_md, t_as)
+setdiff(t_as, t_md)
+setdiff(t_md, t_as)
+setdiff(t_as, t_md)
+
+# matched only also have the same columns! (018 matched, _6, 017 matched w/ renamed sources and doi+id+source)
+
+# So only the 3 added cases are the difference! good.
+
+# verify that you don't have the unwanted source_charite values in in_dcc == "FALSE"
+datasets_metadata_master_updated_017 |>
+  dplyr::filter(in_dcc == "FALSE") |>
+  dplyr::filter(source_charite %in% c("datastet_in_numbat", "datastet_in_numbat"))
+
+# Bind non-matched cases to 018
+datasets_metadata_master_updated_018 <- test_018_only_matched |> 
+  mutate(is_gen_rep = as.character(is_gen_rep)) |> 
+  bind_rows(
+    datasets_metadata_master_updated_017 |>
+      mutate(doi_id_clean_pair_with_source =paste(doi_no_ver_info, detected_id, source_charite, sep = ";")) |> 
+      dplyr::filter(in_dcc == "FALSE"))
+
+# verify that numebr of rows make sense:
+datasets_metadata_master_updated_018 |> nrow() # 2193
+
+datasets_metadata_master_updated_017 |>
+  mutate(source_charite = case_when(source_charite == "datastet_in_numbat" ~ "datastet", .default = source_charite)) |> 
+  #dplyr::filter(source_charite != "additional_ids_in_numbat") |> 
+  mutate(doi_id_clean_pair_with_source =paste(doi_no_ver_info, detected_id, source_charite, sep = ";")) |> 
+  nrow() # 2194
+
+# It makes sense, since I deleted 4 "additional_ids_in_numbat" cases and added 3 "datastet" cases. 
+
+# complete info of 3 added datastet cases:
+
+  # 10.17863/cam.23511 (datastet)
+  # 10.17863/cam.87955 (datastet)
+  # 10.6084/m9.figshare.12436517 (datastet - already in numbat)
+
+# 10.6084/m9.figshare.12436517: take info from Numbat entry of the same ID and DOI:
+
+datasets_metadata_master_updated_018 <- datasets_metadata_master_updated_018 |> 
+  mutate(
+    in_dcc = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = in_dcc),
+    data_availability_statement = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = data_availability_statement),
+    human_data = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = human_data),
+    covid_related = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = covid_related),
+    charite_id_year = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "2020", .default = charite_id_year),
+    license = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "CC BY", .default = license),                                
+    is_detected_id_doi = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = is_detected_id_doi),
+    das_for_analysis = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = das_for_analysis),
+    license_for_analysis = case_when(
+      detected_id == "10.6084/m9.figshare.12436517" & source_charite == "datastet" ~ "TRUE", .default = license_for_analysis))
+
+# and for the other 2 I'll complete the info manually (from _v9)
+
+datasets_metadata_master_updated_018 <- datasets_metadata_master_updated_018 |> 
+  mutate(
+    in_dcc = case_when(detected_id %in% c("10.17863/cam.23511", "10.17863/cam.87955") ~ "TRUE", .default = in_dcc),
+    covid_related = case_when(detected_id %in% c("10.17863/cam.23511", "10.17863/cam.87955") ~ "no", .default = covid_related),
+    charite_id_year = case_when(detected_id %in% c("10.17863/cam.23511", "10.17863/cam.87955") ~ "2023", .default = charite_id_year),
+    license = case_when(detected_id %in% c("10.17863/cam.23511", "10.17863/cam.87955") ~ "CC BY", .default = license),                                
+    is_detected_id_doi = case_when(detected_id %in% c("10.17863/cam.23511", "10.17863/cam.87955") ~ "TRUE", .default = is_detected_id_doi),
+    license_for_analysis = case_when(detected_id %in% c("10.17863/cam.23511", "10.17863/cam.87955") ~ "TRUE", .default = license_for_analysis),
+    
+    human_data = case_when(
+      detected_id == "10.17863/cam.23511" ~ "yes",
+      detected_id == "10.17863/cam.87955" ~ "no", .default = human_data),
+    data_availability_statement = case_when(
+      detected_id == "10.17863/cam.23511" ~ "yes",
+      detected_id == "10.17863/cam.87955" ~ "not in DAS", .default = data_availability_statement),
+    das_for_analysis = case_when(
+      detected_id == "10.17863/cam.23511" ~ "TRUE",
+      detected_id == "10.17863/cam.87955" ~ "FALSE", .default = das_for_analysis))
+
+# Verify NA / "" in matched metadata:
+
+# check Blanks
+datasets_metadata_master_updated_018 |> 
+  dplyr::filter(in_dcc == "TRUE") |> 
+  dplyr::filter(
+    data_access == ""
+    | license == ""
+    | human_data == ""
+    | covid_related == ""
+    | is_detected_id_doi == ""
+    | data_availability_statement == ""
+    | charite_id_year == ""
+    | das_for_analysis == ""
+    | license_for_analysis == ""
+    ) |>  View() # no blanks
+
+# check NAs
+datasets_metadata_master_updated_018 |> 
+  dplyr::filter(in_dcc == "TRUE") |> 
+  dplyr::filter(
+    is.na(data_access)
+    | is.na(license)
+    | is.na(human_data)
+    | is.na(covid_related)
+    | is.na(is_detected_id_doi)
+    #| is.na(data_availability_statement)
+    | is.na(charite_id_year)
+    #| is.na(das_for_analysis)
+    | is.na(license_for_analysis)
+  ) |> View() # there are some, but only under "data_availability_statement" and "das_for_analysis" (commented out for verification)
+
+# which?
+which_ids <- datasets_metadata_master_updated_018 |> 
+  dplyr::filter(in_dcc == "TRUE") |> 
+  dplyr::filter(
+    is.na(data_availability_statement)
+    | is.na(das_for_analysis)
+  ) |>
+  select(doi_no_ver_info, detected_id, source_charite) |> 
+  distinct()
+
+# verify that they actually do have metadata under their numbat entry
+datasets_metadata_master_updated_017 |> 
+  dplyr::filter(detected_id %in% which_ids$detected_id) |> 
+  select(doi_no_ver_info,
+         detected_id,
+         source_charite,
+         data_availability_statement,
+         das_for_analysis) |> 
+  distinct() |> 
+  View()
+
+# verify that they actually do have metadata under their numbat entry
+datasets_metadata_master_updated_018 |> 
+  dplyr::filter(detected_id %in% which_ids$detected_id) |> 
+  select(doi_no_ver_info,
+         detected_id,
+         source_charite,
+         data_availability_statement,
+         das_for_analysis) |> 
+  distinct() |> 
+  # dplyr::filter(is.na(data_availability_statement) & is.na(das_for_analysis)) |> 
+  # select(detected_id) |> 
+  # distinct() |> 
+  arrange(detected_id, doi_no_ver_info) |> 
+  View() # they do
+
+# verify that they are all "datastet_in_numbat or additional_ids_in_datasete"
+datasets_metadata_master_updated_017 |> 
+  dplyr::filter(detected_id %in% which_ids$detected_id) |> 
+  select(doi_no_ver_info,
+         detected_id,
+         source_charite,
+         data_availability_statement,
+         das_for_analysis) |> 
+  distinct() |> 
+  # dplyr::filter(is.na(data_availability_statement) & is.na(das_for_analysis)) |> 
+  # select(detected_id) |> 
+  # distinct() |> 
+  arrange(detected_id, doi_no_ver_info) |> 
+  View() # they are
+
+# So until now almost everything is completed.
+# I still need to complete DAS and DAS for analysis values, if necessary.
+
+# correct last das_for_analysis and the last 2 "missed" datastet cases that were added recently:
+
+datasets_metadata_master_updated_018 <- datasets_metadata_master_updated_018 |> 
+  mutate(
+    das_for_analysis = 
+      case_when(das_for_analysis == "no_statement_no_data"
+              ~ "FALSE",
+              .default = das_for_analysis),
+    human_data =
+      case_when(
+        human_data == "yes" ~ "TRUE",
+        human_data == "no" ~ "FALSE",
+        .default = human_data),
+    covid_related =
+      case_when(
+        covid_related == "yes" ~ "TRUE",
+        covid_related == "no" ~ "FALSE",
+        .default = covid_related))
+
+# save
+metadata_update(datasets_metadata_master_updated_018) # call function to save as csv, xlsx, rda
+
+# 19. Finish completing DAS and das_for_analysis values -------------------
+
+# Here I'll complete DAS and DAS for analysis values, if necessary, and then choose the earlier DOI to set the DAS value.
+# I'll start with an inspection of the values (take from chunk above).
+
+
+
+
+

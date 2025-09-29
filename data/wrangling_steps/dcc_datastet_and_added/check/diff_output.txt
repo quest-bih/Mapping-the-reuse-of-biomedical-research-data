@@ -1,0 +1,13 @@
+`old` is length 49
+`new` is length 50
+
+     names(old)                | names(new)                          
+[45] "numbat_id_of_da_id"      | "numbat_id_of_da_id"            [45]
+[46] "numbat_id_of_da_id_lc"   | "numbat_id_of_da_id_lc"         [46]
+[47] "listed_in_numbat_output" | "listed_in_numbat_output"       [47]
+[48] "in_dashboard"            - "doi_id_clean_pair_with_source" [48]
+[49] "data_access"             - "in_dashboard"                  [49]
+                               - "data_access"                   [50]
+
+`old$doi_id_clean_pair_with_source` is absent
+`new$doi_id_clean_pair_with_source` is a character vector ('10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1k5n;additional_ids', '10.3389/fimmu.2020.00179;1uxs;additional_ids', ...)

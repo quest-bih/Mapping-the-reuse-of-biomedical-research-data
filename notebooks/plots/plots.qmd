@@ -48,30 +48,7 @@ load(here("data", "tables_for_plots", "not_mentioned_years.RData")) # fig-non-ye
 
 load(here("data", "tables_for_plots", "rep_dt_ds.RData")) # fig-repo-dist-ds
 
-#load(here("data", "inputs_for_quick_render",  "res.RData"))
-
-# # Path to RData objects
-# rdata_path <- here("data", "inputs_for_quick_render", "for_index")
-# 
-# # List all .RData files
-# rdata_files <- list.files(rdata_path, pattern = "\\.RData$", full.names = TRUE)
-# 
-# # Load all into global environment
-# walk(rdata_files, load, envir = .GlobalEnv)
-
-```
-
-# expose
-
-```{r}
-
-# # Dynamically assign each loaded variable into the global render env
-# rdata_path <- here::here("data", "inputs_for_quick_render", "for_index")
-# 
-# list.files(rdata_path, pattern = "\\.RData$", full.names = TRUE) |>
-#   purrr::walk(\(f) load(f, envir = .GlobalEnv))
-# 
-# try <- res
+load(here("data", "inputs_for_quick_render",  "res.RData"))
 
 ```
 
@@ -411,291 +388,34 @@ rep_dt |>
 #| fig.height: 12
 #| fig.width: 10
 
-# year_dcc_dt_all_for_plot_agg_top_7 |> 
-#   ggplot(aes(x = factor(publication_year_dcc), fill = factor(detected_id))) +
-#   geom_bar(stat = "identity",
-#            position = "stack",
-#            aes(y = count)) +
-# geom_text(
-#   data = year_dcc_dt_all_for_plot_agg_top_7 |>
-#     group_by(publication_year_dcc) |>
-#     dplyr::filter(!(publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count))),  # Exclude text labels only for specific years
-#   aes(y = count, label = count),
-#   position = position_stack(vjust = 0.5),
-#   size = 4) +
-#   labs(
-#     x = "Year",
-#     y = "Count",
-#     fill = "Accession Number"
-#   ) +
-#   scale_x_discrete(labels = function(x) ifelse(x == "<=2012", expression("\u2264"~2012), x)) +
-#   scale_fill_manual(values = c("#C3B1E1", "#F9DC5C", "#FFB6B9", "#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
-#   theme_classic() +
-#   theme(
-#     #legend.position = "none",
-#     axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
-#     axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
-#     axis.text.y = element_text(size = 16, color = "black"),
-#     axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
-#     )
-# 2 variants:
-
-# Define year order explicitly
-year_levels <- c("<=2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022")
-
-# Define color palette (match detected_id count)
-detected_id_colors <- c("#C3B1E1", "#F9DC5C", "#FFB6B9", "#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")
-
-# --- Variant 1: Stack by descending count per year ---
-variant_1_stacked <- year_dcc_dt_all_for_plot_agg_top_7 |>
-  dplyr::mutate(publication_year_dcc = factor(publication_year_dcc, levels = year_levels)) |>
-  dplyr::group_by(publication_year_dcc) |>
-  dplyr::arrange(publication_year_dcc, dplyr::desc(count)) |>
-  dplyr::mutate(
-    ymin = cumsum(count) - count,
-    ymax = cumsum(count),
-    ymid = (ymin + ymax) / 2
-  ) |>
-  dplyr::ungroup()
-
-# Plot Variant 1 (descending count)
-ggplot(variant_1_stacked) +
-  geom_rect(
-    aes(
-      xmin = as.numeric(publication_year_dcc) - 0.4,
-      xmax = as.numeric(publication_year_dcc) + 0.4,
-      ymin = ymin,
-      ymax = ymax,
-      fill = detected_id
-    )
-  ) +
-  geom_text(
-    data = ~ dplyr::filter(.x, !(publication_year_dcc %in% c("2014", "2015", "2016", "2017", "2018") & count < 5)),
-    aes(
-      x = as.numeric(publication_year_dcc),
-      y = ymid,
-      label = count
-    ),
-    size = 4
-  ) +
-  scale_x_continuous(
-    breaks = seq_along(year_levels),
-    labels = function(x) ifelse(year_levels[x] == "<=2012", expression("\u2264" ~ 2012), year_levels[x])
-  ) +
-  scale_fill_manual(
-    values = detected_id_colors
-  ) +
-  labs(
-    x = "Year",
-    y = "Count",
-    fill = "Accession Number",
-    title = "Descending count within each year. Text of count<5 is omitted."
-  ) +
-  theme_classic() +
-  theme(
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
-    axis.text.y = element_text(size = 16, color = "black"),
-    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
-  )
-
-
-# --- Variant 2: Others bottom, rest ascending count ---
-variant_2_stacked <- year_dcc_dt_all_for_plot_agg_top_7 |>
-  dplyr::mutate(publication_year_dcc = factor(publication_year_dcc, levels = year_levels)) |>
-  dplyr::group_by(publication_year_dcc) |>
-  dplyr::mutate(
-    sort_key = dplyr::case_when(
-      detected_id == "Others" ~ -1,
-      .default = count
-    )
-  ) |>
-  dplyr::arrange(publication_year_dcc, sort_key) |>
-  dplyr::mutate(
-    ymin = cumsum(count) - count,
-    ymax = cumsum(count),
-    ymid = (ymin + ymax) / 2
-  ) |>
-  dplyr::ungroup()
-
-# Plot Variant 2 (Others bottom, ascending count)
-ggplot(variant_2_stacked) +
-  geom_rect(
-    aes(
-      xmin = as.numeric(publication_year_dcc) - 0.4,
-      xmax = as.numeric(publication_year_dcc) + 0.4,
-      ymin = ymin,
-      ymax = ymax,
-      fill = detected_id
-    )
-  ) +
-  geom_text(
-    data = ~ dplyr::filter(.x, !(publication_year_dcc %in% c("2014", "2015", "2016", "2017", "2018") & count < 5)),
-    aes(
-      x = as.numeric(publication_year_dcc),
-      y = ymid,
-      label = count
-    ),
-    size = 4
-  ) +
-  scale_x_continuous(
-    breaks = seq_along(year_levels),
-    labels = function(x) ifelse(year_levels[x] == "<=2012", expression("\u2264" ~ 2012), year_levels[x])
-  ) +
-  scale_fill_manual(
-    values = detected_id_colors
-  ) +
-  labs(
-    x = "Year",
-    y = "Count",
-    fill = "Accession Number",
-    title = "`Others` is at the bottom, then ascending count for top 7. Text of count<5 is omitted."
-  ) +
-  theme_classic() +
-  theme(
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
-    axis.text.y = element_text(size = 16, color = "black"),
-    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
-  )
-
-
-
-
-# Define year order explicitly
-year_levels <- c("<=2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022")
-
-# Define color palette (match detected_id count)
-detected_id_colors <- c("#C3B1E1", "#F9DC5C", "#FFB6B9", "#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")
-
-# Helper function to add x offsets for label jittering
-jitter_labels <- function(df, spread = 0.25) {
-  df |>
-    dplyr::group_by(publication_year_dcc) |>
-    dplyr::mutate(
-      x_offset = dplyr::case_when(
-        publication_year_dcc %in% c("2014", "2015", "2016", "2017", "2018", "2019") & detected_id != "Others" ~
-          seq(-spread, spread, length.out = dplyr::n()),
-        .default = 0
-      ),
-      x_label = as.numeric(publication_year_dcc) + x_offset
-    ) |>
-    dplyr::ungroup()
-}
-
-
-# --- Variant 1: Stack by descending count per year ---
-variant_1_stacked <- year_dcc_dt_all_for_plot_agg_top_7 |>
-  dplyr::mutate(publication_year_dcc = factor(publication_year_dcc, levels = year_levels)) |>
-  dplyr::group_by(publication_year_dcc) |>
-  dplyr::arrange(publication_year_dcc, dplyr::desc(count)) |>
-  dplyr::mutate(
-    ymin = cumsum(count) - count,
-    ymax = cumsum(count),
-    ymid = (ymin + ymax) / 2
-  ) |>
-  dplyr::ungroup() |>
-  jitter_labels()
-
-# Plot Variant 1 (descending count)
-ggplot(variant_1_stacked) +
-  geom_rect(
-    aes(
-      xmin = as.numeric(publication_year_dcc) - 0.4,
-      xmax = as.numeric(publication_year_dcc) + 0.4,
-      ymin = ymin,
-      ymax = ymax,
-      fill = detected_id
-    )
-  ) +
+year_dcc_dt_all_for_plot_agg_top_7 |>
+  ggplot(aes(x = factor(publication_year_dcc), fill = factor(detected_id))) +
+  geom_bar(stat = "identity",
+           position = "stack",
+           aes(y = count)) +
 geom_text(
-  aes(
-    x = x_label,
-    y = ymid,
-    label = count
-  ),
-  size = 4
-  ) +
-  scale_x_continuous(
-    breaks = seq_along(year_levels),
-    labels = function(x) ifelse(year_levels[x] == "<=2012", expression("\u2264" ~ 2012), year_levels[x])
-  ) +
-  scale_fill_manual(
-    values = detected_id_colors
-  ) +
+  data = year_dcc_dt_all_for_plot_agg_top_7 |>
+    group_by(publication_year_dcc) |>
+    dplyr::filter(!(publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count))),  # Exclude text labels only for specific years
+  aes(y = count, label = count),
+  position = position_stack(vjust = 0.5),
+  size = 4) +
   labs(
     x = "Year",
     y = "Count",
-    fill = "Accession Number",
-    title = "Descending count within each year. All counts texts are included."
+    fill = "Accession Number"
   ) +
+  scale_x_discrete(labels = function(x) ifelse(x == "<=2012", expression("\u2264"~2012), x)) +
+  scale_fill_manual(values = c("#C3B1E1", "#F9DC5C", "#FFB6B9", "#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
   theme_classic() +
   theme(
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
+    #legend.position = "none",
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
     axis.text.y = element_text(size = 16, color = "black"),
     axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
-  )
-
-
-# --- Variant 2: Others bottom, rest ascending count ---
-variant_2_stacked <- year_dcc_dt_all_for_plot_agg_top_7 |>
-  dplyr::mutate(publication_year_dcc = factor(publication_year_dcc, levels = year_levels)) |>
-  dplyr::group_by(publication_year_dcc) |>
-  dplyr::mutate(
-    sort_key = dplyr::case_when(
-      detected_id == "Others" ~ -1,
-      .default = count
     )
-  ) |>
-  dplyr::arrange(publication_year_dcc, sort_key) |>
-  dplyr::mutate(
-    ymin = cumsum(count) - count,
-    ymax = cumsum(count),
-    ymid = (ymin + ymax) / 2
-  ) |>
-  dplyr::ungroup() |>
-  jitter_labels()
 
-# Plot Variant 2 (Others bottom, ascending count)
-ggplot(variant_2_stacked) +
-  geom_rect(
-    aes(
-      xmin = as.numeric(publication_year_dcc) - 0.4,
-      xmax = as.numeric(publication_year_dcc) + 0.4,
-      ymin = ymin,
-      ymax = ymax,
-      fill = detected_id
-    )
-  ) +
-geom_text(
-  aes(
-    x = x_label,
-    y = ymid,
-    label = count
-  ),
-  size = 4
-  ) +
-  scale_x_continuous(
-    breaks = seq_along(year_levels),
-    labels = function(x) ifelse(year_levels[x] == "<=2012", expression("\u2264" ~ 2012), year_levels[x])
-  ) +
-  scale_fill_manual(
-    values = detected_id_colors
-  ) +
-  labs(
-    x = "Year",
-    y = "Count",
-    fill = "Accession Number",
-    title = "`Others` is at the bottom, then ascending count for top 7. All counts texts are included."
-  ) +
-  theme_classic() +
-  theme(
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
-    axis.text.y = element_text(size = 16, color = "black"),
-    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
-  )
 
 
 ```
