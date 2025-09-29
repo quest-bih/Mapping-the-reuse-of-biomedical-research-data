@@ -1816,6 +1816,25 @@ datasets_metadata_master_updated_017 |>
 # So until now almost everything is completed.
 # I still need to complete DAS and DAS for analysis values, if necessary.
 
+# correct last das_for_analysis and the last 2 "missed" datastet cases that were added recently:
+
+datasets_metadata_master_updated_018 <- datasets_metadata_master_updated_018 |> 
+  mutate(
+    das_for_analysis = 
+      case_when(das_for_analysis == "no_statement_no_data"
+              ~ "FALSE",
+              .default = das_for_analysis),
+    human_data =
+      case_when(
+        human_data == "yes" ~ "TRUE",
+        human_data == "no" ~ "FALSE",
+        .default = human_data),
+    covid_related =
+      case_when(
+        covid_related == "yes" ~ "TRUE",
+        covid_related == "no" ~ "FALSE",
+        .default = covid_related))
+
 # save
 metadata_update(datasets_metadata_master_updated_018) # call function to save as csv, xlsx, rda
 

@@ -64,122 +64,283 @@ load_latest_metadata_update <- function() {
 
 metadata <- load_latest_metadata_update()
 
-# 2. Matched:
+metadata_no_da <- metadata |> dplyr::filter(source_charite != "data_articles")
 
-# get file names
+# 2. Matched
+
+# get files
 files <- dir_ls(
   here("data", "wrangling_steps", "all_sources_binded"),
   regexp = "dcc_detected_ids_all_sources_\\d+.*\\.RData$"
 )
 
-# get numbers index
+# extract numeric suffix from filenames
 nums <- str_extract(basename(files), "(?<=dcc_detected_ids_all_sources_)\\d+") |> as.integer()
 
-# get latest file
-latest_file <- files[which.max(nums)]
+# get indices of two most recent files
+top_two_idx <- order(nums, decreasing = TRUE)[1:2]
+latest_idx <- top_two_idx[1]
+prev_idx <- top_two_idx[2]
 
-# load into environment and pull the object into detected
+# get file paths
+latest_file <- files[latest_idx]
+prev_file <- files[prev_idx]
+
+# load both files into a new environment
 env <- new.env()
-obj_names <- load(latest_file, envir = env)
-detected <- env[[obj_names[1]]]
+
+# get all detected
+prev_obj <- load(prev_file, envir = env)
+detected <- env[[prev_obj[1]]]
+
+# get all detected, deduplicated, still with data articles cases
+latest_obj <- load(latest_file, envir = env)
+detected_dedup <- env[[latest_obj[1]]]
+
+# get all detected, deduplicated, still with data articles cases
+detected_dedup_no_da <- env[[latest_obj[1]]]
+
 
 # 3. For matching
 
-## 3.1 Numbat + DA
+## 3.1 Numbat
 load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData"))
 
 num_for_match <- numbat_da_dois_and_ids_9_clean_pairs |> 
   dplyr::filter(source == "numbat")
 
+## 3.2 Data Articles
 da_for_match <- numbat_da_dois_and_ids_9_clean_pairs |> 
   dplyr::filter(source == "data_articles")
 
-## 3.2 Additional IDs
+## 3.3 Additional IDs
 load(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_4_rm_exist.RData"))
 
 ad_for_match <- added_and_ds_for_matching_4_rm_exist |> 
   dplyr::filter(source == "additional_ids")
+
+# clean up
+rm(numbat_da_dois_and_ids_9_clean_pairs,
+   added_and_ds_for_matching_4_rm_exist,
+   datasets_metadata_master_updated_018,
+   env)
 
 # 3. Build results table --------------------------------------------------
 
 res <- tibble(
   value = c(
     "placeholder",
-    "ds_matched_ids_count_dist_no_overlap",
-    "n_matched_ids_count_dist_no_overlap",
-    "da_matched_ids_count_dist_no_overlap",
-    "all_matched_ids_count_dist_no_overlap",
+    "ds_matched_ids_count_dist",               # DS   ids dist detected
+    "n_matched_ids_count_dist",                # N+AD ids dist detected      
+    "da_matched_ids_count_dist",               # DA   ids dist detected
+    "all_matched_ids_count_dist",              # All  ids dist detected
     
-    "ds_non_matched_ids_count_dist_no_overlap",
-    "n_non_matched_ids_count_dist_no_overlap",
-    "da_non_matched_ids_count_dist_no_overlap",
-    "all_non_matched_ids_count_dist_no_overlap",
+    "ds_non_matched_ids_count_dist",           # DS   ids dist not
+    "n_non_matched_ids_count_dist",            # N+AD ids dist not
+    "da_non_matched_ids_count_dist",           # DA   ids dist not
+    "all_non_matched_ids_count_dist",          # All  ids dist not
     
-    "n_max_mentions_of_single_id",
-    "all_ids_with_1_mention_count_dist",
-    "n_ids_with_1_mention_count_dist",
+    "all_matched_and_non_matched_ids_count_dist", # All ids (matched+non)
     
-    "n_ids_for_match_count",
-    "n_2nd_for_match_count",
-    "da_for_match_count",
-    "ad_for_match_count",
+    "max_mentions_of_single_id",               # All  max-ref of 1 id
+    "all_ids_with_1_mention_count_dist",       # All  ids with 1 mention
+    "n_ids_with_1_mention_count_dist",         # N    ids with 1 mention
     
-    "n_dois_for_match",
-    "da_dois_for_match",
-    "ad_dois_for_match",
-    "n_mentions"),
-    # "all_matched_mentions_count_dist_no_overlap_geo",
-    # "all_matched_mentions_dist_no_overlap_gen_rep",
-    # "all_matched_mentions_dist_no_overlap_disp_rep",
-    # "all_matched_mentions_dist_no_overlap_mendeley",
-    # "all_matched_mentions_dist_no_overlap_emd",
-    # "all_matched_ids_dist_no_overlap_gen_rep",
-    # "all_matched_ids_dist_no_overlap_disp_rep"),
+    "n_ids_for_match_count",                   # N    ids for matching
+    "n_2nd_for_match_count",                   # N    2nd ids for matching
+    "da_for_match_count",                      # DA   ids for matching
+    "ad_for_match_count",                      # AD   ids for matching
+    
+    "n_dois_for_match",                        # N    dois for matching
+    "da_dois_for_match",                       # DA   dois for matching
+    "ad_dois_for_match",                       # AD   dois for matching
+    
+    "n_mentions",                              # N    refs dist detected
+    "ds_mentions",                             # DS   refs dist detected
+    "da_mentions",                             # DA   refs dist detected
+    "all_mentions",                            # All  refs dist detected
+     
+    "all_mentions_geo",                        # All  refs dist detected in GEO
+    "all_mentions_mendeley",                   # All  refs dist detected in mendeley
+    "all_mentions_emdb",                       # All  refs dist detected in general purpose / disciplinary
+    
+    "all_mentions_gen_and_discp",               # All  refs dist detected in emdb
+
+    "human_data",                              # All  ids dist detected human-data
+    
+    "all_matched_charite_dois",                # All  Charite's dois dist detected
+    
+    "all_matched_dcc_dois"),                   # All  Mentioning dois dist detected
+    
   count = c(
+    
+    # placeholder
     999,
-    detected |> dplyr::filter(source_charite == "datastet") |> select(detected_id) |> distinct() |> nrow(),
-    detected |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> select(detected_id) |> distinct() |> nrow(),
-    detected |> dplyr::filter(source_charite == "data_articles") |> select(detected_id) |> distinct() |> nrow(),
-    detected |> select(detected_id) |> distinct() |> nrow(),
     
+    # ds_matched_ids_count_dist
+    detected_dedup |> dplyr::filter(source_charite == "datastet") |> select(detected_id) |> distinct() |> nrow(),
+    
+    # n_matched_ids_count_dist
+    detected_dedup |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> select(detected_id) |> distinct() |> nrow(),
+    
+    # da_matched_ids_count_dist
+    detected_dedup |> dplyr::filter(source_charite == "data_articles") |> select(detected_id) |> distinct() |> nrow(),
+    
+    # all_matched_ids_count_dist
+    detected_dedup_no_da |> select(detected_id) |> distinct() |> nrow(),
+    
+    # ds_non_matched_ids_count_dist
     metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite == "datastet") |> select(dataset_for_matching) |> distinct() |> nrow(),
-    metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite %in% c("numbat", "additional_ids")) |> select(dataset_for_matching) |> distinct() |> nrow(),
-    metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite == "data_articles") |> select(dataset_for_matching) |> distinct() |> nrow(),
-    metadata |> dplyr::filter(in_dcc == "FALSE") |> select(dataset_for_matching) |> distinct() |> nrow(),
     
-    detected |>
-      dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> 
+    # n_non_matched_ids_count_dist
+    metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite %in% c("numbat", "additional_ids")) |> select(dataset_for_matching) |> distinct() |> nrow(),
+    
+    # da_non_matched_ids_count_dist
+    metadata |> dplyr::filter(in_dcc == "FALSE" & source_charite == "data_articles") |> select(dataset_for_matching) |> distinct() |> nrow(),
+    
+    # all_non_matched_ids_count_dist
+    metadata_no_da |> dplyr::filter(in_dcc == "FALSE") |> select(dataset_for_matching) |> distinct() |> nrow(),
+    
+    # all_matched_and_non_matched_ids_count_dist
+    metadata_no_da |> select(dataset_for_matching) |> distinct() |> nrow(),
+    
+    # max_mentions_of_single_id
+    detected_dedup_no_da |>
       distinct(detected_id, doi_dcc) |>
       count(detected_id, name = "n_citations") |>
       arrange(desc(n_citations)) |>
       slice(1) |>
       pull(n_citations),
     
-    detected |>
+    # all_ids_with_1_mention_count_dist
+    detected_dedup_no_da |>
       distinct(detected_id, doi_dcc) |>
       count(detected_id, name = "n_citations") |>
       dplyr::filter(n_citations == 1) |>
       nrow(),
     
-    detected |>
+    # n_ids_with_1_mention_count_dist
+    detected_dedup_no_da |>
       dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> 
       distinct(detected_id, doi_dcc) |>
       count(detected_id, name = "n_citations") |>
       dplyr::filter(n_citations == 1) |>
       nrow(),
-      
+    
+    # n_ids_for_match_count 
     num_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),
+    
+    # n_2nd_for_match_count
     num_for_match |> select(data_id_secondary) |> dplyr::filter(!is.na(data_id_secondary)) |> distinct() |> nrow(),
     
+    # da_for_match_count
     da_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),
+    
+    # ad_for_match_count
     ad_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),
     
+    # n_dois_for_match
     num_for_match |> dplyr::filter(source == "numbat") |> select(doi) |> distinct() |> nrow(),
+    
+    # da_dois_for_match
     da_for_match |> dplyr::filter(source == "data_articles") |> select(doi) |> distinct() |> nrow(),
+    
+    # ad_dois_for_match
     ad_for_match |> dplyr::filter(source == "additional_ids") |> select(doi) |> distinct() |> nrow(),
-    detected |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> distinct(detected_id, doi_dcc) |> nrow()
+    
+    # n_mentions
+    detected_dedup |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # ds_mentions    
+    detected_dedup |> dplyr::filter(source_charite == "datastet") |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # da_mentions    
+    detected_dedup |> dplyr::filter(source_charite == "data_articles") |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_mentions   
+    detected_dedup_no_da |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_mentions_geo
+    detected_dedup_no_da |> dplyr::filter(repository == "gene expression omnibus (geo)") |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_mentions_mendeley
+    detected_dedup_no_da |> dplyr::filter(repository == "mendeley") |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_mentions_emdb
+    detected_dedup_no_da |> dplyr::filter(repository == "the electron microscopy data bank (emdb)") |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_mentions_gen_and_discp
+    detected_dedup_no_da |> dplyr::filter(repository %in% c(
+      "the electron microscopy data bank (emdb)",
+      "openneuro",
+      "zenodo",
+      "figshare",
+      "mendeley",
+      "harvard dataverse")) |>
+      distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # human_data
+    detected_dedup_no_da |> dplyr::filter(human_data == "TRUE") |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_matched_charite_dois 
+    detected_dedup_no_da |> select(doi_no_ver_info) |> distinct() |> nrow(),
+    
+    # all_matched_dcc_dois
+    detected_dedup_no_da |> select(doi_dcc) |> distinct() |> nrow()
   )
 )
+
+# Continue working on analysis table
+
+# # 2. Extract values
+# overall_p <- anova_result$`Pr(>Chi)`[2]
+# overall_p_report <- format.pval(overall_p, digits = 3, eps = .001)
+# 
+# # Predictor p-values
+# pvals <- coef(summary_model)[, "Pr(>|z|)"]
+# p_human   <- pvals["human_dataTRUE"]
+# p_covid   <- pvals["covid_relatedTRUE"]
+# p_license <- pvals["license_for_analysisTRUE"]
+# p_das     <- pvals["das_for_analysisTRUE"]
+# 
+# # Formatted
+# p_human_report   <- format.pval(p_human, digits = 3, eps = .001)
+# p_covid_report   <- format.pval(p_covid, digits = 3, eps = .001)
+# p_license_report <- format.pval(p_license, digits = 3, eps = .001)
+# p_das_report     <- format.pval(p_das, digits = 3, eps = .001)
+# 
+# # Odds ratios
+# or_human   <- odds_ratios["human_dataTRUE"]
+# or_covid   <- odds_ratios["covid_relatedTRUE"]
+# or_license <- odds_ratios["license_for_analysisTRUE"]
+# or_das     <- odds_ratios["das_for_analysisTRUE"]
+# 
+# # 3. Final tibble: only `anova_result` stays a list
+# stat_chi_res <- tibble(
+#   result = c(
+#     "anova_result",
+#     "overall_p", "overall_p_report",
+#     "p_human", "p_covid", "p_license", "p_das",
+#     "p_human_report", "p_covid_report", "p_license_report", "p_das_report",
+#     "or_human", "or_covid", "or_license", "or_das"
+#   ),
+#   value = c(
+#     list(anova_result),  # keep as list
+#     overall_p, overall_p_report,
+#     p_human, p_covid, p_license, p_das,
+#     p_human_report, p_covid_report, p_license_report, p_das_report,
+#     or_human, or_covid, or_license, or_das
+#   )
+# )
+# 
+# 
+# # save as RData
+# save_cr(stat_chi_res, file = file.path(here("data",
+#                                    "inputs_for_quick_render",
+#                                    "stat_chi_res.RData")))
+
+   
+# stat_glm_res <- 
 
 res <- res |> pivot_wider(names_from = value, values_from = count) |> mutate(placeholder = "__")
 
