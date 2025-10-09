@@ -1838,12 +1838,21 @@ datasets_metadata_master_updated_018 <- datasets_metadata_master_updated_018 |>
 # save
 metadata_update(datasets_metadata_master_updated_018) # call function to save as csv, xlsx, rda
 
-# 19. Finish completing DAS and das_for_analysis values -------------------
 
-# Here I'll complete DAS and DAS for analysis values, if necessary, and then choose the earlier DOI to set the DAS value.
-# I'll start with an inspection of the values (take from chunk above).
+# 19. label "apollo" as gen_rep, merge "ncbi" -----------------------------
 
+load_latest_metadata_update() # call function to load latest version
 
+datasets_metadata_master_updated_019 <- datasets_metadata_master_updated_018  |>
+  mutate(
+    is_gen_rep =
+      case_when(stringr::str_detect(detected_id, "cam") ~ "TRUE",
+      .default = is_gen_rep))
+    
+# save
+metadata_update(datasets_metadata_master_updated_019) # call function to save as csv, xlsx, rda
+
+# 20. add 1 more case of non-matched metadata -----------------------------
 
 
 

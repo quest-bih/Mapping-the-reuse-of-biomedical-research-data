@@ -88,19 +88,22 @@ files <- dir_ls(
 # get numbers index
 nums <- str_extract(basename(files), "(?<=dcc_detected_ids_all_sources_)\\d+") |> as.integer()
 
-# get latest file
-latest_file <- files[which.max(nums)]
-
-# load into environment and pull the object into detected
-env <- new.env()
-obj_names <- load(latest_file, envir = env)
-detected <- env[[obj_names[1]]]
+# # get latest file
+# latest_file <- files[which.max(nums)]
+# 
+# # load into environment and pull the object into detected
+# env <- new.env()
+# obj_names <- load(latest_file, envir = env)
+# detected <- env[[obj_names[1]]]
 
 # Create a table with no overlapping sources
-detected_no_sources_overlap <- dcc_detected_ids_all_sources_8_dedup 
+load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_7_w_metadata.RData"))
+detected_with_dup_sources <- dcc_detected_ids_all_sources_7_w_metadata
 
-detected_with_dup_sources <- detected
+load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData"))
+detected_no_sources_overlap <- dcc_detected_ids_all_sources_8_dedup
 
+rm(dcc_detected_ids_all_sources_7_w_metadata, dcc_detected_ids_all_sources_8_dedup)
 ```
 
 <br>
@@ -313,9 +316,9 @@ rep_dt <- detected_no_sources_overlap |>
            repository == "the international genome sample resource" ~ "IGSR",
            repository == "physionet" ~ "Physionet",
     .default = repository)) |>  # shorten rep names for a nicer appearance
-  select(repository, doi_dcc) |>
+  select(repository, doi_dcc, detected_id) |>
   group_by(repository) |> 
-  summarise(n = n()) |> 
+  summarise(n = n_distinct(doi_dcc, detected_id)) |> 
   arrange(desc(n))
 
 

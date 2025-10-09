@@ -353,10 +353,30 @@ write_csv_cr(sample_1_more_case,
              row.names = F)
 
 
-# TBD: replace "non-matched" if needed ------------------------------------
 
-# Check if after matching Added and DataStet, some "non-matched" so far
-# where actually detected and are now needed to be replaced.
+# add one more sampled dataset --------------------------------------------
 
+# 09.10.2025:
+# We've decided to exclude data articles from the main analysis.
+# One of the 200 sampled was a data article, so we'll replace it with a new one:
+
+load_latest_metadata_update() # call function to load latest version
+
+sample_1_case_to_replace_da <- datasets_metadata_master_updated_018 |> 
+  dplyr::filter(is.na(human_data)
+                & is.na(covid_related)
+                & is.na(data_availability_statement)
+                & is.na(license)) |>
+  sample_n(1) |> # sample 1
+  select(doi_charite, dataset_for_matching, data_availability_statement, human_data, covid_related, license)
+
+# save
+write_csv_cr(sample_1_case_to_replace_da,
+             file = file.path(here(
+               "data",
+               "verification",
+               "verification of sample",
+               "sample_1_case_to_replace_da.csv")),
+             row.names = F)
 
 
