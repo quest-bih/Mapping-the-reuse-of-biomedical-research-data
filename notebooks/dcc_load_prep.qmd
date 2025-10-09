@@ -1086,7 +1086,7 @@ dcc_years_dist <- DCC_corpus_11_std_lbl |>
   select(-publishedDate) |> 
   distinct() |> 
   group_by(year) |> 
-  summarise(n = n())
+  summarise(n = n()) # assuming no NA in "doi" (was checked separately)
 
 dcc_years_dist_for_plot <- dcc_years_dist |> 
   mutate(year = case_when(year < 2000 ~ 1, .default = year)) |> 
@@ -1110,7 +1110,7 @@ save_cr(dcc_years_dist_for_plot, file = file.path(here("data", "tables_for_plots
 
 rep_for_plot <- DCC_corpus_orig |> 
   group_by(repository) |> 
-  summarise(n = n()) |> 
+  summarise(n = n()) |> # overall cases count!
   ungroup() |> 
   dplyr::filter(!repository == "") |> 
   arrange(desc(n)) |> 

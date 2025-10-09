@@ -1,284 +1,284 @@
-file,line,text
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,537,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,597,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,757,#   distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,762,#   distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,768,#   distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,774,#   distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,843,  distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,848,  distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,853,  distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,859,  distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,886,dcc_id_dist <- DCC_corpus_10_id_std |> select(data_id_or_acc_nr) |> distinct() |> nrow()
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,892,"    osf = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""osf"")]),"
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,893,"    zenodo = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""zenodo"")]),"
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,894,"    dryad = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""dryad"")]),"
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,895,"    figshare = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""figshare"")]),"
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,896,"    harvard = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""harvard"")])"
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,1087,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,1089,  summarise(n = n())
-C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,1113,  summarise(n = n()) |> 
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,101,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,107,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,226,  # added_and_ds_for_matching_2_rm_exc |> select(dataset_for_matching) |> distinct() |> View() # ok.
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,233,  #   distinct() # 2 cases that are not relevant
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,363,"dcc_ds_and_added_joined |> summarise(across(everything(), ~ any(str_detect(as.character(.), ""[A-Z]"")))) |> View()"
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,390,"dois_ids_grouped <- dcc_ds_and_added_joined_1_rm_self |> select(doi_dcc,dataset_for_matching) |> group_by(dataset_for_matching) |> summarise(n=n())"
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,399,"dois_ids_distinct <- dcc_ds_and_added_joined_1_rm_self |> select(doi_dcc, dataset_for_matching) |> distinct()"
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,410,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,426,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,438,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,506,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,531,"  distinct(doi_datastet_and_added, dataset_for_matching, doi_dcc, .keep_all = TRUE)"
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,602,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,606,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,618,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,710,"  distinct(doi_datastet_and_added, dataset_for_matching, doi_dcc, .keep_all = TRUE)"
-C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,858,    distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,190,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,220,#     n_distinct(not_bad(dataset_license)) > 1
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,221,#     | n_distinct(not_bad(license_name)) > 1
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,222,#     | n_distinct(not_bad(data_availability_statement)) > 1
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,223,#     | n_distinct(not_bad(data_access)) > 1
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,243,   summarise(n = n()) |>
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,262,   summarise(n = n()) |>
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,322,  summarise(
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,323,"    unique_access = n_distinct(data_access),"
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,332,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,341,#   distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,344,# charite_da_dois_and_ids_1_m_add |> select(doi_lc) |>  distinct() |> View()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,657,#   distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,913,  distinct() # get dcc
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,918,  distinct() # get charite
-C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,997,"  distinct(doi_charite, dataset_for_matching, doi_dcc, .keep_all = TRUE)"
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,98,"#     dplyr::filter(n() > 1, n_distinct(source_charite) > 1) |> "
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,99,"#     distinct(detected_id, source_charite)"
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,105,#     distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,110,#     distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,115,#     distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,131,"#     distinct(detected_id, source_charite, listed_in_numbat_output) |> View()"
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,138,#     distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,143,#     distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,148,#     distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,153,#     distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,158,#     distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,163,#     distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,255,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,378,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,384,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,408,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,414,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,426,  distinct() # was verified with doi_no_ver_info as well - same result
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,453,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,514,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,553,"    n_distinct(doi_lc) > 1,                         # different DOIs"
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,581,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,587,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,596,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,627,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,652,"  summarise(across(everything(), ~ n_distinct(.x)), .groups = ""drop"") |>"
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,668,"  summarise(across(everything(), ~ n_distinct(.x)), .groups = ""drop"") |>"
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,759,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,825,  dplyr::filter(dplyr::n_distinct(source_charite) > 1) |> 
-C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,829,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots.qmd,205,"  dplyr::summarise(total = unique(total), .groups = ""drop"")"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots.qmd,583,"  distinct(detected_id, source_charite) |>  # avoid duplicates"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots.qmd,585,  summarise(items = list(detected_id)) |>
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,120,  summarise(
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,121,"    distinct_detected_id = n_distinct(detected_id),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,122,"    distinct_doi_dcc = n_distinct(doi_dcc),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,129,  summarise(
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,130,"    distinct_detected_id = n_distinct(detected_id),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,131,"    distinct_doi_dcc = n_distinct(doi_dcc),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,176,"#   `Mentioning Articles` = detected_no_sources_overlap |> select(doi_dcc) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,177,"#   `Charité Articles` = detected_no_sources_overlap |> select(doi_charite) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,178,#   `Mentioned Datasets` = detected_no_sources_overlap |> select(detected_id) |> distinct() |> nrow()
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,225,#   distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,235,#   distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,243,#   distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,253,"#   `Mentioning Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_dcc) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,254,"#   `Charité Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_charite) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,255,#   `Mentioned Datasets` = numbat_da_dcc_joined_3_au_info |> select(detected_id) |> distinct() |> nrow()
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,284,  summarise(n = n())
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,321,"  summarise(n = n_distinct(doi_dcc, detected_id)) |> "
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,338,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,357,"#   summarise(count = n(), .groups = ""drop"") |> "
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,375,"  summarise(count = n(), .groups = ""drop"") |> "
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,393,  distinct()
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,509,  distinct() |>
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,512,  summarise(n = n())
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,531,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,579,  summarise(n = n_distinct(detected_id)) |> 
-C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,48,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,64,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,123,"  distinct(doi_added, data_id_merged, doi_dcc, .keep_all = TRUE)"
-C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,143,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/datastet_id_extraction.R,4,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/datastet_id_extraction.R,77,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/datastet_id_extraction.R,88,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/extract_ids_from_datastet_AC.R,75,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/extract_ids_from_datastet_AC.R,85,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/archive/extract_ids_from_datastet_AC.R,96,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/cleaning_all_numbat_ds_records.R,15,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/cleaning_all_numbat_ds_records.R,20,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,118,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,139,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,195,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,207,  summarise(n = n()) |>
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,213,"  distinct(unique_id, .keep_all = TRUE)"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,238,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,246,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,108,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,179,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,508,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,686,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,706,numbat_da_non_matched_for_binding |> distinct() |> nrow() # good
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,716,datasets_metadata_master_new_structure_all |> distinct() |> nrow() # good
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,779,datastet_and_added_matched_metatdata_1_od_ids |> select(doi_datastet_and_added) |> distinct() |> View() # doi is already no_ver_info
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,830,datasets_metadata_master_updated_012 |> select(doi_no_ver_info) |> distinct() |> View() # verifying doi_no_ver_info
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,852,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,891,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,906,  distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,913,"              distinct(), by = ""detected_id"") |> "
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,918,"  distinct(detected_id, .keep_all = TRUE) # remove duplicate ids with same metadata that is just written differently"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,944,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,949,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1072,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1078,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1128,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1146,  distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1169,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1176,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1184,  distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1203,  dplyr::summarise(
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1207,"      ~ n_distinct(.) > 1,     # TRUE = inconsistent within group"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1217,  dplyr::summarise(
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1219,"      ~ n_distinct(.) > 1,"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1349,"  summarise(across(everything(), n_distinct), .groups = ""drop"") |>"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1405,"    dplyr::n_distinct(doi_no_ver_info, na.rm = TRUE) > 1 &"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1406,"      dplyr::n_distinct(data_availability_statement, na.rm = TRUE) > 1"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1409,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1447,"    dplyr::n_distinct(doi_no_ver_info, na.rm = TRUE) > 1 &"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1448,"      dplyr::n_distinct(das_for_analysis, na.rm = TRUE) > 1"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1451,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1486,  dplyr::summarise(
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1519,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1524,"  distinct() # one case of non-matched, which is ok, because it wasn't supposed to match anyway."
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1529,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1543,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1552,#   distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1561,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1564,"anti_join(t_metadata, t_detected) |> distinct() |> View()"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1565,"anti_join(t_detected, t_metadata) |> distinct() |> View() # only the 3 new datastet cases (1 of them is already in numbat)"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1601,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1612,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1622,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1626,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1628,"anti_join(t_md, t_as) |> distinct()"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1629,"anti_join(t_as, t_md) |> distinct()"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1642,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1644,"anti_join(t_17, t_as) |> distinct()"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1645,"anti_join(t_as, t_17) |> distinct()"
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1773,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1783,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1794,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1797,  # distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1809,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1812,  # distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,78,#   distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,95,#   distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,116,#   distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,173,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/dois_and_ids_all_sources_no_sources_for_reuse_check.R,8,  distinct() |> nrow()
-C:/AVIHAY/git/DCC-v3/scripts/extract_ids_from_datastet_AC.R,88,  distinct()  # remove duplicates
-C:/AVIHAY/git/DCC-v3/scripts/extract_ids_from_datastet_AC.R,116,  distinct()  # deduplicate
-C:/AVIHAY/git/DCC-v3/scripts/extract_ids_from_datastet_AC.R,135,  distinct()  # deduplicate   
-C:/AVIHAY/git/DCC-v3/scripts/manual_validation.R,197,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/manual_validation.R,201,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/Openalex_authors_and_years_extraction.R,125,"    summarise(authors = str_c(authors, collapse = "";""), .groups = ""drop"") |> "
-C:/AVIHAY/git/DCC-v3/scripts/Openalex_authors_and_years_extraction_datastet_and_added.R,125,"    summarise(authors = str_c(authors, collapse = "";""), .groups = ""drop"") |> "
-C:/AVIHAY/git/DCC-v3/scripts/Openalex_authors_and_years_extraction_datastet_and_added.R,227,  group_by(dataset_for_matching) |> summarise(n=n()) |>
-C:/AVIHAY/git/DCC-v3/scripts/sample_200_non_matched.R,95,"  distinct(data_id_merged, .keep_all = TRUE) |>"
-C:/AVIHAY/git/DCC-v3/scripts/sample_200_non_matched.R,182,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,34,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,39,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,44,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,50,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,55,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,60,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,66,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,71,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,76,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,82,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,91,  distinct() |> nrow()
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,97,  distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,102,  distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,108,  distinct() |>
-C:/AVIHAY/git/DCC-v3/scripts/sources_organization.R,45,added_and_ds_for_matching_3_lbl |> select(dataset_for_matching) |> distinct()
-C:/AVIHAY/git/DCC-v3/scripts/sources_organization.R,48,added_and_ds_for_matching_4_rm_exist |> select(dataset_for_matching) |> distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,15,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,21,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,45,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,51,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,57,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,75,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,83,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,107,added_and_ds_for_matching_2_rm_exc |> select(dataset_for_matching) |> distinct() |> View() # ok.
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,114,  distinct() # 2 cases that are not relevant
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,127,"    dplyr::filter(n() > 1, n_distinct(source_charite) > 1) |> "
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,128,"    distinct(detected_id, source_charite) |> "
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,135,    distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,140,    distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,145,    distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,152,"    distinct(detected_id, source_charite, listed_in_numbat_output) |> "
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,180,  dplyr::filter(dplyr::n_distinct(source) > 1) |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,181,"  dplyr::distinct(value, source)"
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,185,  dplyr::filter(dplyr::n_distinct(source) > 1) |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,186,"  dplyr::distinct(value, source)"
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,195,  select(dataset_for_matching) |> distinct() # this line turns the asymmetry into intersect
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,200,  select(detected_id) |> distinct() # this line turns the asymmetry into intersect
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,223,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,243,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,245,"dist_int <- intersect_df |> select(doi_charite, detected_id) |> distinct()"
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,320,      dplyr::n_distinct(source_charite) > 1
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,323,  dplyr::distinct(detected_id) |> 
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,331,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,337,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,342,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,350,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,356,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,361,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,371,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,377,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,382,  distinct()
-C:/AVIHAY/git/DCC-v3/scripts/statistical_analysis.R,107,  distinct() |> 
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,161,"    detected_dedup |> dplyr::filter(source_charite == ""datastet"") |> select(detected_id) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,164,"    detected_dedup |> dplyr::filter(source_charite %in% c(""numbat"", ""additional_ids"")) |> select(detected_id) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,167,"    detected_dedup |> dplyr::filter(source_charite == ""data_articles"") |> select(detected_id) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,170,"    detected_dedup_no_da |> select(detected_id) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,173,"    metadata |> dplyr::filter(in_dcc == ""FALSE"" & source_charite == ""datastet"") |> select(dataset_for_matching) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,176,"    metadata |> dplyr::filter(in_dcc == ""FALSE"" & source_charite %in% c(""numbat"", ""additional_ids"")) |> select(dataset_for_matching) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,179,"    metadata |> dplyr::filter(in_dcc == ""FALSE"" & source_charite == ""data_articles"") |> select(dataset_for_matching) |> distinct() |> nrow() - n_collapse + 1,"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,183,"    metadata_no_da |> dplyr::filter(in_dcc == ""FALSE"") |> select(dataset_for_matching) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,186,"    metadata_no_da |> select(dataset_for_matching) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,190,"      distinct(detected_id, doi_dcc) |>"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,198,"      distinct(detected_id, doi_dcc) |>"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,206,"      distinct(detected_id, doi_dcc) |>"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,212,"    num_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,215,"    num_for_match |> select(data_id_secondary) |> dplyr::filter(!is.na(data_id_secondary)) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,218,"    da_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow() - n_collapse,"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,222,"    ad_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,225,"    num_for_match |> dplyr::filter(source == ""numbat"") |> select(doi) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,228,"    da_for_match |> dplyr::filter(source == ""data_articles"") |> select(doi) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,232,"    ad_for_match |> dplyr::filter(source == ""additional_ids"") |> select(doi) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,235,"    detected_dedup |> dplyr::filter(source_charite %in% c(""numbat"", ""additional_ids"")) |> distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,238,"    detected_dedup |> dplyr::filter(source_charite == ""datastet"") |> distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,241,"    detected_dedup |> dplyr::filter(source_charite == ""data_articles"") |> distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,245,"    detected_dedup_no_da |> distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,248,"    detected_dedup_no_da |> dplyr::filter(repository == ""gene expression omnibus (geo)"") |> distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,251,"    detected_dedup_no_da |> dplyr::filter(repository == ""mendeley"") |> distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,254,"    detected_dedup_no_da |> dplyr::filter(repository == ""the electron microscopy data bank (emdb)"") |> distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,264,"      distinct(detected_id, doi_dcc) |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,267,"    detected_dedup_no_da |> dplyr::filter(human_data == ""TRUE"") |> select(detected_id) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,270,"    detected_dedup_no_da |> select(doi_no_ver_info) |> distinct() |> nrow(),"
-C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,273,    detected_dedup_no_da |> select(doi_dcc) |> distinct() |> nrow()
+file,line,Checked,text,Comments
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,537,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,597,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,757,V,#   distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,762,V,#   distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,768,V,#   distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,774,V,#   distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,843,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,848,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,853,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,859,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,886,V,dcc_id_dist <- DCC_corpus_10_id_std |> select(data_id_or_acc_nr) |> distinct() |> nrow(),
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,892,V,"    osf = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""osf"")]),",
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,893,V,"    zenodo = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""zenodo"")]),",
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,894,V,"    dryad = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""dryad"")]),",
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,895,V,"    figshare = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""figshare"")]),",
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,896,V,"    harvard = n_distinct(data_id_or_acc_nr[str_detect(data_id_or_acc_nr, ""harvard"")])",
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,1087,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,1089,V,  summarise(n = n()),
+C:/AVIHAY/git/DCC-v3/notebooks/dcc_load_prep.qmd,1113,V,  summarise(n = n()) |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,101,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,107,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,226,V,  # added_and_ds_for_matching_2_rm_exc |> select(dataset_for_matching) |> distinct() |> View() # ok.,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,233,V,  #   distinct() # 2 cases that are not relevant,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,363,V,"dcc_ds_and_added_joined |> summarise(across(everything(), ~ any(str_detect(as.character(.), ""[A-Z]"")))) |> View()",
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,390,V,"dois_ids_grouped <- dcc_ds_and_added_joined_1_rm_self |> select(doi_dcc,dataset_for_matching) |> group_by(dataset_for_matching) |> summarise(n=n())",
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,399,V,"dois_ids_distinct <- dcc_ds_and_added_joined_1_rm_self |> select(doi_dcc, dataset_for_matching) |> distinct()",
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,410,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,426,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,438,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,506,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,531,,"  distinct(doi_datastet_and_added, dataset_for_matching, doi_dcc, .keep_all = TRUE)",
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,602,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,606,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,618,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,710,V,"  distinct(doi_datastet_and_added, dataset_for_matching, doi_dcc, .keep_all = TRUE)",was checked against the same without .keep_all
+C:/AVIHAY/git/DCC-v3/notebooks/ds_added_and_datastet_load_prep_match_clean.qmd,858,V,    distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,190,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,220,V,#     n_distinct(not_bad(dataset_license)) > 1,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,221,V,#     | n_distinct(not_bad(license_name)) > 1,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,222,V,#     | n_distinct(not_bad(data_availability_statement)) > 1,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,223,V,#     | n_distinct(not_bad(data_access)) > 1,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,243,V,   summarise(n = n()) |>,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,262,V,   summarise(n = n()) |>,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,322,V,  summarise(,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,323,V,"    unique_access = n_distinct(data_access),",
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,332,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,341,V,#   distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,344,V,# charite_da_dois_and_ids_1_m_add |> select(doi_lc) |>  distinct() |> View(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,657,V,#   distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,913,V,  distinct() # get dcc,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,918,V,  distinct() # get charite,
+C:/AVIHAY/git/DCC-v3/notebooks/ds_primary_load_prep_match_clean.qmd,997,V,"  distinct(doi_charite, dataset_for_matching, doi_dcc, .keep_all = TRUE)","https://openneuro.org/datasets/ds001226 from data articles is missing! Make sure you have it under data articles then. Other then that it's supposed to be ok, since it's the same detected_id"
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,98,V,"#     dplyr::filter(n() > 1, n_distinct(source_charite) > 1) |> ",
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,99,V,"#     distinct(detected_id, source_charite)",
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,105,V,#     distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,110,V,#     distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,115,V,#     distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,131,V,"#     distinct(detected_id, source_charite, listed_in_numbat_output) |> View()",
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,138,V,#     distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,143,V,#     distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,148,V,#     distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,153,V,#     distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,158,V,#     distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,163,V,#     distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,255,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,378,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,384,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,408,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,414,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,426,V,  distinct() # was verified with doi_no_ver_info as well - same result,
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,453,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,514,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,553,V,"    n_distinct(doi_lc) > 1,                         # different DOIs",
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,581,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,587,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,596,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,627,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,652,V,"  summarise(across(everything(), ~ n_distinct(.x)), .groups = ""drop"") |>",
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,668,V,"  summarise(across(everything(), ~ n_distinct(.x)), .groups = ""drop"") |>",
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,759,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,825,V,  dplyr::filter(dplyr::n_distinct(source_charite) > 1) |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/joined_bind_add_metadata_verify.qmd,829,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots.qmd,205,,"  dplyr::summarise(total = unique(total), .groups = ""drop"")",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots.qmd,583,,"  distinct(detected_id, source_charite) |>  # avoid duplicates",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots.qmd,585,,  summarise(items = list(detected_id)) |>,
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,120,,  summarise(,
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,121,,"    distinct_detected_id = n_distinct(detected_id),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,122,,"    distinct_doi_dcc = n_distinct(doi_dcc),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,129,,  summarise(,
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,130,,"    distinct_detected_id = n_distinct(detected_id),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,131,,"    distinct_doi_dcc = n_distinct(doi_dcc),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,176,,"#   `Mentioning Articles` = detected_no_sources_overlap |> select(doi_dcc) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,177,,"#   `Charité Articles` = detected_no_sources_overlap |> select(doi_charite) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,178,,#   `Mentioned Datasets` = detected_no_sources_overlap |> select(detected_id) |> distinct() |> nrow(),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,225,,#   distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,235,,#   distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,243,,#   distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,253,,"#   `Mentioning Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_dcc) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,254,,"#   `Charité Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_charite) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,255,,#   `Mentioned Datasets` = numbat_da_dcc_joined_3_au_info |> select(detected_id) |> distinct() |> nrow(),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,284,,  summarise(n = n()),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,321,,"  summarise(n = n_distinct(doi_dcc, detected_id)) |> ",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,338,,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,357,,"#   summarise(count = n(), .groups = ""drop"") |> ",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,375,,"  summarise(count = n(), .groups = ""drop"") |> ",
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,393,,  distinct(),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,509,,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,512,,  summarise(n = n()),
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,531,,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/notebooks/plots/plots_prep.qmd,579,,  summarise(n = n_distinct(detected_id)) |> ,
+C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,48,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,64,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,123,,"  distinct(doi_added, data_id_merged, doi_dcc, .keep_all = TRUE)",
+C:/AVIHAY/git/DCC-v3/scripts/archive/added_ids_check.R,143,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/datastet_id_extraction.R,4,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/datastet_id_extraction.R,77,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/datastet_id_extraction.R,88,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/extract_ids_from_datastet_AC.R,75,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/extract_ids_from_datastet_AC.R,85,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/archive/extract_ids_from_datastet_AC.R,96,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/cleaning_all_numbat_ds_records.R,15,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/cleaning_all_numbat_ds_records.R,20,,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,118,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,139,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,195,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,207,V,  summarise(n = n()) |>,"maybe not right, but already not relevant"
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,213,V,"  distinct(unique_id, .keep_all = TRUE)","maybe not right, but already not relevant"
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,238,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_creation.R,246,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,108,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,179,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,508,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,686,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,706,V,numbat_da_non_matched_for_binding |> distinct() |> nrow() # good,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,716,V,datasets_metadata_master_new_structure_all |> distinct() |> nrow() # good,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,779,V,datastet_and_added_matched_metatdata_1_od_ids |> select(doi_datastet_and_added) |> distinct() |> View() # doi is already no_ver_info,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,830,V,datasets_metadata_master_updated_012 |> select(doi_no_ver_info) |> distinct() |> View() # verifying doi_no_ver_info,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,852,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,891,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,906,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,913,V,"              distinct(), by = ""detected_id"") |> ",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,918,V,"  distinct(detected_id, .keep_all = TRUE) # remove duplicate ids with same metadata that is just written differently",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,944,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,949,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1072,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1078,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1128,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1146,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1169,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1176,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1184,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1203,V,  dplyr::summarise(,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1207,V,"      ~ n_distinct(.) > 1,     # TRUE = inconsistent within group",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1217,V,  dplyr::summarise(,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1219,V,"      ~ n_distinct(.) > 1,",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1349,V,"  summarise(across(everything(), n_distinct), .groups = ""drop"") |>",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1405,V,"    dplyr::n_distinct(doi_no_ver_info, na.rm = TRUE) > 1 &",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1406,V,"      dplyr::n_distinct(data_availability_statement, na.rm = TRUE) > 1",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1409,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1447,V,"    dplyr::n_distinct(doi_no_ver_info, na.rm = TRUE) > 1 &",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1448,V,"      dplyr::n_distinct(das_for_analysis, na.rm = TRUE) > 1",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1451,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1486,V,  dplyr::summarise(,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1519,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1524,V,"  distinct() # one case of non-matched, which is ok, because it wasn't supposed to match anyway.",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1529,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1543,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1552,V,#   distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1561,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1564,V,"anti_join(t_metadata, t_detected) |> distinct() |> View()",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1565,V,"anti_join(t_detected, t_metadata) |> distinct() |> View() # only the 3 new datastet cases (1 of them is already in numbat)",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1601,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1612,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1622,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1626,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1628,V,"anti_join(t_md, t_as) |> distinct()",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1629,V,"anti_join(t_as, t_md) |> distinct()",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1642,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1644,V,"anti_join(t_17, t_as) |> distinct()",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1645,V,"anti_join(t_as, t_17) |> distinct()",
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1773,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1783,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1794,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1797,V,  # distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1809,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R,1812,V,  # distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,78,,#   distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,95,,#   distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,116,,#   distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/data_articles_load_prep_internal.R,173,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/dois_and_ids_all_sources_no_sources_for_reuse_check.R,8,,  distinct() |> nrow(),
+C:/AVIHAY/git/DCC-v3/scripts/extract_ids_from_datastet_AC.R,88,,  distinct()  # remove duplicates,
+C:/AVIHAY/git/DCC-v3/scripts/extract_ids_from_datastet_AC.R,116,,  distinct()  # deduplicate,
+C:/AVIHAY/git/DCC-v3/scripts/extract_ids_from_datastet_AC.R,135,,  distinct()  # deduplicate   ,
+C:/AVIHAY/git/DCC-v3/scripts/manual_validation.R,197,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/manual_validation.R,201,,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/Openalex_authors_and_years_extraction.R,125,,"    summarise(authors = str_c(authors, collapse = "";""), .groups = ""drop"") |> ",
+C:/AVIHAY/git/DCC-v3/scripts/Openalex_authors_and_years_extraction_datastet_and_added.R,125,,"    summarise(authors = str_c(authors, collapse = "";""), .groups = ""drop"") |> ",
+C:/AVIHAY/git/DCC-v3/scripts/Openalex_authors_and_years_extraction_datastet_and_added.R,227,,  group_by(dataset_for_matching) |> summarise(n=n()) |>,
+C:/AVIHAY/git/DCC-v3/scripts/sample_200_non_matched.R,95,V,"  distinct(data_id_merged, .keep_all = TRUE) |>",
+C:/AVIHAY/git/DCC-v3/scripts/sample_200_non_matched.R,182,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,34,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,39,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,44,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,50,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,55,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,60,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,66,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,71,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,76,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,82,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,91,V,  distinct() |> nrow(),
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,97,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,102,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/sanity_check.R,108,V,  distinct() |>,
+C:/AVIHAY/git/DCC-v3/scripts/sources_organization.R,45,V,added_and_ds_for_matching_3_lbl |> select(dataset_for_matching) |> distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/sources_organization.R,48,V,added_and_ds_for_matching_4_rm_exist |> select(dataset_for_matching) |> distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,15,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,21,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,45,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,51,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,57,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,75,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,83,V,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,107,V,added_and_ds_for_matching_2_rm_exc |> select(dataset_for_matching) |> distinct() |> View() # ok.,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,114,V,  distinct() # 2 cases that are not relevant,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,127,V,"    dplyr::filter(n() > 1, n_distinct(source_charite) > 1) |> ",
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,128,V,"    distinct(detected_id, source_charite) |> ",
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,135,V,    distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,140,V,    distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,145,V,    distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,152,V,"    distinct(detected_id, source_charite, listed_in_numbat_output) |> ",
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,180,V,  dplyr::filter(dplyr::n_distinct(source) > 1) |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,181,V,"  dplyr::distinct(value, source)",
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,185,V,  dplyr::filter(dplyr::n_distinct(source) > 1) |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,186,V,"  dplyr::distinct(value, source)",
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,195,V,  select(dataset_for_matching) |> distinct() # this line turns the asymmetry into intersect,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,200,V,  select(detected_id) |> distinct() # this line turns the asymmetry into intersect,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,223,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,243,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,245,V,"dist_int <- intersect_df |> select(doi_charite, detected_id) |> distinct()",
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,320,V,      dplyr::n_distinct(source_charite) > 1,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,323,V,  dplyr::distinct(detected_id) |> ,
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,331,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,337,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,342,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,350,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,356,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,361,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,371,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,377,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/src-ds-ws-fix-helper.R,382,V,  distinct(),
+C:/AVIHAY/git/DCC-v3/scripts/statistical_analysis.R,107,,  distinct() |> ,
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,161,,"    detected_dedup |> dplyr::filter(source_charite == ""datastet"") |> select(detected_id) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,164,,"    detected_dedup |> dplyr::filter(source_charite %in% c(""numbat"", ""additional_ids"")) |> select(detected_id) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,167,,"    detected_dedup |> dplyr::filter(source_charite == ""data_articles"") |> select(detected_id) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,170,,"    detected_dedup_no_da |> select(detected_id) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,173,,"    metadata |> dplyr::filter(in_dcc == ""FALSE"" & source_charite == ""datastet"") |> select(dataset_for_matching) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,176,,"    metadata |> dplyr::filter(in_dcc == ""FALSE"" & source_charite %in% c(""numbat"", ""additional_ids"")) |> select(dataset_for_matching) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,179,,"    metadata |> dplyr::filter(in_dcc == ""FALSE"" & source_charite == ""data_articles"") |> select(dataset_for_matching) |> distinct() |> nrow() - n_collapse + 1,",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,183,,"    metadata_no_da |> dplyr::filter(in_dcc == ""FALSE"") |> select(dataset_for_matching) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,186,,"    metadata_no_da |> select(dataset_for_matching) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,190,,"      distinct(detected_id, doi_dcc) |>",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,198,,"      distinct(detected_id, doi_dcc) |>",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,206,,"      distinct(detected_id, doi_dcc) |>",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,212,,"    num_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,215,,"    num_for_match |> select(data_id_secondary) |> dplyr::filter(!is.na(data_id_secondary)) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,218,,"    da_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow() - n_collapse,",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,222,,"    ad_for_match |> select(dataset_for_matching) |> dplyr::filter(!is.na(dataset_for_matching)) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,225,,"    num_for_match |> dplyr::filter(source == ""numbat"") |> select(doi) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,228,,"    da_for_match |> dplyr::filter(source == ""data_articles"") |> select(doi) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,232,,"    ad_for_match |> dplyr::filter(source == ""additional_ids"") |> select(doi) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,235,,"    detected_dedup |> dplyr::filter(source_charite %in% c(""numbat"", ""additional_ids"")) |> distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,238,,"    detected_dedup |> dplyr::filter(source_charite == ""datastet"") |> distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,241,,"    detected_dedup |> dplyr::filter(source_charite == ""data_articles"") |> distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,245,,"    detected_dedup_no_da |> distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,248,,"    detected_dedup_no_da |> dplyr::filter(repository == ""gene expression omnibus (geo)"") |> distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,251,,"    detected_dedup_no_da |> dplyr::filter(repository == ""mendeley"") |> distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,254,,"    detected_dedup_no_da |> dplyr::filter(repository == ""the electron microscopy data bank (emdb)"") |> distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,264,,"      distinct(detected_id, doi_dcc) |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,267,,"    detected_dedup_no_da |> dplyr::filter(human_data == ""TRUE"") |> select(detected_id) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,270,,"    detected_dedup_no_da |> select(doi_no_ver_info) |> distinct() |> nrow(),",
+C:/AVIHAY/git/DCC-v3/scripts/vars_for_paper.R,273,,    detected_dedup_no_da |> select(doi_dcc) |> distinct() |> nrow(),
