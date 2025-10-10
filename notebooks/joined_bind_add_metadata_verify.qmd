@@ -810,6 +810,82 @@ dcc_detected_ids_all_sources_7_w_metadata <- dcc_detected_ids_all_sources_7_w_me
     )
   )
 
+##### ONE LAST STEP - retroactively (see inspection_to_add_added_duplications_after_the_fact.R):
+
+# I found added cases that were accidentally removed (they are identical to datastet cases).
+# So here I'll add them again with the exact same data but as source == "added"
+# In addidion, there's one data_articles that should be added (with the same detected_id as "numbat": ds001226).
+
+# 1. "additional_ids"
+
+# get cases to bind
+load(here("data", "wrangling_steps", "dcc_datastet_and_added", "add_added_post_hoc", "ids_source_added.RData"))
+
+# prepare for joining
+ids_source_added <- ids_source_added |> 
+  rename(doi_charite = doi_datastet_and_added)
+
+rows_to_duplicate <- dcc_detected_ids_all_sources_7_w_metadata |>
+  inner_join(ids_source_added, by = c("doi_charite", "dataset_for_matching", "doi_dcc")) |>
+  mutate(source_charite = "additional_ids")
+
+# verify that they were all only datastet in "all_sources"
+ids_to_verify_source <- rows_to_duplicate |> 
+  select(detected_id) |> 
+  distinct()
+
+dcc_detected_ids_all_sources_7_w_metadata |>
+  select(detected_id, source_charite) |> 
+  dplyr::filter(detected_id %in% ids_to_verify_source$detected_id) |> 
+  distinct() |> 
+  View() # they are all datastet.
+
+# add them as additional to "all_sources"
+dcc_detected_ids_all_sources_7_w_metadata <- bind_rows(dcc_detected_ids_all_sources_7_w_metadata, rows_to_duplicate)
+
+# 2. "data_articles"
+
+da_one_case_to_add <- tibble::tibble(
+  doi_charite = "10.1038/s41597-022-01806-4",
+  dataset_for_matching = "10.18112/openneuro.ds001226",
+  doi_dcc = "10.1007/978-3-030-87234-2_49",
+  data_identifier = "https://openneuro.org/datasets/ds001226",
+  data_id_lc = "https://openneuro.org/datasets/ds001226",
+  source_charite = "data_articles",
+  numbat_id_of_da_id_lc = "https://doi.org/10.18112/openneuro.ds001226.v5.0.0",
+  doi_id_orig_pair = "10.1038/s41597-022-01806-4;https://openneuro.org/datasets/ds001226",
+  doi_id_lc_pair_for_joining = "10.1038/s41597-022-01806-4;https://openneuro.org/datasets/ds001226",
+  doi_id_clean_pair = "10.1038/s41597-022-01806-4;10.18112/openneuro.ds001226",
+  doi_id_clean_pair_with_source = "10.1038/s41597-022-01806-4;10.18112/openneuro.ds001226;data_articles"
+  )
+
+# Define key columns (used to match rows)
+key_cols <- c("doi_charite", "dataset_for_matching", "doi_dcc")
+
+# Extract matching row from dcc_detected_ids_all_sources_7_w_metadata
+row_from_all_sources <- dcc_detected_ids_all_sources_7_w_metadata |> 
+  dplyr::filter(across(all_of(key_cols), ~ . == da_one_case_to_add[[cur_column()]]))
+
+# Determine which columns to override (present in da_one_case_to_add, not keys)
+override_cols <- intersect(names(da_one_case_to_add), names(dcc_detected_ids_all_sources_7_w_metadata)) |> setdiff(key_cols)
+
+# Override the relevant columns
+for (col in override_cols) {
+  row_from_all_sources[[col]] <- da_one_case_to_add[[col]]
+}
+
+# Append to original dcc_detected_ids_all_sources_7_w_metadata
+test <- bind_rows(dcc_detected_ids_all_sources_7_w_metadata, row_from_all_sources)
+
+dcc_detected_ids_all_sources_7_w_metadata <- test
+
+# add one last column's value manually because I missed it above:
+dcc_detected_ids_all_sources_7_w_metadata <- dcc_detected_ids_all_sources_7_w_metadata |> 
+  mutate(numbat_id_of_da_id = 
+           case_when(numbat_id_of_da_id_lc == "https://doi.org/10.18112/openneuro.ds001226.v5.0.0"
+                     ~ "https://doi.org/10.18112/openneuro.ds001226.v5.0.0",
+                     .default = numbat_id_of_da_id))
+
 # save
 save_cr(dcc_detected_ids_all_sources_7_w_metadata, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_7_w_metadata.RData")))
 
@@ -832,7 +908,11 @@ overlaps <- dcc_detected_ids_all_sources_7_w_metadata |>
 
 dcc_detected_ids_all_sources_8_dedup <- dcc_detected_ids_all_sources_7_w_metadata |> 
   dplyr::anti_join(overlaps, by = c("doi_no_ver_info", "detected_id", "source_charite"))
-  
+
+# remove data articles that are in numbat as well:
+dcc_detected_ids_all_sources_8_dedup <- dcc_detected_ids_all_sources_8_dedup |> 
+  dplyr::filter(is.na(numbat_id_of_da_id))
+
 # save
 save_cr(dcc_detected_ids_all_sources_8_dedup, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData")))
 
