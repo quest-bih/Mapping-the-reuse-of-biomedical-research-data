@@ -105,7 +105,9 @@ rm(numbat_da_dois_and_ids_9_clean_pairs,
    added_and_ds_for_matching_4_rm_exist,
    datasets_metadata_master_updated_018)
 
-# 3. Build results table --------------------------------------------------
+# 3. Build results tables --------------------------------------------------
+
+# 1. Counts
 
 res <- tibble(
   value = c(
@@ -274,61 +276,66 @@ res <- tibble(
   )
 )
 
-# Continue working on analysis table
-
-# # 2. Extract values
-# overall_p <- anova_result$`Pr(>Chi)`[2]
-# overall_p_report <- format.pval(overall_p, digits = 3, eps = .001)
-# 
-# # Predictor p-values
-# pvals <- coef(summary_model)[, "Pr(>|z|)"]
-# p_human   <- pvals["human_dataTRUE"]
-# p_covid   <- pvals["covid_relatedTRUE"]
-# p_license <- pvals["license_for_analysisTRUE"]
-# p_das     <- pvals["das_for_analysisTRUE"]
-# 
-# # Formatted
-# p_human_report   <- format.pval(p_human, digits = 3, eps = .001)
-# p_covid_report   <- format.pval(p_covid, digits = 3, eps = .001)
-# p_license_report <- format.pval(p_license, digits = 3, eps = .001)
-# p_das_report     <- format.pval(p_das, digits = 3, eps = .001)
-# 
-# # Odds ratios
-# or_human   <- odds_ratios["human_dataTRUE"]
-# or_covid   <- odds_ratios["covid_relatedTRUE"]
-# or_license <- odds_ratios["license_for_analysisTRUE"]
-# or_das     <- odds_ratios["das_for_analysisTRUE"]
-# 
-# # 3. Final tibble: only `anova_result` stays a list
-# stat_chi_res <- tibble(
-#   result = c(
-#     "anova_result",
-#     "overall_p", "overall_p_report",
-#     "p_human", "p_covid", "p_license", "p_das",
-#     "p_human_report", "p_covid_report", "p_license_report", "p_das_report",
-#     "or_human", "or_covid", "or_license", "or_das"
-#   ),
-#   value = c(
-#     list(anova_result),  # keep as list
-#     overall_p, overall_p_report,
-#     p_human, p_covid, p_license, p_das,
-#     p_human_report, p_covid_report, p_license_report, p_das_report,
-#     or_human, or_covid, or_license, or_das
-#   )
-# )
-# 
-# 
-# # save as RData
-# save_cr(stat_chi_res, file = file.path(here("data",
-#                                    "inputs_for_quick_render",
-#                                    "stat_chi_res.RData")))
-
-   
-# stat_glm_res <- 
-
 res <- res |> pivot_wider(names_from = value, values_from = count) |> mutate(placeholder = "__")
 
 # save as RData
 save_cr(res, file = file.path(here("data",
                                    "inputs_for_quick_render",
                                    "res.RData")))
+
+# 2. Chi square results:
+
+# 1. Extract raw p-values (excluding intercept)
+coeffs <- summary_model$coefficients
+raw_p <- coeffs[, "Pr(>|z|)"]
+raw_p <- raw_p[!str_detect(names(raw_p), "Intercept")]
+
+# 2. Rename raw p-values
+raw_p_named <- raw_p |>
+  setNames(names(raw_p) |> str_remove("TRUE") |> (\(x) paste0("p_", x))())
+
+# 3. Adjust p-values (FDR by default)
+adj_p <- p.adjust(raw_p, method = "fdr")
+
+# 4. Rename adjusted p-values
+adj_p_named <- adj_p |>
+  setNames(names(adj_p) |> str_remove("TRUE") |> (\(x) paste0("p_adj_", x))())
+
+# 5. Extract overall model p-value and format
+p_model <- anova_result$`Pr(>Chi)`[2] |> as.numeric()
+p_model <- ifelse(p_model < 1e-6, "<0.000001", formatC(p_model, format = "f", digits = 6))
+names(p_model) <- "p_model"
+
+# 6. Get odds ratios (excluding intercept)
+or_vals <- odds_ratios[!str_detect(names(odds_ratios), "Intercept")]
+or_vals_named <- or_vals |>
+  setNames(names(or_vals) |> str_remove("TRUE") |> (\(x) paste0("odds_ratios_", x))())
+
+# 7. Combine into final 1-row tibble
+stat_chi_metadata_res <- tibble(
+  !!!as.list(raw_p_named),
+  !!!as.list(adj_p_named),
+  p_model = p_model,
+  !!!as.list(or_vals_named)
+)
+
+
+# save as RData
+save_cr(stat_chi_metadata_res, file = file.path(here("data",
+                                   "inputs_for_quick_render",
+                                   "stat_chi_metadata_res.RData")))
+
+   
+
+# 3. age-citation relationship model
+
+p_age <- as.data.frame(summary(model_nb)$coefficients$cond["age", "Pr(>|z|)"]) |> 
+  rename(p_value = `summary(model_nb)$coefficients$cond[\"age\", \"Pr(>|z|)\"]`)
+
+
+
+# save as RData
+save_cr(p_age, file = file.path(here("data",
+                                     "inputs_for_quick_render",
+                                     "p_age.RData")))
+

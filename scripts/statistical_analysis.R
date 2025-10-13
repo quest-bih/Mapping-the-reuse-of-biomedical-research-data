@@ -91,7 +91,7 @@ load_latest_metadata_update()
 
 # get only relevant cases (matched + sample of 200 non-matched)
 
-data_for_glm <- datasets_metadata_master_updated_018 |> 
+data_for_glm <- datasets_metadata_master_updated_020 |> 
   dplyr::filter(!is.na(covid_related)) |> 
   dplyr::filter(source_charite != "data_articles") |> 
   select(detected_id,
@@ -100,39 +100,69 @@ data_for_glm <- datasets_metadata_master_updated_018 |>
          das_for_analysis,
          human_data,
          covid_related,
-         license_for_analysis) |> 
+         license_for_analysis,
+         is_detected_id_doi) |> 
   mutate(dataset = coalesce(detected_id, dataset_for_matching)) |> 
   select(-c(detected_id, dataset_for_matching)) |> 
   dplyr::filter(!is.na(das_for_analysis)) |> 
   distinct() |> 
   mutate(in_dcc = as.factor(in_dcc))
 
+data_for_glm |>dplyr::filter(if_any(everything(), is.na)) # check for NAs
 
-model <- glm(in_dcc ~ human_data + covid_related + license_for_analysis + das_for_analysis,
+model <- glm(in_dcc ~ human_data + covid_related + license_for_analysis + das_for_analysis + is_detected_id_doi,
              data = data_for_glm,
              family = "binomial")
 
-glm_null <- glm(in_dcc ~ 1, data = data_for_glm, family = "binomial") # defien a null model
-anova_result <- anova(glm_null, model, test = "Chisq") # overall model signifiance
+glm_null <- glm(in_dcc ~ 1, data = data_for_glm, family = "binomial") # define a null model
+anova_result <- anova(glm_null, model, test = "Chisq") # overall model significance
 
 summary_model <- summary(model)
+
+# Extract raw p-values (as before)
+raw_p <- summary_model$coefficients[, "Pr(>|z|)"]
+raw_p <- raw_p[!str_detect(names(raw_p), "Intercept")]
+
+# Apply correction (e.g., Benjamini-Hochberg / FDR)
+corrected_p <- p.adjust(raw_p, method = "fdr")
+
+# Rename like before
+names(corrected_p) <- names(corrected_p) |>
+  str_remove("TRUE") |>
+  (\(x) paste0("p_adj_", x))()
+
 
 # check for multicollinearity
 vif(model) # none are > 5-10
 
-odds_ratios <- round(exp(coef(model)), 2) # get how lokely is a human/covid/licensed/das dataset to be reused
+odds_ratios <- round(exp(coef(model)), 2) # get how likely is a human/covid/licensed/das dataset to be reused
 
 # 2.datasets age-citations relationship -----------------------------------
 
-# load data file
-load(here("data", "tables_for_plots", "ds_age_cit_cor_prep.RData")) # fig-age-citation
+# Prepare table for analysis
+
+load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData")) # load dedup final results
+
+ids_and_years <- dcc_detected_ids_all_sources_8_dedup |> 
+  dplyr::filter(source_charite != "data_articles") |> 
+  select(detected_id, charite_id_year, publication_year_dcc) |> 
+  mutate(age = as.numeric(publication_year_dcc) - as.numeric(charite_id_year)) |> 
+  dplyr::filter(age >= 0 & age <= 3) |> 
+  group_by(detected_id, age) |> 
+  summarise(number_of_citations_in_age = n())
+
+# save as RData
+save_cr(ids_and_years, file = file.path(here("data",
+                                             "inputs_for_quick_render",
+                                             "ids_and_years.RData")))
 
 # model
 
 model_nb <- glmmTMB(
-  n_citations ~ ds_age_when_cited + (1 | detected_in_dcc),
-  data = ds_age_cit_cor_prep,
+  number_of_citations_in_age ~ age + (1 | detected_id),
+  data = ids_and_years,
   family = nbinom2
 )
 
 summary(model_nb)
+

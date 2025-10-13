@@ -48,7 +48,9 @@ load(here("data", "tables_for_plots", "not_mentioned_years.RData")) # fig-non-ye
 
 load(here("data", "tables_for_plots", "rep_dt_ds.RData")) # fig-repo-dist-ds
 
-load(here("data", "inputs_for_quick_render",  "res.RData"))
+load(here("data", "inputs_for_quick_render", "res.RData"))
+
+load(here("data", "inputs_for_quick_render", "ids_and_years.RData"))
 
 ```
 
@@ -759,4 +761,115 @@ rep_dt_ds |>
     panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
   )
 
+```
+
+# Relationship between age and number of citations: All Datasets
+
+```{r}
+#| label: fig-age-citation-1
+#| fig-cap: Datasets and Citing Papers Publication Years
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+ids_and_years |>
+  ggplot(aes(x = age, y = number_of_citations_in_age, group = detected_id)) +
+  geom_line(aes(color = detected_id), linewidth = 1, alpha = 0.5) +
+  geom_point(size = 2, color = "black") +
+
+  geom_text(
+    aes(label = detected_id),
+    vjust = -1.1,
+    size = 5,
+    color = "blue",
+    check_overlap = TRUE
+  ) +
+
+  geom_text(
+    aes(label = number_of_citations_in_age),
+    vjust = 1.5,
+    size = 4,
+    color = "darkred",
+    check_overlap = TRUE
+  ) +
+
+  # One global trend line — override group/color
+  geom_smooth(
+    aes(group = 1),
+    method = "lm",
+    se = FALSE,
+    color = "black",
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+
+  scale_x_continuous(breaks = 0:3) +
+  labs(
+    x = "Age of Dataset (years since publication)",
+    y = "Number of Citations"
+  ) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(color = "black", size = 14),
+        axis.text.y = element_text(color = "black", size = 14),
+        axis.title.x = element_text(color = "black", size = 18),
+        axis.title.y = element_text(color = "black", size = 18)
+        )
+
+```
+
+# Relationship between age and number of citations: Most cited datasets only
+
+```{r}
+#| label: fig-age-citation-2
+#| fig-cap: Datasets and Citing Papers Publication Years
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+ids_and_years |>
+  dplyr::filter(number_of_citations_in_age > 6) |>
+  ggplot(aes(x = age, y = number_of_citations_in_age, group = detected_id)) +
+
+  geom_line(aes(color = detected_id), linewidth = 1, alpha = 0.5) +
+  geom_point(size = 2, color = "black") +
+
+  geom_text(
+    aes(label = detected_id),
+    vjust = -1.1,
+    size = 5,
+    color = "blue",
+    check_overlap = TRUE
+  ) +
+
+  geom_text(
+    aes(label = number_of_citations_in_age),
+    vjust = 1.5,
+    size = 4,
+    color = "darkred",
+    check_overlap = TRUE
+  ) +
+
+  # One global trend line — override group/color
+  geom_smooth(
+    aes(group = 1),
+    method = "lm",
+    se = FALSE,
+    color = "black",
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+
+  scale_x_continuous(breaks = 0:3) +
+  labs(
+    x = "Age of Dataset (years since publication)",
+    y = "Number of Citations"
+  ) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(color = "black", size = 14),
+        axis.text.y = element_text(color = "black", size = 14),
+        axis.title.x = element_text(color = "black", size = 18),
+        axis.title.y = element_text(color = "black", size = 18)
+        )
 ```

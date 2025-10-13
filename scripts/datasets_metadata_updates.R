@@ -1852,7 +1852,21 @@ datasets_metadata_master_updated_019 <- datasets_metadata_master_updated_018  |>
 # save
 metadata_update(datasets_metadata_master_updated_019) # call function to save as csv, xlsx, rda
 
-# 20. add 1 more case of non-matched metadata -----------------------------
 
+# 20. add "is_doi" info ---------------------------------------------------
+
+datasets_metadata_master_updated_020 <- datasets_metadata_master_updated_019 |> 
+  mutate(
+    is_detected_id_doi = case_when(
+      str_starts(dataset_for_matching, "10.") ~ "TRUE",
+      .default = "FALSE"
+    )
+  )
+datasets_metadata_master_updated_020 |> select(dataset_for_matching, detected_id, is_detected_id_doi) |> View() # check
+
+# save
+metadata_update(datasets_metadata_master_updated_020) # call function to save as csv, xlsx, rda
+
+# 21. add 1 more case of non-matched metadata -----------------------------
 
 

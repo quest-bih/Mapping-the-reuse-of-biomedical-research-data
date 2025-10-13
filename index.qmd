@@ -19,7 +19,9 @@ link-citations: true
 
 # load results variables
 load(here::here("data", "inputs_for_quick_render", "res.RData"))
-load(here::here("data", "inputs_for_quick_render", "stat_chi_res.RData"))
+load(here::here("data", "inputs_for_quick_render", "stat_chi_metadata_res.RData"))
+load(here::here("data", "inputs_for_quick_render", "p_age.RData"))
+
 ```
 
 ## 1. Introduction
@@ -196,7 +198,7 @@ Second, we screened data articles published by institutional authors, and used G
 
 ### 3.1. Quantification of institutional dataset reuse using the DCC
 
-We started from a set of `r res$n_dois_for_match` articles (co-)authored by Charité researchers between 2020 and 2023. These articles reported the deposition of `r res$n_ids_for_match_count + res$n_2nd_for_match_count` datasets ('Charité datasets'). For these datasets, we investigated, using the DCC, whether they have been referenced by other articles. We observed that `r res$n_matched_ids_count_dist` of datasets (`r round(res$n_matched_ids_count_dist / res$n_ids_for_match_count * 100, 1)`% of all datasets) have been referenced at least once. Overall, there were `r res$n_mentions` references to datasets, by the time the DCC version used had last been last updated (Feb. 25^th^, 2025). These numbers are shown in @fig-distinct-numbers. The fact that only a subset of datasets has so far been referenced is also reflected in the distribution of references per reused dataset. While a small number of datasets has been referenced many times, with a maximum of `r res$max_mentions_of_single_id` references, `r res$n_ids_with_1_mention_count_dist` out of `r res$n_matched_ids_count_dist` cited datasets (`r round(res$n_ids_with_1_mention_count_dist / res$n_matched_ids_count_dist * 100, 1)`%) have been referenced only once (@fig-datasets-freq-dist), and `r res$placeholder` of datasets (`r res$placeholder`%) have not been referenced so far.
+We started from a set of `r res$n_dois_for_match` articles (co-)authored by Charité researchers between 2020 and 2023. These articles reported the deposition of `r res$n_ids_for_match_count + res$n_2nd_for_match_count` datasets ('Charité datasets'). For these datasets, we investigated, using the DCC, whether they have been referenced by other articles. We observed that `r res$n_matched_ids_count_dist` of datasets (`r round(res$n_matched_ids_count_dist / res$n_ids_for_match_count * 100, 1)`% of all datasets) have been referenced at least once. Overall, there were `r res$n_mentions` references to datasets, by the time the DCC version used had last been last updated (Feb. 25^th^, 2025). These numbers are shown in `r res$placeholder`. The fact that only a subset of datasets has so far been referenced is also reflected in the distribution of references per reused dataset. While a small number of datasets has been referenced many times, with a maximum of `r res$max_mentions_of_single_id` references, `r res$n_ids_with_1_mention_count_dist` out of `r res$n_matched_ids_count_dist` cited datasets (`r round(res$n_ids_with_1_mention_count_dist / res$n_matched_ids_count_dist * 100, 1)`%) have been referenced only once (@fig-datasets-freq-dist), and `r res$placeholder` of datasets (`r res$placeholder`%) have not been referenced so far.
 
 In addition, Figure 3 (= Venn diagram) \[AC\] shows the different data sources, and how they overlap. Here, we pooled sources (1) and (2), as these are conceptually identical and will in the future be extracted in one step. The majority of datasets was found in this pool of identifiers detected by text mining. DataStet contributed an addition `r res$ds_matched_ids_count_dist` datasets, corresponding to `r round(res$ds_matched_ids_count_dist / (res$all_matched_ids_count_dist - res$ds_matched_ids_count_dist) * 100, 1)`%, not found in other sets.
 
@@ -204,9 +206,9 @@ In addition, Figure 3 (= Venn diagram) \[AC\] shows the different data sources, 
 
 We observed that out of `r res$all_mentions` dataset references, `r res$all_mentions_geo` (`r round(res$all_mentions_geo / res$all_mentions * 100, 1)`%) were to deposits in the Gene Expression Omnibus (GEO) (@fig-repo-dist). Overall, references were overwhelmingly to datasets from the fields of genomics and proteomics, i.e., sequences of DNA, RNA, and proteins. The ten most-referenced repositories contain datasets which are predominantly constituted by sequence data. Only `r res$all_mentions_gen_and_discp` of `r res$all_mentions` data references (`r round(res$all_mentions_gen_and_discp / res$all_mentions * 100, 1)`%) referred to datasets of other type, deposited in either disciplinary repositories (e.g. Electron Microscopy Data Bank, `r res$all_mentions_emdb` references) or general-purpose repositories (e.g. Mendeley, `r res$all_mentions_mendeley` references). The overall patters was very similar when looking at the level of datasets rather than references (Supp. @fig-repo-dist-ds). This clearly shows that quantitatively, 'OMICS' fields currently contribute the large majority of dataset reuse cases.
 
-This observation also help to explain the observation made that the use of DOIs is **negatively** correlated with dataset reuse (P = `r stat_chi_res$placeholder` corrected; Figure ... `r res$placeholder`). Within the top five most-referenced repositories (GEO, PDB, dbGaP, NCBI RefSeq, ENA), only PDB uses DOIs, and even in this case the reference used in articles is overwhelmingly to the accession code. We know that general-purpose repositories are represented in the DCC, with 4.4% of references belonging to Dryad, Figshare, Mendeley, and Zenodo (Supp. @fig-dcc-rep). However, even this small number is not reflected in the references to Charité dataset. Overall, the negative correlation between DOIs and dataset reuse is most likely a collateral effect of the fact that data from disciplinary repositories is reused far more, and at the same time these repositories currently rarely mint DOIs for datasets.
+This observation also help to explain the observation made that the use of DOIs is **negatively** correlated with dataset reuse (P = `r round(stat_chi_metadata_res$p_adj_is_detected_id_doi, 2)` corrected; Figure ... `r res$placeholder`). Within the top five most-referenced repositories (GEO, PDB, dbGaP, NCBI RefSeq, ENA), only PDB uses DOIs, and even in this case the reference used in articles is overwhelmingly to the accession code. We know that general-purpose repositories are represented in the DCC, with 4.4% of references belonging to Dryad, Figshare, Mendeley, and Zenodo (Supp. @fig-dcc-rep). However, even this small number is not reflected in the references to Charité dataset. Overall, the negative correlation between DOIs and dataset reuse is most likely a collateral effect of the fact that data from disciplinary repositories is reused far more, and at the same time these repositories currently rarely mint DOIs for datasets.
 
-We investigated further determinants of dataset reuse and found that human data, which constitutes `r round(res$human_data / res$all_matched_ids_count_dist * 100, 1)`% of all checked datasets, is used slightly more often than non-human data (P = `r stat_chi_res$placeholder` corrected; **refer to figure**). In contrast, it had no significant effect on dataset reuse whether the data had a relation to COVID-19 (P = `r stat_chi_res$placeholder` corrected; P = `r stat_chi_res$placeholder` uncorrected), indicating that data reuse is not a phenomenon particularly common to this line of research. In addition, there was also no significant influence of the location of the data references in the original publication on data reuse **\[TODO confirm that this is correct in the final data\]**. Whether the data deposition had been announced in a data availability statement (DAS) or not did not impact the probability of reuse. However, it should be kept in mind that the Charité article sharing the dataset must not have necessarily been the **first** article to do so (see methods), and thus the dataset might have been found by re-users through another, earlier article. Also, this analysis does not differentiate between data references outside of a present DAS and articles without a DAS section.
+We investigated further determinants of dataset reuse and found that human data, which constitutes `r round(res$human_data / res$all_matched_ids_count_dist * 100, 1)`% of all checked datasets, is used slightly more often than non-human data (P = `r round(stat_chi_metadata_res$p_adj_human_data, 2)` corrected; **refer to figure**). In contrast, it had no significant effect on dataset reuse whether the data had a relation to COVID-19 (P = `r round(stat_chi_metadata_res$p_adj_covid_related, 2)` corrected; P = `r round(stat_chi_metadata_res$p_covid_related, 2)` uncorrected), indicating that data reuse is not a phenomenon particularly common to this line of research. In addition, there was also no significant influence of the location of the data references in the original publication on data reuse **\[TODO confirm that this is correct in the final data\]**. Whether the data deposition had been announced in a data availability statement (DAS) or not did not impact the probability of reuse. However, it should be kept in mind that the Charité article sharing the dataset must not have necessarily been the **first** article to do so (see methods), and thus the dataset might have been found by re-users through another, earlier article. Also, this analysis does not differentiate between data references outside of a present DAS and articles without a DAS section.
 
 @fig-sankey presents an overall characterization of reused Charité datasets, with a focus on how these different characteristics are interrelated. It can be observed that reused datasets were, in their majority, shared openly, without a CC license as well as a DOI. Restricted-access reused data were mostly shared through dbGaP. Covid-19-related data were mostly shared though GEO, EGA, and PDB.
 
@@ -356,9 +358,7 @@ References
 
 # Plots
 
-{{< embed notebooks/plots/plots.qmd#fig-distinct-numbers >}}
-
-**Note:** Counts distinct mentioning papers and detected ids, with and without author overlap cases.
+<!-- {{< embed notebooks/plots/plots.qmd#fig-distinct-numbers >}} -->
 
 {{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
 
@@ -383,6 +383,10 @@ References
 {{< embed notebooks/plots/plots.qmd#fig-non-years >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-age-citation-1 >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-age-citation-2 >}}
 
 ::: quarto-figure
 ![Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){#fig-sankey .embedded width="100%" height="600px"}
