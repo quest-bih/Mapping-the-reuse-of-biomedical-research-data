@@ -1855,6 +1855,8 @@ metadata_update(datasets_metadata_master_updated_019) # call function to save as
 
 # 20. add "is_doi" info ---------------------------------------------------
 
+load_latest_metadata_update() # call function to load latest version
+
 datasets_metadata_master_updated_020 <- datasets_metadata_master_updated_019 |> 
   mutate(
     is_detected_id_doi = case_when(
@@ -1869,4 +1871,38 @@ metadata_update(datasets_metadata_master_updated_020) # call function to save as
 
 # 21. add 1 more case of non-matched metadata -----------------------------
 
+load_latest_metadata_update() # call function to load latest version
 
+# I'll add it manually but it's according to the same updating file:
+  # here(
+  #   "data",
+  #   "verification",
+  #   "metadata all",
+  #   "datasets_metadata_master_updated",
+  #   "filled tables",
+  #   "sample_200_ids_no_citation_v14.xlsx")
+
+# check current situation:
+
+datasets_metadata_master_updated_020 |> 
+  dplyr::filter(in_dcc == "FALSE") |> # not in dcc
+  dplyr::filter(!is.na(covid_related)) |> # has no metadata (covid just to sample one column)
+  dplyr::filter(source_charite != "data_articles") |> # not data-articles
+  select(dataset_for_matching) |>
+  distinct() |> # distinct datasets
+  nrow() # indeed 199
+
+# add metadata to one more sampled case:
+
+datasets_metadata_master_updated_021 <- datasets_metadata_master_updated_020 |> 
+  mutate(
+    covid_related = case_when(dataset_for_matching == "gse171690" ~ "TRUE", .default = covid_related),
+    human_data = case_when(dataset_for_matching == "gse171690" ~ "TRUE", .default = human_data),
+    data_availability_statement = case_when(dataset_for_matching == "gse171690" ~ "TRUE", .default = data_availability_statement),
+    das_for_analysis = case_when(dataset_for_matching == "gse171690" ~ "TRUE", .default = das_for_analysis),
+    license = case_when(dataset_for_matching == "gse171690" ~ "FALSE", .default = license),
+    license_for_analysis = case_when(dataset_for_matching == "gse171690" ~ "FALSE", .default = license_for_analysis),
+    charite_id_year = case_when(dataset_for_matching == "gse171690" ~ "2023", .default = charite_id_year))
+
+# save
+metadata_update(datasets_metadata_master_updated_021) # call function to save as csv, xlsx, rda

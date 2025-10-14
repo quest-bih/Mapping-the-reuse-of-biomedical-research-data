@@ -18,7 +18,7 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue)
 
 # Load tables for plots
 
@@ -390,33 +390,62 @@ rep_dt |>
 #| fig.height: 12
 #| fig.width: 10
 
-year_dcc_dt_all_for_plot_agg_top_7 |>
-  ggplot(aes(x = factor(publication_year_dcc), fill = factor(detected_id))) +
-  geom_bar(stat = "identity",
-           position = "stack",
-           aes(y = count)) +
-geom_text(
-  data = year_dcc_dt_all_for_plot_agg_top_7 |>
-    group_by(publication_year_dcc) |>
-    dplyr::filter(!(publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count))),  # Exclude text labels only for specific years
-  aes(y = count, label = count),
-  position = position_stack(vjust = 0.5),
-  size = 4) +
+desired_order <- c("6y2f", "gse55235", "6y2e", "gse44076", "gse14764", "6y2g", "gse45547", "Others")
+
+year_dcc_dt_all_for_plot_collapsed |>
+  dplyr::mutate(
+    detected_id = factor(detected_id, levels = desired_order),
+    publication_year_dcc = dplyr::case_when(
+      publication_year_dcc == "<=2012" ~ "<=2012",
+      TRUE ~ publication_year_dcc
+    )
+  ) |>
+  ggplot(aes(x = factor(publication_year_dcc), fill = detected_id)) +
+  geom_bar(
+    stat = "identity",
+    position = "stack",
+    aes(y = count)
+  ) +
+  geom_text(
+    data = year_dcc_dt_all_for_plot_collapsed |>
+      dplyr::mutate(detected_id = factor(detected_id, levels = desired_order)) |>
+      dplyr::group_by(publication_year_dcc) |>
+      dplyr::filter(!(publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count))),
+    aes(y = count, label = count),
+    position = position_stack(vjust = 0.5),
+    size = 4
+  ) +
   labs(
     x = "Year",
     y = "Count",
     fill = "Accession Number"
   ) +
-  scale_x_discrete(labels = function(x) ifelse(x == "<=2012", expression("\u2264"~2012), x)) +
-  scale_fill_manual(values = c("#C3B1E1", "#F9DC5C", "#FFB6B9", "#E89FB4", "#5DAF9E", "#F4A261", "#87CEFA", "grey")) +
+  scale_x_discrete(
+    labels = \(x) dplyr::case_when(
+      x == "<=2012" ~ "\u2264 2012",
+      .default = x
+    )
+  ) +
+  scale_fill_manual(
+    values = c(
+      "6y2f" = "#C3B1E1",
+      "gse55235" = "#F9DC5C",
+      "6y2e" = "#FFB6B9",
+      "gse44076" = "#E89FB4",
+      "gse14764" = "#5DAF9E",
+      "6y2g" = "#F4A261",
+      "gse45547" = "#87CEFA",
+      "Others" = "grey"
+    )
+  ) +
   theme_classic() +
   theme(
-    #legend.position = "none",
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
     axis.text.y = element_text(size = 16, color = "black"),
     axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
-    )
+  )
+
 
 
 
@@ -599,14 +628,14 @@ setlist <- id_source_for_venn |>
 
 # Oval
 
-venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#E6E6E6", "#A6CEE3", "#B2DF8A")) {
-  stopifnot(length(setlist) == 3)
+venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#A6CEE3", "#B2DF8A")) {
+  stopifnot(length(setlist) == 2)
   
   # Control circle's size and shape
   ellipses <- tibble(
     group = names(setlist),
-    x0 = c(1, 2, 1.5),
-    y0 = c(1, 1, 2),
+    x0 = c(1, 2),
+    y0 = c(1, 1),
     a  = a,
     b  = b,
     angle = 0
@@ -617,24 +646,18 @@ venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#E6E6E6", "
   # Extract sets
   A <- unique(setlist[[1]])
   B <- unique(setlist[[2]])
-  C <- unique(setlist[[3]])
-  
+
   total <- length(unique(c(A, B, C)))
   
   # Define Venn regions
   regions <- tibble(
     label = c(
-      "A only", "B only", "C only",
-      "A & B", "A & C", "B & C", "A & B & C"
+      "A only", "B only", "A & B"
     ),
     count = c(
-      length(setdiff(A, union(B, C))),
-      length(setdiff(B, union(A, C))),
-      length(setdiff(C, union(A, B))),
-      length(intersect(A, B)) - length(Reduce(intersect, list(A, B, C))),
-      length(intersect(A, C)) - length(Reduce(intersect, list(A, B, C))),
-      length(intersect(B, C)) - length(Reduce(intersect, list(A, B, C))),
-      length(Reduce(intersect, list(A, B, C)))
+      length(setdiff(A, B)),
+      length(setdiff(B, A)),
+      length(intersect(A, B))
     )
   ) |>
     mutate(
@@ -644,25 +667,25 @@ venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#E6E6E6", "
       # control text labels locations
       x = c(0.4, # right
             2.6, # left
-            1.5, # top
-            1.5, # bottom inter
-            0.8, # left inter
-            2.3, # right inter
-            1.5), # cented inner
+            #1.5, # top
+            #1.5, # bottom inter
+            #0.8, # left inter
+            #2.3, # right inter
+            1.5), # center inner
       y = c(1,
             1,
-            2.5,
-            0.7, 
-            1.75,
-            1.75,
-            1.5)
+            #2.5,
+            #0.7, 
+            #1.75,
+            #1.75,
+            1.2)
     )
   
   # control titles locations
   titles <- tibble(
     group = names(setlist),
-    x = c(0.6, 2.4, 1.5),
-    y = c(-0.2, -0.2, 3.2)  # top/top/bottom
+    x = c(0.6, 2.4),
+    y = c(-0.2, -0.2)  # top/top/bottom
   )
   
   ggplot() +
@@ -767,7 +790,7 @@ rep_dt_ds |>
 
 ```{r}
 #| label: fig-age-citation-1
-#| fig-cap: Datasets and Citing Papers Publication Years
+#| fig-cap: Datasets and Citing Papers Publication Years (All datasets)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
@@ -822,7 +845,7 @@ ids_and_years |>
 
 ```{r}
 #| label: fig-age-citation-2
-#| fig-cap: Datasets and Citing Papers Publication Years
+#| fig-cap: Datasets and Citing Papers Publication Years (Most cited datasets only)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
@@ -872,4 +895,62 @@ ids_and_years |>
         axis.title.x = element_text(color = "black", size = 18),
         axis.title.y = element_text(color = "black", size = 18)
         )
+```
+
+# \# Relationship between age and number of citations: all datasets are visible
+
+```{r}
+#| label: fig-age-citation-3
+#| fig-cap: Datasets and Citing Papers Publication Years (all datasets are visible)
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 10
+
+
+ids_and_years |>
+  dplyr::mutate(
+    label_full = glue("{detected_id}\n{number_of_citations_in_age}")
+  ) |>
+  ggplot(aes(x = age, y = number_of_citations_in_age, group = detected_id)) +
+  
+  geom_line(aes(color = detected_id), linewidth = 1, alpha = 0.5) +
+  
+  geom_point(
+    size = 1,
+    color = "black",
+    alpha = 0.5,
+    position = position_jitter(width = 0.1, height = 0)
+  ) +
+  
+  geom_text(
+    aes(label = label_full),
+    size = 4.5,
+    color = "blue",
+    check_overlap = TRUE,
+    position = position_jitter(width = 0.1, height = 0)
+  ) +
+  
+  geom_smooth(
+    aes(group = 1),
+    method = "lm",
+    se = FALSE,
+    color = "black",
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+  
+  scale_x_continuous(breaks = 0:3) +
+  labs(
+    x = "Age of Dataset (years since publication)",
+    y = "Number of Citations"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(color = "black", size = 14),
+    axis.text.y = element_text(color = "black", size = 14),
+    axis.title.x = element_text(color = "black", size = 18),
+    axis.title.y = element_text(color = "black", size = 18)
+  )
+
 ```

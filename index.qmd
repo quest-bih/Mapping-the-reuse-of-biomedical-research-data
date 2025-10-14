@@ -374,7 +374,7 @@ References
 
 {{< embed notebooks/plots/plots.qmd#fig-ref-by-year-top-7 >}}
 
-<!-- **Update Notes:** <br> 1. srr12801265 and srx9270124 are both actually prjna668334 dataset.<br> 2. two "ncbi dbgap" identifiers (39 mentions total) were excluded from the plot <br> 3. Years 2023-2024 are not shown in the plot, and that's why the total number of mentions is lower than in other plots. -->
+**Note:** <br> Mentioning year 2024 is not shown in the plot.
 
 {{< embed notebooks/plots/plots.qmd#fig-dcc-rep >}}
 
@@ -382,11 +382,15 @@ References
 
 {{< embed notebooks/plots/plots.qmd#fig-non-years >}}
 
+**Note:** N = 199 since one dataset year couldn't be retrieved by thet time we got to it.
+
 {{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-age-citation-1 >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-age-citation-2 >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-age-citation-3 >}}
 
 ::: quarto-figure
 ![Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){#fig-sankey .embedded width="100%" height="600px"}

@@ -103,7 +103,9 @@ detected_with_dup_sources <- dcc_detected_ids_all_sources_7_w_metadata
 load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData"))
 detected_no_sources_overlap <- dcc_detected_ids_all_sources_8_dedup
 
-rm(dcc_detected_ids_all_sources_7_w_metadata, dcc_detected_ids_all_sources_8_dedup)
+rm(dcc_detected_ids_all_sources_7_w_metadata,
+   dcc_detected_ids_all_sources_8_dedup,
+   datasets_metadata_master_updated_021)
 ```
 
 <br>
@@ -280,8 +282,12 @@ save_cr(combined_long_counts, file = file.path(here("data",
 ```{r fig-datasets-freq-dist-prep}
 
 ds_freq <- detected_no_sources_overlap |>
+  dplyr::filter(source_charite != "data_articles") |> # exclude data articles detected
+  select(detected_id, doi_dcc) |> 
+  distinct() |> 
   group_by(detected_id) |>
-  summarise(n = n())
+  summarise(n = n()) |> 
+  arrange(detected_id, n)
 
 # save as RData
 save_cr(ds_freq, file = file.path(here("data",
@@ -294,31 +300,31 @@ save_cr(ds_freq, file = file.path(here("data",
 ```{r fig-repo-dist-ref-prep}
 
 rep_dt <- detected_no_sources_overlap |> 
-   mutate(repository = case_when(
+  dplyr::filter(source_charite != "data_articles") |> # exclude data articles detected
+  mutate(repository = case_when(
      repository %in% c("ncbi dbgap",
-                             "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
-           repository == "figshare" ~ "Figshare",
-           repository == "the european genome-phenome archive(ega)" ~ "EGA",
-           repository == "gene expression omnibus (geo)" ~ "GEO",
-           repository == "pride proteomics identification database" ~ "PRIDE",
-           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-           repository == "european nucleotide archive" ~ "ENA",
-           repository == "the protein data bank" ~ "PDB",
-           repository == "mendeley" ~ "Mendeley",
-           repository == "bioproject" ~ "Bioproject",
-           repository == "arrayexpress" ~ "Arrayexpress",
-           repository == "openneuro" ~ "Openneuro",
-           repository == "uniprot" ~ "Uniprot",
-           repository == "zenodo" ~ "Zenodo",
-           repository == "harvard dataverse" ~ "Harvard Dataverse",
-           repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "physionet" ~ "Physionet",
-    .default = repository)) |>  # shorten rep names for a nicer appearance
+                       "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
+     repository == "figshare" ~ "Figshare",
+     repository == "the european genome-phenome archive(ega)" ~ "EGA",
+     repository == "gene expression omnibus (geo)" ~ "GEO",
+     repository == "pride proteomics identification database" ~ "PRIDE",
+     repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+     repository == "european nucleotide archive" ~ "ENA",
+     repository == "the protein data bank" ~ "PDB",
+     repository == "mendeley" ~ "Mendeley",
+     repository == "bioproject" ~ "Bioproject",
+     repository == "arrayexpress" ~ "Arrayexpress",
+     repository == "openneuro" ~ "Openneuro",
+     repository == "uniprot" ~ "Uniprot",
+     repository == "harvard dataverse" ~ "Harvard Dataverse",
+     repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+     repository == "the international genome sample resource" ~ "IGSR",
+     repository == "the international genome sample resource" ~ "IGSR",
+     repository == "apollo - university of cambridge repository" ~ "Apollo",
+     .default = repository)) |>  # shorten rep names for a nicer appearance
   select(repository, doi_dcc, detected_id) |>
   group_by(repository) |> 
-  summarise(n = n_distinct(doi_dcc, detected_id)) |> 
+  summarise(n = n_distinct(doi_dcc, detected_id)) |> # number of mentions in each repository
   arrange(desc(n))
 
 
@@ -334,35 +340,27 @@ save_cr(rep_dt, file = file.path(here("data",
 ```{r fig-ref-by-year-prep}
 
 year_dcc_dt_all <- detected_no_sources_overlap |>
-  select(doi_dcc, detected_id, publication_year_dcc) |> 
+  dplyr::filter(source_charite != "data_articles") |> 
+  select(doi_dcc, detected_id, publication_year_dcc) |>
   distinct() |> 
-  count(detected_id, sort = TRUE)
+  count(detected_id, publication_year_dcc, name = "count", sort = TRUE)
 
-year_dcc_dt_all_for_plot <- year_dcc_dt_all |>
-  inner_join(detected_no_sources_overlap, by = "detected_id")
+# # verify that there's no more than 1 year value for each mention:
+# detected_no_sources_overlap |>
+#   select(doi_dcc, detected_id, publication_year_dcc) |> 
+#   distinct() |> 
+#   group_by(doi_dcc, detected_id) |> 
+#   summarise(n = n()) |> 
+#   dplyr::filter(n > 1) # verified
 
-top_7 <- year_dcc_dt_all |> select(detected_id) |> slice(1:7)
-# top_4 <- year_dcc_dt_all |> select(detected_id) |> slice(1:4)
+top_7 <- year_dcc_dt_all |>
+  group_by(detected_id) |>
+  summarise(total = sum(count)) |>
+  arrange(desc(total)) |> 
+  slice(1:7) |> 
+  select(detected_id)
 
-# year_dcc_dt_all_for_plot_agg_top_4 <- year_dcc_dt_all_for_plot |> 
-#   mutate(
-#     detected_id = case_when(
-#       !detected_id %in% top_4$detected_id ~ "Others",
-#       .default = detected_id),
-#     publication_year_dcc = as.character(publication_year_dcc),
-#     publication_year_dcc = case_when(
-#       publication_year_dcc %in% c("2009", "2010", "2011", "2012") ~ "<=2012",
-#       .default = publication_year_dcc)) |> 
-#   group_by(detected_id, publication_year_dcc) |> 
-#   summarise(count = n(), .groups = "drop") |> 
-#   dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
-# 
-# # save as RData
-# save_cr(year_dcc_dt_all_for_plot_agg_top_4, file = file.path(here("data",
-#                                                             "tables_for_plots",
-#                                                             "year_dcc_dt_all_for_plot_agg_top_4.RData")))
-
-year_dcc_dt_all_for_plot_agg_top_7 <- year_dcc_dt_all_for_plot |> 
+year_dcc_dt_all_for_plot <- year_dcc_dt_all |> 
   mutate(
     detected_id = case_when(
       !detected_id %in% top_7$detected_id ~ "Others",
@@ -370,10 +368,15 @@ year_dcc_dt_all_for_plot_agg_top_7 <- year_dcc_dt_all_for_plot |>
     publication_year_dcc = as.character(publication_year_dcc),
     publication_year_dcc = case_when(
       publication_year_dcc %in% c("2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012") ~ "<=2012",
-      .default = publication_year_dcc)) |> 
-  group_by(detected_id, publication_year_dcc) |> 
-  summarise(count = n(), .groups = "drop") |> 
-  dplyr::filter(!publication_year_dcc %in% c("2023", "2024"))
+      .default = publication_year_dcc)) |>
+  dplyr::filter(publication_year_dcc != "2024")
+
+year_dcc_dt_all_for_plot_collapsed <-
+  year_dcc_dt_all_for_plot |>
+  dplyr::group_by(detected_id, publication_year_dcc) |>
+  dplyr::summarise(count = sum(count), .groups = "drop")
+
+year_dcc_dt_all_for_plot_collapsed |> summarise(total_count = sum(count)) # verify count - verified! (two 2024 are omitted)
 
 # save as RData
 save_cr(year_dcc_dt_all_for_plot_agg_top_7, file = file.path(here("data",
@@ -389,6 +392,7 @@ save_cr(year_dcc_dt_all_for_plot_agg_top_7, file = file.path(here("data",
 # Prepare table for sankey:
 
 dcc_charite_for_sankey <- detected_no_sources_overlap |>
+  dplyr::filter(source_charite != "data_articles") |> 
   select(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) |>
   distinct()
 
@@ -440,6 +444,7 @@ links_access_rep <- dcc_charite_for_sankey |>
            repository == "the international genome sample resource" ~ "IGSR",
            repository == "the international genome sample resource" ~ "IGSR",
            repository == "physionet" ~ "Physionet",
+           repository == "apollo - university of cambridge repository" ~ "Apollo",
            .default = repository)) |>
   count(source, target) |>
   rename(value = n) |>
@@ -447,30 +452,31 @@ links_access_rep <- dcc_charite_for_sankey |>
 
 links_rep_covid <- dcc_charite_for_sankey |>
   mutate(source = case_when(
-                   repository %in% c("ncbi dbgap",
-                             "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
-           repository == "figshare" ~ "Figshare",
-           repository == "the european genome-phenome archive(ega)" ~ "EGA",
-           repository == "gene expression omnibus (geo)" ~ "GEO",
-           repository == "pride proteomics identification database" ~ "PRIDE",
-           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-           repository == "european nucleotide archive" ~ "ENA",
-           repository == "the protein data bank" ~ "PDB",
-           repository == "mendeley" ~ "Mendeley",
-           repository == "bioproject" ~ "Bioproject",
-           repository == "arrayexpress" ~ "Arrayexpress",
-           repository == "openneuro" ~ "Openneuro",
-           repository == "uniprot" ~ "Uniprot",
-           repository == "zenodo" ~ "Zenodo",
-           repository == "harvard dataverse" ~ "Harvard Dataverse",
-           repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "physionet" ~ "Physionet",
-           .default = repository),
-         target = case_when(covid_related == "TRUE" ~ "Covid Related",
-                            covid_related == "FALSE" ~ "Not Covid Related",
-                            .default = "covid not checked yet")) |>
+    repository %in% c("ncbi dbgap",
+                      "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
+    repository == "figshare" ~ "Figshare",
+    repository == "the european genome-phenome archive(ega)" ~ "EGA",
+    repository == "gene expression omnibus (geo)" ~ "GEO",
+    repository == "pride proteomics identification database" ~ "PRIDE",
+    repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+    repository == "european nucleotide archive" ~ "ENA",
+    repository == "the protein data bank" ~ "PDB",
+    repository == "mendeley" ~ "Mendeley",
+    repository == "bioproject" ~ "Bioproject",
+    repository == "arrayexpress" ~ "Arrayexpress",
+    repository == "openneuro" ~ "Openneuro",
+    repository == "uniprot" ~ "Uniprot",
+    repository == "zenodo" ~ "Zenodo",
+    repository == "harvard dataverse" ~ "Harvard Dataverse",
+    repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+    repository == "the international genome sample resource" ~ "IGSR",
+    repository == "the international genome sample resource" ~ "IGSR",
+    repository == "physionet" ~ "Physionet",
+    repository == "apollo - university of cambridge repository" ~ "Apollo",
+    .default = repository),
+    target = case_when(covid_related == "TRUE" ~ "Covid Related",
+                       covid_related == "FALSE" ~ "Not Covid Related",
+                       .default = "covid not checked yet")) |>
   count(source, target) |>
   rename(value = n) |>
   as.data.frame()
@@ -498,11 +504,12 @@ Create a table like in the reference pic that I took, with: Dimensions of metada
 
 (for this I need dataset_master)
 
-```{r}
+```{r fig-non-years}
 
 # Get the data from the 200 sampled
 
 not_mentioned_years <- datasets_metadata_master_latest |>
+  dplyr::filter(source_charite != "data_articles") |> 
   dplyr::filter(in_dcc == "FALSE") |>
   dplyr::filter(!is.na(covid_related)) |>
   select(charite_id_year, dataset_for_matching) |>
@@ -523,17 +530,12 @@ save_cr(not_mentioned_years, file = file.path(here("data",
 ```{r}
 
 id_source_for_venn <- detected_with_dup_sources |>
-  bind_rows(
-    detected_with_dup_sources |> 
-      slice_head(n = 2) |> 
-      mutate(source_charite = "data_articles_in_numbat")) |> 
+  dplyr::filter(source_charite != "data_articles") |> 
   select(detected_id, source_charite) |> 
   distinct() |> 
-  dplyr::filter(source_charite != "additional_ids_in_numbat") |> 
   mutate(source_charite = case_when(
-    source_charite %in% c("numbat", "additional_ids", "data_articles_in_numbat") ~ "Numbat (and additional)",
-    source_charite %in% c("datastet", "datastet_in_additional_ids", "datastet_in_numbat") ~ "DataStet",
-    source_charite %in% c("data_articles") ~ "Data Articles",
+    source_charite %in% c("numbat", "additional_ids") ~ "Numbat",
+    source_charite == "datastet" ~ "DataStet",
     .default = source_charite))
 
 venn_input_for_debugging <- id_source_for_venn |>
@@ -552,33 +554,34 @@ save_cr(id_source_for_venn, file = file.path(here("data",
 ```{r fig-repo-dist-id-prep}
 
 rep_dt_ds <- detected_no_sources_overlap |> 
+  dplyr::filter(source_charite != "data_articles") |> 
    mutate(repository = case_when(
      repository %in% c("ncbi dbgap",
                              "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
-           repository == "figshare" ~ "Figshare",
-           repository == "the european genome-phenome archive(ega)" ~ "EGA",
-           repository == "gene expression omnibus (geo)" ~ "GEO",
-           repository == "pride proteomics identification database" ~ "PRIDE",
-           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-           repository == "european nucleotide archive" ~ "ENA",
-           repository == "the protein data bank" ~ "PDB",
-           repository == "mendeley" ~ "Mendeley",
-           repository == "bioproject" ~ "Bioproject",
-           repository == "arrayexpress" ~ "Arrayexpress",
-           repository == "openneuro" ~ "Openneuro",
-           repository == "uniprot" ~ "Uniprot",
-           repository == "zenodo" ~ "Zenodo",
-           repository == "harvard dataverse" ~ "Harvard Dataverse",
-           repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "physionet" ~ "Physionet",
+     repository == "figshare" ~ "Figshare",
+     repository == "the european genome-phenome archive(ega)" ~ "EGA",
+     repository == "gene expression omnibus (geo)" ~ "GEO",
+     repository == "pride proteomics identification database" ~ "PRIDE",
+     repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+     repository == "european nucleotide archive" ~ "ENA",
+     repository == "the protein data bank" ~ "PDB",
+     repository == "mendeley" ~ "Mendeley",
+     repository == "bioproject" ~ "Bioproject",
+     repository == "arrayexpress" ~ "Arrayexpress",
+     repository == "openneuro" ~ "Openneuro",
+     repository == "uniprot" ~ "Uniprot",
+     repository == "zenodo" ~ "Zenodo",
+     repository == "harvard dataverse" ~ "Harvard Dataverse",
+     repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+     repository == "the international genome sample resource" ~ "IGSR",
+     repository == "the international genome sample resource" ~ "IGSR",
+     repository == "physionet" ~ "Physionet",
+     repository == "apollo - university of cambridge repository" ~ "Apollo",
     .default = repository)) |>  # shorten rep names for a nicer appearance
   select(repository, detected_id) |>
   group_by(repository) |> 
   summarise(n = n_distinct(detected_id)) |> 
   arrange(desc(n))
-
 
 # save as RData
 save_cr(rep_dt_ds, file = file.path(here("data",

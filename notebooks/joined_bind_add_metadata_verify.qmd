@@ -745,7 +745,7 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_matched_for_joining <- datasets_metadata_master_updated_019 |>
+metadata_matched_for_joining <- datasets_metadata_master_updated_021 |>
   dplyr::filter(in_dcc == "TRUE") |> 
   select(doi_id_clean_pair_with_source,
          license,
@@ -917,3 +917,37 @@ dcc_detected_ids_all_sources_8_dedup <- dcc_detected_ids_all_sources_8_dedup |>
 save_cr(dcc_detected_ids_all_sources_8_dedup, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData")))
 
 ```
+
+# Verify that all the same detected ids are in metadata, in all sources dup and all sources dedup
+
+```{r verification}
+
+# detected from metadata
+t1 <- datasets_metadata_master_updated_021 |> 
+  dplyr::filter(in_dcc == "TRUE") |> 
+  dplyr::filter(source_charite != "data_articles") |> 
+  select(detected_id) |> 
+  distinct() |> 
+  arrange(detected_id)
+
+# without sources overlap
+t2 <- dcc_detected_ids_all_sources_8_dedup |> 
+  dplyr::filter(source_charite != "data_articles") |> 
+  select(detected_id) |> 
+  distinct() |> 
+  arrange(detected_id)
+
+# with sources overlap
+t3 <- dcc_detected_ids_all_sources_7_w_metadata |> 
+  dplyr::filter(source_charite != "data_articles") |> 
+  select(detected_id) |> 
+  distinct() |> 
+  arrange(detected_id)
+
+waldo::compare(t1, t2)
+
+waldo::compare(t2, t3)
+
+waldo::compare(t1, t3)
+
+# No differences!
