@@ -379,9 +379,9 @@ year_dcc_dt_all_for_plot_collapsed <-
 year_dcc_dt_all_for_plot_collapsed |> summarise(total_count = sum(count)) # verify count - verified! (two 2024 are omitted)
 
 # save as RData
-save_cr(year_dcc_dt_all_for_plot_agg_top_7, file = file.path(here("data",
+save_cr(year_dcc_dt_all_for_plot_collapsed, file = file.path(here("data",
                                                             "tables_for_plots",
-                                                            "year_dcc_dt_all_for_plot_agg_top_7.RData")))
+                                                            "year_dcc_dt_all_for_plot_collapsed.RData")))
 
 ```
 

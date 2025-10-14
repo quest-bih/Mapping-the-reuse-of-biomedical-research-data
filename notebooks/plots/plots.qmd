@@ -30,7 +30,7 @@ load(here("data", "tables_for_plots", "rep_dt.RData"))                 # fig-rep
 
 load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_agg_top_4.RData")) # fig-ref-by-year-top-4
 
-load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_agg_top_7.RData")) # fig-ref-by-year-top-7
+load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_collapsed.RData")) # fig-ref-by-year-top-7
 
 load(here("data", "tables_for_plots", "links_all.RData")) # fig-datasets-properties
 
