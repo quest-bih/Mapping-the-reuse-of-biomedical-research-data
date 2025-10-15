@@ -67,6 +67,12 @@ datasets_metadata_master_latest <- load_latest_metadata_update() # call function
 
 load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_3_au_info.RData"))
 
+# load numbat datasets for matching:
+load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData"))
+
+# load all numbat datasetsm including non-OD:
+load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids.RData"))
+
 # Load latest all_sources
 
 # get file names
@@ -116,59 +122,127 @@ rm(dcc_detected_ids_all_sources_7_w_metadata,
 
 ```{r fig-distinct-numbers-prep}
 
-dcc_summary <- detected_no_sources_overlap |>
-  select(source_charite, detected_id, doi_dcc) |> 
-  group_by(source_charite) |> 
-  summarise(
-    distinct_detected_id = n_distinct(detected_id),
-    distinct_doi_dcc = n_distinct(doi_dcc),
-    .groups = "drop"
+# 1. Numbat datasets for matching, detected numbat datasets and numbat mentions;
+#    Detected DataStet and Additional IDs, DS+AD mentions
+
+counts_ids_and_dois <- tibble(
+  category = c(
+    "numbat_dois",
+    "numbat_all_ids",
+    "numbat_ids_for_matching",
+    "numbat_detected_ids",
+    "numbat_mentions",
+    "ds_ad_detected_ids",
+    "ds_ad_mentions"
+  ),
+  count = c(
+    numbat_da_dois_and_ids_9_clean_pairs |>
+    select(doi_no_ver_info) |>
+    distinct() |>
+    nrow(), # number of numbat datasets for matching
+    
+    numbat_da_dois_and_ids |> 
+    select(data_id_lc) |> 
+    distinct() |> 
+    nrow(),
+
+    numbat_da_dois_and_ids_9_clean_pairs |>
+      select(dataset_for_matching) |>
+      distinct() |>
+      nrow(), # number of numbat datasets for matching
+
+    detected_no_sources_overlap |>
+      dplyr::filter(source_charite == "numbat") |>
+      select(detected_id) |>
+      distinct() |>
+      nrow(), # numebr of detected numbat datasets
+    
+     detected_no_sources_overlap |>
+      dplyr::filter(source_charite == "numbat") |>
+      select(detected_id, doi_dcc) |>
+      distinct() |>
+      nrow(), # number of mentions from numbat   
+    
+      detected_no_sources_overlap |>
+      dplyr::filter(source_charite %in% c("datastet", "additional_ids")) |>
+      select(detected_id) |>
+      distinct() |>
+      nrow(), # number of detected dataStet + additional ids
+    
+      detected_no_sources_overlap |>
+      dplyr::filter(source_charite %in% c("datastet", "additional_ids")) |>
+      select(detected_id, doi_dcc) |>
+      distinct() |>
+      nrow() # number of mentions dataStet + additional ids
   )
-
-dcc_au_ov <- numbat_da_dcc_joined_3_au_info |>
-  select(source_charite, detected_id, doi_dcc) |> 
-  group_by(source_charite) |> 
-  summarise(
-    distinct_detected_id = n_distinct(detected_id),
-    distinct_doi_dcc = n_distinct(doi_dcc),
-    .groups = "drop"
-  ) |> 
-  bind_rows(
-    dcc_summary |>
-      dplyr::filter(
-        source_charite %in% c("additional_ids", "datastet")))
-
-
-# Prepare data
-dcc_summary_long <- dcc_summary |>
-  mutate(dataset = "dcc_summary") |>
-  pivot_longer(cols = starts_with("distinct_"),
-               names_to = "Type",
-               values_to = "Count")
-
-dcc_au_ov_long <- dcc_au_ov |>
-  mutate(dataset = "dcc_au_ov") |>
-  pivot_longer(cols = starts_with("distinct_"),
-               names_to = "Type",
-               values_to = "Count")
-
-combined_long_counts <- bind_rows(dcc_summary_long, dcc_au_ov_long) |> 
-  mutate(
-    label_nudge = case_when(
-      #Type == "distinct_detected_id" & source_charite == "numbat" ~ -0.15,
-      #Type == "distinct_detected_id" & source_charite == "datastet" ~ 0,
-      Type == "distinct_detected_id" & source_charite == "data_articles" ~ -0.15,
-      Type == "distinct_detected_id" & source_charite == "additional_ids" ~ 0.15,
-      .default = 0  # no nudge for other bars
-    )
-  )
-
+)
 
 # save as RData
-save_cr(combined_long_counts, file = file.path(here("data",
-                                                      "tables_for_plots",
-                                                      "combined_long_counts.RData")))
+save_cr(counts_ids_and_dois, file = file.path(here("data",
+                                                   "tables_for_plots",
+                                                   "counts_ids_and_dois.RData")))
 
+# 2. Data Articles: 
+
+
+
+
+
+##### ARCHIVE: #####
+
+# dcc_summary <- detected_no_sources_overlap |>
+#   select(source_charite, detected_id, doi_dcc) |> 
+#   group_by(source_charite) |> 
+#   summarise(
+#     distinct_detected_id = n_distinct(detected_id),
+#     distinct_doi_dcc = n_distinct(doi_dcc),
+#     .groups = "drop"
+#   )
+# 
+# dcc_au_ov <- numbat_da_dcc_joined_3_au_info |>
+#   select(source_charite, detected_id, doi_dcc) |> 
+#   group_by(source_charite) |> 
+#   summarise(
+#     distinct_detected_id = n_distinct(detected_id),
+#     distinct_doi_dcc = n_distinct(doi_dcc),
+#     .groups = "drop"
+#   ) |> 
+#   bind_rows(
+#     dcc_summary |>
+#       dplyr::filter(
+#         source_charite %in% c("additional_ids", "datastet")))
+# 
+# 
+# # Prepare data
+# dcc_summary_long <- dcc_summary |>
+#   mutate(dataset = "dcc_summary") |>
+#   pivot_longer(cols = starts_with("distinct_"),
+#                names_to = "Type",
+#                values_to = "Count")
+# 
+# dcc_au_ov_long <- dcc_au_ov |>
+#   mutate(dataset = "dcc_au_ov") |>
+#   pivot_longer(cols = starts_with("distinct_"),
+#                names_to = "Type",
+#                values_to = "Count")
+# 
+# combined_long_counts <- bind_rows(dcc_summary_long, dcc_au_ov_long) |> 
+#   mutate(
+#     label_nudge = case_when(
+#       #Type == "distinct_detected_id" & source_charite == "numbat" ~ -0.15,
+#       #Type == "distinct_detected_id" & source_charite == "datastet" ~ 0,
+#       Type == "distinct_detected_id" & source_charite == "data_articles" ~ -0.15,
+#       Type == "distinct_detected_id" & source_charite == "additional_ids" ~ 0.15,
+#       .default = 0  # no nudge for other bars
+#     )
+#   )
+# 
+# 
+# # save as RData
+# save_cr(combined_long_counts, file = file.path(here("data",
+#                                                       "tables_for_plots",
+#                                                       "combined_long_counts.RData")))
+# 
 
 
 
