@@ -392,6 +392,10 @@ References
 
 {{< embed notebooks/plots/plots.qmd#fig-age-citation-3 >}}
 
+{{< embed notebooks/plots/plots.qmd#fig-repo-dist-da >}}
+
+{{< embed notebooks/plots/plots.qmd#fig-matched-non >}}
+
 ::: quarto-figure
 ![Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){#fig-sankey .embedded width="100%" height="600px"}
 :::

@@ -122,8 +122,7 @@ rm(dcc_detected_ids_all_sources_7_w_metadata,
 
 ```{r fig-distinct-numbers-prep}
 
-# 1. Numbat datasets for matching, detected numbat datasets and numbat mentions;
-#    Detected DataStet and Additional IDs, DS+AD mentions
+# 1. DOIs, IDs and Mentions - w/o Data Articles
 
 counts_ids_and_dois <- tibble(
   category = c(
@@ -182,12 +181,57 @@ save_cr(counts_ids_and_dois, file = file.path(here("data",
                                                    "tables_for_plots",
                                                    "counts_ids_and_dois.RData")))
 
-# 2. Data Articles: 
+# 2. DOIs, IDs and Mentions - Only Data Articles
 
+charite_da_dois_and_ids <- read.csv(
+  file.path(here("data",
+                 "raw",
+                 "charite",
+                 "data_articles_AI_2025_05_14.csv")),
+  header = TRUE,
+  sep = ";")
 
+load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RData"))
 
+counts_ids_and_dois_da <- tibble(
+  category = c(
+    "da_dois",
+    "da_data_articles",
+    "da_datasets",
+    "da_ref",
+    "da_ref_extrapolated"
+  ),
+  count = c(
+    charite_da_dois_and_ids |>
+      select(charite_doi) |>
+      distinct() |>
+      nrow(), # number of charite dois with data articles
+    
+    charite_da_dois_and_ids |>
+      select(identifier_from_data_article_analysis) |>
+      distinct() |>
+      nrow(), # number of data articles
+    
+    charite_da_dois_and_ids |>
+      select(identifier_from_data_article_analysis) |>
+      distinct() |>
+      nrow(), # number of data articles datasets ### FIX
+    
+    data_articles_dois_v10 |>
+      distinct() |> 
+      nrow(), # number of mentions
+    
+    data_articles_dois_v10 |>
+      distinct() |> 
+      nrow() # number of mentions (extrapolation) ### FIX
+  )
+)
 
-
+# save as RData
+save_cr(counts_ids_and_dois_da, file = file.path(here("data",
+                                                      "tables_for_plots",
+                                                      "counts_ids_and_dois_da.RData")))
+    
 ##### ARCHIVE: #####
 
 # dcc_summary <- detected_no_sources_overlap |>
@@ -664,10 +708,51 @@ save_cr(rep_dt_ds, file = file.path(here("data",
 
 ```
 
-# Exclusion Steps
+# Repositories Distribution of Data Articles
 
 ```{r}
 
+rep_dt_da <- charite_da_dois_and_ids |> 
+  mutate(repository = case_when(repository == "2020" ~ "Zenodo",
+                                repository == "OpenNEURO" ~ "Openneuro",
+                                repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
+                                .default = repository)) |> 
+  dplyr::filter(repository != "n/a") |> 
+  dplyr::filter(identifier_from_data_article_analysis != "NULL") |> 
+  select(identifier_from_data_article_analysis, repository) |> 
+  group_by(repository) |> 
+  summarise(n = n_distinct(identifier_from_data_article_analysis))
 
+
+# save as RData
+save_cr(rep_dt_da, file = file.path(here("data",
+                                         "tables_for_plots",
+                                         "rep_dt_da.RData")))
+
+```
+
+
+# Repositories Distribution of Data Articles Mentions
+
+```{r}
+
+##### FIX
+
+# rep_dt_da <- charite_da_dois_and_ids |> 
+#   mutate(repository = case_when(repository == "2020" ~ "Zenodo",
+#                                 repository == "OpenNEURO" ~ "Openneuro",
+#                                 repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
+#                                 .default = repository)) |> 
+#   dplyr::filter(repository != "n/a") |> 
+#   dplyr::filter(identifier_from_data_article_analysis != "NULL") |> 
+#   select(identifier_from_data_article_analysis, repository) |> 
+#   group_by(repository) |> 
+#   summarise(n = n_distinct(identifier_from_data_article_analysis))
+# 
+# 
+# # save as RData
+# save_cr(rep_dt_da, file = file.path(here("data",
+#                                          "tables_for_plots",
+#                                          "rep_dt_da.RData")))
 
 ```

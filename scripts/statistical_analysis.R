@@ -2,7 +2,7 @@
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, lsr, car)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, lsr, car, broom)
 
 # wrappers for save. write.csv() and write_xlsx with automatic directory creation
 
@@ -91,7 +91,7 @@ load_latest_metadata_update()
 
 # get only relevant cases (matched + sample of 200 non-matched)
 
-data_for_glm <- datasets_metadata_master_updated_020 |> 
+data_for_glm <- datasets_metadata_master_updated_021 |> 
   dplyr::filter(!is.na(covid_related)) |> 
   dplyr::filter(source_charite != "data_articles") |> 
   select(detected_id,
@@ -131,11 +131,71 @@ names(corrected_p) <- names(corrected_p) |>
   str_remove("TRUE") |>
   (\(x) paste0("p_adj_", x))()
 
-
 # check for multicollinearity
 vif(model) # none are > 5-10
 
 odds_ratios <- round(exp(coef(model)), 2) # get how likely is a human/covid/licensed/das dataset to be reused
+
+# prepare table for plot
+
+clean_labels <- c(
+  "covid_relatedTRUE"        = "Covid Related",
+  "human_dataTRUE"           = "Human Data",
+  "license_for_analysisTRUE" = "CC Licensed",
+  "das_for_analysisTRUE"     = "In DAS",
+  "is_detected_id_doiTRUE"   = "DOI"
+)
+
+tidy_model_matched_non_matched <- model |>
+  broom::tidy(conf.int = TRUE) |>
+  dplyr::filter(term != "(Intercept)") |>
+  dplyr::mutate(
+    term_clean = dplyr::recode(term, !!!clean_labels),
+    significance = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      .default        = ""
+    )
+  )
+
+# save as RData
+save_cr(tidy_model_matched_non_matched, file = file.path(here("data",
+                                         "tables_for_plots",
+                                         "tidy_model_matched_non_matched.RData")))
+
+# Contingency tables
+
+# list of predictors to analyze
+predictors <- c(
+  "das_for_analysis",
+  "human_data",
+  "covid_related",
+  "license_for_analysis",
+  "is_detected_id_doi"
+)
+
+# function to build one contingency table
+make_table <- function(var) {
+  data_for_glm |>
+    dplyr::count(in_dcc, !!sym(var)) |>
+    tidyr::pivot_wider(
+      names_from = !!sym(var),
+      values_from = n,
+      names_prefix = paste0(var, "_")
+    ) |>
+    mutate(variable = var, .before = 1)
+}
+
+# apply to each predictor
+contingency_tables <- predictors |> map(make_table)
+
+# name each list element for clarity
+names(contingency_tables) <- predictors
+
+# view all tables
+contingency_tables
+
 
 # 2.datasets age-citations relationship -----------------------------------
 

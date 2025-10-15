@@ -246,5 +246,11 @@ detected_no_sources_overlap |>
   summarise(n = n())
 
 
-
+charite_da_dois_and_ids <- read.csv(
+  file.path(here("data",
+                 "raw",
+                 "charite",
+                 "data_articles_AI_2025_05_14.csv")),
+  header = TRUE,
+  sep = ";")
   

@@ -18,7 +18,7 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue, broom)
 
 # Load tables for plots
 
@@ -48,9 +48,15 @@ load(here("data", "tables_for_plots", "not_mentioned_years.RData")) # fig-non-ye
 
 load(here("data", "tables_for_plots", "rep_dt_ds.RData")) # fig-repo-dist-ds
 
+load(here("data", "tables_for_plots", "rep_dt_da.RData")) # fig-repo-dist-da
+
+load(here("data", "tables_for_plots", "tidy_model_matched_non_matched.RData")) # fig-matched-non
+
 load(here("data", "inputs_for_quick_render", "res.RData"))
 
 load(here("data", "inputs_for_quick_render", "ids_and_years.RData"))
+
+
 
 ```
 
@@ -951,6 +957,72 @@ ids_and_years |>
     axis.text.y = element_text(color = "black", size = 14),
     axis.title.x = element_text(color = "black", size = 18),
     axis.title.y = element_text(color = "black", size = 18)
+  )
+
+```
+
+# Distribution of References Across Repositories: Data Articles
+
+```{r}
+#| label: fig-repo-dist-da
+#| fig-cap: Distribution of References Across Repositories Data Articles
+#| fig-format: png
+#| fig.height: 10
+#| fig.width: 10
+
+# log scale
+
+rep_dt_da |>
+  ggplot(aes(x = reorder(repository, n), y = n)) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           fill = "#80CBC4") +
+  geom_text(aes(y = n, label = n),
+            hjust = -0.2,
+            size = 6, color = "black") +
+  coord_flip() +
+  labs(x = "Repository", y = "Number of Data Articles") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 20, color = "black"),
+    axis.text.x = element_text(size = 20, color = "black"),
+    panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
+    panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
+    panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
+  )
+
+```
+
+# Predictors of Citation Likelihood
+
+```{r}
+#| label: fig-matched-non
+#| fig-cap: Predictors of Citation Likelihood
+#| fig-format: png
+#| fig.height: 10
+#| fig.width: 10
+
+tidy_model_matched_non_matched |>
+  mutate(term_clean = fct_reorder(term_clean, estimate)) |>
+  ggplot(aes(x = term_clean, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  geom_text(aes(label = sprintf("%.2f %s", estimate, significance)), hjust = 0.3, vjust = -1.2, size = 6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_flip() +
+  labs(
+    x = "Predictor",
+    y = "Estimated Effect on Citation (Log-odds)"
+  ) +
+  theme_classic() +
+    theme(
+    axis.text.x = element_text(size = 16),       # x-axis tick labels
+    axis.text.y = element_text(size = 16),       # y-axis tick labels
+    axis.title.x = element_text(size = 20, margin = margin(t=22)),      # x-axis title
+    axis.title.y = element_text(size = 20, margin = margin(r=22)),      # x-axis title
   )
 
 ```

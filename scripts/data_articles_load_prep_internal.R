@@ -62,6 +62,34 @@ save_cr(data_articles_dois, file = file.path(here("data",
                                                   "1_data_articles_dois.RData")))
 
 
+# Load raw xlsx into a csv
+
+# Read sheet "datasets_reuses" from Excel file
+data_articles_dois_v10 <- read_excel(file.path(here("data",
+                                                "raw",
+                                                "data_articles",
+                                                "v10"), "datajournal_articles - analysis of citations v10.xlsx"),
+                                 sheet = "datasets_reuses") |> # load relevant sheet from xlsx
+  rename(charite_doi = `Charité article DOI`,
+         reusing_paper_doi = `DOIs/links of articles that reused data`) |>  # rename columns
+  mutate(across(everything(), tolower)) |> # tolower
+  select(charite_doi, reusing_paper_doi) # get only relevant columns: charite paper and reusing paper
+
+# Write to csv
+write.csv(data_articles_dois_v10, file.path(here("data",
+                                             "raw",
+                                             "data_articles",
+                                             "v10",
+                                             "data_articles_dois_v10.csv")),
+          row.names = FALSE)
+
+# save as RData
+save_cr(data_articles_dois_v10, file = file.path(here("data",
+                                                  "wrangling_steps",
+                                                  "data_articles",
+                                                  "data_articles_dois_v10.RData")))
+
+
 # 3. Prepare DOIs list for openalex authors extraction script -------------
 
 
