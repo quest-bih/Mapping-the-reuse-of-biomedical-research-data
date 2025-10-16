@@ -193,9 +193,10 @@ contingency_tables <- predictors |> map(make_table)
 # name each list element for clarity
 names(contingency_tables) <- predictors
 
-# view all tables
-contingency_tables
-
+# save as RData
+save_cr(contingency_tables, file = file.path(here("data",
+                                                  "tables_for_plots",
+                                                  "contingency_tables.RData")))
 
 # 2.datasets age-citations relationship -----------------------------------
 

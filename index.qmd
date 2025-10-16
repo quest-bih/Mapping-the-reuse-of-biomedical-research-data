@@ -396,9 +396,24 @@ References
 
 {{< embed notebooks/plots/plots.qmd#fig-matched-non >}}
 
+**Interpertation:**
+<br>
+1. Datasets that include human data are 1.99 times the odds of be cited compared to those without (Meaning almost twice as likely to be cited).
+<br>
+2. Covid was only marginally significant: (*p = 0.0514*).
+<br>
+3. Datasets under the "1" value have 0.3 / 0.23 / 0.18 times the odds to be cited (e.g. 0.3 means 70% less likely to be cited).
+
 ::: quarto-figure
 ![Datasets Access, Repositories and Covid-relationship](data/processed/dcc_charite_joined/sankey_interactive_plot.html){#fig-sankey .embedded width="100%" height="600px"}
 :::
 
+<br>
+
 ![Charité Datasets and Mentions as Detected in DCC](plots_png/fig-dist-counts.png){#fig-dist-counts}
+
+<br>
+
+![Charité Data Articles Citations Analysis](plots_png/fig-dist-counts-da.png){#fig-dist-counts-da}
+
 

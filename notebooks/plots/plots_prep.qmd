@@ -181,7 +181,7 @@ save_cr(counts_ids_and_dois, file = file.path(here("data",
                                                    "tables_for_plots",
                                                    "counts_ids_and_dois.RData")))
 
-# 2. DOIs, IDs and Mentions - Only Data Articles
+# 2. Data Articles, their datasets, reusing papers and mentions
 
 charite_da_dois_and_ids <- read.csv(
   file.path(here("data",
@@ -193,45 +193,60 @@ charite_da_dois_and_ids <- read.csv(
 
 load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RData"))
 
+# Number of Data Articles:
+
+data_articles_and_citations_numbers |> select(data_article) |> distinct() |> nrow() # data_sum: 28
+data_articles_and_reusing_papers |> select(data_article) |> distinct() |> nrow() # datasets_reuses: 10
+data_articles_their_datasets |> select(data_article) |> distinct() |> nrow() # datasets_repos: 21
+data_articles_dois_v10 |> select(charite_doi) |> distinct() |> nrow() # datasets_reuses: 10
+
+# Number of Datasets:
+
+data_articles_their_datasets |> select(dataset) |> distinct() |> nrow()
+
+# Numebr of Reusing Papers:
+load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RData"))
+
+data_articles_dois_v10 |> distinct() |> nrow() # 113
+
+# Numebr of Citations:
+data_articles_and_citations_numbers |>
+  mutate(n_citations = as.numeric(n_citations)) |>
+  summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
+
 counts_ids_and_dois_da <- tibble(
   category = c(
-    "da_dois",
-    "da_data_articles",
+    "da_doi",
     "da_datasets",
-    "da_ref",
-    "da_ref_extrapolated"
-  ),
+    "reusing_papaers",
+    "n_citations"
+    ),
   count = c(
-    charite_da_dois_and_ids |>
-      select(charite_doi) |>
+    data_articles_and_citations_numbers |>
+      select(data_article) |>
       distinct() |>
-      nrow(), # number of charite dois with data articles
+      nrow(), # data_sum: 28 ### DECIDE WHICH ONE IS IT FROM THE OPTIONS ABOVE!
     
-    charite_da_dois_and_ids |>
-      select(identifier_from_data_article_analysis) |>
+    data_articles_their_datasets |>
+      select(dataset) |>
       distinct() |>
-      nrow(), # number of data articles
-    
-    charite_da_dois_and_ids |>
-      select(identifier_from_data_article_analysis) |>
-      distinct() |>
-      nrow(), # number of data articles datasets ### FIX
+      nrow(), # 35
     
     data_articles_dois_v10 |>
-      distinct() |> 
-      nrow(), # number of mentions
-    
-    data_articles_dois_v10 |>
-      distinct() |> 
-      nrow() # number of mentions (extrapolation) ### FIX
+      distinct() |>
+      nrow(), # 113
+
+    data_articles_and_citations_numbers |>
+      mutate(n_citations = as.numeric(n_citations)) |>
+      summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
   )
 )
 
 # save as RData
 save_cr(counts_ids_and_dois_da, file = file.path(here("data",
-                                                      "tables_for_plots",
-                                                      "counts_ids_and_dois_da.RData")))
-    
+                                                   "tables_for_plots",
+                                                   "counts_ids_and_dois_da.RData")))
+
 ##### ARCHIVE: #####
 
 # dcc_summary <- detected_no_sources_overlap |>
@@ -395,6 +410,71 @@ save_cr(counts_ids_and_dois_da, file = file.path(here("data",
 
 ```
 
+# Flow Chart of Data Articles: Data Articles, Datasets, Reusing Papers
+
+```{r}
+
+# Read sheet "datasets_repos" from Excel file for data articles (col B) and their datasets (col D)
+data_articles_their_datasets <- read_excel(file.path(here("data",
+                                                          "raw",
+                                                          "data_articles",
+                                                          "v10"), "datajournal_articles - analysis of citations v10.xlsx"),
+                                           sheet = "datasets_repos") |> # load relevant sheet from xlsx
+  rename(data_article = `Charité article DOI`,
+         dataset = `dataset DOI, accession code, or link`) |>  # rename columns
+  mutate(across(everything(), tolower)) |> # tolower
+  select(data_article, dataset) |> # get only relevant columns: charite paper and reusing paper
+  dplyr::filter(dataset != "n/a")
+
+# Read sheet "datasets_reuses" from Excel file for data articles (col B) and the reusing papers (col D)
+data_articles_and_reusing_papers <- read_excel(file.path(here("data",
+                                                              "raw",
+                                                              "data_articles",
+                                                              "v10"), "datajournal_articles - analysis of citations v10.xlsx"),
+                                               sheet = "datasets_reuses") |> # load relevant sheet from xlsx
+  rename(data_article = `Charité article DOI`,
+         reusing_paper_doi = `DOIs/links of articles that reused data`) |>  # rename columns
+  mutate(across(everything(), tolower)) |> # tolower
+  select(data_article, reusing_paper_doi) # get only relevant columns: charite paper and reusing paper
+
+# Read sheet "data_sum" from Excel file for number of citations (col E)
+data_articles_and_citations_numbers <- read_excel(file.path(here("data",
+                                                                 "raw",
+                                                                 "data_articles",
+                                                                 "v10"), "datajournal_articles - analysis of citations v10.xlsx"),
+                                                  sheet = "data_sum") |> # load relevant sheet from xlsx
+  rename(data_article = `Charite article doi`,
+         n_citations = `N citations on last checked date`) |>  # rename columns
+  mutate(across(everything(), tolower)) |> # tolower
+  select(data_article, n_citations) |> # get only relevant columns: charite paper and reusing paper
+  dplyr::filter(!is.na(data_article))
+
+
+
+# save as RData files
+
+save_cr(data_articles_their_datasets, file = file.path(here(
+  "data",
+  "tables_for_plots",
+  "data_articles_their_datasets.RData")))
+
+save_cr(data_articles_and_reusing_papers, file = file.path(here(
+  "data",
+  "tables_for_plots",
+  "data_articles_and_reusing_papers.RData")))
+
+save_cr(data_articles_and_citations_numbers, file = file.path(here(
+  "data",
+  "tables_for_plots",
+  "data_articles_and_citations_numbers.RData")))
+
+data_articles_and_citations_numbers |>
+  mutate(n_citations = as.numeric(n_citations)) |>
+  summarise(total_citations = sum(n_citations, na.rm = TRUE))
+
+
+```
+
 # Distribution Frequency of Datasets References
 
 ```{r fig-datasets-freq-dist-prep}
@@ -530,7 +610,7 @@ links_lic_access <- dcc_charite_for_sankey |>
   mutate(source = case_when(license_for_analysis == "TRUE" ~ "CC License",
                             license_for_analysis == "FALSE" ~ "No CC License",
                             .default = "license not checked yet"),
-         target = case_when(data_access == "yes" ~ "Open Data",
+         target = case_when(data_access == "yes" ~ "Full Access",
                             data_access == "restricted" ~ "Restricted Access",
                             .default = "access not checked yet")) |>
   count(source, target) |>
@@ -538,7 +618,7 @@ links_lic_access <- dcc_charite_for_sankey |>
   as.data.frame()
 
 links_access_rep <- dcc_charite_for_sankey |>
-  mutate(source = case_when(data_access == "yes" ~ "Open Data",
+  mutate(source = case_when(data_access == "yes" ~ "Full Access",
                             data_access == "restricted" ~ "Restricted Access",
                             .default = "access not checked yet"),
          target = case_when(
@@ -730,7 +810,6 @@ save_cr(rep_dt_da, file = file.path(here("data",
                                          "rep_dt_da.RData")))
 
 ```
-
 
 # Repositories Distribution of Data Articles Mentions
 
