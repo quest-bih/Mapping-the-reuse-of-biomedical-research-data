@@ -895,7 +895,7 @@ save_cr(dcc_detected_ids_all_sources_7_w_metadata, file = file.path(here("data",
 
 ```{r}
 
-# These datasets of DataStet have an overlap with numbat
+# These datasets of DataStet have an overlap with numbat (and "additional ids")
 overlaps <- dcc_detected_ids_all_sources_7_w_metadata |> 
   dplyr::group_by(detected_id) |> 
   dplyr::filter(dplyr::n_distinct(source_charite) > 1) |> 
@@ -904,14 +904,25 @@ overlaps <- dcc_detected_ids_all_sources_7_w_metadata |>
   select(doi_no_ver_info, detected_id, source_charite) |> 
   distinct()
 
-# So I'll remove them, together with datastet:
+# So I'll remove their "DataStet" instances, in order to have only DataStet cases that are NOT in Numbat (and additional ids):
 
 dcc_detected_ids_all_sources_8_dedup <- dcc_detected_ids_all_sources_7_w_metadata |> 
   dplyr::anti_join(overlaps, by = c("doi_no_ver_info", "detected_id", "source_charite"))
 
-# remove data articles that are in numbat as well:
+  # Verify that these ids are now only under numbat/additional sources
+  #
+  # dcc_detected_ids_all_sources_8_dedup |> 
+  #   dplyr::filter(detected_id %in% overlaps$detected_id) |> 
+  #   View()
+
+# This detected id overlaps between data articles and numbat: 10.18112/openneuro.ds001226
+dcc_detected_ids_all_sources_8_dedup |> dplyr::filter(!is.na(numbat_id_of_da_id)) |> View()
+
+# We want to exclude its "numbat" instance, since it's already being analyzed in the separate data articles analysis:
 dcc_detected_ids_all_sources_8_dedup <- dcc_detected_ids_all_sources_8_dedup |> 
-  dplyr::filter(is.na(numbat_id_of_da_id))
+  dplyr::filter(
+    !(detected_id == "10.18112/openneuro.ds001226"
+    & source_charite == "numbat"))
 
 # save
 save_cr(dcc_detected_ids_all_sources_8_dedup, file = file.path(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData")))
@@ -923,26 +934,16 @@ save_cr(dcc_detected_ids_all_sources_8_dedup, file = file.path(here("data", "wra
 ```{r verification}
 
 # detected from metadata
-t1 <- datasets_metadata_master_updated_021 |> 
-  dplyr::filter(in_dcc == "TRUE") |> 
-  dplyr::filter(source_charite != "data_articles") |> 
-  select(detected_id) |> 
-  distinct() |> 
-  arrange(detected_id)
+
+t1 <- datasets_metadata_master_updated_021 |> dplyr::filter(in_dcc == "TRUE") |> dplyr::filter(source_charite != "data_articles") |> select(detected_id) |> distinct() |> arrange(detected_id)
 
 # without sources overlap
-t2 <- dcc_detected_ids_all_sources_8_dedup |> 
-  dplyr::filter(source_charite != "data_articles") |> 
-  select(detected_id) |> 
-  distinct() |> 
-  arrange(detected_id)
+
+t2 <- dcc_detected_ids_all_sources_8_dedup |> dplyr::filter(source_charite != "data_articles") |> select(detected_id) |> distinct() |> arrange(detected_id)
 
 # with sources overlap
-t3 <- dcc_detected_ids_all_sources_7_w_metadata |> 
-  dplyr::filter(source_charite != "data_articles") |> 
-  select(detected_id) |> 
-  distinct() |> 
-  arrange(detected_id)
+
+t3 <- dcc_detected_ids_all_sources_7_w_metadata |> dplyr::filter(source_charite != "data_articles") |> select(detected_id) |> distinct() |> arrange(detected_id)
 
 waldo::compare(t1, t2)
 
@@ -950,4 +951,5 @@ waldo::compare(t2, t3)
 
 waldo::compare(t1, t3)
 
-# No differences!
+# No differences! ("ds001226" numbat instance was excluded from _8_dedup)
+```

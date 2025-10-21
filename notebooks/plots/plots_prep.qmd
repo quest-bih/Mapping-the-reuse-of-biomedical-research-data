@@ -12,7 +12,7 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, fs)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, fs, readxl)
 
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
@@ -70,37 +70,8 @@ load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_3_au_i
 # load numbat datasets for matching:
 load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData"))
 
-# load all numbat datasetsm including non-OD:
+# load all numbat datasets including non-OD:
 load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids.RData"))
-
-# Load latest all_sources
-
-# get file names
-files <- dir_ls(
-  here("data",
-       "wrangling_steps",
-       "all_sources_binded"),
-  regexp = "dcc_detected_ids_all_sources_\\d+.*\\.RData$")
-
-# get numbers index
-nums  <- str_extract(files, "\\d+") |> as.integer()
-
-# get file names
-files <- dir_ls(
-  here("data", "wrangling_steps", "all_sources_binded"),
-  regexp = "dcc_detected_ids_all_sources_\\d+.*\\.RData$"
-)
-
-# get numbers index
-nums <- str_extract(basename(files), "(?<=dcc_detected_ids_all_sources_)\\d+") |> as.integer()
-
-# # get latest file
-# latest_file <- files[which.max(nums)]
-# 
-# # load into environment and pull the object into detected
-# env <- new.env()
-# obj_names <- load(latest_file, envir = env)
-# detected <- env[[obj_names[1]]]
 
 # Create a table with no overlapping sources
 load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_7_w_metadata.RData"))
@@ -116,7 +87,7 @@ rm(dcc_detected_ids_all_sources_7_w_metadata,
 
 <br>
 
-# Distinct Number of Papers and Datasets Found in the DCC - prep
+# Distinct Number of Papers and Datasets Found in the DCC: Preparing Data for Flowchart
 
 <br>
 
@@ -136,43 +107,55 @@ counts_ids_and_dois <- tibble(
   ),
   count = c(
     numbat_da_dois_and_ids_9_clean_pairs |>
-    select(doi_no_ver_info) |>
-    distinct() |>
-    nrow(), # number of numbat datasets for matching
+      dplyr::filter(source != "data_articles") |> # exclude data articles cases
+      dplyr::filter(!dataset_for_matching %in% c(
+        "ptb-xl",
+        "10.18112/openneuro.ds001226")) |> # exclude numbat cases that are in data articles analysis
+      select(doi_no_ver_info) |>
+      distinct() |>
+      nrow(), # number of numbat datasets for mathcing's charite papers DOIs
     
     numbat_da_dois_and_ids |> 
-    select(data_id_lc) |> 
-    distinct() |> 
-    nrow(),
+      dplyr::filter(source != "data_articles") |> # exclude data articles cases (this excludes the 1.0.1 variations as well!)
+      dplyr::filter(!data_id_lc %in% c(
+        "https://physionet.org/content/ptb-xl/1.0.1/",
+        "https://doi.org/10.18112/openneuro.ds001226.v5.0.0")) |> # exclude numbat cases that are in data articles analysis
+      select(data_id_lc) |> 
+      distinct() |>
+      nrow(), # number of all numbat datasets, including non-OD
 
     numbat_da_dois_and_ids_9_clean_pairs |>
+      dplyr::filter(source != "data_articles") |> # exclude data articles cases
+      dplyr::filter(!dataset_for_matching %in% c(
+        "ptb-xl",
+        "10.18112/openneuro.ds001226")) |> # exclude numbat cases that are in data articles analysis
       select(dataset_for_matching) |>
       distinct() |>
       nrow(), # number of numbat datasets for matching
 
     detected_no_sources_overlap |>
-      dplyr::filter(source_charite == "numbat") |>
+      dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |>
       select(detected_id) |>
       distinct() |>
       nrow(), # numebr of detected numbat datasets
     
      detected_no_sources_overlap |>
-      dplyr::filter(source_charite == "numbat") |>
+      dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |>
       select(detected_id, doi_dcc) |>
       distinct() |>
       nrow(), # number of mentions from numbat   
     
       detected_no_sources_overlap |>
-      dplyr::filter(source_charite %in% c("datastet", "additional_ids")) |>
+      dplyr::filter(source_charite == "datastet") |> 
       select(detected_id) |>
       distinct() |>
-      nrow(), # number of detected dataStet + additional ids
+      nrow(), # number of detected dataStet
     
       detected_no_sources_overlap |>
-      dplyr::filter(source_charite %in% c("datastet", "additional_ids")) |>
+      dplyr::filter(source_charite == "datastet") |> 
       select(detected_id, doi_dcc) |>
       distinct() |>
-      nrow() # number of mentions dataStet + additional ids
+      nrow() # number of mentions dataStet
   )
 )
 
@@ -182,237 +165,6 @@ save_cr(counts_ids_and_dois, file = file.path(here("data",
                                                    "counts_ids_and_dois.RData")))
 
 # 2. Data Articles, their datasets, reusing papers and mentions
-
-charite_da_dois_and_ids <- read.csv(
-  file.path(here("data",
-                 "raw",
-                 "charite",
-                 "data_articles_AI_2025_05_14.csv")),
-  header = TRUE,
-  sep = ";")
-
-load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RData"))
-
-# Number of Data Articles:
-
-data_articles_and_citations_numbers |> select(data_article) |> distinct() |> nrow() # data_sum: 28
-data_articles_and_reusing_papers |> select(data_article) |> distinct() |> nrow() # datasets_reuses: 10
-data_articles_their_datasets |> select(data_article) |> distinct() |> nrow() # datasets_repos: 21
-data_articles_dois_v10 |> select(charite_doi) |> distinct() |> nrow() # datasets_reuses: 10
-
-# Number of Datasets:
-
-data_articles_their_datasets |> select(dataset) |> distinct() |> nrow()
-
-# Numebr of Reusing Papers:
-load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RData"))
-
-data_articles_dois_v10 |> distinct() |> nrow() # 113
-
-# Numebr of Citations:
-data_articles_and_citations_numbers |>
-  mutate(n_citations = as.numeric(n_citations)) |>
-  summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
-
-counts_ids_and_dois_da <- tibble(
-  category = c(
-    "da_doi",
-    "da_datasets",
-    "reusing_papaers",
-    "n_citations"
-    ),
-  count = c(
-    data_articles_and_citations_numbers |>
-      select(data_article) |>
-      distinct() |>
-      nrow(), # data_sum: 28 ### DECIDE WHICH ONE IS IT FROM THE OPTIONS ABOVE!
-    
-    data_articles_their_datasets |>
-      select(dataset) |>
-      distinct() |>
-      nrow(), # 35
-    
-    data_articles_dois_v10 |>
-      distinct() |>
-      nrow(), # 113
-
-    data_articles_and_citations_numbers |>
-      mutate(n_citations = as.numeric(n_citations)) |>
-      summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
-  )
-)
-
-# save as RData
-save_cr(counts_ids_and_dois_da, file = file.path(here("data",
-                                                   "tables_for_plots",
-                                                   "counts_ids_and_dois_da.RData")))
-
-##### ARCHIVE: #####
-
-# dcc_summary <- detected_no_sources_overlap |>
-#   select(source_charite, detected_id, doi_dcc) |> 
-#   group_by(source_charite) |> 
-#   summarise(
-#     distinct_detected_id = n_distinct(detected_id),
-#     distinct_doi_dcc = n_distinct(doi_dcc),
-#     .groups = "drop"
-#   )
-# 
-# dcc_au_ov <- numbat_da_dcc_joined_3_au_info |>
-#   select(source_charite, detected_id, doi_dcc) |> 
-#   group_by(source_charite) |> 
-#   summarise(
-#     distinct_detected_id = n_distinct(detected_id),
-#     distinct_doi_dcc = n_distinct(doi_dcc),
-#     .groups = "drop"
-#   ) |> 
-#   bind_rows(
-#     dcc_summary |>
-#       dplyr::filter(
-#         source_charite %in% c("additional_ids", "datastet")))
-# 
-# 
-# # Prepare data
-# dcc_summary_long <- dcc_summary |>
-#   mutate(dataset = "dcc_summary") |>
-#   pivot_longer(cols = starts_with("distinct_"),
-#                names_to = "Type",
-#                values_to = "Count")
-# 
-# dcc_au_ov_long <- dcc_au_ov |>
-#   mutate(dataset = "dcc_au_ov") |>
-#   pivot_longer(cols = starts_with("distinct_"),
-#                names_to = "Type",
-#                values_to = "Count")
-# 
-# combined_long_counts <- bind_rows(dcc_summary_long, dcc_au_ov_long) |> 
-#   mutate(
-#     label_nudge = case_when(
-#       #Type == "distinct_detected_id" & source_charite == "numbat" ~ -0.15,
-#       #Type == "distinct_detected_id" & source_charite == "datastet" ~ 0,
-#       Type == "distinct_detected_id" & source_charite == "data_articles" ~ -0.15,
-#       Type == "distinct_detected_id" & source_charite == "additional_ids" ~ 0.15,
-#       .default = 0  # no nudge for other bars
-#     )
-#   )
-# 
-# 
-# # save as RData
-# save_cr(combined_long_counts, file = file.path(here("data",
-#                                                       "tables_for_plots",
-#                                                       "combined_long_counts.RData")))
-# 
-
-
-
-# 1. Number of papers (dcc and charite) and of identifiers in final table (excluding author overlap cases)
-
-# counts_final <- tibble(
-#   `Mentioning Articles` = detected_no_sources_overlap |> select(doi_dcc) |> distinct() |> nrow(),
-#   `Charité Articles` = detected_no_sources_overlap |> select(doi_charite) |> distinct() |> nrow(),
-#   `Mentioned Datasets` = detected_no_sources_overlap |> select(detected_id) |> distinct() |> nrow()
-# )
-# 
-# # save as RData
-# save_cr(combined_count_tibbles, file = file.path(here("data",
-#                                                       "tables_for_plots",
-#                                                       "combined_count_tibbles.RData")))
-
-# # 2. Number of papers (dcc and charite) and of identifiers in final table (including author overlap cases)
-# 
-# # I'll use numbat_da_dcc_joined_3_au_info to count, since it is one step before excluding author overlap cases.
-# 
-# # However, I need to *exclude* cases where the author overlap is a result of the same paper that is present once as a preprint (as "doi_charite") and once as a publication (as "doi_dcc").
-# 
-# # So I'll first create a table with the cases suspected of being preprint-publication cases and check them for author overlap:
-# 
-# dcc_charite_blank_journals <- numbat_da_dcc_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
-#   dplyr::filter(journal == "") |> # get only cases where there's no journal information, because most of them are preprint cases
-#   rowwise()  |> 
-#   mutate(
-#     common_au = {
-#       common <- intersect(
-#         str_split(authors_dcc, ";")[[1]], 
-#         str_split(authors_charite, ";")[[1]]
-#       )
-#       if (length(common) > 0) paste(common, collapse = ";") else NA
-#     }
-#   ) |>
-#   ungroup() # check for author overlap in these cases only
-# 
-# # Then I'll verify that I should keep cases with partial overlap, since they are presumably cases of author overlap which are not a result of preprint-publication relation:
-# 
-#   # Get partial overlap cases
-# 
-#   dcc_charite_blank_journals |>
-#     dplyr::filter(!is.na(common_au)) |> # remove cases where there's no overlap at all (they are irrelevant for this table in any case)
-#     dplyr::filter(authors_dcc != common_au) |> # remove cases where there's a full overlap
-#     ungroup() |>
-#     View()
-# 
-#   # I've checked each one manually and they are indeed not preprints - so they will be included in the "matched-with-author-overlap".
-# 
-# # Now I'll manually check the full (exact) overlap cases - these are suspected to be preprints:
-# 
-# dcc_charite_blank_journals_exact_overlap <- dcc_charite_blank_journals |>
-#   dplyr::filter(authors_dcc == common_au) |> # get cases with full overlap out of journal == ""
-#   select(doi_charite, doi_dcc) |>
-#   distinct()
-# 
-# # Results (distinct): 4 preprints, 2 datasets in doi_dcc(!). So those should be removed from "with-author-overlap".
-# # Note: they are already removed from the final matched list, because of the exact author overlap.
-# 
-# # Now I'll look for author overlap cases in general:
-# 
-# dcc_charite_all_exact_overlap <- numbat_da_dcc_joined_3_au_info |> # get all cases from the step before "author overlap exclusion" step
-#   dplyr::filter(authors_dcc == authors_charite) |> 
-#   select(doi_charite, doi_dcc) |> 
-#   distinct()
-# 
-# # I've checked them manually as well, and they are also preprints-publications (10.1016/j.dib.2021.107320 is actually a data article under doi_dcc). So they should also be removed.
-# 
-# # Now I'll bind _all_exact_overlap cases with _blank_journals_exact_overlap cases, to create a table with preprint-publication cases to remove from matched-list-including-overlap
-# 
-# cases_to_remove <- dcc_charite_blank_journals_exact_overlap |> 
-#     bind_rows(dcc_charite_all_exact_overlap) |> 
-#   distinct()
-# 
-# # Remove those preprint-publication cases
-# 
-# dcc_charite_joined_w_au_ov <- numbat_da_dcc_joined_3_au_info |> 
-#   anti_join(cases_to_remove, by = c("doi_charite", "doi_dcc")) 
-# 
-# # Get counts
-# 
-# counts_w_au_ov <- tibble(
-#   `Mentioning Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_dcc) |> distinct() |> nrow(),
-#   `Charité Articles` = numbat_da_dcc_joined_3_au_info |> select(doi_charite) |> distinct() |> nrow(),
-#   `Mentioned Datasets` = numbat_da_dcc_joined_3_au_info |> select(detected_id) |> distinct() |> nrow()
-# )
-# 
-# # Prepare count tibbles (with and without author overlap cases) for plotting
-# 
-# combined_count_tibbles <- counts_final |>
-#   bind_rows(counts_w_au_ov,
-#             .id = "tibble_source") |>
-#   select(-`Charité Articles`) |>
-#   mutate(tibble_source = recode(tibble_source,
-#                                 "1" = "No Author Overlap",
-#                                 "2" = "Inc. Author Overlap")) |>
-#   pivot_longer(cols = -tibble_source, names_to = "variable", values_to = "value") |>
-#   mutate(variable = fct_reorder(variable, value, .desc = TRUE))
-
-# # save as RData
-# save_cr(combined_count_tibbles, file = file.path(here("data",
-#                                                       "tables_for_plots",
-#                                                       "combined_count_tibbles.RData")))
-
-
-```
-
-# Flow Chart of Data Articles: Data Articles, Datasets, Reusing Papers
-
-```{r}
 
 # Read sheet "datasets_repos" from Excel file for data articles (col B) and their datasets (col D)
 data_articles_their_datasets <- read_excel(file.path(here("data",
@@ -449,8 +201,6 @@ data_articles_and_citations_numbers <- read_excel(file.path(here("data",
   select(data_article, n_citations) |> # get only relevant columns: charite paper and reusing paper
   dplyr::filter(!is.na(data_article))
 
-
-
 # save as RData files
 
 save_cr(data_articles_their_datasets, file = file.path(here(
@@ -472,6 +222,101 @@ data_articles_and_citations_numbers |>
   mutate(n_citations = as.numeric(n_citations)) |>
   summarise(total_citations = sum(n_citations, na.rm = TRUE))
 
+# Load Ana's da_in_numbat file as well, just in case
+charite_da_dois_and_ids <- read.csv(
+  file.path(here("data",
+                 "raw",
+                 "charite",
+                 "data_articles_AI_2025_05_14.csv")),
+  header = TRUE,
+  sep = ";")
+
+# Load my wrangling of data articles
+load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RData"))
+
+# Number of Data Articles according to different tabs:
+
+data_articles_and_citations_numbers |> select(data_article) |> distinct() |> nrow() # data_sum: 28
+data_articles_and_reusing_papers |> select(data_article) |> distinct() |> nrow() # datasets_reuses: 10
+data_articles_their_datasets |> select(data_article) |> distinct() |> nrow() # datasets_repos: 21
+data_articles_dois_v10 |> select(charite_doi) |> distinct() |> nrow() # datasets_reuses: 10
+
+# Number of Datasets:
+data_articles_their_datasets |> select(dataset) |> distinct() |> nrow()
+
+# Numebr of Reusing Papers:
+data_articles_dois_v10 |> distinct() |> nrow() # 113
+
+# Numebr of Citations:
+data_articles_and_citations_numbers |>
+  mutate(n_citations = as.numeric(n_citations)) |>
+  summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
+
+counts_ids_and_dois_da <- tibble(
+  category = c(
+    "da_doi",
+    "da_datasets",
+    "reusing_papaers",
+    "n_citations"
+    ),
+  count = c(
+    data_articles_and_citations_numbers |>
+      select(data_article) |>
+      distinct() |>
+      nrow(), # data_sum: 28 ### DECIDE WHICH ONE IS IT FROM THE OPTIONS ABOVE!
+    
+    data_articles_their_datasets |>
+      select(dataset) |>
+      distinct() |>
+      dplyr::filter(dataset != "https://zenodo.org/records/4059716") |>  # inapplicable case, see original xslx file
+      nrow(), # 34
+    
+    data_articles_dois_v10 |>
+      distinct() |>
+      nrow(), # 113
+
+    data_articles_and_citations_numbers |>
+      mutate(n_citations = as.numeric(n_citations)) |>
+      summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
+  )
+)
+
+# save as RData
+save_cr(counts_ids_and_dois_da, file = file.path(here("data",
+                                                   "tables_for_plots",
+                                                   "counts_ids_and_dois_da.RData")))
+
+# Get numebre of overlapping mentions:
+
+# 1. With which source each DataStet case is overlapped with:
+
+overlaps_ds <- dcc_detected_ids_all_sources_7_w_metadata |>
+  dplyr::group_by(detected_id) |>
+  dplyr::filter(dplyr::n_distinct(source_charite) > 1) |>
+  dplyr::ungroup() |>
+  dplyr::filter(source_charite %in% c("datastet")) |>
+  dplyr::left_join(
+    dcc_detected_ids_all_sources_7_w_metadata |>
+      dplyr::select(detected_id, source_charite) |>
+      dplyr::distinct() |>
+      dplyr::filter(source_charite != "datastet") |>
+      dplyr::group_by(detected_id) |>
+      dplyr::summarise(overlaps_with = paste(sort(unique(source_charite)), collapse = ", "), .groups = "drop"),
+    by = "detected_id"
+  ) |>
+  dplyr::select(doi_no_ver_info, detected_id, source_charite, overlaps_with) |>
+  dplyr::distinct()
+
+# 2. Count how many overlapping cases of IDENTIFIERS are there between datastet and numbat+added
+ol_ids <- overlaps_ds |> select(detected_id) |> distinct() # 62
+
+# 3. Count how many overlapping cases of MENTIONS are there between datastet and numbat+added
+detected_with_dup_sources |> 
+  dplyr::filter(detected_id %in% ol_ids$detected_id) |> 
+  dplyr::filter(source_charite == "datastet") |> 
+  select(detected_id, doi_dcc) |> 
+  distinct() |> 
+  nrow() # 325
 
 ```
 
@@ -688,15 +533,7 @@ save_cr(links_all, file = file.path(here("data",
 
 ```
 
-# comparisons between referenced and non-referenced datasets properties
-
-Create a table like in the reference pic that I took, with: Dimensions of metadata on one side (human, covid, etc) 3 column with colors for the p value of x sqr: matched, non matched, p value
-
-(for this I need to perform X\^2 on joined (but for now, on dataset_master, until I join it with joined)
-
-```{r}
-
-```
+<br>
 
 # Non mentioned datasets: publication years of datasets over time
 
@@ -734,7 +571,8 @@ id_source_for_venn <- detected_with_dup_sources |>
   mutate(source_charite = case_when(
     source_charite %in% c("numbat", "additional_ids") ~ "Numbat",
     source_charite == "datastet" ~ "DataStet",
-    .default = source_charite))
+    .default = source_charite)) |> 
+  dplyr::filter(detected_id != "10.18112/openneuro.ds001226") # remove this overlapping case from Numbat cases, as it belongs to Data Articles
 
 venn_input_for_debugging <- id_source_for_venn |>
   pivot_wider(names_from = source_charite, values_from = source_charite,
@@ -749,7 +587,7 @@ save_cr(id_source_for_venn, file = file.path(here("data",
 
 # Distribution of Datasets Across Repositories
 
-```{r fig-repo-dist-id-prep}
+```{r fig-repo-dist-ds-prep}
 
 rep_dt_ds <- detected_no_sources_overlap |> 
   dplyr::filter(source_charite != "data_articles") |> 
@@ -788,32 +626,32 @@ save_cr(rep_dt_ds, file = file.path(here("data",
 
 ```
 
-# Repositories Distribution of Data Articles
+# Repositories Distribution of Data Articles identifiers
 
-```{r}
+```{r fig-repo-dist-ds-da}
 
-rep_dt_da <- charite_da_dois_and_ids |> 
-  mutate(repository = case_when(repository == "2020" ~ "Zenodo",
-                                repository == "OpenNEURO" ~ "Openneuro",
-                                repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
-                                .default = repository)) |> 
-  dplyr::filter(repository != "n/a") |> 
-  dplyr::filter(identifier_from_data_article_analysis != "NULL") |> 
-  select(identifier_from_data_article_analysis, repository) |> 
-  group_by(repository) |> 
-  summarise(n = n_distinct(identifier_from_data_article_analysis))
-
-
-# save as RData
-save_cr(rep_dt_da, file = file.path(here("data",
-                                         "tables_for_plots",
-                                         "rep_dt_da.RData")))
+# rep_dt_da <- charite_da_dois_and_ids |> 
+#   mutate(repository = case_when(repository == "2020" ~ "Zenodo",
+#                                 repository == "OpenNEURO" ~ "Openneuro",
+#                                 repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
+#                                 .default = repository)) |> 
+#   dplyr::filter(repository != "n/a") |> 
+#   dplyr::filter(identifier_from_data_article_analysis != "NULL") |> 
+#   select(identifier_from_data_article_analysis, repository) |> 
+#   group_by(repository) |> 
+#   summarise(n = n_distinct(identifier_from_data_article_analysis))
+# 
+# 
+# # save as RData
+# save_cr(rep_dt_da, file = file.path(here("data",
+#                                          "tables_for_plots",
+#                                          "rep_dt_da.RData")))
 
 ```
 
-# Repositories Distribution of Data Articles Mentions
+# Repositories Distribution of Data Articles Identifiers Mentions
 
-```{r}
+```{r fig-repo-dist-ref-da}
 
 ##### FIX
 

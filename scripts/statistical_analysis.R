@@ -106,7 +106,8 @@ data_for_glm <- datasets_metadata_master_updated_021 |>
   select(-c(detected_id, dataset_for_matching)) |> 
   dplyr::filter(!is.na(das_for_analysis)) |> 
   distinct() |> 
-  mutate(in_dcc = as.factor(in_dcc))
+  mutate(in_dcc = as.factor(in_dcc)) |> 
+  dplyr::filter(dataset != "10.18112/openneuro.ds001226") # remove this overlapping case from Numbat cases, as it belongs to Data Articles
 
 data_for_glm |>dplyr::filter(if_any(everything(), is.na)) # check for NAs
 
@@ -205,24 +206,36 @@ save_cr(contingency_tables, file = file.path(here("data",
 load(here("data", "wrangling_steps", "all_sources_binded", "dcc_detected_ids_all_sources_8_dedup.RData")) # load dedup final results
 
 ids_and_years <- dcc_detected_ids_all_sources_8_dedup |> 
-  dplyr::filter(source_charite != "data_articles") |> 
+  dplyr::filter(source_charite != "data_articles") |> # exclude data articles cases
   select(detected_id, charite_id_year, publication_year_dcc) |> 
   mutate(age = as.numeric(publication_year_dcc) - as.numeric(charite_id_year)) |> 
-  dplyr::filter(age >= 0 & age <= 3) |> 
+  dplyr::filter(age >= 0 & age <= 3) |> # get only datasets that have ages 0, 1, 2, and or 3
   group_by(detected_id, age) |> 
-  summarise(number_of_citations_in_age = n())
+  summarise(number_of_citations_in_age = n()) # get number of citations for each dataset in each age
 
 # save as RData
 save_cr(ids_and_years, file = file.path(here("data",
                                              "inputs_for_quick_render",
                                              "ids_and_years.RData")))
 
+ids_and_years_only_0_3_ages <- ids_and_years |>
+  dplyr::group_by(detected_id) |>
+  dplyr::filter(dplyr::n_distinct(age) == 4) |>
+  dplyr::ungroup()
+
+# save as RData
+save_cr(ids_and_years_only_0_3_ages, file = file.path(here("data",
+                                             "inputs_for_quick_render",
+                                             "ids_and_years_only_0_3_ages.RData")))
+
 # model
 
-model_nb <- glmmTMB(
-  number_of_citations_in_age ~ age + (1 | detected_id),
-  data = ids_and_years,
-  family = nbinom2
+# GLMM was chosen in order to handle non-normal data + grouped structure simultaneously.
+
+model_nb <- glmmTMB( # mixed = considering that it's the same datasets between the years.
+  number_of_citations_in_age ~ age + (1 | detected_id), # age-citation relationship with datasets as random effects 
+  data = ids_and_years_only_0_3_ages,
+  family = nbinom2 # takes into account the right-skewed-tail distribution of the data (v > m)
 )
 
 summary(model_nb)

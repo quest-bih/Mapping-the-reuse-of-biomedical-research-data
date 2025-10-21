@@ -62,224 +62,6 @@ load(here("data", "inputs_for_quick_render", "ids_and_years.RData"))
 
 <br>
 
-# Distinct Number of Papers and Datasets Found in the DCC
-
-<br>
-
-```{r}
-#| label: fig-distinct-numbers
-#| fig-cap: Distinct Number of Papers and Datasets in Found in the DCC
-#| fig-format: png
-#| fig.height: 8
-#| fig.width: 10
-
-combined_long_counts_labeled <- combined_long_counts |>
-  group_by(dataset, Type) |>
-  arrange(desc(source_charite), .by_group = TRUE) |>
-  mutate(
-    y_label = cumsum(Count) - Count / 2  # center of each stacked segment
-  ) |>
-  ungroup()
-
-
-# Plot
-ggplot(combined_long_counts, aes(x = Type, y = Count, fill = source_charite)) +
-  geom_bar(stat = "identity", position = "stack", width = 0.6) +
-  geom_text(
-    data = combined_long_counts_labeled,
-    aes(
-      x = as.numeric(factor(Type)) + label_nudge,
-      y = y_label,
-      label = Count
-    ),
-    size = 5,
-    color = "black"
-  ) +
-  facet_wrap(~dataset, labeller = labeller(
-    dataset = c(
-      dcc_summary = "Excluding author overlap cases",
-      dcc_au_ov = "Including author overlap cases\n(for numbat & data articles only)"
-    )
-  )) +
-  scale_x_discrete(labels = c(
-    distinct_detected_id = "Datasets",
-    distinct_doi_dcc = "Mentions"
-  )) +
-  labs(
-    x = "",
-    y = "Count",
-    fill = "Source",
-    title = "Number of datasets detected with number of mentioning papers, by source"
-  ) +
-  theme_classic() +
-  theme(
-    axis.text.x = element_text(size = 16, color = "black"),
-    axis.text.y = element_text(size = 14, color = "black"),
-    axis.title = element_text(size = 14, color = "black"),
-    strip.text = element_text(size = 12, color = "black"),
-    legend.title = element_text(size = 14, face = "bold", color = "black"),
-    legend.text = element_text(size = 12, color = "black")
-  )
-# 
-# 
-# combined_count_tibbles |>
-#   ggplot(aes(x = tibble_source, y = value, fill = variable)) +
-#   geom_bar(stat = "identity",
-#            position = "dodge",
-#            color = "black") +
-#   # geom_bar(stat = "identity", fill = "gray30",
-#   #          alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
-#   geom_text(aes(label = value), 
-#             vjust = -0.5, 
-#             size = 6, 
-#             color = "black") +
-#  # facet_wrap(~variable, scales = "free") +
-#   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-#   scale_fill_manual(values = c(
-#     "Mentioning Articles" = "#80CBC4",
-#     "Mentioned Datasets" = "#C1E8E1"
-#   )) +
-#   theme_classic() +
-#   theme(
-#     legend.position = "none",
-#     axis.title.x = element_text(size = 16, color = "black"),
-#     axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
-#     axis.text.x = element_text(size = 16, color = "black", angle = 45, hjust = 1),     # diagonal x labels
-#     axis.text.y = element_text(size = 14, color = "black"),
-#     strip.text = element_text(size = 16, color = "black", margin = margin(b = 10), vjust = -0.5)
-#   ) +
-#   labs(
-#     x = "",
-#     y = "Count"
-#   )
-
-# combined_count_tibbles |>
-#   ggplot(aes(x = tibble_source, y = value, fill = variable)) +
-#   geom_bar(stat = "identity",
-#            position = "dodge",
-#            color = "black") +
-#   # geom_bar(stat = "identity", fill = "gray30",
-#   #          alpha = 0.1, position = position_nudge(x = -0.05, y = -0.5)) +
-#   geom_text(aes(label = value), 
-#             vjust = -0.5, 
-#             size = 6, 
-#             color = "black") +
-#   facet_wrap(~variable, scales = "free") +
-#   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-#   scale_fill_manual(values = c(
-#     "Mentioning Articles" = "#80CBC4",
-#     "Mentioned Datasets" = "#C1E8E1"
-#   )) +
-#   theme_classic() +
-#   theme(
-#     legend.position = "none",
-#     axis.title.x = element_text(size = 16, color = "black"),
-#     axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
-#     axis.text.x = element_text(size = 16, color = "black", angle = 45, hjust = 1),     # diagonal x labels
-#     axis.text.y = element_text(size = 14, color = "black"),
-#     strip.text = element_text(size = 16, color = "black", margin = margin(b = 10), vjust = -0.5)
-#   ) +
-#   labs(
-#     x = "",
-#     y = "Count"
-#   )
-```
-
-# Distinct Number of Papers and Datasets Found in the DCC: Pie Charts
-
-```{r}
-#| label: fig-distinct-numbers-pie
-#| fig-cap: Distinct Number of Papers and Datasets in Found in the DCC
-#| fig-format: png
-#| fig.height: 8
-#| fig.width: 10
-#| 
-
-# Prepare data: each facet (dataset × Type) should be a complete pie
-pie_data <- combined_long_counts |>
-  dplyr::filter(
-    (dataset == "dcc_summary" & Type %in% c("distinct_detected_id", "distinct_doi_dcc")) |
-      (dataset == "dcc_au_ov" & Type %in% c("distinct_detected_id", "distinct_doi_dcc"))
-  ) |>
-  dplyr::group_by(dataset, Type) |>
-  dplyr::mutate(
-    total = sum(Count),
-    Count_norm = Count / total,
-    label = as.character(Count)
-  )
-
-# For totals (n = ...)
-totals <- pie_data |>
-  dplyr::summarise(total = unique(total), .groups = "drop")
-
-# Facet label mappings
-dataset_labels <- c(
-  "dcc_summary" = "No Author Overlap",
-  "dcc_au_ov"   = "With Author Overlap"
-)
-type_labels <- c(
-  "distinct_detected_id" = "Datasets",
-  "distinct_doi_dcc"     = "Mentions"
-)
-
-facet_labs <- labeller(
-  dataset = as_labeller(dataset_labels),
-  Type = as_labeller(type_labels)
-)
-
-# Legend label mappings
-legend_labels <- c(
-  "additional_ids" = "Additional Extractions",
-  "data_articles"  = "Data Articles",
-  "numbat"         = "Manual Extractions",
-  "datastet"       = "DataStet Extractions"
-)
-
-# Custom color mapping: define exactly which color for each source_charite
-palette_colors <- c(
-  "additional_ids" = "#e64b35",   # red
-  "data_articles"  = "#4dbbd5",   # blue
-  "numbat"         = "#00a087",   # green
-  "datastet"       = "#f39b7f"    # purple
-)
-
-
-ggplot(pie_data, aes(x = "", y = Count_norm, fill = source_charite)) +
-  geom_bar(stat = "identity", width = 1, color = "white") +
-  coord_polar(theta = "y") +
-  geom_text(
-    aes(label = label),
-    position = position_stack(vjust = 0.5),
-    color = "black",
-    size = 5
-  ) +
-  # Add totals (n=...)
-  geom_text(
-    data = totals,
-    aes(label = paste0("n = ", total)),
-    x = 1.6,            # center horizontally
-    y = 1.5,          # vertical offset (higher = above the pie)
-    inherit.aes = FALSE,
-    size = 5,
-    fontface = "bold"
-  ) +
-  facet_grid(Type ~ dataset, labeller = facet_labs) +
-  scale_fill_manual(
-    name = "Source",        # legend title
-    values = palette_colors,
-    labels = legend_labels  # custom legend texts
-  ) +
-  labs(x = NULL, y = NULL) +
-  theme_void() +
-  theme(
-    strip.text = element_text(size = 14, face = "bold"),
-    legend.title = element_text(size = 16, , face = "bold"),
-    legend.text = element_text(size = 14)
-  )
-
-
-```
-
 # Distribution Frequency of Datasets References
 
 ```{r}
@@ -735,24 +517,27 @@ venn_ellipse_plot(setlist, a=1.3, b=1) # global circle control
 #| fig.width: 10
 
 not_mentioned_years |>
-  ggplot(aes(x = reorder(charite_id_year, charite_id_year), y = n)) +
+  dplyr::mutate(charite_id_year = as.character(charite_id_year),
+                year_numeric = as.numeric(charite_id_year)) |>
+  ggplot(aes(x = reorder(charite_id_year, year_numeric), y = n)) +
   geom_bar(stat = "identity",
            position = "dodge",
            color = "black",
-               fill = "lightgrey") +
-  geom_text(aes(y = n + 2,
-                label = n),
+           fill = "lightgrey") +
+  geom_text(aes(y = n + 2, label = n),
             vjust = 1,
             hjust = 0.5,
             size = 6,
             color = "black") +
   labs(x = "Year", y = "Number of Datasets") +
   theme_classic() +
-  theme(legend.position = "none",
-        axis.title.x = element_text(size = 22, color = "black",  margin = margin(t = 12)),
-        axis.title.y = element_text(size = 22, color = "black",  margin = margin(r = 12)),
-        axis.text.x = element_text(size = 16, color = "black"),
-        axis.text.y = element_text(size = 16, color = "black"))
+  theme(
+    legend.position = "none",
+    axis.title.x = element_text(size = 22, color = "black", margin = margin(t = 12)),
+    axis.title.y = element_text(size = 22, color = "black", margin = margin(r = 12)),
+    axis.text.x = element_text(size = 16, color = "black"),
+    axis.text.y = element_text(size = 16, color = "black")
+  )
 ```
 
 # Distribution of Datasets Across Repositories
@@ -795,16 +580,21 @@ rep_dt_ds |>
 
 ```
 
-# Relationship between age and number of citations: All Datasets
+# Relationship between age and number of citations: Only datasets that have all ages 0-3
 
 ```{r}
 #| label: fig-age-citation-1
-#| fig-cap: Datasets and Citing Papers Publication Years (All datasets)
+#| fig-cap: Datasets and Citing Papers Publication Years (Only datasets that have all ages )
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
 
-ids_and_years |>
+ids_and_years_only_0_3_ages |>
+
+  dplyr::group_by(detected_id) |>
+  dplyr::filter(dplyr::n_distinct(age) == 4) |>
+  dplyr::ungroup() |> 
+
   ggplot(aes(x = age, y = number_of_citations_in_age, group = detected_id)) +
   geom_line(aes(color = detected_id), linewidth = 1, alpha = 0.5) +
   geom_point(size = 2, color = "black") +
@@ -825,7 +615,6 @@ ids_and_years |>
     check_overlap = TRUE
   ) +
 
-  # One global trend line — override group/color
   geom_smooth(
     aes(group = 1),
     method = "lm",
@@ -836,81 +625,28 @@ ids_and_years |>
   ) +
 
   scale_x_continuous(breaks = 0:3) +
+  #scale_y_log10() +
   labs(
     x = "Age of Dataset (years since publication)",
-    y = "Number of Citations"
+    y = "Number of Citations (log scale)"
   ) +
   theme_classic() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(color = "black", size = 14),
-        axis.text.y = element_text(color = "black", size = 14),
-        axis.title.x = element_text(color = "black", size = 18),
-        axis.title.y = element_text(color = "black", size = 18)
-        )
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(color = "black", size = 14),
+    axis.text.y = element_text(color = "black", size = 14),
+    axis.title.x = element_text(color = "black", size = 18),
+    axis.title.y = element_text(color = "black", size = 18)
+  )
+
 
 ```
 
-# Relationship between age and number of citations: Most cited datasets only
-
-```{r}
-#| label: fig-age-citation-2
-#| fig-cap: Datasets and Citing Papers Publication Years (Most cited datasets only)
-#| fig-format: png
-#| fig.height: 8
-#| fig.width: 10
-
-ids_and_years |>
-  dplyr::filter(number_of_citations_in_age > 6) |>
-  ggplot(aes(x = age, y = number_of_citations_in_age, group = detected_id)) +
-
-  geom_line(aes(color = detected_id), linewidth = 1, alpha = 0.5) +
-  geom_point(size = 2, color = "black") +
-
-  geom_text(
-    aes(label = detected_id),
-    vjust = -1.1,
-    size = 5,
-    color = "blue",
-    check_overlap = TRUE
-  ) +
-
-  geom_text(
-    aes(label = number_of_citations_in_age),
-    vjust = 1.5,
-    size = 4,
-    color = "darkred",
-    check_overlap = TRUE
-  ) +
-
-  # One global trend line — override group/color
-  geom_smooth(
-    aes(group = 1),
-    method = "lm",
-    se = FALSE,
-    color = "black",
-    linetype = "dashed",
-    linewidth = 1
-  ) +
-
-  scale_x_continuous(breaks = 0:3) +
-  labs(
-    x = "Age of Dataset (years since publication)",
-    y = "Number of Citations"
-  ) +
-  theme_classic() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(color = "black", size = 14),
-        axis.text.y = element_text(color = "black", size = 14),
-        axis.title.x = element_text(color = "black", size = 18),
-        axis.title.y = element_text(color = "black", size = 18)
-        )
-```
-
-# \# Relationship between age and number of citations: all datasets are visible
+# Relationship between age and number of citations: all datasets that have ages 0, 1, 2, and or 3 are visible; log scale
 
 ```{r}
 #| label: fig-age-citation-3
-#| fig-cap: Datasets and Citing Papers Publication Years (all datasets are visible)
+#| fig-cap: Datasets and Citing Papers Publication Years (all datasets are visible, log scale)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
@@ -928,7 +664,7 @@ ids_and_years |>
     size = 1,
     color = "black",
     alpha = 0.5,
-    position = position_jitter(width = 0.1, height = 0)
+    position = position_jitter(width = 0.01, height = 0)
   ) +
   
   geom_text(
@@ -936,7 +672,7 @@ ids_and_years |>
     size = 4.5,
     color = "blue",
     check_overlap = TRUE,
-    position = position_jitter(width = 0.1, height = 0)
+    position = position_jitter(width = 0.01, height = 0)
   ) +
   
   geom_smooth(
@@ -949,6 +685,7 @@ ids_and_years |>
   ) +
   
   scale_x_continuous(breaks = 0:3) +
+  scale_y_log10() +
   labs(
     x = "Age of Dataset (years since publication)",
     y = "Number of Citations"
@@ -1003,7 +740,7 @@ rep_dt_da |>
 
 ```{r}
 #| label: fig-matched-non
-#| fig-cap: Predictors of Citation Likelihood
+#| fig-cap: Predictors of Citation Likelihood (N = )
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
