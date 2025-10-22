@@ -748,7 +748,6 @@ tidy_model_matched_non_matched |>
 
 # Repositories Distribution of Data Articles identifiers
 
-
 ```{r}
 #| label: fig-repo-dist-ds-da
 #| fig-cap: Repositories Distribution of Data Articles identifiers

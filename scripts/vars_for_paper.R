@@ -106,10 +106,16 @@ ad_non_matched <- ad_for_match |>
 
 # 4. Analyses
 
-# 4.1 Chi square matched: non-matched analisys
+# 4.1 Chi square matched: non-matched analysis
+
+load(here("data", "tables_for_plots", "summary_model_chi.RData"))
+load(here("data", "tables_for_plots", "anova_result.RData"))
+load(here("data", "tables_for_plots", "odds_ratios.RData"))
 
 
 # 4.2 GLM: age-citation relationship
+
+load(here("data", "tables_for_plots", "summary_model_glm.RData"))
 
 # clean up
 rm(dcc_detected_ids_all_sources_7_w_metadata,
@@ -182,7 +188,7 @@ res <- tibble(
     
     # ds_matched_ids_count_dist
     detected_dup |> dplyr::filter(source_charite == "datastet") |> select(detected_id) |> distinct() |> nrow(),
-    
+
     # n_matched_ids_count_dist
     detected_dedup |> dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> select(detected_id) |> distinct() |> nrow(),
     
@@ -198,7 +204,7 @@ res <- tibble(
       select(dataset_for_matching) |> 
       dplyr::filter(!is.na(dataset_for_matching)) |> 
       distinct() |> 
-      nrow()) + (ad_non_matched |> nrow()),
+      nrow()) + (ad_non_matched |> nrow()) - 2, # minus 2 because 2 of the matched are secondary ids, so they need to be removed from the non-matched couunt here
 
     # max_mentions_of_single_id
     detected_dedup_no_da |>
@@ -309,11 +315,6 @@ save_cr(res, file = file.path(here("data",
 # 4. Build Analyses results tables ----------------------------------------
 
 # Chi square results:
-
-load(here("data", "tables_for_plots", "summary_model_chi.RData"))
-load(here("data", "tables_for_plots", "anova_result.RData"))
-load(here("data", "tables_for_plots", "odds_ratios.RData"))
-
 
 # 1. Extract raw p-values (excluding intercept)
 coeffs <- summary_model_chi$coefficients
