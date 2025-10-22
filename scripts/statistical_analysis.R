@@ -118,10 +118,20 @@ model <- glm(in_dcc ~ human_data + covid_related + license_for_analysis + das_fo
 glm_null <- glm(in_dcc ~ 1, data = data_for_glm, family = "binomial") # define a null model
 anova_result <- anova(glm_null, model, test = "Chisq") # overall model significance
 
-summary_model <- summary(model)
+# save as RData
+save_cr(anova_result, file = file.path(here("data",
+                                                 "tables_for_plots",
+                                                 "anova_result.RData")))
+
+summary_model_chi <- summary(model)
+
+# save as RData
+save_cr(summary_model_chi, file = file.path(here("data",
+                                             "tables_for_plots",
+                                             "summary_model_chi.RData")))
 
 # Extract raw p-values (as before)
-raw_p <- summary_model$coefficients[, "Pr(>|z|)"]
+raw_p <- summary_model_chi$coefficients[, "Pr(>|z|)"]
 raw_p <- raw_p[!str_detect(names(raw_p), "Intercept")]
 
 # Apply correction (e.g., Benjamini-Hochberg / FDR)
@@ -136,6 +146,12 @@ names(corrected_p) <- names(corrected_p) |>
 vif(model) # none are > 5-10
 
 odds_ratios <- round(exp(coef(model)), 2) # get how likely is a human/covid/licensed/das dataset to be reused
+
+# save as RData
+save_cr(odds_ratios, file = file.path(here("data",
+                                                 "tables_for_plots",
+                                                 "odds_ratios.RData")))
+
 
 # prepare table for plot
 
@@ -238,5 +254,9 @@ model_nb <- glmmTMB( # mixed = considering that it's the same datasets between t
   family = nbinom2 # takes into account the right-skewed-tail distribution of the data (v > m)
 )
 
-summary(model_nb)
+summary_model_glm <- summary(model_nb)
 
+# save as RData
+save_cr(summary_model_glm, file = file.path(here("data",
+                                                 "tables_for_plots",
+                                                 "summary_model_glm.RData")))

@@ -17,7 +17,7 @@ files <- list.files(
 results <- files |> 
   map_dfr(function(file) {
     lines <- read_lines(file)
-    matches <- which(str_detect(lines, fixed("summarise(n = n())")))
+    matches <- which(str_detect(lines, fixed("datajournal_articles - analysis of citations v10.xlsx")))
     
     if (length(matches) == 0) return(NULL)
     

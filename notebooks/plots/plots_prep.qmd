@@ -87,7 +87,7 @@ rm(dcc_detected_ids_all_sources_7_w_metadata,
 
 <br>
 
-# Distinct Number of Papers and Datasets Found in the DCC: Preparing Data for Flowchart
+# Distinct Number of Papers and Datasets Found in the DCC and in Data Articles Analysis: Preparing Data for Flowcharts
 
 <br>
 
@@ -286,17 +286,17 @@ save_cr(counts_ids_and_dois_da, file = file.path(here("data",
                                                    "tables_for_plots",
                                                    "counts_ids_and_dois_da.RData")))
 
-# Get numebre of overlapping mentions:
+# Get numebr of overlapping mentions:
 
 # 1. With which source each DataStet case is overlapped with:
 
-overlaps_ds <- dcc_detected_ids_all_sources_7_w_metadata |>
+overlaps_ds <- detected_with_dup_sources |>
   dplyr::group_by(detected_id) |>
   dplyr::filter(dplyr::n_distinct(source_charite) > 1) |>
   dplyr::ungroup() |>
   dplyr::filter(source_charite %in% c("datastet")) |>
   dplyr::left_join(
-    dcc_detected_ids_all_sources_7_w_metadata |>
+    detected_with_dup_sources |>
       dplyr::select(detected_id, source_charite) |>
       dplyr::distinct() |>
       dplyr::filter(source_charite != "datastet") |>
@@ -630,22 +630,23 @@ save_cr(rep_dt_ds, file = file.path(here("data",
 
 ```{r fig-repo-dist-ds-da}
 
-# rep_dt_da <- charite_da_dois_and_ids |> 
-#   mutate(repository = case_when(repository == "2020" ~ "Zenodo",
-#                                 repository == "OpenNEURO" ~ "Openneuro",
-#                                 repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
-#                                 .default = repository)) |> 
-#   dplyr::filter(repository != "n/a") |> 
-#   dplyr::filter(identifier_from_data_article_analysis != "NULL") |> 
-#   select(identifier_from_data_article_analysis, repository) |> 
-#   group_by(repository) |> 
-#   summarise(n = n_distinct(identifier_from_data_article_analysis))
-# 
-# 
-# # save as RData
-# save_cr(rep_dt_da, file = file.path(here("data",
-#                                          "tables_for_plots",
-#                                          "rep_dt_da.RData")))
+rep_dt_da_ds <- charite_da_dois_and_ids |>
+  dplyr::filter(
+    !identifier_from_data_article_analysis %in% c("10.5281/zenodo.4059716", "NULL")) |> # exclude 2 invalid identifiers (See original "v10" xslx for details)
+  mutate(repository = case_when(repository == "2020" ~ "Zenodo",
+                                repository == "OpenNEURO" ~ "Openneuro",
+                                repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
+                                .default = repository)) |>
+  dplyr::filter(repository != "n/a") |> # 2 repositories with "n/a" are excluded as well
+  select(identifier_from_data_article_analysis, repository) |>
+  group_by(repository) |>
+  summarise(n = n_distinct(identifier_from_data_article_analysis))
+
+
+# save as RData
+save_cr(rep_dt_da_ds, file = file.path(here("data",
+                                         "tables_for_plots",
+                                         "rep_dt_da_ds.RData")))
 
 ```
 
@@ -653,23 +654,34 @@ save_cr(rep_dt_ds, file = file.path(here("data",
 
 ```{r fig-repo-dist-ref-da}
 
-##### FIX
+# SO FAR WE ONLY HAVE THE INFO OF CITATION NUMBERS BY DATA ARTICLE, NOT BY THEIR IDENTIFIERS
 
-# rep_dt_da <- charite_da_dois_and_ids |> 
+# rep_dt_da_ref <- charite_da_dois_and_ids |>
+#   dplyr::filter(
+#     !identifier_from_data_article_analysis %in% c("10.5281/zenodo.4059716", "NULL")) |> # exclude 2 invalid identifiers (See original "v10" xslx for details)
 #   mutate(repository = case_when(repository == "2020" ~ "Zenodo",
 #                                 repository == "OpenNEURO" ~ "Openneuro",
 #                                 repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
-#                                 .default = repository)) |> 
-#   dplyr::filter(repository != "n/a") |> 
-#   dplyr::filter(identifier_from_data_article_analysis != "NULL") |> 
-#   select(identifier_from_data_article_analysis, repository) |> 
-#   group_by(repository) |> 
+#                                 .default = repository)) |>
+#   dplyr::filter(repository != "n/a") |> # 2 repositories with "n/a" are excluded as well
+#   select(charite_doi, identifier_from_data_article_analysis, repository) |>
+#   group_by(repository) |>
 #   summarise(n = n_distinct(identifier_from_data_article_analysis))
+
+# n_citations_for_join <- data_articles_and_citations_numbers |> 
+#   rename(charite_doi = data_article)
+#   
 # 
-# 
+# rep_dt_da_ref |> 
+#   left_join(n_citations_for_join,
+#             by = "charite_doi") |>
+#   select(-identifier_from_data_article_analysis) |> 
+#   distinct() |> 
+#   View()
+
 # # save as RData
-# save_cr(rep_dt_da, file = file.path(here("data",
+# save_cr(rep_dt_da_ref, file = file.path(here("data",
 #                                          "tables_for_plots",
-#                                          "rep_dt_da.RData")))
+#                                          "rep_dt_da_ref.RData")))
 
 ```
