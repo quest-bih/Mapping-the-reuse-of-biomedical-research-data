@@ -457,16 +457,16 @@ links_lic_access <- dcc_charite_for_sankey |>
   mutate(source = case_when(license_for_analysis == "TRUE" ~ "CC License",
                             license_for_analysis == "FALSE" ~ "No CC License",
                             .default = "license not checked yet"),
-         target = case_when(data_access == "yes" ~ "Full Access",
-                            data_access == "restricted" ~ "Restricted Access",
+         target = case_when(data_access == "yes" ~ "Open Data",
+                            data_access == "restricted" ~ "Restricted-Access",
                             .default = "access not checked yet")) |>
   count(source, target) |>
   rename(value = n) |>
   as.data.frame()
 
 links_access_rep <- dcc_charite_for_sankey |>
-  mutate(source = case_when(data_access == "yes" ~ "Full Access",
-                            data_access == "restricted" ~ "Restricted Access",
+  mutate(source = case_when(data_access == "yes" ~ "Open Data",
+                            data_access == "restricted" ~ "Restricted-Access",
                             .default = "access not checked yet"),
          target = case_when(
            repository %in% c("ncbi dbgap",

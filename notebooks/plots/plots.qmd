@@ -268,8 +268,8 @@ plot_Sankey <- function(links, ...) {
   highlight_colors <- list(
     "Accession Number" = "blue",
     "DOI" = "red",
-    "Full Access" = "#FFF9C4",
-    "Restricted Access" = "#B2F2BB",
+    "Open Data" = "#FFF9C4",
+    "Restricted-Access" = "#B2F2BB",
     "Not Covid Related" = "purple",
     "Covid Related" = "pink",
     "No CC License" = "darkgrey",
@@ -438,7 +438,7 @@ venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#A6CEE3", "
   A <- unique(setlist[[1]])
   B <- unique(setlist[[2]])
 
-  total <- length(unique(c(A, B, C)))
+  total <- length(union(A, B))
   
   # Define Venn regions
   regions <- tibble(
