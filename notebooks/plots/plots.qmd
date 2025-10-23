@@ -628,7 +628,7 @@ ids_and_years_only_0_3_ages |>
   #scale_y_log10() +
   labs(
     x = "Age of Dataset (years since publication)",
-    y = "Number of Citations (log scale)"
+    y = "Number of Citations"
   ) +
   theme_classic() +
   theme(

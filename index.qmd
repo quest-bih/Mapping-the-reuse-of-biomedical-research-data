@@ -200,7 +200,7 @@ Second, we screened data articles published by institutional authors, and used G
 
 We started from a set of `r res$n_dois_for_match` articles (co-)authored by Charité researchers between 2020 and 2023. These articles reported the deposition of `r res$n_ids_for_match_count + res$n_2nd_for_match_count` datasets ('Charité datasets'). For these datasets, we investigated, using the DCC, whether they have been referenced by other articles. We observed that `r res$n_matched_ids_count_dist` of datasets (`r round(res$n_matched_ids_count_dist / res$n_ids_for_match_count * 100, 1)`% of all datasets) have been referenced at least once. Overall, there were `r res$n_mentions` references to datasets, by the time the DCC version used had last been last updated (Feb. 25^th^, 2025). These numbers are shown in @fig-dist-counts. The fact that only a subset of datasets has so far been referenced is also reflected in the distribution of references per reused dataset. While a small number of datasets has been referenced many times, with a maximum of `r res$max_mentions_of_single_id` references, `r res$n_ids_with_1_mention_count_dist` out of `r res$n_matched_ids_count_dist` cited datasets (`r round(res$n_ids_with_1_mention_count_dist / res$n_matched_ids_count_dist * 100, 1)`%) have been referenced only once (@fig-datasets-freq-dist), and `r res$n_non_matched_ids_count_dist` of datasets (`r round(res$n_non_matched_ids_count_dist / res$n_ids_for_match_count * 100, 1)`%) have not been referenced so far.
 
-In addition, @fig-venn-ids shows the different data sources, and how they overlap. Here, we pooled sources (1) and (2), as these are conceptually identical and will in the future be extracted in one step. The majority of datasets was found in this pool of identifiers detected by text mining. DataStet contributed an addition `r res$all_matched_ids_count_dist - res$n_matched_ids_count_dist` datasets, corresponding to `r round((res$all_matched_ids_count_dist - res$n_matched_ids_count_dist) / res$all_matched_ids_count_dist * 100, 1)`%, not found in other sets.
+In addition, @fig-venn-ids shows the different data sources, and how they overlap. Here, we pooled sources (1) and (2), as these are conceptually identical and will in the future be extracted in one step. The majority of datasets was found in this pool of identifiers detected by text mining. DataStet contributed an addition of `r res$all_matched_ids_count_dist - res$n_matched_ids_count_dist` datasets, corresponding to `r round(res$all_matched_ids_count_dist - res$n_matched_ids_count_dist) / res$all_matched_ids_count_dist * 100, 1)`%, not found in other sets.
 
 ### 3.3. Determinants of institutional dataset reuse
 
@@ -377,8 +377,6 @@ References
 {{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-age-citation-1 >}}
-
-{{< embed notebooks/plots/plots.qmd#fig-age-citation-2 >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds-da >}}
 

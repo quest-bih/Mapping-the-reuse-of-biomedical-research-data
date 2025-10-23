@@ -229,20 +229,10 @@ ids_and_years <- dcc_detected_ids_all_sources_8_dedup |>
   group_by(detected_id, age) |> 
   summarise(number_of_citations_in_age = n()) # get number of citations for each dataset in each age
 
-# save as RData
-save_cr(ids_and_years, file = file.path(here("data",
-                                             "inputs_for_quick_render",
-                                             "ids_and_years.RData")))
-
 ids_and_years_only_0_3_ages <- ids_and_years |>
   dplyr::group_by(detected_id) |>
   dplyr::filter(dplyr::n_distinct(age) == 4) |>
   dplyr::ungroup()
-
-# save as RData
-save_cr(ids_and_years_only_0_3_ages, file = file.path(here("data",
-                                             "inputs_for_quick_render",
-                                             "ids_and_years_only_0_3_ages.RData")))
 
 # model
 
@@ -257,6 +247,14 @@ model_nb <- glmmTMB( # mixed = considering that it's the same datasets between t
 summary_model_glm <- summary(model_nb)
 
 # save as RData
+save_cr(ids_and_years_only_0_3_ages, file = file.path(here("data",
+                                                           "inputs_for_quick_render",
+                                                           "ids_and_years_only_0_3_ages.RData")))
+
+save_cr(ids_and_years, file = file.path(here("data",
+                                             "inputs_for_quick_render",
+                                             "ids_and_years.RData")))
+
 save_cr(summary_model_glm, file = file.path(here("data",
                                                  "tables_for_plots",
                                                  "summary_model_glm.RData")))

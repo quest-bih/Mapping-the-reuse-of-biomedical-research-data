@@ -275,9 +275,11 @@ counts_ids_and_dois_da <- tibble(
       distinct() |>
       nrow(), # 113
 
-    data_articles_and_citations_numbers |>
-      mutate(n_citations = as.numeric(n_citations)) |>
-      summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
+    1663
+    # The code below adds rows which in the original excel file have "NaN" in their Column "C", so I just wrote the value without them.
+    # data_articles_and_citations_numbers |>
+    #   mutate(n_citations = as.numeric(n_citations)) |>
+    #   summarise(total_citations = sum(n_citations, na.rm = TRUE)) # 1756
   )
 )
 
