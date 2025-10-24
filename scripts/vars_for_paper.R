@@ -112,18 +112,9 @@ load(here("data", "tables_for_plots", "summary_model_chi.RData"))
 load(here("data", "tables_for_plots", "anova_result.RData"))
 load(here("data", "tables_for_plots", "odds_ratios.RData"))
 
-
 # 4.2 GLM: age-citation relationship
 
 load(here("data", "tables_for_plots", "summary_model_glm.RData"))
-
-# clean up
-rm(dcc_detected_ids_all_sources_7_w_metadata,
-   dcc_detected_ids_all_sources_8_dedup,
-   numbat_da_dois_and_ids_9_clean_pairs,
-   added_and_ds_for_matching_4_rm_exist,
-   datasets_metadata_master_updated_021)
-
 
 # 5. Data Articles
 
@@ -131,6 +122,16 @@ load(here("data", "tables_for_plots", "counts_ids_and_dois_da.RData")) # counts 
 
 load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RData")) # for number of reusing papers
 
+# 6. DCC
+load(here("data", "wrangling_steps", "dcc", "DCC_corpus_11_std_lbl.RData")) # DCC wrangled
+load(here("data", "inputs_for_quick_render", "doi_is_id_count.RData")) # DCC wrangled
+
+# clean up
+rm(dcc_detected_ids_all_sources_7_w_metadata,
+   dcc_detected_ids_all_sources_8_dedup,
+   numbat_da_dois_and_ids_9_clean_pairs,
+   added_and_ds_for_matching_4_rm_exist,
+   datasets_metadata_master_updated_021)
 
 # 3. Build results tables --------------------------------------------------
 
@@ -176,8 +177,18 @@ res <- tibble(
     "da_dois",                                 # DA charite's data articles
     "da_ids",                                  # DA charite's datasets
     "da_mentions",                             # DA confirmed citations
-    "da_citing_papers"),                       # DA number of reusing papers     
+    "da_citing_papers",                        # DA number of reusing papers     
     
+    "dcc_datasets",                            # Number of dcc_datasets (in the corpus)
+    "dcc_mentions",                            # Number of dcc_mentions (in the corpus)
+    "dcc_rep",                                 # Number of dcc_repositories (in the corpus)
+    "dcc_journals",                            # Number of dcc_journals (in the corpus)
+    "dcc_papers",                              # Number of dcc_papers (in the corpus)
+    "dcc_doi_is_dataset",                      # Number of dcc_doi = dcc_dataset (in the corpus)
+    "human_odd_r",                             # human_odd_r (odds_ratio)
+    "covid_odd_r",                             # covid_odd_r (odds_ratio)
+    "datasets_20_23"                           # Number of datasets published between 2020-2023
+    ),
   count = c(
     
     # placeholder
@@ -300,7 +311,34 @@ res <- tibble(
     counts_ids_and_dois_da |> dplyr::filter(category == "n_citations") |> dplyr::pull(count) |> unlist() |> as.integer(),
     
     # da_citing_papers" (DA number of reusing papers)
-    counts_ids_and_dois_da |> dplyr::filter(category == "reusing_papaers") |> dplyr::pull(count) |> unlist() |> as.integer()
+    counts_ids_and_dois_da |> dplyr::filter(category == "reusing_papaers") |> dplyr::pull(count) |> unlist() |> as.integer(),
+    
+    # dcc_datasets Number of dcc_datasets (in the corpus)
+    DCC_corpus_11_std_lbl |> select(dataset_for_matching) |> distinct() |> nrow(),
+    
+    # dcc_mentions (Number of dcc_mentions (in the corpus))
+    DCC_corpus_11_std_lbl |> select(dataset_for_matching, doi) |> distinct() |> nrow(),
+    
+    # dcc_rep (Number of dcc_repositories (in the corpus))
+    DCC_corpus_11_std_lbl |> select(repository) |> distinct() |> nrow(),
+    
+    # dcc_journals (Number of dcc_journals (in the corpus))
+    DCC_corpus_11_std_lbl |> select(journal) |> distinct() |> nrow(),
+    
+    # dcc_papers (Number of dcc_papers (in the corpus))
+    DCC_corpus_11_std_lbl |> select(doi) |> distinct() |> nrow(),
+    
+    # dcc_doi_is_dataset (Number of dcc_doi = dcc_dataset (in the corpus))
+    doi_is_id_count,
+    
+    # human_odd_r (human_odd_r (odds_ratio))
+    odds_ratios[["human_dataTRUE"]],
+    
+    # covid_odd_r (covid_odd_r (odds_ratio))
+    odds_ratios[["covid_relatedTRUE"]],
+    
+    # datasets_20_23 Number of datasets published between 2020-2023)
+    999
   )
 )
 
