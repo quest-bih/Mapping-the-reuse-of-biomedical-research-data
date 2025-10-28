@@ -409,7 +409,7 @@ rm(DCC_corpus_1_dates) # clean up
 
 # 5. Removing identifiers prefixes
 
-For all identifiers containing "/10." not at the end of the string, every character up to and including the slash before "10." was removed. This steps makes it easier to futrher standardize dataset's DOIs.
+For all identifiers containing "/10." not at the end of the string, every character up to and including the slash before "10." was removed. This steps makes it easier to further standardize dataset's DOIs.
 
 ```{r Remove identifiers prefixes}
 
