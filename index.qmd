@@ -24,19 +24,19 @@ load(here::here("data", "inputs_for_quick_render", "p_age.RData"))
 
 ```
 
-## 1. Introduction
+## 1. Introduction {#sec-intro}
 
-### 1.1. The relevance of investigating dataset reuse
+### 1.1. The relevance of investigating dataset reuse {#sec-intro-rational}
 
 A lot of effort is invested into the sharing of data by researchers by creating infrastructures, developing know-how, and raising awareness. The practice of data sharing is called upon, supported, and sometimes required by funders [@wellcome2025], journals [@loder2024; @plosmedicine], institutions [@theneuro2025], scientific societies, and governments \[\] (UNESCO Recommendation on Open Science, 2023). Data sharing serves multiple purposes [@gregory2020; @locher2023]. The availability of data has a positive effect on trust [@rosman2022], and thus availability of data is a value in itself. However, we see a wide agreement that value is primarily created by data sharing when somebody else takes this data and uses it in some way. To quantify the impact of shared data, we thus focused on its reuse, and, more specifically, on references to dataset reuse in the published literature. Reuse can take place in a lot of ways, and by many actors: in addition to researchers, it could also be by governments, civil society, companies, or other actors. In addition, researchers might reuse data for purposes outside of research, as e.g. teaching [@gregory2020]. Thus, many reuse cases might never find their way into the literature. However, the traces of data reuse in the literature are currently the only way to investigate at scale, whether data is reused. Thus, we focus on mentions of data reuse in the published literature as a proxy of overall data reuse to investigate the impact of shared data. Ultimately, the answer to this question is central to advance and focus efforts regarding data sharing in the future [@eosceden].
 
-### 1.2. Terminology
+### 1.2. Terminology {#sec-intro-terminology}
 
 We are aware that data reuse is in itself not a self-evident concept, and it has been even argued that it cannot be defined at all [@sandt2019]. Although we argue that such a distinction is intuitive and useful, a line is certainly very difficult to draw. For the purpose of our analysis, we consider every instance where the article reporting data reuse ('reusing article') and the article reporting data sharing ('sharing article') do not have author overlap. Although this is certainly a simplification, it seems justified and our own analyses show that typically authors see this distinction the way we do, e.g. in that references to data reuse cases are much more often found outside of data availability statements than reference to what we define as ‘own data’. However, this issue warrants its own discussion, and probably a simple dichotomy might not suffice in the long term. In that regard, one of the authors (EB) is involved in the FORCE11 Working Group “Data Usage Typologies” [@force11], which aims to define types of data (re)use and their respective properties. **\[TODO: this section needs to be harmonized with the discussion\]**
 
 The literature on data use and reuse employs different terms for statements which refer to utilized datasets. We follow the terminology employed by @gregory2023. Thus, we use the term ‘data citation’ for data objects in reference lists, while the term ‘data mention’ is used for statements in the publication text. As a consequence, the Data Citation Corpus analyzed here is, in this terminology, a corpus of both ‘data mentions’ and ‘data citations’ and, in a summarizing fashion, is denoted as a corpus of 'data references'. 'Data citations' and 'data mentions' are synonymous with ‘formal data citations’ and ‘informal data citations’, respectively, as used by @park2018. The third type of data references which we analyze are ‘indirect data citations’ [@sandt2019]. In our case, this applies to cases where a data article rather than the dataset itself is referenced.
 
-### 1.3. Institutional dataset reuse as specific application
+### 1.3. Institutional dataset reuse as specific application {#sec-intro-application}
 
 We were interested in the reuse of data published by researchers from our institution. The primary focus of our study are the questions which datasets have been mentioned in the literature, and how often. In addition, we investigated the characteristics of reuse with regard to properties of data (e.g., whether it is data collected from human participants), properties of metadata (e.g., license), and the time lag between data publication and data reference.
 
@@ -44,53 +44,51 @@ We work at the Charité – Universitätsmedizin Berlin, a large university medi
 
 The list of datasets published by our institution is an outcome of the process of locally monitoring open science practices. We have collected information on the publication of datasets by Charité’s researchers, and thus, we know for the period 2020-2023 which datasets have been shared. This list can then be matched to references in the Data Citation Corpus to investigate the reuse of datasets from our institution. The process is briefly described in the methods section, which also provides references to detailed descriptions.
 
-### 1.4. Data Citation Corpus as data source
+### 1.4. Data Citation Corpus as data source {#sec-intro-dcc}
 
 The use of references to datasets is complicated by the fact that data reuse is rarely acknowledged by data citations [@ninkov2021; @gregory2023]. More commonly, data reuse is mentioned in a more or less informal way in different article sections [@park2018; @sandt2019]. The Data Citation Corpus (DCC) **TODO add reference (Make Data Count – Data Citation Corpus, no date)** is the first comprehensive approach to address this issue by text-mining a large body of the published literature for references to reused data. It includes `r format(res$dcc_mentions, scientific = FALSE, big.mark = ",")` dataset citations to `r format(res$dcc_datasets, scientific = FALSE, big.mark = ",")` datasets in `r res$dcc_rep` repositories, mentioned in `r format(res$dcc_papers, scientific = FALSE, big.mark = ",")` research articles from `r format(res$dcc_journals, scientific = FALSE, big.mark = ",")` journals. These and further numbers are displayed in the DCC dashboard\*\* TODO add reference (DataCite – Data Citation Corpus, no date)**. Beyond this dashboard, so far only two analyses making use of the DCC have been published to date [@strecker2025]** \[REF Strecker et al., 2025; REF The State of Open Data 2024\*\*\]. Also, there is no comprehensive validation as yet with regard to the completeness, correctness, or bias within the DCC, although @page2024 has documented common data quality issues in the DCC. Such a validation could e.g. investigate, whether known cases of data referencing are present in the DCC. However, the lack of large and diverse sets of data references which are in themselves validated precludes an extensive validation of the DCC at the time being.
 
-### 1.5. Indirect data citation via data articles
+### 1.5. Indirect data citation via data articles {#sec-intro-data-articles}
 
 In addition to data citations and data mentions, many authors reference not the reused dataset directly, but an article which describes the results derived from the data, given that such an article exists [@callaghan2012; @gregory2023; @yoon2019]. Detecting the whole breadth of indirect data citations would require investigating every single article reference to articles by Charité authors to distinguish between indirect dataset citations and references to the content of the data article proper. This can currently not be reliably automated and is not feasible manually, as it would apply to an estimated high five-digit number of articles. We this focus on citations of dataset articles, where the probability of encountering indirect data citations can be expected to be substantially higher than amongst research articles generally. We have used dataset articles in two common data journals to track such indirect data citations. This complements the analysis of the DCC and allows for a more comprehensive picture of dataset reuse.
 
-## 2. Methods
+## 2. Methods {#sec-methods}
 
-### 2.1. High-level overview of the process
+### 2.1. High-level overview of the process {#sec-methods-overview}
 
 The process of cleaning our own source dataset and matching it to entries in the DCC contains the following steps, described in below sections in more detail:
 
-(1) Preparation of DCC: combination of the tables into one file, removal of columns not to be used, and renaming of some columns for clarity
-(2) Cleaning of the Charité dataset identifier list
-(3) Programmatically extracting the DOI or accession code from the identifier list
-(4) Manually extracting the DOI or accession code from cases where the script applied in step (4) did not yield a useful result (either not extracted automatically or not properly documented in the source data)
-(5) Matching Charité dataset identifiers with identifiers in the DCC; this way, we determined which publications have referenced datasets underlying publications by Charité authors
+(1) Preparation of the DCC for analysis
+(2) Preperation of Charité dataset identifiers list for analysis
+(3) Matching Charité dataset identifiers with identifiers in the DCC; this way, we determined which publications have referenced datasets underlying publications by Charité authors
 
-This description applies to the analysis of dataset references. For the analysis of indirect data references through data articles, additional steps had to be performed, as described in @sec-match.
+This description applies to the analysis of dataset references (See @fig-dist-counts). For the analysis of indirect data references through data articles, additional steps had to be performed, as described in #sec-methods-charite-data-articles (See @fig-dist-counts-da).
 
-### 2.2. Preparing and quality-checking the Data Citation Corpus
+### 2.2. Preparing and quality-checking the Data Citation Corpus {#sec-methods-dcc}
 
-check Preparation of DCC: combination of the tables into one file, removal of columns not to be used, and renaming some columns for clarity \@Avihay
+The DCC was downloaded as separate csv files which were then combined into one table. We performed several steps on that table to standardize the DCC for our needs, as well as to quality-check the entries:
 
-We performed several steps to standardize the DCC for our needs, as well as to quality-check the entries:
+(1) Searching for missing (NA and NULL) values in fields that are relevant for the analysis; no such cases were observed
 
-1.  Searching for missing (NA) values in fields that are relevant for the analysis; no such cases were observed
+(2) Checking whether articles publication years are plausible; we found six entries with implausible publication years (e.g., 2104, 2108) and corrected them by replacing the leading "1" with a "0"; these corrected publication years were then manually verified
 
-2.  Checking whether articles publication year are plausible; we found six entries with implausible publication years (e.g., 2104, 2108) and corrected them by replacing the leading "1" with a "0"; these corrected publication years were then manually verified
+(3) Renaming several columns for clarity
 
-3.  DOIs of datasets deposited in general-purpose repositories (i.e., Zenodo, Figshare, Dryad, OSF, Mendeley, and Harvard Dataverse) were found to appear in multiple formats within the DCC; to ensure consistency, these DOIs were standardized to a uniform format
+(4) DOIs of datasets deposited in general-purpose repositories (i.e., Zenodo, Figshare, Dryad, OSF, Mendeley, Apollo and Harvard Dataverse) were found to appear in multiple formats within the DCC; to ensure consistency, these DOIs were standardized to a uniform format
 
-4.  Subsequently, excess characters were stripped from both the dataset and the article DOIs; this included leading and trailing slashes, dots and spaces, together with any other space found within the string value of the dataset or the article DOI; furthermore, commas were replaced with dots
+(5) Subsequently, excess characters were stripped from both the dataset and the article DOIs; this included leading and trailing slashes, dots and spaces, together with any other space found within the string value of the dataset or the article DOI; furthermore, commas were replaced with dots
 
-5.  version information was removed from all datasets identifiers
+(6) version information was removed from all datasets identifiers
 
-6.  After earlier cleaning steps, it could be observed that the DCC included `r format(res$dcc_doi_is_dataset, scientific = FALSE, big.mark = ",")` cases where the same DOI was listed in both the 'referencing article' and 'referenced dataset' fields; such cases were removed from the corpus.
+(7) After earlier cleaning steps, it could be observed that the DCC included `r format(res$dcc_doi_is_dataset, scientific = FALSE, big.mark = ",")` cases where the same DOI was listed in both the 'referencing article' and 'referenced dataset' fields; such cases were removed from the corpus
 
-7.  Lastly, to exclude preprints from analysis, all cases where the listed repository name contained the suffix “rxiv” (e.g., bioRxiv, medRxiv, arXiv) were removed
+(8) Lastly, to exclude preprints from analysis, all cases where the listed repository name contained the suffix “rxiv” (e.g., bioRxiv, medRxiv, arXiv) were removed
 
-Due to the size of the corpus, standardization steps performed were followed by inspection of individual samples rather than comprehensive manual validation.
+Due to the size of the corpus, standardization steps performed were followed by inspection of individual samples rather than comprehensive manual validation. Original values of the DCC were kept in the table in their original respective columns for documentation, while the standardized values were the ones that were being used for the analysis.
 
-### 2.3. Detecting datasets published by our institution
+### 2.3. Detecting datasets published by our institution {#sec-methods-charite}
 
-#### 2.3.1. Detecting datasets via text mining of institutional articles with ODDPub
+#### 2.3.1. Detecting datasets via text mining of institutional articles with ODDPub {#sec-methods-charite-numbat}
 
 The process through which we obtained the list of shared datasets has been described in detail in our publications and @iarkaeva2024, as well as a detailed protocol [@iarkaeva2022]. Briefly, starting with an institutional bibliography, the steps are the following:
 
@@ -99,23 +97,27 @@ The process through which we obtained the list of shared datasets has been descr
 (3) Verifying that the open data cases flagged by ODDPub are indeed open data cases by our definition
 (4) As part of this verification process, we document the so-called “best identifier” of the dataset, e.g. preferring a DOI over an accession code, where both are available; however, some cleaning of this list was still necessary before a matching with the DCC could take place
 
-#### 2.3.2. Using datasets detected with ODDPub as seed to detect additional datasets {#sec-oddpub}
+**TODO: Where to mention this? sometimes the Charité article appears to have created the data, but in fact it might be said to have reused the data. This leads to datasets sometimes being published before the article, as this was not the first article to report them**
 
-In the detection procedure described in @iarkaeva2024, as well as briefly in section 2.3.1., we extracted one dataset identifier per repository. However, we had observed that in many cases multiple datasets had been deposed in the same repository, in some cases up to several dozen. Thus, we used the extracted dataset identifiers as "seeds" to detect further identifiers. These additional identifiers were only searched for either in the text surrounding the seed identifier, or if this text clearly indicated where in the text or supplements further identifiers were to be found.
+#### 2.3.2. Using datasets detected with ODDPub as seed to detect additional datasets {#sec-methods-charite-added}
 
-#### 2.3.3. Detecting datasets via text mining using DataStet
+@EB**:** **Does this section described the "additional IDs" extraction? If so, it should be noted that this procedure was being done only for ODDPub identifiers that were already detected in the DCC as cited datasets, meaning only after the matching with the DCC step.** In the detection procedure described in @iarkaeva2024, as well as briefly in #sec-methods-charite-numbat, we extracted one dataset identifier per repository. However, we had observed that in many cases multiple datasets had been deposed in the same repository, in some cases up to several dozen. Thus, we used the extracted dataset identifiers as "seeds" to detect further identifiers. These additional identifiers were only searched for either in the text surrounding the seed identifier, or if this text clearly indicated where in the text or supplements further identifiers were to be found.
 
-DataStet is an alternative to ODDPub, which also screens article full-texts to detect dataset references **\[add ref kermitt2/datastet\]**. It includes some functionalities in addition to those offered by ODDPub, including a detection of whether a dataset had been at all created for the study, as well as a probability for the classification of a detected statement as indicative of shared data. However, we used DataStet only for the purpose of detecting any additional datasets which ODDPub might have missed. Unlike the datasets detected with ODDPub, the datasets detected using DataStet were not used as seeds for further dataset detection (see @sec-oddpub).
+#### 2.3.3. Detecting datasets via text mining using DataStet {#sec-methods-charite-datastet}
 
-**\[AC\] Avihay/Vladi: did we use the default settings of DataStet? which were these? which version was it? is there anything else to say about this?**
+DataStet is an alternative to ODDPub, which also screens article full-texts to detect dataset references **\[add ref kermitt2/datastet\]**. It includes some functionalities in addition to those offered by ODDPub, including a detection of whether a dataset had been at all created for the study, as well as a probability for the classification of a detected statement as indicative of shared data. However, we used DataStet only for the purpose of detecting any additional datasets which ODDPub might have missed. Unlike the datasets detected with ODDPub (See #sec-methods-charite-numbat), the datasets detected using DataStet were not used as seeds for further dataset detection (see #sec-methods-charite-added). Steps 4-6 of the standardization process described in #sec-methods-dcc were performed for the identifiers values of DataStet as well.
 
-#### 2.3.4. Indirect citation detection via data articles
+**\[AC\] / Vladi: did we use the default settings of DataStet? which were these? which version was it? is there anything else to say about this?**
+
+@EB**:** **According to Ana (I asked them both in Teams), we used the standard "/service/annotateDatasetPDF" API endpoint to produce JSONs file with the identifiers names and whether they were OD or not. The parameters were set for default: disambiguate = 1, verbosity = 0.**
+
+#### 2.3.4. Indirect citation detection via data articles {#sec-methods-charite-data-articles}
 
 The purpose of this analysis was to investigate for a sample of data articles by Charité authors, whether the articles citing the data articles referred to reuse of the presented data. In other words, we aimed at detecting indirect data citations.
 
 Data in Brief and Scientific Data are, to our knowledge, the two most common data journals not specific to any discipline. All Charité articles published in these journals were detected on 16.8.2024 using publication data from Embase and Pubmed for 2016-2020 and openAlex for 2021 and 2022. For each data article, we determined whether the data presented was deposited in repositories, and if so, under which identifier(s). Of the 28 data articles, seven shared the data exclusively in the article itself or as supplementary materials. For these seven articles, no data identifiers were matched to the DCC. Of the remaining 21 articles, some had multiple datasets attributed to them, thus corresponding to 33 unique datasets overall (i.e., excluding deposits of the same dataset in two or more repositories).
 
-Then, each article was searched in Google Scholar to obtain the list of articles which cited it, applying the “sort by date” function, thus using the most recent citations. To these articles, we applied an algorithm for removing studies with author overlap to the original Charité articles **(see section ... for details \[AC - might still need to be written\])**. Subsequently, for data articles which had up to 60 citations, all citing articles were investigated with regard to the reuse of data, with the goal of detecting possible indirect data citations. For articles with \>60 citations, due to time constraints caused by the substantial effort necessary for investigating the context of individual citations, only the first 60 eligible citing articles were checked. Articles were ineligible if it was not possible for us to access the citing article full-text and/or the language was not English. In these cases, citations were added to reach 60, if so many were available. Out of 20 data articles, four have more than 60 eligible articles citing them on the respective date of checking.
+Then, each article was searched in Google Scholar to obtain the list of articles which cited it, applying the “sort by date” function, thus using the most recent citations. To these articles, we applied the an algorithm for removing studies with author overlap to the original Charité articles, based on authorship metadata that was extracted from openAlex. Subsequently, for data articles which had up to 60 citations, all citing articles were investigated with regard to the reuse of data, with the goal of detecting possible indirect data citations. For articles with \>60 citations, due to time constraints caused by the substantial effort necessary for investigating the context of individual citations, only the first 60 eligible citing articles were checked. Articles were ineligible if it was not possible for us to access the citing article full-text and/or the language was not English. In these cases, citations were added to reach 60, if so many were available. Out of 20 data articles, four have more than 60 eligible articles citing them on the respective date of checking.
 
 For citations exceeding the 60 cases which were maximally screened, we extrapolated a number of assumed missed indirect data citations. For this, we calculated the fraction of indirect data citations within the 60 articles screened and multiplied this fraction with the number of articles not screened. This was then added to the confirmed cases to received an overall estimate of indirect data citations. In this extrapolation, all articles were considered, including those which could not be screened for reasons of access or language, assuming there is no systematic relationship between data use and these restrictions.
 
@@ -123,7 +125,7 @@ For each citation of the respective data article within the citing article, it w
 
 There were multiple difficulties and limitations encountered during this process. First of all, the purpose of this analysis was to estimate the prevalence of indirect data citations. To limit the time investment of manual checking the search was restricted to references found through Google Scholar articles. Google Scholar has been shown to cover only a part pf all dataset citations [@gerasimov2024]. We also noticed that the sorting by date was sometimes erroneous, thus limiting the reproducibility of this step. Furthermore, depending on the journal it is harder to find where in article something was referenced. For example, in two articles which used numbers to indicate a citation, these numbers appeared in the document over a hundred times and therefore required too much time to find all citations of a Charité article.
 
-check Similarly to the DCC analysis, we excluded all articles with author overlap
+check Similarly to the DCC analysis, we excluded all articles with author overlap @EB **this is already mentioned in paragraph 3 of this section (2.3.4.), isn't it?**
 
 The following steps were taken to ensure validity:
 
@@ -141,64 +143,71 @@ We only examined the indirect citations which referenced data articles in the re
 
 While screening data articles, we detected two Charité datasets which we missed using other sources. For simplicity, we excluded these two additional datasets from analysis.
 
-### 2.4. Data cleaning and standardization
+### 2.4. Data cleaning and standardization {#sec-methods-std-charite}
 
 The list of datasets thus obtained had to be cleaned and standardized before matching with the DCC, in order to maximize the probability of matching. This processing included the following steps:
 
 (1) removal of empty entries, non-identifier entries, and any free text beyond the identifier itself (i.e., DOI, link including an accession code, or link only)
+
 (2) standardization of identifier notation; an automated function was used, which extracted the accession number part from each given URL of a dataset; e.g., removing “https://www.rcsb.org/structure/” from “https://www.rcsb.org/structure/5MEQ” to yield the accession code "5MEQ"; in addition, DOIs were standarized to a uniform format
+
 (3) manual verification of the output to ensure that all datasets were indeed in the correct format (i.e., either a DOI or an accession code), with the version information removed
+
 (4) deduplication (i.e., making sure the Charité dataset identifier list contains each identifier only once)
 
-### 2.5. Matching of institutional and DCC references {#sec-match}
+(5) documentation of different identifiers that were leading to the same dataset, in order to look for them in the DCC as well
+
+### 2.5. Matching of institutional and DCC references {#sec-methods-match}
 
 Following the preprocessing steps above, we matched Charité dataset references with entries in the DCC. This resulted in a list of cases from the DCC which had matching dataset identifiers to the ones in the Charité dataset list, and were thus putative examples of references to datasets shared by Charité authors. From this results list, two cases were excluded:
 
-1.  Charité article and referencing article (DCC article) are in fact the same article
+(1) Charité article and referencing article (DCC article) are in fact the same article
 
-2.  Charité article and referencing article had at least one author in common; this cleaning step was based on authorship metadata from OpenAlex. **Avihay: is there more to say about this? @EB Should I introduce OpenAlex with a sentence or two? Or you could just add a reference to it?**
+(2) Charité article and referencing article had at least one author in common; this cleaning step was based on authorship metadata that was extracted from openAlex, and was done using the same algorithm mentioned in #sec-methods-charite-data-articles. **\[AC\]: is there more to say about this? @EB Should I introduce OpenAlex with a sentence or two? Or you could just add a reference to it?**
 
-The decision to exclude author overlap was a design decision which can also reasonably be approached differently. As discussed in other section, our definition of data reuse is based on complete exclusion of any author overlap.
+The decision to exclude author overlap was a design decision which can also reasonably be approached differently. As discussed in @EB **which** section, our definition of data reuse is based on complete exclusion of any author overlap.
 
-*TODO we need to describe here or elsewhere, that the way we match the datasets and articles also means that sometimes the Charité article appears to have created the data, but in fact it might be said to have reused the data; also, this leads to datasets sometimes being published before the article, as this was not the first article to report them*
+\*\*@EB I'm not sure how to report this, but here I'm reporting that DataStet + additional IDs were first matched with DCC and only then manually filtered to have only OD cases. Following the matching of datasets from the ODDPub seed source with the DCC, we matched the DataStet and the additional extracted Charité identifiers with the DCC as well. The DataStet and additional identifiers were a pool of "Open-Data", "Restricted-"Access" and "Not Open-Data" datasets, and only after matching them with the DCC, the same cleaning procedure that was described in this section was performed, together with the exclusion of datasets that were not "Open" or "Restricted-Access" datasets. This was done in this order (i.e., first matching and then excluding non-" Open data" cases) since the number of matched entries were more manageable for a manual validation than the number of the whole DataStet extracted identifiers list.
 
-### 2.6. Enrichment of the dataset information
+### 2.6. Enrichment of the dataset information {#sec-methods-metadata}
 
 As we were interested in the determinants of data reuse, we manually extracted the following pieces of information about every dataset we found via ODDPub and indirect data citations, as well as for a set of 200 randomly drawn dataset identifiers which had NOT been referenced in the DCC **\[AC\] is it correct we do not have it for additional identifiers and DataStet? I thought this is what Blanka was working on in July? @EB It's correct. Blanka added the determinants for the dataStet+additional datasets that were matched (= detected in DCC = mentioned). The 200 non-matched sample was taken before adding these sources, and in any case for DataStet there are no "non-matched", since we first matched everything that looked like a dataset and then excluded everything that wasn't an OD dataset.**
 
-1.  Was the dataset COVID-related? (yes/no)
+(1) Was the dataset COVID-related? (yes/no)
 
-2.  Were the data human data? (yes/no) All data collected with or from humans pooled into one category, which thus included medical as well as other data, e.g. survey data.
+(2) Were the data human data? (yes/no) All data collected with or from humans pooled into one category, which thus included medical as well as other data, e.g. survey data.
 
-3.  What was the data access status? (open data/restricted access)
+(3) What was the data access status? (open data/restricted access)
 
-4.  Did the identifier appear in a data availability statement within the Charité article? (yes/no)
+(4) Did the identifier appear in a data availability statement within the Charité article? (yes/no)
 
-5.  Under which license was the data shared? The license was documented, but the analysis was performed on a dichotomous level (Creative Commons license/no Creative Commons license)
+(5) Under which license was the data shared? The license was documented, but the analysis was performed on a dichotomous level (Creative Commons license/no Creative Commons license)
 
-6.  What was the identifier type? (accession code/DOI)
+(6) What was the identifier type? (accession code/DOI)
 
 In all cases, if the answer was "partly yes", the case in question was counted as a "yes", if the answer was uncertain, it was counted as "no".
 
 Furthermore, we were interested in the development of data references over time. Thus, we manually extracted the year, in which every dataset was published. This was not always done in a fully consistent fashion. In the original extraction based on ODDPub, we typically extracted the year of the newest version of the dataset. Sometimes these were fully new versions and sometimes these were just - from what we could gather - only small changes to the original dataset metadata. In contrast, in the additional extractions we performed to include other data sources, we documented the year in which the dataset was first created, insofar available. As described before, we removed version information for datasets as far as possible, and thus this is not expected to have substantial impact on the detection, except for rare cases where new versions receive fully new identifiers. However, this can have an impact on the analysis of dataset citations over time.
 
-### 2.7. Validation
+### 2.7. Validation {#sec-methods-validation}
 
-? separate section ?
+We conducted iterative checks on the matched list with its metadata to confirm that the publication dates of datasets consistently preceded those of the referencing articles. Specifically, we verified that all referencing articles were all: (1) published in 2016 or later (2) published after the corresponding dataset (as we documented it) (3) published after the associated Charité article.
 
-## 3. Results
+The publication years of the Charité and the mentioning (DCC) articles were extracted using openAlex, and the publication years of the datasets were extracted manually. When deviations were identified, they were corrected.In all three cases mentioned above, these observations can appear counterintuitive at first. However, they are all explained by our definition of “Charité datasets” (datasets underlying articles with Charité authors). We establish a link between a Charité article and a Charité dataset. However, the information is not available to us whether this is the first time the dataset is shared, or whether it has already been published with another, earlier article (or possible independently of an article altogether). This can lead to cases in which the order of events is reversed. However, typically it is not, and the apparent contradiction is explained by an earlier sharing of the data in question, or an earlier version thereof. We validated a subset of such cases to confirm that this was indeed the case. This validation conformed our assumption, except in one case, where the dataset was still apparently publisher a year before the Charité article. This case might be due to a process where a dataset identifier is created and shared with collaborators before the dataset is officially published and becomes available online. We concluded the validation steps a final sampling check of 20 randomly selected cases out of the final result table.
+
+## 3. Results {#sec-results}
 
 We conducted analyses of two independent sets of dataset references. First, we compiled a list of identifiers of datasets which were shared alongside publications by our institutional authors. This set was based on three sources of dataset identifiers:
 
-1.  screening of articles using the text-mining algorithm ODDPub followed by a manual check, aiming to document one identifier per repository
+(1) screening of articles using the text-mining algorithm ODDPub followed by a manual check, aiming to document one identifier per repository
 
-2.  post-hoc extraction from the same articles of all data identifiers also mentioned in the surrounding of the identifiers found before, and
+(2) post-hoc extraction from the same articles of all data identifiers also mentioned in the surrounding of the identifiers found before, and
 
-3.  screening of articles using the machine learning tool DataStet, followed by manual cleaning
+(3) screening of articles using the machine learning tool DataStet, followed by manual cleaning
 
 Second, we screened data articles published by institutional authors, and used Google Scholar to obtain a list of references. This was subsequently screened to distinguish between data article citations proper and indirect data citations. The latter constituted the second set of dataset references. The details for the collation of each datasets are described in the methods section. We present these results separately first, with analyses of their respective properties. Subsequently, we combine the numbers of dataset references to quantify the overall citation impact of institutional datasets.
 
-### 3.1. Quantification of institutional dataset reuse using the DCC
+### 3.1. Quantification of institutional dataset reuse using the DCC {#sec-results-quant}
 
 We started from a set of `r format(res$total_published_charite_dois, scientific = FALSE, big.mark = ",")` articles (co-)authored by Charité researchers between 2020 and 2023. These articles reported the deposition of `r res$n_ids_for_match_count + res$n_2nd_for_match_count` datasets ('Charité datasets'). For these datasets, we investigated, using the DCC, whether they have been referenced by other articles. We observed that `r res$n_matched_ids_count_dist` of datasets (`r round(res$n_matched_ids_count_dist / res$n_ids_for_match_count * 100, 1)`% of all datasets) have been referenced at least once. Overall, there were `r res$n_mentions` references to datasets, by the time the DCC version used had last been last updated (Feb. 25^th^, 2025). These numbers are shown in @fig-dist-counts. The fact that only a subset of datasets has so far been referenced is also reflected in the distribution of references per reused dataset. While a small number of datasets has been referenced many times, with a maximum of `r res$max_mentions_of_single_id` references, `r res$n_ids_with_1_mention_count_dist` out of `r res$n_matched_ids_count_dist` cited datasets (`r round(res$n_ids_with_1_mention_count_dist / res$n_matched_ids_count_dist * 100, 1)`%) have been referenced only once (@fig-datasets-freq-dist), and `r res$n_non_matched_ids_count_dist` of datasets (`r round(res$n_non_matched_ids_count_dist / res$n_ids_for_match_count * 100, 1)`%) have not been referenced so far.
 
@@ -206,7 +215,7 @@ In addition, @fig-venn-ids shows the different data sources, and how they overla
 
 In addition, @fig-venn-ids shows the different data sources, and how they overlap. Here, we pooled sources (1) and (2), as these are conceptually identical and will in the future be extracted in one step. The majority of datasets was found in this pool of identifiers detected by text mining.
 
-### 3.2. Determinants of institutional dataset reuse
+### 3.2. Determinants of institutional dataset reuse {#sec-results-determinants}
 
 We observed that out of `r res$all_mentions` dataset references, `r res$all_mentions_geo` (`r round(res$all_mentions_geo / res$all_mentions * 100, 1)`%) were to deposits in the Gene Expression Omnibus (GEO) (@fig-repo-dist). Overall, references were overwhelmingly to datasets from the fields of genomics and proteomics, i.e., sequences of DNA, RNA, and proteins. The ten most-referenced repositories contain datasets which are predominantly constituted by sequence data. Only `r res$all_mentions_gen_and_discp` of `r res$all_mentions` data references (`r round(res$all_mentions_gen_and_discp / res$all_mentions * 100, 1)`%) referred to datasets of other type, deposited in either disciplinary repositories (e.g. Electron Microscopy Data Bank, `r res$all_mentions_emdb` references) or general-purpose repositories (e.g. Mendeley, `r res$all_mentions_mendeley` references). The overall patters was very similar when looking at the level of datasets rather than references (Supp. @fig-repo-dist-ds). This clearly shows that quantitatively, 'OMICS' fields currently contribute the large majority of dataset reuse cases.
 
@@ -216,39 +225,40 @@ We investigated further determinants of dataset reuse and found that human data,
 
 @fig-sankey presents an overall characterization of reused Charité datasets, with a focus on how these different characteristics are interrelated. It can be observed that reused datasets were, in their majority, shared openly, without a CC license as well as a DOI. Restricted-access reused data were mostly shared through dbGaP. Covid-19-related data were mostly shared though GEO, EGA, and PDB.
 
-### 3.3. Data reuse as a function of dataset age
+### 3.3. Data reuse as a function of dataset age {#sec-results-age}
 
-We investigated whether there is a correlation between dataset age and number of references. This analysis is constrained by the fact that the large majority of datasets was published between 2020 and 2023 **(\[AC\]%) @EB I wrote a question for our meeting to clarify from which subset should I calculate this ratio**. Datasets publisher earlier could still be part of the analyzed set, and in this regard it is important to consider, as mentioned earlier, that the analyzed Charité articles were not necessarily the first ones to base their analyses on the respective datasets. Rather, these articles were only **the earliest detected** out of n≥1 instances where a dataset was, by our definition, shared by Charité authors. However, the analysis is dominated by recent datasets, which only had up to three years to accrue references. **For this analysis, we removed all datasets related to Covid-19, as we expected a strong temporal effect \[I had this statement, but is this correct? I think not... AC @EB Not correct. Covid-related datasets were included in this analysis, like every other mentioned dataset that had any "age" between 0-3. Should I exclude them?\]**. Such an effect was also suggested by the two most-referenced datasets, which were two Covid-19 protein structures. In addition, we excluded data from 2023, as the DCC version used did not cover 2023 completely. The overall development of citations over years (@fig-age-citation-1) suggests that datasets references do not follow a clear trend in the first four years from the dataset's publication. However, this analysis is strongly skewer by the datasets which are cited only once. We thus generated a subset containing only datasets referenced at least once in all four years since the dataset's publication @fig-age-citation-1. This subset contained only **(7? \[AC\])** datasets, and showed a trend towards a decrease in citations over time. However, this seems to be a one-off covid-related effect. Overall, both the time period and the number of datasets do not allow to come to any firm conclusions.
+We investigated whether there is a correlation between dataset age and number of references. This analysis is constrained by the fact that the large majority of datasets was published between 2020 and 2023 **(\[AC\]%) @EB I wrote a question for our meeting to clarify from which subset should I calculate this ratio**. Datasets publisher earlier could still be part of the analyzed set, and in this regard it is important to consider, as mentioned earlier, that the analyzed Charité articles were not necessarily the first ones to base their analyses on the respective datasets. Rather, these articles were only **the earliest detected** out of n≥1 instances where a dataset was, by our definition, shared by Charité authors. However, the analysis is dominated by recent datasets, which only had up to three years to accrue references. **For this analysis, we removed all datasets related to Covid-19, as we expected a strong temporal effect \[I had this statement, but is this correct? I think not... AC @EB Not correct. Covid-related datasets were included in this analysis, like every other mentioned dataset that had any "age" between 0-3. Should I exclude them?\]**. Such an effect was also suggested by the two most-referenced datasets, which were two Covid-19 protein structures. In addition, we excluded data from 2023, as the DCC version used did not cover 2023 completely. The overall development of citations over years (@fig-age-citation-1) suggests that datasets references do not follow a clear trend in the first four years from the dataset's publication. However, this analysis is strongly skewer by the datasets which are cited only once. We thus generated a subset containing only datasets referenced at least once in all four years since the dataset's publication @fig-age-citation-1. This subset contained only 7 datasets, and showed a trend towards a decrease in citations over time. However, this seems to be a one-off covid-related effect. Overall, both the time period and the number of datasets do not allow to come to any firm conclusions.
 
-**\[we should probably include a figure 7 which shows this correlation, especially if it turns out to be interesting\] @EB Do you mean the ag-citation relationship figure with only the 7 datasets that has all 0-3 ages? If so, I added it back and you may delete this comment.**
+**\[we should probably include a figure 7 which shows this correlation, especially if it turns out to be interesting\] @EB Do you mean the age-citation relationship figure with only the 7 datasets that has all 0-3 ages? If so, I added it back and you may delete this comment.**
 
-### 3.4. Analysis of references to data articles
+### 3.4. Analysis of references to data articles {#sec-results-data-articles}
 
-@EB **for the section below I asked Blanka to provide me with the info, since she was more involved in this analysis.** In addition to an analysis of data references, we conducted an independent analysis of indirect data citation. As described in detail in the methods section, this analysis is based on a set of data articles, for which we first detected all references citing these using Google scholar. Subsequently, we manually detected whether a specific reference was really to the content of the data article itself, or was rather an indirect dataset citation, where the data article citation stood in for the dataset. In this analysis of data articles published between 2019 (i.e., starting a year earlier than the DCC analysis) and 2023 [\*\*check]\*\* in the journals Scientific Data and Data in Brief (n = X [AC]), we detected X [AC] shared datasets overall. These articles had been cited X [AC] times. In the X [AC] cases where data articles were cited \>60 times, we restricted manual checks to 60 references. In this "truncated" set, we found that out of X [AC] references, X [AC] references where in fact indirect data citations X% [AC]. We used this to extrapolate numbers for the additional references to the three most-cited articles which could not be screened. Adding these extrapolations, we obtained a number of X[AC] citations for these X [AC] datasets. @fig-dist-counts-da summarizes these numbers. \*[same flow also for the number of data articles, the number of datasets in them, the number of datasets referenced, and the number of references to these datasets (projected and actually observed)\*\*].\* Thus, indirect data references are very common, and if they are not taken into account, a major part of institutional dataset references would be missed. In addition, the huge number of references to some datasets, and the fact that they were largely **not** published in OMICS repositories suggests a very different pattern of sharing and reuse for dataset presented in data articles.
+@EB **for the section below I asked Blanka to provide me with the info, since she was more involved in this analysis. I will complete it accordingly.**
+In addition to an analysis of data references, we conducted an independent analysis of indirect data citation. As described in detail in the methods section, this analysis is based on a set of data articles, for which we first detected all references citing these using Google scholar. Subsequently, we manually detected whether a specific reference was really to the content of the data article itself, or was rather an indirect dataset citation, where the data article citation stood in for the dataset. In this analysis of data articles published between 2019 (i.e., starting a year earlier than the DCC analysis) and 2023 [\*\*check]\*\* in the journals Scientific Data and Data in Brief (n = X [AC]), we detected X [AC] shared datasets overall. These articles had been cited X [AC] times. In the X [AC] cases where data articles were cited \>60 times, we restricted manual checks to 60 references. In this "truncated" set, we found that out of X [AC] references, X [AC] references where in fact indirect data citations X% [AC]. We used this to extrapolate numbers for the additional references to the three most-cited articles which could not be screened. Adding these extrapolations, we obtained a number of X[AC] citations for these X [AC] datasets. @fig-dist-counts-da summarizes these numbers. \*[same flow also for the number of data articles, the number of datasets in them, the number of datasets referenced, and the number of references to these datasets (projected and actually observed)\*\*].\* Thus, indirect data references are very common, and if they are not taken into account, a major part of institutional dataset references would be missed. In addition, the huge number of references to some datasets, and the fact that they were largely **not** published in OMICS repositories suggests a very different pattern of sharing and reuse for dataset presented in data articles.
 
 *old: In addition to dataset reuse found through the DCC, indirect data citations offered us a second way of detecting data references. As described in detail in the methods, some references to data articles refer to the underlying shared data, while others really refer to the data article text proper. We manually disentangled these two types of references for all data articles we analyzed (n = \[AC/BI\]), restricting ourselves to the first 60 references in cases where \>60 references to the data article in question were found (n = \[AC/BI\]). This analysis complements the DCC analysis in shedding light on the reuse of datasets shared through general-purpose repositories, as well as disciplinary repositories outside of OMICS fields. This analysis was distinct from the DCC analysis in that we did not require the dataset to be deposited in a repository.*
 
-### 3.5. Quantification of overall institutional dataset reuse
+### 3.5. Quantification of overall institutional dataset reuse {#sec-results-overall-quant}
 
-## 4. Discussion
+## 4. Discussion {#sec-discussion}
 
-### 4.1. Detecting data reuse through the DCC
+### 4.1. Detecting data reuse through the DCC {#sec-discussion-dcc}
 
 Using two approaches, we charted the reuse of datasets shared alongside articles published by researchers from our large biomedical research institution. Our primary approach made use of the Data Citation Corpus (DCC) to detect references to reused datasets. Between 2020 and 2023, Charité researchers published (not considering the author position) `r res$all_matched_charite_dois` articles for which at least one dataset was shared. This resulted in `r res$all_matched_ids_count_dist` datasets, which were referenced `r res$all_matched_dcc_dois` times. This is, to our knowledge, the first analysis to quantitatively show at the scale of a research institution, how the datasets produced are reused and enter the published literature. We show that reuse of datasets is common in the biomedical domain. At the same time, `r round(res$all_non_matched_ids_count_dist / res$all_matched_and_non_matched_ids_count_dist * 100, 1)`% of datasets have not been referenced within the time period in question. While the distribution of dataset citations over time has to our knowledge so far not been investigated, a highly uneven distribution of dataset citations is plausible based on the literature on article citations [@redner1998; @brzezinski2015]. We did not investigate the fraction of dataset citations out of all dataset references to Charité articles. However, it has been shown repeatedly that the number of data citations alone is low. E.g., @ninkov2021 show that only ca. 1% of datasets in DataCite had a citation. This is corroborated by the survey of @gregory2023, which citing the article analyzing the data is much more common than citing the data itself.
 
 It has been described extensively before [e.g. @silvello2018] that data citations can indicate both the sharing and the reuse of data. Correspondingly, we observed, in addition to `r res$placeholder` cases of dataset reuse (also see below for a discussion of data sharing vs reuse), `r res$placeholder` cases where authors mentioned datasets they had themselves created. The definition of “being created by Charité authors” used here is that a given dataset was mentioned in an article by Charité authors as underlying evidence they had themselves collected. This definition does not require overlapping authorship between the using article and the dataset itself. We do not know the first publication with which a dataset was shared, and thus we do not make a distinction between own sharing and own use – rather, we pool this in the data sharing category.  
 
-On a methodological level, we also show that, given a list of dataset identifiers, this can be matched to the DCC to obtain a corresponding list of data citations. As we also describe, this process is far from straightforward, however. Even if the institutional data identifier list is highly standardized, the variability of dataset IDs in the DCC poses considerable challenges. The same dataset can be referred to in several ways, which makes the detection of references general-purpose repositories particularly complex. Nevertheless, the DCC includes both data citations and data mentions, and thus has a much broader coverage than databases which build on citation metadata only. This is necessarily true for DataCite [analyzed e.g. by @ninkov2021] which constitutes the subset of data citations within the DCC. It has been shown for datasets in the earth sciences, that proprietary databases, which include additional methods and sources, have better coverage [@gerasimov2024]. It is still to be investigated, how these databases compare to the DCC. \[check does Avihay have anything to add?\]
+On a methodological level, we also show that, given a list of dataset identifiers, this can be matched to the DCC to obtain a corresponding list of data citations. As we also describe, this process is far from straightforward, however. Even if the institutional data identifier list is highly standardized, the variability of dataset IDs in the DCC poses considerable challenges. The same dataset can be referred to in several ways, which makes the detection of references general-purpose repositories particularly complex. Nevertheless, the DCC includes both data citations and data mentions, and thus has a much broader coverage than databases which build on citation metadata only. This is necessarily true for DataCite [analyzed e.g. by @ninkov2021] which constitutes the subset of data citations within the DCC. It has been shown for datasets in the earth sciences, that proprietary databases, which include additional methods and sources, have better coverage [@gerasimov2024]. It is still to be investigated, how these databases compare to the DCC.
 
 The DCC dashboard indicates that, check as of August 14^th^ 2024, 85% of identifiers in the DCC are accession numbers and 15% are DOIs (needs updating as well). This suggests a dominance in the DCC of disciplinary repositories, which – at least in the biomedical sciences – use accession codes rather than DOIs. However, the overall number of datasets available in repositories online is unknown, and thus it is unclear whether this distribution is representative, or whether disciplinary repositories might be overrepresented in the DCC. In the DCC analysis we conducted, only one dataset shared in a general-purpose repository was referenced. At the same time, amongst the datasets shared by Charité researchers in 2023 (check ref: dashboard) check 32% \[this number is guessed based on my memory of earlier years – calculate the correct one!\] of datasets were deposited in general-purpose repositories. Thus, data in disciplinary repositories are very clearly referenced more often. We would expect two primary explanations for this. One explanation could be that datasets in disciplinary repositories are more findable and/or reusable due to richer disciplinary metadata. An alternative or additional explanation could be that in biomedical research, disciplinary repositories in their majority represent OMICS fields, and at the same time reusing data is by far most common in these fields. It is indicative in this regard that the only dataset reference to a general-purpose repository detected through the DCC was to a genetic dataset, which was unusually not shared in a disciplinary repository. Further explanations are possible, however. E.g. the expectation of data quality could be higher for disciplinary repositories. The analysis of indirect data citations clearly shows that sharing data in general-purpose repositories is not in itself an obstacle to reuse. We found multiple cases (check check number?) of indirect citations where the underlying data had been shared in a general-purpose repository only, and further cases where general-purpose data might also have been used. However, the aforementioned issues of visibility, disciplinary information, and quality-assurance are all alleviated when a dataset is accompanied by a reviewed data article.
 
-### 4.2. Detecting data reuse by indirect citations of data articles
+### 4.2. Detecting data reuse by indirect citations of data articles {#sec-discussion-data-articles}
 
 We complemented this approach by an analysis of references to data articles. Data articles or ‘data descriptors’ are a type of article which explains in detail the provenance and properties of a dataset, but does not report results derived from its analysis. We examined a sample of 28 data articles published by Charité researchers between 2016 and 2022 in the two most common, non-disciplinary data journals. Our analysis has confirmed the finding of @jiao2020 that it is common practice in the literature to refer to a data article instead of the data, when actually the data have been used. At the same time, not every reference to a data article indicates a reuse of the data. @jiao2020 observed for two journals in the earth as well as physical and chemical sciences that 56% of citations to data articles indicate actual data reuse. In our case, 25.8% of citations to data articles (147 of 570) in fact referred to the underlying dataset (or one of several shared datasets). Thus, studies on the reuse of data need to take such “indirect citations” into account. These constitute a substantial fraction of all dataset references, and could be of particular importance for some purposes of monitoring, as data articles describe particularly ‘valuable’ datasets. Also, we see indications that this sample is characterized by both data types and types of data reuse distinct form the sample found via the DCC. However, this warrants further research.
 
 To extract the information whether a data article reference in fact referred to the underlying data was manual and thus time-consuming. Correspondingly, we had to limit ourselves to extracting up to 60 citations per data article. In four out of 28 cases, the number of citations exceeded this number. In these cases, we have extrapolated the number of expected data uses based on the number of data uses within the 60 citations we analyzed. This extrapolation yielded a staggering number of 695 putative data reuse cases for the most-cited dataset. While there is an certainly an error margin attached to this number, it does clearly indicate the reuse value of certain well-curated and unique datasets.
 
-### 4.3. Putative invisible data reuse
+### 4.3. Putative invisible data reuse {#sec-discussion-invisible}
 
 The numbers on data reuse reported here are probably very substantially underestimated. This is due to several reasons. For further limitations, which do not introduce an obvious directionality by decreasing detected reuse cases, see section 4.5.
 
@@ -272,7 +282,7 @@ We searched for reuse of datasets associated with Charité publications starting
 
 On a more general note, the approach we follow can only capture one type of data reuse, namely the reuse which contributes to published research and is considering worthy of mention by researcher. Data referencing practices differ between communities [@gregory2023], and it has been shown that not all data uses will be references in publication with equal probability (Borgman, 2016; Federer, 2019). For example, use for teaching or calibration might not commonly mentioned in research articles [@gregory2020]. In addition, the literature on publication bias (check ref) suggests that many data reuse cases might not be reported as the project they are part of is itself not published. Lastly, certain reuse purposes, in particular teaching, typically do not contribute to academic publishing, and thus cannot at all be detected.
 
-### 4.4. Determinants and patterns of data reuse
+### 4.4. Determinants and patterns of data reuse {#sec-discussion-determinants}
 
 · Analysis of year since sharing data
 
@@ -294,13 +304,13 @@ On a more general note, the approach we follow can only capture one type of data
 
 and authors from our institution shared datasets via these repositories (check numbers) (supplementary Figure… check or refer to FAIR dashboard). Nevertheless, only one out of 65 reused datasets found through the DCC was shared via a general-purpose repository. This is despite extensive standardization of references to general-purpose repositories which we performed after we had observed a considerable variation in them. We also observed that authors sometimes refer to data articles rather than the underlying datasets, where data articles have been published. The corresponding analysis of ‘indirect data citations’ follows further below.
 
-### 4.5. What is data reuse anyway?
+### 4.5. What is data reuse anyway? {#sec-discussion-reuse}
 
 In this article, we have taken a pragmatic approach to data reuse. We have defined data reuse as the referencing in a research article of a dataset which is findable online, whether openly or with a defined access pathway, where the article referencing the data and the article for which we had originally detected data sharing had no author overlap. In our experience, it is a common view in the research community that a distinction between “own data use” and “data reuse” is possible. @gregory2023 similarly adopted the definition that “data reuse” means “using data which others have created, for any purpose.” The notion that use and reuse can be distinguished to us seems intuitive, as well as useful to inform ways to measure the value created by data sharing. This in turn is necessary to inform policy and support activities. However, this notion being intuitive and useful does not necessarily make it conceptually consistent. We would argue that it is intuitive based on common notions of “data ownership”, which might, however, be misleading. On the legal level, data cannot be owned at least in some jurisdictions, as e.g. in Germany [@bmwk]. Beyond that, starting from the related notion that data are intellectual property of some sort (whether this is legally enforceable or not), “data ownership” suggests a clear line between an “owner” or “creator” and a “non-owner” or “non-creator”. However useful such a distinction might be, defining it requires assumptions which are not necessarily in line with scientific practice, or at least not universally accepted. Consider the case real-world case of a database which makes datasets available, but requires that PIs from the original project are included as co-authors. By our definition, the resulting articles would be “own data use”. However, without data sharing, this article would not have existed, and thus value has been created by making data available to others. In turn, the notion that “reuse” is “use for a different purpose”, independently of authorship, is also widely held and so intuitive that @gregory2023, despite the definition given above, also state that “roughly three-quarters of respondents […] reported reusing their own data multiple times”. It has been argued by @sandt2019 that reuse cannot at all be defined. While we consider our definition legitimate and useful for our purposes, there is need for a community consensus on what constitutes data reuse. The FORCE11 Working Group “Data usage typologies” [@force11] will work on this question between early 2025 and mid 2026. In this regard, it is important to mention that data references are indicative of data use, but similar to views or downloads of datasets, they do not constitute data use in themselves. For the purpose of this work we also have to stress that our definition of own data sharing vs. data reuse creates borderline cases in both directions. In some cases, publications using data from Charité researchers (or their collaborators) were excluded from the analysis, if there was author overlap, as this is not “data reuse” by our definition. From the type of data and the authorship position we would however expect that the collaboration came about precisely by way of the data being reused. Vice versa, we also observed cases where we included datasets into our sample as “Charité datasets”, although the creation date of the original dataset, and the link between its study PIs and the article with Charité participation that the dataset had actually been reused. Thus,
 
 It is also important to mention that we understand “data” throughout this article as a shorthand for “datasets”. It is datasets which are shared and datasets which are reused. Any piece of information which can be used to support a claim can be understood as “data”, which would not be a useful category. In line with this understand we have excluded cases of databases which contain information as e.g. the association between a certain disease and a certain mutation, but not a dataset in the sense of structured information which can be downloaded and processed further. Necessarily, the distinction between data and datasets is a matter of definition and contentious, as is the related distinction between data and metadata.
 
-### 4.6. Limitations
+### 4.6. Limitations {#sec-discussion-limitations}
 
 The following restrictions and limitations apply to our analysis:
 
@@ -320,7 +330,7 @@ The following restrictions and limitations apply to our analysis:
 
 For steps to ensure the validity of data, see the methods section.
 
-### 4.6. Outlook
+### 4.6. Outlook- {#sec-discussion-outlook}
 
 For a wider adoption of the DCC, we suggest additional data cleaning and standardization steps, as well as a documentation of the form into which identifiers from common repositories have been transformed.
 
@@ -331,32 +341,6 @@ To make such analyses comparable we see a need for standard definitions of types
  [\[EB1\]](#_msoanchor_1)Check with Iratxe whether DCC builds on Imker HJ, Schackart KE III, Istrate A-M, Cook CE (2023) A machine learning-enabled open biodata resource inventory from the scientific literature. PLoS ONE 18(11): e0294812. https://doi.org/10.1371/journal.pone.0294812
 
  [\[BE2\]](#_msoanchor_2)I still have to add these references from Gregory et al and check they really say what I claim they do
-
-# Methods
-
-Identifiers and accession codes of open an restricted datasets that were found in articles by Charité's authors between the years 2020 and 2023 (henceforth referred to as the datasets) were collected as part of a separate data sharing monitoring process. Articles were defined as written by Charité's authors if at least one author had an affiliation to Charité.
-
-Prior to looking for mentions of Charités datasets in the DCC, the datasets were standardized into a format that would maximize their chance to be found in the DCC. This was done by an automatic standardization function that extracted the accession number from each given URL of a dataset, and standardized any DOI to a uniform format. The output of that function was verified manualy in order to ensure that all datasets are indeed in the correct format (i.e. either a DOI or an accession code), with the version information removed from it.
-
-Prior to applying several preprocessing and cleaning steps to the DCC as well, we first explored the corpus in order to make sure that there are no NAs in relevant fields. We then made sure that dates entries of pucblication years were correct. Lastly, we observed the frequency of repositories in which datasets were deposited according to the corpus, together with publication years of the mentioning articles. Once we made sure that the fundamental structure of the corpus is preoperly defined, we went on with the preprocessing steps described below.
-
-DOIs of datasets deposited in general repositories (i.e., Zenodo, Figshare, Dryad, and OSF) were found to appear in multiple formats within the DCC. To ensure consistency, all DOIs were standardized to a uniform format. As with the Charité datasets, version information was removed from all entries. Subsequently, excess characters were stripped from both the dataset and the articles' DOIs. This included leading and trailing slashes, dots and spaces, together with any other space found within the string value of the dataset or the article's DOI. Additionally, commas were replaced with dots. DOIs of articles were likewise standardized to a uniform DOI format.
-
-The DCC had also cases where the same DOI was listed both in the "mentioning article" field and the "mentioned dataset" field. There were cases where this was discovered only after standardizing both fields. All such cases were removed from the DCC. We have also decided to not include preprints in the analysis, and therefore all cases where the repository was listed as a preprint service were removed as well.
-
-Following all the steps above, we looked for Charité's datasets mentions in the DCC. This step resulted in a list with cases from the DCC which had a matching dataset identifier to the ones in the Charité datasets list. From this results list, cases where the mentioning article and the article with the mentioned dataset had at least one author in common were excluded. For this step, meta data regarding the authors of each article was extracted using Openalex. Publication years of Charité's papers and of their datasets were incorporated into the results list as meta data as well.
-
-Lastly, a sample of the remaining cases was taken in order to manualy verify the results, focusing on the following cases:
-
-1\. Mentioning article is listed as published before 2016
-
-2\. Mentioning article is listed as published before the publication of the dataset
-
-3\. Publication year of mentioning article is listed as earlier than publication year of the Charité article.
-
-For steps to ensure the validity of data, see the methods section.
-
-References
 
 # Plots
 
@@ -382,7 +366,7 @@ References
 
 {{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds-da >}}
 
-**Note:** N = 32. 2 repositories were irretrievable.
+**Note:** Two repositories were irretrievable.
 
 {{< embed notebooks/plots/plots.qmd#fig-matched-non >}}
 
