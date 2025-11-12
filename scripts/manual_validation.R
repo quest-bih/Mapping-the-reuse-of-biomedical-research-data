@@ -355,3 +355,32 @@ old_5_done <- numbat_da_dois_and_ids_5_m_val_joined_done |>
 identical(new_5_done, old_5_done)
 
 # Identical. No problems.
+
+# 5. Archive --------------------------------------------------------------
+
+# ARCHIVE of updating manual validation:
+#
+# # Check which and if there are any identifiers to manual validate
+# 
+# numbat_da_dois_and_ids_6_m_val_done <- read.csv(
+#   file.path(here("data", "verification", "m_val", "charite_dois_and_ids_6_m_val_done.csv")),
+#   header = TRUE,
+#   sep = ",") # load previous m_val
+# 
+# with_new_ids_to_val_v1_to_edit <- numbat_da_dois_and_ids_3_auto_cleaned |> 
+#   left_join(numbat_da_dois_and_ids_6_m_val_done |> select(doi, data_id, data_id_m_val, validated, Category),
+#   by = c("doi", "data_id")
+# ) |> # join existing prior validation
+#   relocate(data_id_m_val, .after = slug)
+# 
+# with_new_ids_to_val_v1_to_edit |> dplyr::filter(is.na(validated) | is.na(Category)) |> View()
+# 
+# # There are several, so I will export to a csv to fill them:
+# write_csv_cr(
+#   with_new_ids_to_val_v1_to_edit,
+#   file = here("data",
+#               "verification",
+#               "m_val",
+#               "with_new_ids_to_val_v1_to_edit.csv"),
+#   row.names = FALSE
+# ) # as csv

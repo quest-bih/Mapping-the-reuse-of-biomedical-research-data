@@ -10,11 +10,17 @@ editor: visual
 
 ```{r setup, echo=FALSE}
 
-Sys.setenv(LANG = "EN")  # Set environment language to English
+# Set environment language to English
+
+Sys.setenv(LANG = "EN")
+
+# Load packages (install first if not installed)
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi)
+
+# Wrapper for save() with automatic directory creation
 
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
@@ -22,7 +28,9 @@ save_cr <- function(..., file) {
     dir.create(dir_path, recursive = TRUE)
   }
   save(..., file = file)
-} # wrapper for save() with automatic directory creation
+}
+
+# Wrapper for write.csv() with automatic directory creation
 
 write_csv_cr <- function(x, file, ...) {
   dir_path <- dirname(file)
@@ -30,9 +38,9 @@ write_csv_cr <- function(x, file, ...) {
     dir.create(dir_path, recursive = TRUE)
   }
   write.csv(x, file = file, ...)
-} # wrapper for write.csv() with automatic directory creation
+} 
 
-# fucntion to load latest metadata version
+# Function: Load latest metadata version
 
 load_latest_metadata_update <- function() {
   # Define target directory using here()
@@ -62,42 +70,50 @@ load_latest_metadata_update <- function() {
   # Return the object invisibly
   invisible(get(loaded_vars[1], envir = .GlobalEnv))
 }
-
 ```
 
-# 1. Loading Raw Inputs of Charite's list
+# 1. Loading Raw Inputs of Charité Datasets
 
 <br>
 
-The Charite dois and identifiers list ("Charite's list") input was derived from output tables of a separate datasets extraction process that was originally performed in order to label datasets as "Open Data" or "Not Open Data". There were two separate lists - one for 2020-2022 and one for 2023. After wrangling each list, they were merged into one (see "Cleaning Steps" section). For the 2020-2022 list, a verification was made so that it includes only Charite papers. This was done by filtering the list to have only paper DOIs that are also present in Charite's open data dashboard (see "Cleaning Steps" section).
+The Charité papers' DOIs and datasets' identifiers list ("Charité list") input was derived from output tables of a separate extraction process of datasets identifiers that was originally performed in order to label datasets as "Open Data", "Restricted-Access" or "Not Open Data". This process was done using an inhoouse software ("Numbat"), and resulted in two separate outputs: One for papers published between 2020-2022 and one for paper published during 2023. After wrangling each output, both were merged into one table (see "Cleaning Steps" section). For the 2020-2022 papers, a verification step was made to make sure that only Charité papers are included (see "#Data Cleaning Steps" section). This was done by:
+(1) Filtering the papers list to contain only DOIs that are also present in Charité's open data dashboard
+(2) Excluding any DOIs that have no Charité affiliation
+<br>
+In the steps below:
+(1) The "Numbat" input is loaded
+(2) A list of Charité DOIs is loaded to later verify which to include
+(3) A list of DOIs is loaded to exclude later (for not having a Charité affiliation)
+(4) The "Data Articles" identifiers input is loaded and added to the "Numbat" input
 
 <br>
 
 ```{r Loading Raw Inputs of Charites list}
 
-# Here we're loading the output of a separate datasets extraction process as our input: master_2020_2023
- 
-# First we'll wrangle and clean the the table.
-# Then we'll inner_join the clean table with a table containing DOIs that are present in the open-data dashboard, to make sure that our table has papers that are only from Charite.
-# Lastly, we'll exclude DOIs that are not affilieted with Charité according to a second source.
+# Loading the output of a separate dataset identifiers extraction process as our input to work with in the next steps.
 
-# 1. Load Charite raw data file (Numbat output for 2020-2023 named "master_2020_2023")
+# 1. Load Charité's raw data file of dataset identifiers and their paper DOIs
 
+# Load raw input
 load(here("data", "raw", "charite", "master_od_screening_manual_check_2020_2023_v2.1.rda"))
 
+# 2. Load a list of Charité DOIs to verify which to include
+
+# Get list of Charité DOIs that are in the "open data dashboard" to know which DOIs to include
 dashboard_dois <- read.csv(
   file.path(here("data", "verification", "inclusion-info-charite", "dashboard_metrics.csv")),
   header = TRUE,
   sep = ",") |> 
-  mutate(doi = gsub("\\+", "/", doi)) |> 
+  mutate(doi = gsub("\\+", "/", doi)) |> # replace "+" with "/" where needed
   mutate(doi_lc = tolower(doi)) # create doi column with lowercase
 
-dashboard_dois_dedup <- dashboard_dois |> group_by(doi_lc) |> slice(1) |> ungroup() # deduplicate dois
+# Deduplicate
+dashboard_dois_dedup <- dashboard_dois |> group_by(doi_lc) |> slice(1) |> ungroup() 
 
-# Load list of DOIs to exclude (for having no Charité affiliation)
+# 3. Load a list of DOIs to exclude (for not having a Charité affiliation)
 
-# The list was derived from filtering "Publikationsdatensatz Charité_2023_241119VN.xlsx"
-# (in the same folder) to only "Keine_Charite_Affiliation = ja"
+  # The list was derived from filtering the file "Publikationsdatensatz Charité_2023_241119VN.xlsx"
+  # (in the same folder) to "Keine_Charite_Affiliation = ja".
 
 dois_to_exclude <- read.csv(
   file.path(here("data",
@@ -106,10 +122,10 @@ dois_to_exclude <- read.csv(
                  "DOIs_to_exclude_from_charite_list.csv")),
   header = TRUE,
   sep = ",") |> 
-  rename(doi = DOI) |> 
+  rename(doi = DOI) |> # rename DOI column
   mutate(doi_lc = tolower(doi)) # create doi column with lowercase
 
-# 2. Load Charite datasets identifiers from data articles
+# 4. Load Charite datasets identifiers from data articles analysis and add them to the "Numbat" input
 
 charite_da_dois_and_ids <- read.csv(
   file.path(here("data",
@@ -125,14 +141,13 @@ charite_da_dois_and_ids <- read.csv(
   mutate(doi_lc = tolower(doi),
          doi_no_ver_info = tolower(doi),
          data_id_lc = tolower(data_identifier),
-         numbat_id_of_da_id_lc = tolower(numbat_id_of_da_id)) |> # create doi and id columns with lowercase
+         numbat_id_of_da_id_lc = tolower(numbat_id_of_da_id)) |> # create DOI and identifier columns with lowercase
   mutate(data_access = case_when(
     `open.or.restricted` %in% c("open", "1") ~ "yes",
     .default = `open.or.restricted`)) |> 
-  mutate(data_access = na_if(data_access, "n/a")) # convert data_access to "yes" / "restricted" / "unsure" values to keep consistency with numbat cases
-    
-
-# Manually append additional identifiers for the same dataset
+  mutate(data_access = na_if(data_access, "n/a")) # convert data_access to "yes" / "restricted" / "unsure" values to keep consistency with the Numbat output
+  
+# Manually append additional identifiers that were found out to be of the same dataset
 
 ids_vector <- c(
   "https://physionet.org/content/ptb-xl/1.0.3/",
@@ -166,25 +181,33 @@ rm(dashboard_dois) # clean up
 
 <br>
 
-After the initial inspection, the Charite lists were wrangled and cleaned further: <br>
+Following an initial inspection, the Charité input (taken from the "Numbat" output) was wrangled and cleaned further: <br>
 
-1.  **Standardized** NA notation and upper/lower cases.
+1. Checked and solved **encoding** issues; Standardized **NA** notation and remove NAs; Standardized **upper/lower** cases
 
-2.  Removed **".txt"** trail from doi.
+2. Resolved cases with more than one **metadata entry**
 
-3.  Removed **NAs and duplicates**.
+3. Filtered the input to get only **Open Data and Restricted-Access** cases
 
-4.  Verified that all dois are indeed **Charite** dois.
+4. Labeled each DOI if it's in the **Charité dashboard** or not
 
-5.  Merging into one Charite list.
+5. Excluded any DOI that has **no affiliation** to Charité, according to the second source
+
+6. Verified that for the same **doi+data_id** combination, data access is not different
+
+7. **Deduplicated** the input
+
+8. Added papers and identifiers from the **data articles analysis**
+
+9. Removed **"clinvar"** datasets and a case where the DOI turned out to not have an open data dataset
+
+10. Exclude DOIs that are **not in the dashboard** (based on the labeling that was done in step **4**)
 
 <br>
 
 ```{r Cleaning Steps}
 
-# 1. Wrangling the Charite list: Numbat
-
-# check for encoding issues
+# 1. Check for encoding issues and solve them
 
 master_2020_2023_1_unique <- master_2020_2023_corr |> 
   distinct() |> 
@@ -193,7 +216,7 @@ master_2020_2023_1_unique <- master_2020_2023_corr |>
 
 View(master_2020_2023_1_unique[!stringi::stri_enc_isutf8(master_2020_2023_1_unique$data_identifier), ]) # view issues
 
-# Both cases where there's a doi and id values are not relevant, and will be removed below
+# Both detected cases were with a DOI and an identifier values that are not relevant, and will be removed below
 
 numbat_2020_2023 <- master_2020_2023_1_unique |>
   dplyr::filter(!temp_unique_id %in% c(2859, 3169)) |> # remove 2 irrelevant cases with encoding issues
@@ -201,74 +224,86 @@ numbat_2020_2023 <- master_2020_2023_1_unique |>
   mutate(doi_lc = tolower(doi),
          data_id_lc = tolower(data_identifier)) |> # tolower
   mutate(doi = na_if(doi, "na")) |> # replace "na" with true NA
-  dplyr::filter(!(is.na(doi))) |> # filter out cases where doi is NA
+  dplyr::filter(!(is.na(doi))) |> # filter out cases where DOI is NA
   mutate(doi_no_ver_info = str_remove(doi_lc, "\\.[0-9]$")) # remove version information from DOIs
 
-# # 2. Verify that for a unique combination of doi+data_id there's only one metadata entry
-# 
-# # Function exclude NA, empty strings, and "null"/"NULL"-like values (after UTF-8 issue fixing)
-# not_bad <- function(x) {
-#   x <- iconv(x, from = "", to = "UTF-8", sub = "")
-#   x_clean <- tolower(trimws(x))
-#   x[!(is.na(x) | x_clean %in% c("null", ""))]
-# }
-# 
-# double_data_for_same_doi_id <- numbat_2020_2023 |>
-#   select(doi_lc, data_id_lc, dataset_license, license_name, data_availability_statement, data_access) |>
-#   group_by(doi_lc, data_id_lc) |>
-#   dplyr::filter(
-#     n_distinct(not_bad(dataset_license)) > 1
-#     | n_distinct(not_bad(license_name)) > 1
-#     | n_distinct(not_bad(data_availability_statement)) > 1
-#     | n_distinct(not_bad(data_access)) > 1
-#   ) |>
-#   ungroup() |>
-#   dplyr::filter(data_id_lc != "null") |>
-#   arrange(data_id_lc)
-# 
-# save_cr(double_data_for_same_doi_id, file = file.path(here("data",
-#                                                            "verification",
-#                                                            "contradictions_in_numbat",
-#                                                            "double_data_for_same_doi_id.RData")))
-# 
-# These enteries were taken care of and now there are no such entries.
+# 2. Verify that for a unique combination of doi+data_id there's only one metadata entry
 
-  # 3. Explore which cases to include
-  
-  # 2020-2022
-  
-  cases_of_ids_until_2022 <- numbat_2020_2023 |>
-   dplyr::filter(year %in% 2020:2022) |> 
-   group_by(open_data_assessment, own_or_reuse_data, data_access) |>
-   summarise(n = n()) |>
-   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
-  
-  write_csv_cr(cases_of_ids_until_2022, file = file.path(here("data",
-                                                             "verification",
-                                                             "inclusion-info-charite",
-                                                             "inclusion_criteria_until_2022_v4.csv")),
-              row.names = FALSE)
-  
-  # Evgeny and Ana replied that each of the 3 cases below should be included for cases between 2020 and 2022:
-  # access = yes, own = unsure / own, assessment = open data
-  # access = unsure, own = own, assessment = open data
-  # access = restricted, own = unsure / own / NULL, assessment = NULL
-  
-  # 2023
-  
-  cases_of_ids_2023 <- numbat_2020_2023 |>
-   dplyr::filter(year == 2023) |> 
-   group_by(open_data_assessment, own_or_reuse_data, data_access, restricted_authorship) |>
-   summarise(n = n()) |>
-   arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
-  
-  write_csv_cr(cases_of_ids_2023, file = file.path(here("data",
-                                                       "verification",
-                                                       "inclusion-info-charite",
-                                                       "inclusion_criteria_2023_v4.csv")),
-              row.names = FALSE)
+# Function exclude NA, empty strings, and "null"/"NULL"-like values (after UTF-8 issue fixing)
+not_bad <- function(x) {
+  x <- iconv(x, from = "", to = "UTF-8", sub = "")
+  x_clean <- tolower(trimws(x))
+  x[!(is.na(x) | x_clean %in% c("null", ""))]
+}
 
-# 4. Filter to get only relevant cases (open / restricted data)
+# Apply the function to find problematic cases
+double_data_for_same_doi_id <- numbat_2020_2023 |>
+  select(doi_lc, data_id_lc, dataset_license, license_name, data_availability_statement, data_access) |>
+  group_by(doi_lc, data_id_lc) |>
+  dplyr::filter(
+    n_distinct(not_bad(dataset_license)) > 1
+    | n_distinct(not_bad(license_name)) > 1
+    | n_distinct(not_bad(data_availability_statement)) > 1
+    | n_distinct(not_bad(data_access)) > 1
+  ) |>
+  ungroup() |>
+  dplyr::filter(data_id_lc != "null") |>
+  arrange(data_id_lc)
+
+# Save
+save_cr(double_data_for_same_doi_id, file = file.path(here("data",
+                                                           "verification",
+                                                           "contradictions_in_numbat",
+                                                           "double_data_for_same_doi_id.RData")))
+
+# These entries were taken care of and now there are no such entries.
+
+# 3. Explore which Charité dataset identifiers to include as an input for the rest of the analysis
+
+# Years 2020-2022:
+
+# Get all possible values of data access, data ownership and open data assessment to show the team and decide which to include
+
+cases_of_ids_until_2022 <- numbat_2020_2023 |>
+ dplyr::filter(year %in% 2020:2022) |> 
+ group_by(open_data_assessment, own_or_reuse_data, data_access) |>
+ summarise(n = n()) |>
+ arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
+
+# Save
+write_csv_cr(cases_of_ids_until_2022, file = file.path(here("data",
+                                                           "verification",
+                                                           "inclusion-info-charite",
+                                                           "inclusion_criteria_until_2022_v4.csv")),
+            row.names = FALSE)
+
+# The team replied that each of the 3 cases below should be included (for cases between 2020 and 2022):
+# access = yes; own = unsure / own; assessment = open data
+# access = unsure; own = own; assessment = open data
+# access = restricted; own = unsure / own / NULL; assessment = NULL
+
+# Year 2023:
+
+# Get all possible values of data access, data ownership and open data assessment to show the team and decide which to include
+
+cases_of_ids_2023 <- numbat_2020_2023 |>
+ dplyr::filter(year == 2023) |> 
+ group_by(open_data_assessment, own_or_reuse_data, data_access, restricted_authorship) |>
+ summarise(n = n()) |>
+ arrange(desc(open_data_assessment), desc(own_or_reuse_data), desc(data_access))
+
+# Save
+write_csv_cr(cases_of_ids_2023, file = file.path(here("data",
+                                                     "verification",
+                                                     "inclusion-info-charite",
+                                                     "inclusion_criteria_2023_v4.csv")),
+            row.names = FALSE)
+
+# The team replied that each of the 2 cases below should be included (for cases in 2023):
+# access = yes / unsure; own = own; assessment = open data
+# access = restricted; own = NULL; assessment = NULL; restricted_authorship = own_restricted
+
+# Filter to get only relevant cases (open / restricted data) according to the team instructions above:
 
 numbat_2020_2023_od_and_rest <- numbat_2020_2023 |>
   dplyr::filter(
@@ -299,7 +334,7 @@ numbat_2020_2023_od_and_rest <- numbat_2020_2023 |>
        & restricted_authorship == "own_restricted")
     )
 
-# 5. Label if doi is in the dashboard; select only relevant columns; exclude according to 2nd source
+# 4. Label each DOI if it's in the Charité dashboard
 
 numbat_2020_2023_od_and_rest_db_lbl <- numbat_2020_2023_od_and_rest |> 
   mutate(in_dashboard = case_when(
@@ -307,14 +342,14 @@ numbat_2020_2023_od_and_rest_db_lbl <- numbat_2020_2023_od_and_rest |>
     |doi_no_ver_info %in% dashboard_dois_dedup$doi_lc
     ~ TRUE,
     .default = FALSE)) |>
-  select(doi, doi_lc, doi_no_ver_info, data_identifier, data_id_lc, data_access, in_dashboard)
+  select(doi, doi_lc, doi_no_ver_info, data_identifier, data_id_lc, data_access, in_dashboard) # select only relevant columns
   
-# 6. Exclude any DOI that has no affiliation to Charité, according to a second source
+# 5. Exclude any DOI that has no affiliation to Charité, according to the second source
 
 numbat_2020_2023_od_and_rest_db_lbl_2nd_source <- numbat_2020_2023_od_and_rest_db_lbl |> 
   dplyr::filter(!doi_lc %in% dois_to_exclude$doi_lc)
 
-# Verify before deduplication that for the same doi+data_id combination, data access is not different:
+# 6. Verify that for the same doi+data_id combination, data access is not different:
 
 numbat_2020_2023_od_and_rest_db_lbl_2nd_source |>
   group_by(doi_lc, data_id_lc) |>
@@ -323,29 +358,27 @@ numbat_2020_2023_od_and_rest_db_lbl_2nd_source |>
     unique_access = n_distinct(data_access),
     .groups = "drop"
   ) |>
-  dplyr::filter(unique_access > 1) |>  # this means conflicting values
+  dplyr::filter(unique_access > 1) |>  # this would mean conflicting values
   View()
 
-# Deduplicate
+# 7. Deduplicate
 
 numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist <- numbat_2020_2023_od_and_rest_db_lbl_2nd_source |> 
   distinct()
 
-# 7. Add papers and identifiers from the data articles analysis and label if they are also in numbat (TRUE) or not (FALSE)
+# 8. Add papers and identifiers from the data articles analysis and label if they are also in numbat (TRUE) or not (FALSE)
 
-# First I'll check if I should exclude any papers from the data articles list
+# First check if there are any papers from the data articles list that should be excluded:
 
-# charite_da_dois_and_ids_1_m_add |>
-#   dplyr::filter(doi_lc %in% dashboard_dois_dedup$doi_lc) |>
-#   select(doi_lc) |>
-#   distinct() |> 
-#   View()
-# 
-# charite_da_dois_and_ids_1_m_add |> select(doi_lc) |>  distinct() |> View()
+charite_da_dois_and_ids_1_m_add |>
+  dplyr::filter(doi_lc %in% dashboard_dois_dedup$doi_lc) |>
+  select(doi_lc) |>
+  distinct() |>
+  View()
 
-# all data articles are in the dashboard, so none should be excluded
+charite_da_dois_and_ids_1_m_add |> select(doi_lc) |>  distinct() |> View() # All data articles are in the dashboard, so none should be excluded
 
-# Then I'll create doi_id_orig_pair for each
+# Create doi_id_orig_pair for each case (This step assists with tracking complex joins):
 
 numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist_paired_orig <- numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist |> 
   mutate(doi_id_orig_pair = paste(doi, data_identifier, sep = ";"))
@@ -353,7 +386,7 @@ numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist_paired_orig <- numbat_2020_2
 charite_da_dois_and_ids_2_paired_orig <- charite_da_dois_and_ids_1_m_add |> 
   mutate(doi_id_orig_pair = paste(doi, data_identifier, sep = ";"))
 
-# Now I can add the data articles identifiers with their source and overlap with numbat labeled
+# Add the data articles identifiers with a "source" label to differentiate them from the "numbat" cases and label any overlap with "numbat" cases:
 
 numbat_da_dois_and_ids <- numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist_paired_orig |> 
   mutate(source = "numbat") |> # label Numbat cases
@@ -375,30 +408,30 @@ numbat_da_dois_and_ids <- numbat_2020_2023_od_and_rest_db_lbl_2nd_source_dist_pa
          in_dashboard =
            case_when(source == "data_articles" ~ TRUE, .default = in_dashboard)) # label data articles as in_dashboard
 
-# save
+# Save
 save_cr(numbat_da_dois_and_ids, file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids.RData")))
 
-# 8. Remove clinvar datasets and DOIs that were eventually found out to be not "Open Data"
+# 9. Remove "clinvar" datasets and a case where the DOI turned out to not have an open data dataset
 
 numbat_da_dois_and_ids_1_no_clinvar <- numbat_da_dois_and_ids |>
-  # remove clinvar cases
+  # remove "clinvar" cases by detecting keywords in the dataset identifier
   dplyr::filter(
   !str_detect(data_id_lc, "clinvar") &
   !str_starts(data_id_lc, "vcv") &
   !str_starts(data_id_lc, "scv") &
   !str_starts(data_id_lc, "rcv")) |> 
-  # remove DOIs that are not really open data
-  dplyr::filter(!doi_lc == "10.1186/s13059-021-02306-1") # this removes the id "10.5281/zenodo.4454489" from the table
+  # remove a case where the DOI turned out to not have an open data dataset
+  dplyr::filter(!doi_lc == "10.1186/s13059-021-02306-1")
 
-# save
+# Save
 save_cr(numbat_da_dois_and_ids_1_no_clinvar, file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_1_no_clinvar.RData")))
 
-# 9. Exclude DOIs that are not in the dashboard
+# 10. Exclude DOIs that are not in the dashboard (based on the labeling that was done in previous steps)
 
 numbat_da_dois_and_ids_2_in_db <- numbat_da_dois_and_ids_1_no_clinvar |> 
   dplyr::filter(in_dashboard == "TRUE")
 
-# save
+# Save
 save_cr(numbat_da_dois_and_ids_2_in_db, file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_2_in_db.RData")))
 
 rm(cases_of_ids_2023,
@@ -419,7 +452,6 @@ rm(cases_of_ids_2023,
   numbat_2020_2023_od_and_rest_db_lbl_2nd_source,
   numbat_da_dois_and_ids_1_no_clinvar
   ) # clean up
-
 
 # data dictionary for numbat_da_dois_and_ids_2_in_db:
 
@@ -443,28 +475,25 @@ rm(cases_of_ids_2023,
 
 <br>
 
-Before matching identifiers between the DCC and Charite lists, the Charite **"identifier"** column had to be standardized into one format where possible and cleaned, as it was typed-in manually and didn't always follow a certain structure of an identifier or an accession number. This was done by the following steps:
+Looking for papers citing Charité identifiers in the DCC was done by matching the identifiers of the DCC with the ones of Charité list (namely, performing an inner join by the dataset identifier column). Prior to this matching procedure, the Charite **"identifier"** column had to be standardized into one format where possible and cleaned, as it was typed-in manually and didn't always follow a certain structure of an identifier or an accession number. This was done by the following steps:
 
 <br>
 
-1.  Automatically cleaning the typed-in accession numbers / data set identifiers / urls, using a function written by **Vladislav Nachev**. <br>
-2.  Manually validating the automatic extraction and correcting and standardizing identifiers where needed.
+(1) Automatically cleaning the typed-in accession numbers / data set identifiers / URLs, using a function written by **Vladislav Nachev**
+
+(2)  Manually validating the automatic extraction and correcting and standardizing identifiers where needed. This was done in a separate script under `scripts/manual_validation.R`.
 
 <br>
 
--   Most identifiers were quickly verified as valid extraction using common prefix matches (e.g. "gse"). <br>
+-   Most identifiers were quickly verified as valid extraction using common prefix matches (e.g. "gse") <br>
 
--   Others had no prefix and therefore had to be manually validated. <br>
+-   Others had no prefix and therefore had to be manually validated and corrected where needed <br>
 
--   The rest were manually corrected to a structure that would maximize the chances for a match with the DCC identifiers list.
-
-<br>
-
-**32** values had no identifiers. These were excluded from the matching list.
+-   All identifiers were eventually manually verified to have a structure that would maximize the chances for a match with the DCC identifiers list
 
 <br>
 
-The distribution of manual validation methods can be seen in **Table 11.** below:
+The DCC identifiers were standardized to the same format in the **dcc_load_prep** notebook.
 
 ```{r Automatic extraction of accession numbers}
 
@@ -509,7 +538,7 @@ extract_acc_nr <- function(url_string, pattern) {
   return(acc_nr)
 }
 
-pattern <- "(acc(?!ess)|accession|ccdcid|studyid|id|run|term|acc)\\=" # we build this pattern when looking for url keyvalue pairs
+pattern <- "(acc(?!ess)|accession|ccdcid|studyid|id|run|term|acc)\\=" # we build this pattern when looking for URL key-value pairs
 
 # Applying the function to extract accession numbers automatically
 
@@ -519,6 +548,7 @@ numbat_da_dois_and_ids_3_auto_cleaned <- numbat_da_dois_and_ids_2_in_db |>
     # Extract slug only where applicable:
     # - If 'data_id_lc' contains an osf.io/[slug] or osf.io/preprints/.../[slug],
     #   extract the 5-character slug from the end.
+    # The slug assists with standardizing OSF identifiers, only for matching purposes.
     slug = case_when(
       str_detect(data_id_lc, "osf\\.io/[A-Za-z0-9]+")
       ~ str_extract(data_id_lc, "osf\\.io/(preprints/[^/]+/)?[A-Za-z0-9]{5}") |> 
@@ -543,13 +573,13 @@ numbat_da_dois_and_ids_3_auto_cleaned <- numbat_da_dois_and_ids_2_in_db |>
       .default = data_id_auto_cleaned
     ),
 
-    # Construct a matching key prefixing the slug with 'osf_' when slug is available;
-    # otherwise set to NA.
+    # Construct a matching key prefixing the slug with 'osf_' when slug is available; otherwise set to NA.
     dataset_for_matching = case_when(
       !is.na(slug) ~ paste0("osf_", slug),
       .default = NA)) |>  
   mutate(
-    # Step 1: Fix malformed figshare entries without DOI
+    # Construct a "figshare" DOI format from "figshare" identifiers:
+    # 1. Fix malformed "figshare" entries without DOI
     data_id_auto_cleaned = case_when(
       str_detect(data_id_lc, "figshare") &
         !str_detect(data_id_lc, "10\\.\\d+") ~ data_id_auto_cleaned |>
@@ -558,61 +588,47 @@ numbat_da_dois_and_ids_3_auto_cleaned <- numbat_da_dois_and_ids_2_in_db |>
     )
   ) |>
   mutate(
-    # Step 2: Extract valid DOI if present in figshare entry
+    # 2. Extract valid DOI if present in "figshare" entry
     data_id_auto_cleaned = case_when(
       str_detect(data_id_lc, "figshare") &
         str_detect(data_id_lc, "10\\.\\d+") ~ str_extract(
           data_id_lc,
-          "10\\.\\d{4,9}/[^\\s/]+"                            # Extracts full DOI, avoids trailing slashes/spaces
+          "10\\.\\d{4,9}/[^\\s/]+"                           # Extracts full DOI, avoids trailing slashes/spaces
         ),
       .default = data_id_auto_cleaned
     )
   ) |>
-  relocate(data_id_auto_cleaned, slug, dataset_for_matching, .after = data_id_lc) # relocate autp_cleaned
+  relocate(data_id_auto_cleaned, slug, dataset_for_matching, .after = data_id_lc) # relocate data_id_auto_cleaned
 
-# save
+# Save
 save_cr(numbat_da_dois_and_ids_3_auto_cleaned, file = file.path(here(
   "data",
   "wrangling_steps",
   "charite",
   "numbat_da_dois_and_ids_3_auto_cleaned.RData")))
 
-# ARCHIVE of updating manual validation:
-#
-# # Check which and if there are any identifiers to manual validate
-# 
-# numbat_da_dois_and_ids_6_m_val_done <- read.csv(
-#   file.path(here("data", "verification", "m_val", "charite_dois_and_ids_6_m_val_done.csv")),
-#   header = TRUE,
-#   sep = ",") # load previous m_val
-# 
-# with_new_ids_to_val_v1_to_edit <- numbat_da_dois_and_ids_3_auto_cleaned |> 
-#   left_join(numbat_da_dois_and_ids_6_m_val_done |> select(doi, data_id, data_id_m_val, validated, Category),
-#   by = c("doi", "data_id")
-# ) |> # join existing prior validation
-#   relocate(data_id_m_val, .after = slug)
-# 
-# with_new_ids_to_val_v1_to_edit |> dplyr::filter(is.na(validated) | is.na(Category)) |> View()
-# 
-# # There are several, so I will export to a csv to fill them:
-# write_csv_cr(
-#   with_new_ids_to_val_v1_to_edit,
-#   file = here("data",
-#               "verification",
-#               "m_val",
-#               "with_new_ids_to_val_v1_to_edit.csv"),
-#   row.names = FALSE
-# ) # as csv
 ```
 
 # 4. Load Manually Validated Identifiers
 
+After the manual validation process of Charité identifiers, the following steps were performed in order to prepare it for matching with the DCC:
+
+(1) Load the manually validated identifiers table
+
+(2) Get cleanest identifier from this table
+
+(3) Add a secondary identifier for the same dataset, where it exists
+
+(4) Add a column with a second "numbat" entry, as typed in in "Numbat"
+
+(5) Create DOI+ID pairs columns for joining and verifications
+
 ```{r Load manual validation of accession numbers extraction}
 
-# The manual validation process was done in a separate file and resulted in the file:
-  # Manual validation of accession numbers extraction function for charite papers.csv
+# The manual validation process was done in a separate script and resulted in the file:
+# "numbat_da_dois_and_ids_5_m_val_joined_done.csv"
 
-# So in this chunk we will load the most recent .csv file from the manual validation directory and assign it to "numbat_da_dois_and_ids_clean_manually_validated", and then wrangle it to show the manual validation process.
+# In this chunk we will load the most recent .csv file from the manual validation directory and assign it to "numbat_da_dois_and_ids_5_m_val_joined_done", and then wrangle it to prepare it for matching with the DCC.
 
 # 1. Load "numbat_da_dois_and_ids_5_m_val_joined_done.csv"
 
@@ -627,6 +643,8 @@ save_cr(numbat_da_dois_and_ids_5_m_val_joined_done,
 
 # 2. Get cleanest identifier
 
+# For efficiency and speed purposes, identifiers that were already clean and standardized were untouched, and any modification was done on a separate column. Here below the cleanest value is coalesced into a the column "dataset_for_matching":
+
 # create a column with the most standardized data_id
 numbat_da_dois_and_ids_6_id_coalesced <- numbat_da_dois_and_ids_5_m_val_joined_done |> 
   mutate(dataset_for_matching =
@@ -636,13 +654,14 @@ numbat_da_dois_and_ids_6_id_coalesced <- numbat_da_dois_and_ids_5_m_val_joined_d
 
 numbat_da_dois_and_ids_6_id_coalesced |> dplyr::filter(is.na(dataset_for_matching)) |> View() # check
 
+# Save
 save_cr(numbat_da_dois_and_ids_6_id_coalesced,
-        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_6_id_coalesced.RData"))) # as RData
+        file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_6_id_coalesced.RData"))) 
 
-# 3. Add secondary identifier for the same dataset, where it exists
+# 3. Add a secondary identifier for the same dataset, where it exists
 
-# Notice: "https://physionet.org/content/ptb-xl/1.0.1/" had more than one secondary identifier, so they were already added as rows, and not as values in "data_id_secondary".
-
+# For this procedure, I took the identifiers list from a table created for the later purpose of adding identifiers' metadata.
+# 
 # # load latest id metadata file
 # load_latest_metadata_update()
 # 
@@ -656,7 +675,7 @@ save_cr(numbat_da_dois_and_ids_6_id_coalesced,
 #   select(data_id_merged) |> 
 #   distinct()
 # 
-# # save
+# # save a csv to fill with secondary IDs
 # write_csv_cr(no_secondary_id,
 #              file = here("data",
 #                          "verification",
@@ -664,13 +683,13 @@ save_cr(numbat_da_dois_and_ids_6_id_coalesced,
 #                          "no_secondary_id.csv"),
 #              row.names = FALSE)
 
-# load secondary id info once it's filled
+# load secondary ID info once it's filled
 secondary_ids <- read.csv(
   file.path(here("data", "verification", "2nd_id", "secondary_id_filled.csv")),
   header = TRUE,
   sep = ",")
 
-# add
+# Add the secondary IDs to Charité identifiers table
 numbat_da_dois_and_ids_7_w_sec_id <- numbat_da_dois_and_ids_6_id_coalesced |> 
   left_join(secondary_ids |> 
               dplyr::filter(!is.na(secondary_study_accession)
@@ -683,17 +702,19 @@ numbat_da_dois_and_ids_7_w_sec_id <- numbat_da_dois_and_ids_6_id_coalesced |>
 save_cr(numbat_da_dois_and_ids_7_w_sec_id,
         file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_7_w_sec_id.RData")))
 
-# 4. Add a column with 2nd numbat entry for cases with more than one form of id for same doi ** in numbat **
+# Notice: "https://physionet.org/content/ptb-xl/1.0.1/" had more than one secondary identifier, so they were already added as rows in section (1) of this qmd, and not as values in "data_id_secondary".
 
-# This step was done only for documentation purposes.
-# Several numbat entries had more than 1 id per doi+id case.
-# This id led to the exact same dataset, and was just written a bit differently,
+# 4. Add a column with 2nd numbat entry for cases with more than one form of id for same doi as typed in in "Numbat"
+
+# This step was done for documentation purposes only.
+# Several "numbat" entries had more than 1 id per doi+id case.
+# This identifier led to the exact same dataset, and was just written a bit differently,
 # which led to an artificial inflation of the number of cases.
 # So here I'll move the 2nd entry into its own column, so that unique doi+id pairs would be reflected in the table.
 
 numbat_da_dois_and_ids_8_w_numbat_2nd <- numbat_da_dois_and_ids_7_w_sec_id |>
   dplyr::left_join(
-    # find the 2nd numbat entry of same doi+dataset_for_matching row (for numbat sources only)
+    # find the 2nd numbat entry of same doi+dataset_for_matching row (for "numbat" sources only)
     numbat_da_dois_and_ids_7_w_sec_id |>
       dplyr::filter(source == "numbat") |>
       dplyr::select(doi, data_identifier, dataset_for_matching) |>
@@ -713,12 +734,11 @@ numbat_da_dois_and_ids_8_w_numbat_2nd <- numbat_da_dois_and_ids_7_w_sec_id |>
     data_id_secondary   = stringr::str_remove_all(data_id_secondary, "\\s")
   )
 
-
-# save
+# Save
 save_cr(numbat_da_dois_and_ids_8_w_numbat_2nd,
         file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_8_w_numbat_2nd.RData")))
 
-# _9: pair doi_no_ver_info;dataset_for_matching and create a column with this pair+source
+# 5: Create pairs columns: pair doi_no_ver_info;dataset_for_matching, and doi_no_ver_info;dataset_for_matching;source
 
 numbat_da_dois_and_ids_9_clean_pairs <- numbat_da_dois_and_ids_8_w_numbat_2nd |> 
   mutate(doi_id_clean_pair = paste(doi_no_ver_info, dataset_for_matching, sep = ";"),
@@ -729,25 +749,24 @@ numbat_da_dois_and_ids_9_clean_pairs <- numbat_da_dois_and_ids_8_w_numbat_2nd |>
 save_cr(numbat_da_dois_and_ids_9_clean_pairs,
         file = file.path(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData")))
 
-
 ```
 
 # 5. Matching DCC and Charite Lists by Dataset Identifiers
 
 <br>
 
-The matching was done by joining the two lists by the **identifier** columns. The result can be seen in **Table 1.** below:
+The matching was done by joining the two lists by the dataset identifier column.
 
 ```{r Matching manually validated Charite list with DCC}
 
-# Load numbat_da_dois_and_ids_manually_valditaed.RData
+# Load "DCC_corpus_11_osf_doi.RData"
 
 load(here("data",
           "wrangling_steps",
           "dcc",
           "DCC_corpus_11_std_lbl.RData"))
 
-# Load "DCC_corpus_11_osf_doi.RData
+# Load "numbat_da_dois_and_ids_9_clean_pairs"
 
 load(here("data",
           "wrangling_steps",
@@ -775,7 +794,7 @@ numbat_da_dcc_joined_secondary <- numbat_da_dois_and_ids_9_clean_pairs |>
     suffix = c("_charite", "_dcc")
   )
 
-# Combine both
+# Combine both joined tables
 numbat_da_dcc_joined <- numbat_da_dcc_joined_primary |>
   bind_rows(numbat_da_dcc_joined_secondary) |> 
   mutate(primary = case_when(
@@ -788,7 +807,7 @@ save_cr(numbat_da_dcc_joined, file = file.path(here("data", "processed","numbat_
 rm(DCC_corpus_11_std_lbl) # clean up
 ```
 
-# 6. Cleaning Matched DCC-Charite List
+# 6. Cleaning the Matched DCC-Charite List
 
 <br>
 
@@ -796,33 +815,17 @@ The matched list was cleaned as follows:
 
 <br>
 
-1.  **Renaming** columns
+(1) **Renaming** columns; Removing **self-citations**, where cited paper's doi value is the same as the citing paper's doi value
 
-2.  Removing cases where there's the same url in the **"identifier"** and **"doi"** columns (resulting in invalid cases for matching).
-
-3.  Removing **self-citations** (where cited paper's doi value is the same as the citing paper's doi value).
-
-4.  **Deduplication**.
-
-5.  Removing cases of \*authors overlap\*\* between the cited and the citing papers (resulting from preprint and published papers or from self-citations).
-
-6.  Completing missing information about **journals** and **publication years** of citing papers, cited papers and datasets.
-
-7.  Verifying that cases where the citing paper publication year is stated as **earlier** than the publication year of the Charite paper are due to the fact that the Charite paper has reused it's own data that was generated and published earlier.
-
-8.  Verifying that cases where the citing paper was published **before 2016** are correct.
-
-9.  Verifying that cases where the citing paper publication year is stated as **earlier** than the dataset publication year are correct.
+(2) Removing cases of **authors overlap** between the cited and the citing papers (resulting from preprint and published papers or from self-citations)
 
 <br>
 
-The exclusion steps are illustrated in **Figure 1.** below, followed by the cleaned matched list resulted from it (seen in **Table 13.**).
-
 ```{r Cleaning dcc-charite joined}
 
-### 1. Initial cleaning and exclusion
+# 1. Initial cleaning and exclusion
 
-# 1. Add a "detected_data_id" column
+# Add a "detected_data_id" column to refer to as the detected identifier
 
 numbat_da_dcc_joined_1_det_id <- numbat_da_dcc_joined |>
     mutate(
@@ -837,7 +840,7 @@ numbat_da_dcc_joined_1_det_id <- numbat_da_dcc_joined |>
 save_cr(numbat_da_dcc_joined_1_det_id, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                   "numbat_da_dcc_joined_1_det_id.RData")))
 
-# 2. Remove self-citations
+# Remove self-citations (these could also be artificial matches from the join process)
 
 numbat_da_dcc_joined_2_rm_self <- numbat_da_dcc_joined_1_det_id |> 
   dplyr::filter(doi_charite != doi_dcc)
@@ -846,7 +849,7 @@ numbat_da_dcc_joined_2_rm_self <- numbat_da_dcc_joined_1_det_id |>
 save_cr(numbat_da_dcc_joined_2_rm_self, file = file.path(here("data", "wrangling_steps", "dcc_charite",
                                                        "numbat_da_dcc_joined_2_rm_self.RData")))
 
-### 2. Excluding authors overlap:
+# 2. Excluding authors overlap:
 
   # # Get authors and years info collected so far:
   # 
@@ -991,7 +994,7 @@ no_common_element <- function(x, y) {
   length(intersect(x_split, y_split)) == 0 # TRUE if no common elements
 }
 
-# Apply the filter using the function to create a matched list with no "Author Overlap"
+# Apply a filter using the function to create a matched list with no "Author Overlap" cases
 numbat_da_dcc_joined_4_rm_au_ov <- numbat_da_dcc_joined_3_au_info  |> 
   dplyr::filter(map2_lgl(authors_charite, authors_dcc, no_common_element)) |> 
   distinct(doi_charite, dataset_for_matching, doi_dcc, .keep_all = TRUE)
