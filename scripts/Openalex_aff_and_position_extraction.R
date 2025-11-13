@@ -197,7 +197,7 @@ authors_flat <- final_results |>
   mutate(author = map2(author, doi, ~ mutate(.x, doi = .y))) |>
   pull(author) |>                # extract the list of author data.frames
   list_rbind() |>                # now safely bind all inner tables
-  select(doi, au_display_name, author_position, institution_display_name)
+  select(doi, au_display_name, author_position, au_affiliation_raw)
 
 # get unresolved dois
 dois_not_resolved_flat_to_add <- dcc_detected_ids_all_sources_8_dedup |> 
@@ -220,18 +220,21 @@ t <- charite_dois_aff_and_position_to_fill |>
   dplyr::filter(n() < 3000) |>
   ungroup()
 
-t |> dplyr::filter(is.na(institution_display_name)) |> select(doi) |> distinct() |> nrow()
+t |> dplyr::filter(is.na(au_affiliation_raw)) |> select(doi) |> distinct() |> nrow()
 t |> dplyr::filter(is.na(author_position)) |> select(doi) |> distinct() |> nrow()
 
-t |> dplyr::filter(is.na(institution_display_name)) |> select(doi, institution_display_name) |> group_by(doi) |> nrow()
-t |> dplyr::filter(is.na(author_position)) |> select(doi, institution_display_name) |> group_by(doi) |> nrow()
+t |> dplyr::filter(is.na(au_affiliation_raw)) |> select(doi, au_affiliation_raw) |> group_by(doi) |> nrow()
+t |> dplyr::filter(is.na(author_position)) |> select(doi, au_affiliation_raw) |> group_by(doi) |> nrow()
+
+t |> dplyr::filter(is.na(au_affiliation_raw)) |> select(doi) |> distinct() |> View()
+t |> dplyr::filter(is.na(author_position)) |> select(doi) |> distinct() |> View()
 
 
 # 5. Complete info manually -----------------------------------------------
 
 charite_dois_aff_and_position_filled <- charite_dois_aff_and_position_to_fill |> 
   mutate(
-    institution_display_name = 
+    au_affiliation_raw = 
       case_when(
         doi == "" & au_display_name == "" ~ "",
         doi == "" & au_display_name == "" ~ "",
@@ -243,7 +246,7 @@ charite_dois_aff_and_position_filled <- charite_dois_aff_and_position_to_fill |>
         doi == "" & au_display_name == "" ~ "",
         doi == "" & au_display_name == "" ~ "",
         
-        .default = institution_display_name),
+        .default = au_affiliation_raw),
     
     author_position =
       case_when(
