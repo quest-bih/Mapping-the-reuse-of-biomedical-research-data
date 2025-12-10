@@ -34,31 +34,27 @@ write_csv_cr <- function(x, file, ...) {
 
 ```
 
-# DCC Loading, Overview and Cleaning
+# Data Citation Corpus (DCC) Loading, Cleaning and Overview
+
+## 1. (DCC) Loading and initial exploration
 
 <br>
 
-The DCC was downloaded as a list of csv files that were then combined into one file. The file was then cleaned using the steps below: <br>
+The DCC (v3) was downloaded as a list of csv files that were then combined into one RData object.
 
-1.  **Renaming** columns for internal analysis purposes <br>
+The DCC was then explored to find:
 
-2.  **Exploring** missing values <br>
+1.  Relevant columns' names
 
-3.  Validating records' **dates** <br>
+2.  Missing values
 
-4.  **Standardizing** doi and identifier columns: <br>
+3.  Errors in publication dates
 
-    -   Bringing all values of doi and dataset to **lower case** <br>
 
-    -   **Replacing** commas with dots <br>
-
-    -   **Removing** dots and slashes trails and spaces from values <br>
-
-    -   **Removing** version information from identifiers values <br>
-
-5.  Standardizing identifiers of **general repositories** (zenodo, figshare, osf, dryad) to a doi format
+The Chunk below lets the user choose a folder with the downloaded csv files and combine them into one RData object. 
 
 ```{r Loading and cleaning}
+
 # 1. Loading and cleaning the DCC list (v3) ---------------------------------------------------------
 
 # DCC data dictionary can be found here:
@@ -81,6 +77,7 @@ if (!exists("selected_dir")) {
   }
 }
 
+# Let user choosee folder with csv files
 message("Selected directory: ", selected_dir)
 
 # Set wd
@@ -109,7 +106,7 @@ rm(data_list, file_list) # clean up
 
 <br>
 
-# 1. DCC Data Dictionary
+### 1.1 DCC Data Dictionary
 
 <br>
 
@@ -117,7 +114,7 @@ rm(data_list, file_list) # clean up
 
 <br>
 
-## Table 1. DCC Data dictionary
+#### Table 1. DCC Data dictionary
 
 <br>
 
@@ -161,13 +158,13 @@ datatable(
 
 <br>
 
-# 2. NAs, NULLs and Blank Values
+### 1.2 NAs, NULLs and Blank Values
 
 <br>
 
 **Table 2.** below shows counts and proportion of NA, NULL and blank values across all columns of DCC. There were no missing values in the doi or dataset columns.
 
-## Table 2. NAs, NULLs and blank values
+#### Table 2. NAs, NULLs and blank values
 
 <br>
 
@@ -183,7 +180,7 @@ dcc_na_null_blank <- tibble(
 
 save_cr(dcc_na_null_blank, file = file.path(here("data", "inputs_for_quick_render", "dcc_na_null_blank.RData"))) # save
 
-# Create reduced table for rendering
+# Create reduced table
 
 dcc_na_null_blank_reduced <- dcc_na_null_blank |> 
   unnest(cols = everything(), names_sep = "_") |>
@@ -284,7 +281,7 @@ rm(DCC_corpus) # clean up
 
 <br>
 
-# 3. Dates of Records
+### 1.3 Dates of Records
 
 <br>
 
@@ -292,7 +289,7 @@ The earliest and latest publication dates were examined for validity, as shown i
 
 <br>
 
-## Table 3. Dates of records in DCC list
+#### Table 3. Dates of records in DCC list
 
 <br>
 
@@ -358,7 +355,7 @@ Publication dates written as later than 2025 look like typos (e.g. 2019 is false
 
 <br>
 
-## Table 4. Papers written as published after 2025
+#### Table 4. Papers written as published after 2025
 
 ```{r DCC dates typos table}
 
@@ -378,7 +375,41 @@ datatable(
   )
 ```
 
-# 4. Renaming columns and initial standardizing
+## 2. DCC Cleaning
+
+The DCC was then processed and cleaned using the steps below: <br>
+
+1.  **Renaming** columns for internal analysis purposes and initial cleaning <br>
+
+    -   Removing white spaces from DOIs and identifiers
+    
+    -   Replacing "," with "."
+    
+    -   Formatting DOI, dataset, journal and repository values to **lower case** <br>
+
+2.  **Initial** standardizing <br>
+
+3.  **Standardizing** identifiers deposited in general purpose repositories (zenodo, figshare, osf, dryad) <br>
+
+4.  Removing datasets' **version information** <br>
+
+5.  Removing leading and trailing **excess characters** from DOI and dataset values (dots, commas, slashes, spaces) <br>
+
+    -   Replacing "," with "." that was still left after the standardization process
+
+6.  Removing invalid entries where the DOI value is actually the same as the dataset identifier value **(DOI = Dataset)**
+
+7.  Removing entries where the repository is a **pre-print service**
+
+8.  Removing **additional version information**
+
+9.  Additional **standardization**
+
+10. Cases that were standardized were then **labeled**
+
+<br>
+
+### 2.1 Renaming columns and initial standardizing
 
 Columns were renamed and values from relevant columns were set to lower case, in order to have a smoother workflow with them. In addition, redundant prefixes and blanks spaces were removed from the doi and datasets columns. Finally, "," were replaced with ".".
 
@@ -407,7 +438,7 @@ save_cr(DCC_corpus_2_renamed_clean, file = file.path(here("data", "wrangling_ste
 rm(DCC_corpus_1_dates) # clean up
 ```
 
-# 5. Removing identifiers prefixes
+### 2.2 Removing identifiers prefixes
 
 For all identifiers containing "/10." not at the end of the string, every character up to and including the slash before "10." was removed. This steps makes it easier to further standardize dataset's DOIs.
 
@@ -438,15 +469,15 @@ DCC_corpus_3_rm_prefix <- DCC_corpus_2_renamed_clean |>
 save_cr(DCC_corpus_3_rm_prefix, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_3_rm_prefix.RData")))
 ```
 
-# 6. Standardizing identifiers deposited in general repositories
+### 2.3 Standardizing identifiers deposited in general purpose repositories
 
-identifiers deposited in general repositories were standardized as follows:
+Identifiers deposited in general purpose repositories were standardized as described below.
 
-Zenodo identifiers were standardized to the format: 10.5281/zenodo.xxxxx OSF identifiers were standardized to the format: //osf.io/xxxxx Figshare identifiers were standardized to the format: 10.6084/m9.figshare.xxxxx Dryad identifiers were standardized to the format: 10.5061/dryad/xxxxx
+Zenodo identifiers were standardized to the format: 10.5281/zenodo.xxxxx
 
-```{r Standardizing general repositories entries zenodo}
+```{r Standardizing general purpose repositories entries zenodo}
 
-# Exploring & standardizing the general repositories values (zenodo): std to: 10.5281/zenodo.xxxxx
+# Exploring & standardizing the general purpose repositories values (zenodo): std to: 10.5281/zenodo.xxxxx
 
 # DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "zenodo")) |> View() # not standardized in DCC
 
@@ -467,9 +498,11 @@ zenodo_na <- DCC_corpus_4_std_gen_rep |> dplyr::filter(data_id_or_acc_nr == "10.
 save_cr(zenodo_na, file = file.path(here("data", "inputs_for_quick_render", "zenodo_na.RData"))) # save
 ```
 
-```{r Standardizing general repositories entries Dryad}
+Dryad identifiers were standardized to the format: 10.5061/dryad/xxxxx
 
-# # Exploring & standardizing the general repositories values (dryad): std to: 10.5061/dryad/xxxxx
+```{r Standardizing general purpose repositories entries Dryad}
+
+# # Exploring & standardizing the general purpose repositories values (dryad): std to: 10.5061/dryad/xxxxx
 
 # DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "dryad")) |> View() # not standardized in DCC
 
@@ -489,9 +522,11 @@ dryad_not_std <- DCC_corpus_4_std_gen_rep |>
 save_cr(dryad_not_std, file = file.path(here("data", "inputs_for_quick_render", "dryad_not_std.RData"))) # save
 ```
 
-```{r Standardizing general repositories entries Figshare}
+Figshare identifiers were standardized to the format: 10.6084/m9.figshare.xxxxx
 
-# # Exploring & standardizing the general repositories values (figshare): std to: 10.6084/m9.figshare.xxxxx or to a URL
+```{r Standardizing general purpose repositories entries Figshare}
+
+# # Exploring & standardizing the general purpose repositories values (figshare): std to: 10.6084/m9.figshare.xxxxx or to a URL
 
 # DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "figshare")) |> View() # not standardized in DCC
 
@@ -540,16 +575,21 @@ figshare_not_std <- DCC_corpus_4_std_gen_rep |>
 save_cr(figshare_not_std, file = file.path(here("data", "inputs_for_quick_render", "figshare_not_std.RData"))) # save
 ```
 
-```{r Standardizing general repositories entries OSF}
+OSF identifiers were standardized to the format: //osf.io/xxxxx
 
-# Exploring & standardizing the general repositories values (osf): std to: //osf.io/xxxxx or to a DOI form
+```{r Standardizing general purpose repositories entries OSF}
+
+# Exploring & standardizing the general purpose repositories values (osf): std to: //osf.io/xxxxx or to a DOI form
 
 # DCC_corpus_3_rm_prefix |> dplyr::filter(str_detect(data_id_or_acc_nr, "osf")) |> View() # not standardized in DCC
 
 # OSF could be listed as a DOI or as a URL.
-# So below I will standardize any OSF to either DOI or URL
+# So below I will standardize any OSF to either DOI or URL.
+
 # But I will mutate a column for matching "for_matching" that'll have osf values in the format "osf_xxxxx" and for other cases (non-osf) just the standardized values (data_id_or_acc_nr), in case there were any osf accession numbers that could exist as a DOI / URL in th Charité / DCC lists and wouldn't match just because of the format.
 
+# Here, a "slug" is the 5-character OSF identifier at the end of an osf.io URL (e.g. osf.io/abcde).
+# We use the slug as a stable key so all OSF entries can be formatted consistently and matched reliably.
 
 DCC_corpus_4_std_gen_rep <- DCC_corpus_4_std_gen_rep |> 
   mutate(
@@ -599,6 +639,8 @@ osf_not_std <- DCC_corpus_4_std_gen_rep |>
 save_cr(osf_not_std, file = file.path(here("data", "inputs_for_quick_render", "osf_not_std.RData"))) # save
 ```
 
+Columns were then reodrered for clarity:
+
 ```{r}
 
 # Reorder columns and save _4
@@ -612,7 +654,7 @@ save_cr(DCC_corpus_4_std_gen_rep, file = file.path(here("data", "wrangling_steps
 
 <br>
 
-# 7. Removing Dataset Version Information
+### 2.4 Removing Dataset Version Information
 
 <br>
 
@@ -638,9 +680,7 @@ save_cr(ver_info, file = file.path(here("data", "inputs_for_quick_render", "ver_
 save_cr(DCC_corpus_5_rm_v_info, file = file.path(here("data", "wrangling_steps", "dcc",  "DCC_corpus_5_rm_v_info.RData")))
 ```
 
-# 8. Removing Excess Characters
-
-Cleaning records end with dots or "/" or has comas
+### 2.5 Removing Excess Characters
 
 ```{r Removing excess characters}
 
@@ -664,11 +704,18 @@ DCC_corpus_6_ex_chr_rm <- DCC_corpus_5_rm_v_info |>
 save_cr(DCC_corpus_6_ex_chr_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_6_ex_chr_rm.RData")))
 ```
 
-# 9. Removing cases where paper value equals dataset value
+### 2.6 Removing entries where the DOI value is the same as the dataset identifier value
 
-```{r Standardizing DOIs of papers}
+Some of these cases could not have been discovered without standardizing the identifiers first.
+For example, a case where:
+**Dataset** = //osf.io/gs2t5
+**DOI** = 10.17605/osf.io/gs2t5
 
-# First, get cases where a DOI of a data set doesn't start with "10."
+So in the chunk below, entries like the one below were remove since they are invalid.
+
+```{r Removing entries where DOI and dataset are the same}
+
+# First and unrelated, get cases where a DOI of a data set doesn't start with "10."
 
 not_std_dois <- DCC_corpus_6_ex_chr_rm |>
   dplyr::filter(str_detect(doi, "10\\.")
@@ -676,9 +723,9 @@ not_std_dois <- DCC_corpus_6_ex_chr_rm |>
 
 save_cr(not_std_dois, file = file.path(here("data", "inputs_for_quick_render", "not_std_dois.RData"))) # save
 
-# there were 4 cases that I didn't fix.
+# There were 4 cases that I didn't fix, since they were not relevant.
 
-# Get cases where paper's doi = dataset's id (after removing excess characters)
+# Now get cases where paper's doi = dataset's id (after removing excess characters)
 
 doi_is_id <- DCC_corpus_6_ex_chr_rm |>
   dplyr::filter(doi == data_id_or_acc_nr)
@@ -687,7 +734,7 @@ doi_is_id_count <- doi_is_id |> nrow() # count
 
 save_cr(doi_is_id_count, file = file.path(here("data", "inputs_for_quick_render", "doi_is_id_count.RData"))) # save
 
-# Create a sample for rendering
+# Create a sample
 doi_is_id_sampled <- doi_is_id |> sample_n(100)
 
 save_cr(doi_is_id_sampled, file = file.path(here("data", "inputs_for_quick_render", "doi_is_id_sampled.RData"))) # save
@@ -699,9 +746,9 @@ DCC_corpus_7_doi_as_id_rm <- DCC_corpus_6_ex_chr_rm |>
 save_cr(DCC_corpus_7_doi_as_id_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_7_doi_as_id_rm.RData")))
 ```
 
-# Removing cases where the repository is a preprint service
+### 2.7 Removing entries where the repository is a pre-print service
 
-biorxiv and nmrxiv were found in the DCC as repositories and were removed from it.
+"biorxiv" and "nmrxiv" entries were found in the DCC as repositories and were removed from it.
 
 ```{r}
 
@@ -713,7 +760,7 @@ save_cr(DCC_corpus_8_preprint_rm, file = file.path(here("data", "wrangling_steps
 
 ```
 
-# removing additional version information
+### 2.8 Removing additional version information
 
 ```{r}
 
@@ -738,7 +785,7 @@ DCC_corpus_9_nm_v_rm <- DCC_corpus_8_preprint_rm |>
 save_cr(DCC_corpus_9_nm_v_rm, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_9_nm_v_rm.RData")))
 ```
 
-# 10. Last standardization steps to match the Charité identifiers / DOIs format:
+### 2.9 Additional standardization steps to match the Charité identifiers / DOIs format:
 
 1.  convert "pxd" DOIs to "pxdXXXXX" format
 2.  standardize "mendeley" datasets (10.17632/xxxxx)
@@ -864,7 +911,7 @@ dcc_openneuro_check <- DCC_corpus_10_id_std |>
 save_cr(DCC_corpus_10_id_std, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_10_id_std.RData")))
 ```
 
-# 11. Label which cases were standardidzed and rename dataset column for matching
+### 2.10 Label which cases were standardidzed and rename dataset column for matching
 
 ```{r}
 
@@ -877,15 +924,17 @@ DCC_corpus_11_std_lbl <- DCC_corpus_10_id_std |>
 save_cr(DCC_corpus_11_std_lbl, file = file.path(here("data", "wrangling_steps", "dcc", "DCC_corpus_11_std_lbl.RData")))
 ```
 
-# 12. Proportion of General Repositories in DCC (After Cleaning)
+## 3. DCC Overview
 
-```{r Proportion of general repositories in DCC}
+### 3.1 Proportion of general purpose repositories in DCC (After Cleaning)
 
-# Get total count if general repositories (to use later in percentages calcaultion)
+```{r Proportion of general purpose repositories in DCC}
+
+# Get total count if general purpose repositories (to use later in percentages calcaultion)
 
 dcc_id_dist <- DCC_corpus_10_id_std |> select(data_id_or_acc_nr) |> distinct() |> nrow()
 
-# Create general repositories counts and percentages table
+# Create general purpose repositories counts and percentages table
 
 gen_rep_dcc <- DCC_corpus_8_preprint_rm |> 
   summarize(
@@ -911,13 +960,13 @@ save_cr(gen_rep_dcc, file = file.path(here("data", "inputs_for_quick_render", "g
 
 <br>
 
-# 13. Blank Spaces, Commas and Trails Dots and Slashes
+###3.2 Blank Spaces, Commas and Trails Dots and Slashes
 
 <br>
 
-Cases where either the DOI or the dataset columns ended with "/" or ".", or contained "," or " " were identified. <br> Then commas were replaced with dots, and any blanks or ending slashes or dots were removed. This was done after standardizing general repositories and removing data set version information, for the remaining cases. <br>
+Cases where either the DOI or the dataset columns ended with "/" or ".", or contained "," or " " were identified. <br> Then commas were replaced with dots, and any blanks or ending slashes or dots were removed. This was done after standardizing general purpose repositories and removing data set version information, for the remaining cases. <br>
 
-**Table 8.** below shows how many cases of each were present in the original DCC ("Before Standardization"), after standardization of general repositories and data set version information removal ("After Standardization") and after the additional excess characters removal (last column in Table 8.). <br>
+**Table 8.** below shows how many cases of each were present in the original DCC ("Before Standardization"), after standardization of general purpose repositories and data set version information removal ("After Standardization") and after the additional excess characters removal (last column in Table 8.). <br>
 
 ```{r count excess characthers in DCC}
 
@@ -999,7 +1048,7 @@ count_exc_characters_post <- tibble(
 save_cr(count_exc_characters_pre, file = file.path(here("data", "inputs_for_quick_render", "count_exc_characters_pre.RData")))
 save_cr(count_exc_characters_post, file = file.path(here("data", "inputs_for_quick_render", "count_exc_characters_post.RData")))
 
-# Prepare tables for rendering
+# Prepare tables
 
 # Before Standardization
 
@@ -1054,7 +1103,7 @@ rm(DCC_corpus_5_rm_v_info) # clean up
 
 <br>
 
-## Table 9. Cases with Excess Charachters
+#### Table 5. Cases with Excess Charachters
 
 <br>
 
@@ -1076,7 +1125,7 @@ datatable(
   )
 ```
 
-# 14. Publication years distribution
+### 3.3 Publication years distribution
 
 ```{r}
 
@@ -1104,7 +1153,7 @@ save_cr(dcc_years_dist_for_plot, file = file.path(here("data", "tables_for_plots
 # this table will be loaded and plotted in "plots.qmd"
 ```
 
-# 15. Repositories distribution
+### 3.4 Repositories distribution
 
 ```{r}
 

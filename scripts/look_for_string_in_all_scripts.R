@@ -1,19 +1,31 @@
-library(fs)
-library(purrr)
-library(stringr)
-library(tibble)
 library(dplyr)
+library(purrr)
+library(readr)
+library(tibble)
+library(stringr)
+library(writexl)
 
-find_files_with_text <- function(root = ".", pattern = "ds_age_cit_cor_pre") { # change string here
-  fs::dir_ls(path = root, recurse = TRUE, type = "file", regexp = "\\.(R|qmd)$") |>
-    tibble::tibble(path = _) |>
-    dplyr::mutate(
-      content = purrr::map(path, ~ tryCatch(readLines(.x, warn = FALSE), error = function(e) character())),
-      has_match = purrr::map_lgl(content, ~ stringr::str_detect(.x, fixed(pattern)) |> any())
-    ) |>
-    dplyr::filter(has_match) |>
-    dplyr::pull(path)
-}
+root_path <- "C:/AVIHAY/git/DCC-v3"  # <-- update this
 
+files <- list.files(
+  path = root_path, 
+  pattern = "\\.(qmd|R)$", 
+  recursive = TRUE, 
+  full.names = TRUE
+)
 
-find_files_with_text("C:/AVIHAY/git/DCC-v3") # change target folder(s) here
+results <- files |> 
+  map_dfr(function(file) {
+    lines <- read_lines(file)
+    matches <- which(str_detect(lines, fixed("datajournal_articles - analysis of citations v10.xlsx")))
+    
+    if (length(matches) == 0) return(NULL)
+    
+    tibble(
+      file_path = file,
+      line_number = matches,
+      line_text = lines[matches]
+    )
+  })
+
+write_xlsx(results, "summarise_n_equals_n_usage.xlsx")

@@ -580,44 +580,104 @@ charite_authors_and_position_w_citing_dois <- charite_authors_and_position |>
 
 charite_authors_and_position_w_citing_dois |> dplyr::filter(if_any(everything(), is.na))
 
+# Reformat "lastname, firstname" to "firstname lastname"
+
+charite_authors_and_position_w_citing_dois_std_au <- charite_authors_and_position_w_citing_dois |>
+  mutate(
+    author = case_when(
+      str_detect(author, ", ") ~ str_replace(author, "^(.*), (.*)$", "\\2 \\1"),
+      .default = author
+    )
+  )
+
 # Save
 save_path <- file.path(here("data",
                             "verification",
                             "aff_and_position",
-                            "charite_authors_and_position_w_citing_dois.RData"))
+                            "charite_authors_and_position_w_citing_dois_std_au.RData"))
 
-save(charite_authors_and_position_w_citing_dois, file = save_path) # RData
+save(charite_authors_and_position_w_citing_dois_std_au, file = save_path) # RData
 
 # csv
-write_csv_cr(charite_authors_and_position_w_citing_dois, file = file.path(here(
+write_csv_cr(charite_authors_and_position_w_citing_dois_std_au, file = file.path(here(
   "data",
   "verification",
   "aff_and_position",
-  "charite_authors_and_position_w_citing_dois.csv")),
+  "charite_authors_and_position_w_citing_dois_std_au.csv")),
   row.names = FALSE)
-
 
 # Create a summary result table for sending automatic emails: authors name, authors family name, doi, id, position, n_citations
 
-charite_authors_and_position_w_citing_dois_summary <- charite_authors_and_position_w_citing_dois |> 
+charite_authors_and_position_w_citing_dois_std_au_summary <- charite_authors_and_position_w_citing_dois_std_au |> 
   group_by(author, doi, dataset, position) |> 
-  summarise(number_of_citations = n())
+  summarise(number_of_citations = n()) |> 
+  ungroup()
+
 
 # Save
 save_path <- file.path(here("data",
                             "verification",
                             "aff_and_position",
-                            "charite_authors_and_position_w_citing_dois_summary.RData"))
+                            "charite_authors_and_position_w_citing_dois_std_au_summary.RData"))
 
-save(charite_authors_and_position_w_citing_dois_summary, file = save_path) # RData
+save(charite_authors_and_position_w_citing_dois_std_au_summary, file = save_path) # RData
 
 # csv
-write_csv_cr(charite_authors_and_position_w_citing_dois_summary, file = file.path(here(
+write_csv_cr(charite_authors_and_position_w_citing_dois_std_au_summary, file = file.path(here(
   "data",
   "verification",
   "aff_and_position",
-  "charite_authors_and_position_w_citing_dois_summary.csv")),
+  "charite_authors_and_position_w_citing_dois_std_au_summary.csv")),
   row.names = FALSE)
+
+# Create a subset of these tables
+
+charite_authors_full <- charite_authors_and_position_w_citing_dois_std_au |> 
+  dplyr::filter(position %in% c("first", "last"))
+
+charite_authors_summary <- charite_authors_and_position_w_citing_dois_std_au_summary |> 
+  dplyr::filter(position %in% c("first", "last"))
+
+# I'll save as xlsx this time.
+# This is in order to avoid encoding issues
+# (the csvs are fine but when opened in excel, special characters get distorted)
+
+write_csv_excel <- function(x, file, ...) {
+  dir_path <- dirname(file)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+  }
+  readr::write_excel_csv(x, file = file, ...)
+}
+
+write_csv_excel(
+  charite_authors_full,
+  file = file.path(
+    here("data", "verification", "aff_and_position", "for sending", "charite_authors_full.csv")
+  )
+)
+
+write_csv_excel(
+  charite_authors_summary,
+  file = file.path(
+    here("data", "verification", "aff_and_position", "for sending", "charite_authors_summary.csv")
+  )
+)
+
+write_csv_excel(
+  charite_authors_and_position_w_citing_dois_std_au,
+  file = file.path(
+    here("data", "verification", "aff_and_position", "for sending", "charite_authors_and_position_w_citing_dois_std_au.csv")
+  )
+)
+
+write_csv_excel(
+  charite_authors_and_position_w_citing_dois_std_au_summary,
+  file = file.path(
+    here("data", "verification", "aff_and_position", "for sending", "charite_authors_and_position_w_citing_dois_std_au_summary.csv")
+  )
+)
+
 
 ###
 

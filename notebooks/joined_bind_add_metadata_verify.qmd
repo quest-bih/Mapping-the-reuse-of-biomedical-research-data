@@ -65,6 +65,18 @@ load_latest_metadata_update <- function() {
 
 ```
 
+In this notebook I will:
+
+1.  Load the 2 joined (matched) lists
+2.  Bind them together
+3.  Add DataStet doi+ids that have ids that already matched as Numbat / Data articles ids
+4.  Remove several invalid cases
+5.  Add missing repository values for matched cases
+6.  Verify results and correct issues
+7.  Add datasets metadata and create a final results table with overlapping sources
+8.  Create a final results table with no overlapping sources
+9.  Final verification
+
 # 1. Loading 2 joined lists of 4 sources (numbat, data articles, datastet, added ids)
 
 Notice!
@@ -733,7 +745,7 @@ save_cr(dcc_detected_ids_all_sources_6_pair_fix, file = file.path(here("data", "
 
 ```
 
-# 8. Add Metadata
+# 7. Add Metadata
 
 ```{r Add metadata}
 
@@ -891,7 +903,7 @@ save_cr(dcc_detected_ids_all_sources_7_w_metadata, file = file.path(here("data",
 
 ```
 
-# 9. Create a deduplicated version
+# 8. Create a deduplicated version
 
 ```{r}
 
@@ -929,7 +941,7 @@ save_cr(dcc_detected_ids_all_sources_8_dedup, file = file.path(here("data", "wra
 
 ```
 
-# Verify that all the same detected ids are in metadata, in all sources dup and all sources dedup
+# 9. Verify that all the same detected ids are in metadata, in all sources dup and all sources dedup
 
 ```{r verification}
 

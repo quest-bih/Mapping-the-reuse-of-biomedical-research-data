@@ -41,7 +41,7 @@ extract_acc_nr <- function(url_string, pattern) {
   acc_nr <- elements <- NULL
   
   if (str_detect(url_string, "osf|figshare")) {
-    return(url_string)  # ✅ Skip processing if OSF or figshare found
+    return(url_string)  # Skip processing if OSF or figshare found
   }
   
   if (stringr::str_detect(url_string, "doi\\:")) { # removing "doi" prefixes

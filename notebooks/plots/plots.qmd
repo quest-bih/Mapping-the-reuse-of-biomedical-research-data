@@ -10,7 +10,7 @@ prefer-html: true
 editor: visual
 ---
 
-# setup
+# Setup
 
 ```{r setup}
 
@@ -20,7 +20,7 @@ if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue, broom)
 
-# Load tables for plots
+# Load tables for plots (in the comment beside each load() is the label of each plot for easy searching)
 
 load(here("data", "tables_for_plots", "combined_long_counts.RData")) # fig-distinct-numbers
 
@@ -53,7 +53,6 @@ load(here("data", "tables_for_plots", "not_mentioned_years.RData")) # fig-non-ye
 load(here("data", "tables_for_plots", "rep_dt_da_ds.RData")) # fig-repo-dist-ds-da
 
 load(here("data", "tables_for_plots", "tidy_model_matched_non_matched.RData")) # fig-matched-non
-
 
 load(here("data", "inputs_for_quick_render", "ids_and_years_only_0_3_ages.RData")) # fig-age-citation-1
 
@@ -114,7 +113,7 @@ ds_freq |>
 #| fig.height: 10
 #| fig.width: 10
 
-# # linear scale
+# # linear scale: was created but is not used
 #
 # rep_dt |>
 #   ggplot(aes(x = reorder(repository, n), y = n)) +
@@ -171,7 +170,7 @@ rep_dt |>
 
 ```
 
-# Datasets References by Year: TOP 7
+# Datasets References by Year: TOP 7 mentioned identifiers
 
 ```{r}
 #| label: fig-ref-by-year-top-7
@@ -244,7 +243,7 @@ year_dcc_dt_all_for_plot_collapsed |>
 
 ```
 
-# Datasets Access, Repositories and Covid-relationship
+# Datasets Properties Not Including Human Data (Sankey Plot)
 
 ```{r}
 #| label: fig-datasets-properties
@@ -316,7 +315,7 @@ saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sanke
 
 ```
 
-# Datasets Access, Repositories and Covid-relationship, including human data
+# Datasets Properties Including Human Data (Sankey Plot)
 
 ```{r}
 #| label: fig-datasets-properties-2

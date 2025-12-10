@@ -10,7 +10,7 @@ added_suffixes <- sub("osf_", "", added_and_ds_for_matching_4_rm_exist$dataset_f
 # 2. Combine and deduplicate
 all_suffixes <- unique(c(numbat_suffixes, added_suffixes))
 
-# ⚠️ 3. Escape special characters in suffixes
+# 3. Escape special characters in suffixes
 escaped_suffixes <- str_replace_all(all_suffixes, "([\\^$.|?*+(){}\\[\\]\\\\])", "\\\\\\1")
 
 # 4. Construct robust regex pattern

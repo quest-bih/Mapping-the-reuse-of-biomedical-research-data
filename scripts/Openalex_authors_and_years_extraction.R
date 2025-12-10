@@ -1,3 +1,25 @@
+# Instructions:
+
+# 1. Run section "Select File" (requires selecting a csv file with a "doi" column)
+# 2. Copy one of the other sections as a template and save under a new name.
+
+#    The template, as shown at the bottom of the script as well, is:
+
+# # List of dataframes
+# 
+# dfs <- list(df)
+# 
+# # Apply function to each dataframe and bind results together
+# final_results <- map_dfr(dfs, process_dataframe)
+# 
+# # Save
+# save_path <- file.path(here("...")) # change path
+# 
+# save(final_results, file = save_path)
+
+
+# Select File -------------------------------------------------------------
+
 if (!require(pacman)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse,
