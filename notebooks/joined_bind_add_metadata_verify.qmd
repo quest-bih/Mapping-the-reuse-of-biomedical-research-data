@@ -83,7 +83,7 @@ Notice!
 
 ```{r Loading 2 joined lists of 4 sources}
 
-# load joined dcc numbat and data articles
+# load joined dcc (numbat and data articles)
 load(here("data",
           "wrangling_steps",
           "dcc_charite",
@@ -91,7 +91,7 @@ load(here("data",
 
 dcc_numbat_da_joined_final <- numbat_da_dcc_joined_4_rm_au_ov
 
-# load joined dcc datastet and added
+# load joined dcc (datastet and added)
 load(here("data",
           "wrangling_steps",
           "dcc_datastet_and_added",
@@ -191,6 +191,7 @@ rm(numbat_da_dcc_joined_4_rm_au_ov, dcc_ds_and_added_joined_8_ex)
 # convert "validated" to chr
 dcc_numbat_da_joined_final_for_binding <- dcc_numbat_da_joined_final |> mutate(validated = as.character(validated))
 
+# bind
 dcc_detected_ids_all_sources <- bind_rows(
   dcc_numbat_da_joined_final_for_binding,
   dcc_ds_added_joined_final
@@ -203,17 +204,24 @@ save_cr(dcc_detected_ids_all_sources, file = file.path(here("data", "wrangling_s
 rm(dcc_ds_added_joined_final, dcc_numbat_da_joined_final, dcc_numbat_da_joined_final_for_binding) # clean up
 ```
 
-# 3. Add DataStet doi+ids that have ids that already matched as Numbat / Data articles ids
+# 3. Add DataStet doi+ids that have ids that already matched as Numbat / Data articles (DA) ids
 
-Currently the binded list contains: 1. numbat and DA matches (with duplication of sources between them) 2. DataStet and added identifiers that WEREN'T matched as numbat identifiers (but with duplication between them - between datastet and added).
+Currently the binded list contains: <br>
 
-So I'd like to add a "duplication" to the list, so that it'll also contain DataStet and added identifiers that were already a match in numbat/DA. That way I could see the overlapping between the sources (importantly, only for matched cases! We don't have the data for unmatched DataStet, so we won't examine the overlap).
+1.  numbat and DA matches (with duplication of sources between them) <br>
+2.  DataStet and added identifiers that WEREN'T matched as numbat identifiers (but with duplication between them - between datastet and added).
 
-In order to do that, I'll bind cases from Numbat/DA that we now know that they're in the DCC, because they matched as DataStet and added ids.
+So I'd like to add a "duplication" to the list, so that it'll also contain DataStet and added identifiers that were **already** a match in numbat/DA. These were not included in the "Datastet and Added" list to match with DCC in notebook "ds_added_and_datastet_load_prep_match_clean.qmd" to begin with.
+By adding them here, we could observe the overlap between all of the sources ("Numbat + Data Articles" and "DataStet + "Added").
+Importantly, this is done only for the matched cases! We don't have the data for unmatched DataStet Identifiers, so we won't examine the overlap there.
+
+In order to do that, I'll bind cases from Numbat+DA that we now know that they're in the DCC, because they matched as DataStet and added ids.
+
+This process will include steps for harmonizing the data as described below.
 
 ```{r}
 
-# Initial state: NU & DA have 1 overlapping id, DS & AD have 2 overlapping ids.
+# Initial state: NU (numbat) & DA (data articles) have 1 overlapping id, DS & AD have 2 overlapping ids.
 
 # 1. Load data
 
@@ -504,7 +512,7 @@ ds_added_in_matched_numbat_5_au_info <- ds_added_in_matched_numbat_4_rm_self |>
     publication_year_charite.x,
     publication_year_charite.y))
 
-# NAs and Blanks were checked again and none were found, except one record that was added later and had no au_info. It was checked manually and was found to be with author overlap, so I'll exclude it manually in the next step, right before saving _6.
+# NAs and Blanks were checked again and none were found, except for one record that was added later and had no au_info. It was checked manually and was found to be with author overlap, so I'll exclude it manually in the next step, right before saving _6.
 
 # save
 save_cr(ds_added_in_matched_numbat_5_au_info,
@@ -556,7 +564,6 @@ save_cr(dcc_detected_ids_all_sources_1_dup,
 
 # So now dcc_detected_ids_all_sources_1_dup really has all sources.
 
-
 # For example, in the view below you can see that the same id appears once as a datastet source (which is also in numbat) and once as a numbat source. and the datastet source has an additional doi_charite that derives from the datastet extractions, which is exactly what we want to see in this table.
 
 dcc_detected_ids_all_sources_1_dup  |>
@@ -574,12 +581,16 @@ dcc_detected_ids_all_sources_1_dup  |>
 
 # 4. Remove several cases where doi_dcc+detected is actually doi_lc (charite)+dataset_for_matching, just from another row
 
+I found out that there were still several cases where the "mentioning" articles (doi_dcc) were actually the same as the Charité articles (doi_charite), which makes the entry invalid. The reason it wasn't discovered until now was that so far I've filtered out entries where doi_dcc = doi_charite **within the same row**. In the section below, cases where doi_dcc was actually a Charité article (with the same dataset identifier, of course) but in a different row are being discovered and filtered out.
+
 ```{r}
 
-# TO DO: document the check, the reason for it, what was done in the check, and what did I find out.
+# Load relevant objects
 
 load(here("data", "wrangling_steps", "charite", "numbat_da_dois_and_ids_9_clean_pairs.RData"))
 load(here("data", "wrangling_steps", "datastet", "added_and_ds_for_matching_4_rm_exist.RData"))
+
+# Find out which cases to remove
 
 charite_dois_distinct_for_matching_all_sources <- numbat_da_dois_and_ids_9_clean_pairs |> 
   select(doi_lc, dataset_for_matching) |> 
@@ -626,10 +637,12 @@ save_cr(dcc_detected_ids_all_sources_2_rm_dcc_is_ch,
                               "dcc_detected_ids_all_sources_2_rm_dcc_is_ch.RData")))
 
 
-# Notice: the count of IDs won't change, because they are being cited by other papers and they belong to other charite papers that are not in the dcc paper column. So the only thing that will change is that 5 distinct doi_dcc records will be removed from the dcc papers count.
+# Notice: the count of IDs IS NOT change because of this procedure. This is because the datasets are being cited by other papers and they belong to other Charité papers that are not in the dcc DOI column. So the only thing that changed now is that 5 distinct doi_dcc records (mentioning articles) will be removed from the dcc articles count.
 ```
 
 # 5. Add missing repository values for matched cases
+
+The section below discovers which cases still has missing data in the "repository" column and completes it.
 
 ```{r}
 
@@ -665,7 +678,7 @@ dcc_detected_ids_all_sources_3_add_rep |>
   dplyr::filter(if_any(-detected_id, ~ .x > 1)) |>
   View() # some repositories are different for the same id
 
-# Note that repository actually belongs to dcc columns, but I'll fix it anyway:
+# Note that repository actually belongs to dcc columns (meaning: derived from the original DCC, not from our extractions), but I'll fix it anyway:
 
 dcc_detected_ids_all_sources_4_rep_fix <- dcc_detected_ids_all_sources_3_add_rep |> 
   mutate(repository = case_when(repository %in% c("elsevier data repository", "elsevier bv", "mendeley")
@@ -745,7 +758,9 @@ save_cr(dcc_detected_ids_all_sources_6_pair_fix, file = file.path(here("data", "
 
 ```
 
-# 7. Add Metadata
+# 7. Add Metadata of datasets
+
+This section and everything below it should be executed again every time that the "datasets_metadata_master_updated_xxx" is being updated in the metadata updates script, in order to get the most up-to-date metadata.
 
 ```{r Add metadata}
 
@@ -824,7 +839,7 @@ dcc_detected_ids_all_sources_7_w_metadata <- dcc_detected_ids_all_sources_7_w_me
 
 ##### ONE LAST STEP - retroactively (see inspection_to_add_added_duplications_after_the_fact.R):
 
-# I found added cases that were accidentally removed (they are identical to datastet cases).
+# I found "Added" cases that were accidentally removed (they are identical to "DataStet" cases).
 # So here I'll add them again with the exact same data but as source == "added"
 # In addidion, there's one data_articles that should be added (with the same detected_id as "numbat": ds001226).
 
@@ -903,7 +918,18 @@ save_cr(dcc_detected_ids_all_sources_7_w_metadata, file = file.path(here("data",
 
 ```
 
-# 8. Create a deduplicated version
+# 8. Create a deduplicated version (with no overlap between sources)
+
+"dcc_detected_ids_all_sources_7_w_metadata" has overlapping sources:
+"Numbat" IDs were extracted and matched with DCC.
+Then "Added" IDs were extracted from the matched "Numbat" (with no overlap) and matched with DCC.
+Then "DataStet" matched IDs (some have an overlap with "Numbat" or with "Added", but not with both) were binded into the result table.
+
+In the following code section, a result table that doesn't contain any overlap will be created.
+It will be called: "dcc_detected_ids_all_sources_8_dedup", and in it:
+Any IDs that overlap between "DataStet" and "Numbat" / "Added" will be deduplicated and tagged as coming from "Numbat" / "Added" sources.
+
+Both results tables are being used in our article for different calculations.
 
 ```{r}
 
@@ -942,6 +968,8 @@ save_cr(dcc_detected_ids_all_sources_8_dedup, file = file.path(here("data", "wra
 ```
 
 # 9. Verify that all the same detected ids are in metadata, in all sources dup and all sources dedup
+
+This is a quick sanity check to verify that after getting the final results tables, everything makes sense.
 
 ```{r verification}
 
