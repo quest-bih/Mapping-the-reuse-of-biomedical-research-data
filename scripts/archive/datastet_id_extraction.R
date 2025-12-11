@@ -1,3 +1,5 @@
+# This scripts tests extraction of DataStet identifiers. It uses "%>%" as a precaution.
+
 test <- all_results_extracted_ids |> 
   select(doi, year, context) |> 
   mutate(context = tolower(context)) |> 
