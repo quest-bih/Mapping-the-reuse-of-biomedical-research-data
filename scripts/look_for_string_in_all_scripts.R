@@ -19,7 +19,7 @@ files <- list.files(
 results <- files |> 
   map_dfr(function(file) {
     lines <- read_lines(file)
-    matches <- which(str_detect(lines, fixed("%>%"))) # <- change the string you want to look for here
+    matches <- which(str_detect(lines, fixed("dcc_paper_2016_and_earlier"))) # <- change the string you want to look for here
     
     if (length(matches) == 0) return(NULL)
     
