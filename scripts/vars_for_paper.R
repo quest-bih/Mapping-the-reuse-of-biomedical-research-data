@@ -145,8 +145,8 @@ res <- tibble(
     "n_matched_ids_count_dist",                # N+AD ids dist detected      
     "all_matched_ids_count_dist",              # All  ids dist detected
     
-    "ds_non_matched_ids_count_dist",           # DS   ids dist not
-    "n_non_matched_ids_count_dist",            # N+AD ids dist not
+    "ds_non_matched_ids_count_dist",           # DS   ids dist not natched
+    "n_non_matched_ids_count_dist",            # N+AD ids dist not matched
 
     "max_mentions_of_single_id",               # All  max-ref of 1 id
     "all_ids_with_1_mention_count_dist",       # All  ids with 1 mention
@@ -155,6 +155,8 @@ res <- tibble(
     "n_ids_for_match_count",                   # N+AD ids for matching
     "n_2nd_for_match_count",                   # N    2nd ids for matching
 
+    "n_ids_gen_rep_for_match_count",            # N   only general purpose repos ids for matching
+    
     "n_dois_for_match",                        # N    dois for matching
     "ad_dois_for_match",                       # AD   dois for matching
     
@@ -164,9 +166,9 @@ res <- tibble(
      
     "all_mentions_geo",                        # All  refs dist detected in GEO
     "all_mentions_mendeley",                   # All  refs dist detected in mendeley
-    "all_mentions_emdb",                       # All  refs dist detected in general purpose / disciplinary
+    "all_mentions_emdb",                       # All  refs dist detected in emdb
     
-    "all_mentions_gen_and_discp",               # All  refs dist detected in emdb
+    "all_mentions_gen_and_discp",              # All  refs dist detected in general purpose / disciplinary
 
     "human_data",                              # All  ids dist detected human-data
     
@@ -185,14 +187,17 @@ res <- tibble(
     "dcc_journals",                            # Number of dcc_journals (in the corpus)
     "dcc_papers",                              # Number of dcc_papers (in the corpus)
     "dcc_doi_is_dataset",                      # Number of dcc_doi = dcc_dataset (in the corpus)
-    "datasets_20_23"                           # Number of datasets published between 2020-2023
+    
+    "non_matched_200_sampled_das_f",            # N    ids dist not matched, with metadata, das = FALSE
+    
+    "datasets_20_23"                          # Number of datasets published between 2020-2023
     ),
   count = c(
     
     # placeholder
     999,
     
-    # total_published_charite_dois (2020-2023)
+    # total_published_charite_dois (2020-2023): Inserted manually by the number of PDFs we fed into DataStet
     4457+4924+2171+4196,
     
     # ds_matched_ids_count_dist
@@ -213,7 +218,7 @@ res <- tibble(
       select(dataset_for_matching) |> 
       dplyr::filter(!is.na(dataset_for_matching)) |> 
       distinct() |> 
-      nrow()) + (ad_non_matched |> nrow()) - 2, # minus 2 because 2 of the matched are secondary ids, so they need to be removed from the non-matched couunt here
+      nrow()) + (ad_non_matched |> nrow()) - 2, # minus 2 because 2 of the matched are secondary ids, so they need to be removed from the non-matched count here
 
     # max_mentions_of_single_id
     detected_dedup_no_da |>
@@ -254,6 +259,27 @@ res <- tibble(
     
     # n_2nd_for_match_count
     num_for_match |> select(data_id_secondary) |> dplyr::filter(!is.na(data_id_secondary)) |> distinct() |> nrow(),
+    
+    # n_ids_gen_rep_for_match_count
+    (numbat_da_dois_and_ids_9_clean_pairs |>
+      dplyr::filter(
+        str_detect(
+          dataset_for_matching,
+          regex("osf|zenodo|openneuro|figshare|harvard|10\\.7910/dvn|10\\.17632|10\\.17863/cam|emd", ignore_case = TRUE)
+        )
+      ) |>
+      select(dataset_for_matching) |> 
+      distinct() |>
+      nrow()) + (ad_for_match |> 
+                   dplyr::filter(
+                     str_detect(
+                       dataset_for_matching,
+                       regex("osf|zenodo|openneuro|figshare|harvard|10\\.7910/dvn|10\\.17632|10\\.17863/cam|emd", ignore_case = TRUE)
+                       )
+                     ) |>
+                   select(dataset_for_matching) |> 
+                   distinct() |>
+                   nrow()),
     
     # n_dois_for_match
     num_for_match |> select(doi_no_ver_info) |> distinct() |> nrow(),
@@ -328,6 +354,14 @@ res <- tibble(
     
     # dcc_doi_is_dataset (Number of dcc_doi = dcc_dataset (in the corpus))
     doi_is_id_count,
+    
+    # non_matched_200_sampled_das_f
+    metadata_no_da |> 
+      dplyr::filter(in_dcc == "FALSE"
+                    & das_for_analysis %in% c("FALSE")) |>
+      select(dataset_for_matching) |> 
+      distinct() |> 
+      nrow(),
 
     # datasets_20_23 Number of datasets published between 2020-2023)
     999

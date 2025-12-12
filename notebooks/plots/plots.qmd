@@ -252,7 +252,7 @@ year_dcc_dt_all_for_plot_collapsed |>
 #| fig.height: 8
 #| fig.width: 12
 
-# Create a function for verifying the links df structure, extracting its entities and finally plotting it:
+# Create a function for verifying the ss df structure, extracting its entities and finally plotting it:
 
 get_nodes_from_links <- function(links) {
   stopifnot(all(c("source", "target", "value") %in% names(links)))
@@ -262,6 +262,7 @@ get_nodes_from_links <- function(links) {
 }
 
 plot_Sankey <- function(links, ...) {
+
   nodes <- get_nodes_from_links(links)
 
   # Assign group labels to nodes
@@ -334,8 +335,9 @@ get_nodes_from_links <- function(links) {
 }
 
 plot_Sankey <- function(links, ...) {
+  
   nodes <- get_nodes_from_links(links)
-
+  
   # Assign group labels to nodes
   # Map directly to colors
   highlight_colors <- list(
@@ -432,7 +434,7 @@ dcc_years_dist_for_plot |>
 
 ```{r}
 #| label: fig-dcc-rep
-#| fig-cap: Distribution of the 20 Most Prevalent DCC Repositories (N = 4,742,484)
+#| fig-cap: Distribution of the 20 Most Prevalent DCC Repositories (N = 4,742,484). The raw DCC dataset includes multiple entries as repositories which are in fact publishers and preprint platforms.
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10

@@ -15,6 +15,7 @@ execute:
 
 format:
   html:
+    css: styles.css
     fig-path: _output/notebooks/plots
     comments:
       hypothesis: true
