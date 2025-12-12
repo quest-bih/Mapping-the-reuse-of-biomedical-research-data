@@ -428,11 +428,11 @@ dcc_years_dist_for_plot |>
 
 ```
 
-# DCC Repositories distribution
+# DCC Repositories distribution (Top 20)
 
 ```{r}
 #| label: fig-dcc-rep
-#| fig-cap: DCC repositories distribution (N = 4,727,310)
+#| fig-cap: Distribution of the 20 Most Prevalent DCC Repositories (N = 4,742,484)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10

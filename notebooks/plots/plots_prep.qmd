@@ -687,7 +687,7 @@ id_source_for_venn <- detected_with_dup_sources |>
   select(detected_id, source_charite) |> 
   distinct() |> 
   mutate(source_charite = case_when(
-    source_charite %in% c("numbat", "additional_ids") ~ "Numbat",
+    source_charite %in% c("numbat", "additional_ids") ~ "ODDPub/Numbat",
     source_charite == "datastet" ~ "DataStet",
     .default = source_charite)) |> 
   dplyr::filter(detected_id != "10.18112/openneuro.ds001226") # remove this overlapping case from Numbat cases, as it belongs to Data Articles

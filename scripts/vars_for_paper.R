@@ -185,8 +185,6 @@ res <- tibble(
     "dcc_journals",                            # Number of dcc_journals (in the corpus)
     "dcc_papers",                              # Number of dcc_papers (in the corpus)
     "dcc_doi_is_dataset",                      # Number of dcc_doi = dcc_dataset (in the corpus)
-    "human_odd_r",                             # human_odd_r (odds_ratio)
-    "covid_odd_r",                             # covid_odd_r (odds_ratio)
     "datasets_20_23"                           # Number of datasets published between 2020-2023
     ),
   count = c(
@@ -330,13 +328,7 @@ res <- tibble(
     
     # dcc_doi_is_dataset (Number of dcc_doi = dcc_dataset (in the corpus))
     doi_is_id_count,
-    
-    # human_odd_r (human_odd_r (odds_ratio))
-    odds_ratios[["human_dataTRUE"]],
-    
-    # covid_odd_r (covid_odd_r (odds_ratio))
-    odds_ratios[["covid_relatedTRUE"]],
-    
+
     # datasets_20_23 Number of datasets published between 2020-2023)
     999
   )

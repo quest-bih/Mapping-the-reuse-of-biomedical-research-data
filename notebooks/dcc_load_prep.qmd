@@ -50,8 +50,7 @@ The DCC was then explored to find:
 
 3.  Errors in publication dates
 
-
-The Chunk below lets the user choose a folder with the downloaded csv files and combine them into one RData object. 
+The Chunk below lets the user choose a folder with the downloaded csv files and combine them into one RData object.
 
 ```{r Loading and cleaning}
 
@@ -382,9 +381,9 @@ The DCC was then processed and cleaned using the steps below: <br>
 1.  **Renaming** columns for internal analysis purposes and initial cleaning <br>
 
     -   Removing white spaces from DOIs and identifiers
-    
+
     -   Replacing "," with "."
-    
+
     -   Formatting DOI, dataset, journal and repository values to **lower case** <br>
 
 2.  **Initial** standardizing <br>
@@ -706,10 +705,7 @@ save_cr(DCC_corpus_6_ex_chr_rm, file = file.path(here("data", "wrangling_steps",
 
 ### 2.6 Removing entries where the DOI value is the same as the dataset identifier value
 
-Some of these cases could not have been discovered without standardizing the identifiers first.
-For example, a case where:
-**Dataset** = //osf.io/gs2t5
-**DOI** = 10.17605/osf.io/gs2t5
+Some of these cases could not have been discovered without standardizing the identifiers first. For example, a case where: **Dataset** = //osf.io/gs2t5 **DOI** = 10.17605/osf.io/gs2t5
 
 So in the chunk below, entries like the one below were remove since they are invalid.
 
@@ -1158,6 +1154,8 @@ save_cr(dcc_years_dist_for_plot, file = file.path(here("data", "tables_for_plots
 ```{r}
 
 rep_for_plot <- DCC_corpus_orig |> 
+  mutate(repository = case_when(repository == "figshare" ~ "Figshare", .default = repository)) |> 
+  select(repository) |> 
   group_by(repository) |> 
   summarise(n = n()) |> # overall cases count!
   ungroup() |> 
