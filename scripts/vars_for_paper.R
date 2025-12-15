@@ -109,12 +109,14 @@ ad_non_matched <- ad_for_match |>
 # 4.1 Chi square matched: non-matched analysis
 
 load(here("data", "tables_for_plots", "summary_model_chi.RData"))
+load(here("data", "tables_for_plots", "fit_glm.RData"))
 load(here("data", "tables_for_plots", "anova_result.RData"))
 load(here("data", "tables_for_plots", "odds_ratios.RData"))
 
 # 4.2 GLM: age-citation relationship
 
 load(here("data", "tables_for_plots", "summary_model_glm.RData"))
+load(here("data", "tables_for_plots", "model_nb.RData"))
 
 # 5. Data Articles
 
@@ -406,12 +408,27 @@ or_vals <- odds_ratios[!str_detect(names(odds_ratios), "Intercept")]
 or_vals_named <- or_vals |>
   setNames(names(or_vals) |> str_remove("TRUE") |> (\(x) paste0("odds_ratios_", x))())
 
-# 7. Combine into final 1-row tibble
+# 7. Extract χ² test stat and p-value
+chisq_stat <- anova_result$Deviance[2]
+chisq_df <- anova_result$Df[2]
+chisq_p <- anova_result$`Pr(>Chi)`[2]
+
+chisq_stat_named  <- setNames(chisq_stat, "chisq_stat")
+chisq_df_named  <- setNames(chisq_df, "chisq_df")
+chisq_p_named <- setNames(chisq_p, "chisq_p")
+
+fit_glm_named  <- setNames(fit_glm$AIC, "fit_glm")
+
+# 8. Combine into final 1-row tibble
 stat_chi_metadata_res <- tibble(
   !!!as.list(raw_p_named),
   !!!as.list(adj_p_named),
   p_model = p_model,
-  !!!as.list(or_vals_named)
+  !!!as.list(or_vals_named),
+  !!!as.list(chisq_stat_named),
+  !!!as.list(chisq_df_named),
+  !!!as.list(chisq_p_named),
+  !!!as.list(fit_glm_named)
 )
 
 # save as RData
@@ -433,3 +450,42 @@ save_cr(p_age, file = file.path(here("data",
                                      "inputs_for_quick_render",
                                      "p_age.RData")))
 
+# Fixed effect estimate and p-value
+age_estimate <- summary_model_glm$coefficients$cond["age", "Estimate"]
+age_se <- summary_model_glm$coefficients$cond["age", "Std. Error"]
+age_p <- summary_model_glm$coefficients$cond["age", "Pr(>|z|)"]
+
+# IRR and 95% CI (exponentiated)
+ci <- confint(model_nb, parm = "beta_", method = "Wald")
+ci_age <- ci["age", ]  # this is on the log scale
+irr_age <- exp(age_estimate)
+irr_ci_lower <- exp(ci_age[1])
+irr_ci_upper <- exp(ci_age[2])
+
+# Extract the SD of the random intercept (first random effect group)
+vc <- VarCorr(model_nb) # get var-cov structure
+re_sd <- attr(vc$cond[[1]], "stddev")[1]
+
+# Model fit metrics
+aic_val <- AIC(model_nb)
+r2_vals <- performance::r2(model_nb)
+r2_marginal <- r2_vals$R2_marginal
+r2_conditional <- r2_vals$R2_conditional
+
+# Combine into 1-row tibble
+stat_glmm_age_res <- tibble(
+  estimate_age = age_estimate,
+  irr_age = irr_age,
+  irr_ci_lower = irr_ci_lower,
+  irr_ci_upper = irr_ci_upper,
+  p_age = age_p,
+  sd_random_intercept = re_sd,
+  aic = aic_val,
+  r2_marginal = r2_marginal,
+  r2_conditional = r2_conditional
+)
+
+# save as RData
+save_cr(stat_glmm_age_res, file = file.path(here("data",
+                                     "inputs_for_quick_render",
+                                     "stat_glmm_age_res.RData")))

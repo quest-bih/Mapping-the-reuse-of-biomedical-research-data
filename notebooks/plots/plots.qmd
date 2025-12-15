@@ -320,7 +320,7 @@ saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sanke
 
 ```{r}
 #| label: fig-datasets-properties-2
-#| fig-cap: Properties of Mentioned Datasets (N = 175)
+#| fig-cap: Determinants of institutional dataset reuse (N = 175)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 12
@@ -751,15 +751,15 @@ ids_and_years |>
     position = position_jitter(width = 0.01, height = 0)
   ) +
   
-  geom_smooth(
-    aes(group = 1),
-    method = "lm",
-    se = FALSE,
-    color = "black",
-    linetype = "dashed",
-    linewidth = 1
-  ) +
-  
+  # geom_smooth(
+  #   aes(group = 1),
+  #   method = "lm",
+  #   se = FALSE,
+  #   color = "black",
+  #   linetype = "dashed",
+  #   linewidth = 1
+  # ) +
+  # 
   scale_x_continuous(breaks = 0:3) +
   scale_y_log10() +
   labs(
@@ -781,7 +781,7 @@ ids_and_years |>
 
 ```{r}
 #| label: fig-matched-non
-#| fig-cap: Determinants of Citation Likelihood (N = 375)
+#| fig-cap: Determinants of institutional dataset reuse (N = 375)
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10

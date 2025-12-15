@@ -1,8 +1,10 @@
 # 0. Setup ----------------------------------------------------------------
+install.packages("future", dependencies = TRUE) # install
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, lsr, car, broom)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, glmmTMB, lsr, car, broom,
+               performance, insight)
 
 # wrappers for save. write.csv() and write_xlsx with automatic directory creation
 
@@ -147,6 +149,19 @@ vif(model) # none are > 5-10
 
 odds_ratios <- round(exp(coef(model)), 2) # get how likely is a human/covid/licensed/das dataset to be reused
 
+# Fixed Effects: Odds Ratios, 95% CI, and p-values
+results_glm <- broom::tidy(model, conf.int = TRUE, exponentiate = TRUE)
+
+# Model Fit
+fit_glm <- data.frame(
+  AIC = AIC(model)
+)
+
+# save as RData
+save_cr(fit_glm, file = file.path(here("data",
+                                           "tables_for_plots",
+                                           "fit_glm.RData")))
+
 # save as RData
 save_cr(odds_ratios, file = file.path(here("data",
                                                  "tables_for_plots",
@@ -255,6 +270,96 @@ save_cr(ids_and_years, file = file.path(here("data",
                                              "inputs_for_quick_render",
                                              "ids_and_years.RData")))
 
+save_cr(model_nb, file = file.path(here("data",
+                                        "tables_for_plots",
+                                        "model_nb.RData")))
+
 save_cr(summary_model_glm, file = file.path(here("data",
                                                  "tables_for_plots",
                                                  "summary_model_glm.RData")))
+
+# 3. Print Outputs --------------------------------------------------------
+
+# Define output .txt file
+output_file <- here::here("results.txt")
+dir.create(dirname(output_file), showWarnings = FALSE, recursive = TRUE)
+
+# Start capturing output
+sink(output_file)
+
+# Intro text
+cat(
+  "This file was created by the script \"scripts/statistical_analysis.R\".\n",
+  "It contains all relevant statistics for both tests performed during the analysis:\n",
+  "χ² and GLMM.\n\n",
+  sep = ""
+)
+
+# χ²
+
+{
+  cat("Logistic Regression Results:\n\n")
+  print(results_glm)
+  cat("\n\n")
+}
+
+{
+  cat("Model Fit (AIC):\n\n")
+  print(fit_glm)
+  cat("\n\n")
+}
+
+{
+  cat("Overall Model Chi-Square Test (Likelihood Ratio Test):\n\n")
+  print(anova_result)
+  cat("\n\n")
+}
+
+{
+  cat(sprintf("Chi-squared test: χ²(%d) = %.2f, p = %.3g\n\n\n", chisq_df, chisq_stat, chisq_p))
+}
+
+# GLMM
+
+{
+  cat("Fixed Effects Estimates:\n\n")
+  print(summary(model_nb)$coefficients$cond)
+  cat("\n\n")
+}
+
+{
+  cat("Fixed Effects: IRRs with 95% Confidence Intervals:\n\n")
+  ci <- confint(model_nb, parm = "beta_", method = "Wald")
+  irr_ci <- exp(ci)
+  print(irr_ci)
+  cat("\n\n")
+}
+
+{
+  cat("Fixed Effects: p-values:\n\n")
+  print(summary(model_nb)$coefficients$cond[, "Pr(>|z|)", drop = FALSE])
+  cat("\n\n")
+}
+
+{
+  cat("Incidence Rate Ratios (IRRs):\n\n")
+  print(exp(fixef(model_nb)$cond))
+  cat("\n\n")
+}
+
+{
+  cat("Random Effects Variance Components:\n\n")
+  print(VarCorr(model_nb))
+  cat("\n\n")
+}
+
+{
+  cat("Model Fit Metrics:\n\n")
+  cat(sprintf("AIC = %.2f\n", AIC(model_nb)))
+  r2_vals <- performance::r2(model_nb)
+  cat(sprintf("Marginal R² (fixed effects) = %.3f\n", r2_vals$R2_marginal))
+  cat(sprintf("Conditional R² (fixed + random) = %.3f\n\n\n", r2_vals$R2_conditional))
+}
+
+# Stop capture
+sink()
