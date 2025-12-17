@@ -136,7 +136,7 @@ save_cr(summary_model_chi, file = file.path(here("data",
 raw_p <- summary_model_chi$coefficients[, "Pr(>|z|)"]
 raw_p <- raw_p[!str_detect(names(raw_p), "Intercept")]
 
-# Apply correction (e.g., Benjamini-Hochberg / FDR)
+# Apply correction (FDR)
 corrected_p <- p.adjust(raw_p, method = "fdr")
 
 # Rename like before
