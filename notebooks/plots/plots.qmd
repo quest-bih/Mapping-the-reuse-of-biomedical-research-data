@@ -723,7 +723,7 @@ ids_and_years_only_0_3_ages |>
 
 ```{r}
 #| label: fig-age-citation-2
-#| fig-cap: Dataset Citations by Year (N = 175)
+#| fig-cap: Dataset Citations by Year (N = 123)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10

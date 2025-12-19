@@ -86,7 +86,7 @@ load_latest_metadata_update <- function() {
   invisible(get(loaded_vars[1], envir = .GlobalEnv))
 }
 
-# 1. matched vs non matched -----------------------------------------------
+# 1. χ²: matched vs non matched -----------------------------------------------
 
 # load latest master file
 load_latest_metadata_update() 
@@ -230,7 +230,7 @@ save_cr(contingency_tables, file = file.path(here("data",
                                                   "tables_for_plots",
                                                   "contingency_tables.RData")))
 
-# 2.datasets age-citations relationship -----------------------------------
+# 2. GLMM: datasets age-citations relationship: 7 datasets only -----------------------------------
 
 # Prepare table for analysis
 
@@ -246,7 +246,7 @@ ids_and_years <- dcc_detected_ids_all_sources_8_dedup |>
 
 ids_and_years_only_0_3_ages <- ids_and_years |>
   dplyr::group_by(detected_id) |>
-  dplyr::filter(dplyr::n_distinct(age) == 4) |>
+  dplyr::filter(dplyr::n_distinct(age) == 4) |> # get only datsets that have all four ages (0, 1, 2 & 3)
   dplyr::ungroup()
 
 # model
@@ -278,7 +278,37 @@ save_cr(summary_model_glm, file = file.path(here("data",
                                                  "tables_for_plots",
                                                  "summary_model_glm.RData")))
 
-# 3. Print Outputs --------------------------------------------------------
+
+
+# 3. GLMM: datasets age-citations relationship: All datasets --------------------
+
+# This is done only for documentation and for reporting the model's stats in the article.
+# The model is not significant and no futher tests were conducted to find main simple effects.
+
+# I will use "ids_and_years" that was created in the beginning of section (2) above.
+
+# model
+
+# GLMM was chosen in order to handle non-normal data + grouped structure simultaneously.
+
+model_nb_all <- glmmTMB( # mixed = considering that it's the same datasets between the years.
+  number_of_citations_in_age ~ age + (1 | detected_id), # age-citation relationship with datasets as random effects 
+  data = ids_and_years,
+  family = nbinom2 # takes into account the right-skewed-tail distribution of the data (v > m)
+)
+
+summary_model_glm_all <- summary(model_nb_all)
+
+save_cr(model_nb_all, file = file.path(here("data",
+                                        "tables_for_plots",
+                                        "model_nb_all.RData")))
+
+save_cr(summary_model_glm_all, file = file.path(here("data",
+                                                 "tables_for_plots",
+                                                 "summary_model_glm_all.RData")))
+
+
+# 4. Print Outputs --------------------------------------------------------
 
 # Define output .txt file
 output_file <- here::here("results.txt")
@@ -291,7 +321,7 @@ sink(output_file)
 cat(
   "This file was created by the script \"scripts/statistical_analysis.R\".\n",
   "It contains all relevant statistics for both tests performed during the analysis:\n",
-  "χ² and GLMM.\n\n",
+  "χ² and GLMM. The GLMM was performed on a subset of 7 datasets identifiers. \n\n",
   sep = ""
 )
 

@@ -115,8 +115,14 @@ load(here("data", "tables_for_plots", "odds_ratios.RData"))
 
 # 4.2 GLM: age-citation relationship
 
+# 7 datasets with all 0-3 ages
 load(here("data", "tables_for_plots", "summary_model_glm.RData"))
 load(here("data", "tables_for_plots", "model_nb.RData"))
+
+# all 123 datasets that have any 0-3 ages
+load(here("data", "tables_for_plots", "summary_model_glm_all.RData"))
+load(here("data", "tables_for_plots", "model_nb_all.RData"))
+
 
 # 5. Data Articles
 
@@ -126,12 +132,11 @@ load(here("data", "wrangling_steps", "data_articles", "data_articles_dois_v10.RD
 
 # 6. DCC
 load(here("data", "wrangling_steps", "dcc", "DCC_corpus_11_std_lbl.RData")) # DCC wrangled
-load(here("data", "inputs_for_quick_render", "doi_is_id_count.RData")) # DCC wrangled
+load(here("data", "inputs_for_quick_render", "doi_is_id_count.RData")) # number of cases in DCC where doi = id
 
 # clean up
 rm(dcc_detected_ids_all_sources_7_w_metadata,
    dcc_detected_ids_all_sources_8_dedup,
-   numbat_da_dois_and_ids_9_clean_pairs,
    added_and_ds_for_matching_4_rm_exist,
    datasets_metadata_master_updated_021)
 
@@ -181,7 +186,8 @@ res <- tibble(
     "da_dois",                                 # DA charite's data articles
     "da_ids",                                  # DA charite's datasets
     "da_mentions",                             # DA confirmed citations
-    "da_citing_papers",                        # DA number of reusing papers     
+    "da_citing_papers",                        # DA number of reusing papers
+    "da_est_mentions",                         # DA estimated citations by extrapolation
     
     "dcc_datasets",                            # Number of dcc_datasets (in the corpus)
     "dcc_mentions",                            # Number of dcc_mentions (in the corpus)
@@ -190,9 +196,11 @@ res <- tibble(
     "dcc_papers",                              # Number of dcc_papers (in the corpus)
     "dcc_doi_is_dataset",                      # Number of dcc_doi = dcc_dataset (in the corpus)
     
-    "non_matched_200_sampled_das_f",            # N    ids dist not matched, with metadata, das = FALSE
+    "non_matched_200_sampled_das_f",           # N ids dist not matched, with metadata, das = FALSE
     
-    "datasets_20_23"                          # Number of datasets published between 2020-2023
+    "ds_matched_dois_unique",                  # Number of matched DS unique articles' DOIs (that are also not in Numbat)     
+    
+    "datasets_20_23"                           # Number of datasets published between 2020-2023
     ),
   count = c(
     
@@ -327,17 +335,22 @@ res <- tibble(
     # all_matched_dcc_dois
     detected_dedup_no_da |> select(doi_dcc) |> distinct() |> nrow(),
     
+    # The 5 data articles analysis counts below were verified with BI and EB:
+    
     # da_dois" (DA charite's data articles)
-    counts_ids_and_dois_da |> dplyr::filter(category == "da_doi") |> dplyr::pull(count) |> unlist() |> as.integer(),
+    counts_ids_and_dois_da |> dplyr::filter(category == "da_doi") |> dplyr::pull(count) |> unlist() |> as.integer() -7, # 7 non-valid entries are excluded from the count
     
     # da_ids" (DA charite's datasets)
-    counts_ids_and_dois_da |> dplyr::filter(category == "da_datasets") |> dplyr::pull(count) |> unlist() |> as.integer(),
+    counts_ids_and_dois_da |> dplyr::filter(category == "da_datasets") |> dplyr::pull(count) |> unlist() |> as.integer() + 1, # 35
     
     # da_mentions" (DA confirmed citations)
-    counts_ids_and_dois_da |> dplyr::filter(category == "n_citations") |> dplyr::pull(count) |> unlist() |> as.integer(),
+    counts_ids_and_dois_da |> dplyr::filter(category == "n_citations") |> dplyr::pull(count) |> unlist() |> as.integer() + 59, # 1722 citations overall
     
     # da_citing_papers" (DA number of reusing papers)
-    counts_ids_and_dois_da |> dplyr::filter(category == "reusing_papaers") |> dplyr::pull(count) |> unlist() |> as.integer(),
+    counts_ids_and_dois_da |> dplyr::filter(category == "reusing_papaers") |> dplyr::pull(count) |> unlist() |> as.integer(), # 113 confirmed data citations
+    
+    # da_est_mentions (DA estimated citations by extrapolation)
+    846,
     
     # dcc_datasets Number of dcc_datasets (in the corpus)
     DCC_corpus_11_std_lbl |> select(dataset_for_matching) |> distinct() |> nrow(),
@@ -364,7 +377,19 @@ res <- tibble(
       select(dataset_for_matching) |> 
       distinct() |> 
       nrow(),
-
+    
+    # ds_matched_dois_unique: (Number of matched DS unique articles' DOIs (that are also not in Numbat)
+    detected_dedup_no_da |> 
+      dplyr::filter(source_charite == "datastet") |> 
+      select(doi_lc) |> 
+      distinct() |> 
+      dplyr::filter(!doi_lc %in% (
+        detected_dedup_no_da |>
+          dplyr::filter(source_charite != "datastet") |> # "Additional"'s DOIs are just a subset of "Numbat"'s DOIs
+          pull(doi_lc))) |> 
+      distinct(doi_lc) |>
+      nrow(),
+    
     # datasets_20_23 Number of datasets published between 2020-2023)
     999
   )
@@ -436,44 +461,54 @@ save_cr(stat_chi_metadata_res, file = file.path(here("data",
                                    "inputs_for_quick_render",
                                    "stat_chi_metadata_res.RData")))
 
-# GLM: age-citation relationship model results
+# GLMM: age-citation relationship model results (subset of 7 datasets)
 
-load(here("data", "tables_for_plots", "summary_model_glm.RData"))
+# Model with 7 datasets that have all 0, 1, 2, 3 citation years:
 
-p_age <- as.data.frame(summary_model_glm$coefficients$cond["age", "Pr(>|z|)"]) |> 
-  rename(p_value = `summary_model_glm$coefficients$cond[\"age\", \"Pr(>|z|)\"]`)
+  load(here("data", "tables_for_plots", "summary_model_glm.RData"))
 
+  # Fixed effect estimate and p-value
+  age_estimate <- summary_model_glm$coefficients$cond["age", "Estimate"]
+  age_se <- summary_model_glm$coefficients$cond["age", "Std. Error"]
+  age_p <- summary_model_glm$coefficients$cond["age", "Pr(>|z|)"]
+  
+  # IRR and 95% CI (exponentiated)
+  ci <- confint(model_nb, parm = "beta_", method = "Wald")
+  ci_age <- ci["age", ]  # this is on the log scale
+  irr_age <- exp(age_estimate)
+  irr_ci_lower <- exp(ci_age[1])
+  irr_ci_upper <- exp(ci_age[2])
+  
+  # Extract the SD of the random intercept (first random effect group)
+  vc <- VarCorr(model_nb) # get var-cov structure
+  re_sd <- attr(vc$cond[[1]], "stddev")[1]
+  
+  # Model fit metrics
+  aic_val <- AIC(model_nb)
+  r2_vals <- performance::r2(model_nb)
+  r2_marginal <- r2_vals$R2_marginal
+  r2_conditional <- r2_vals$R2_conditional
 
-
-# save as RData
-save_cr(p_age, file = file.path(here("data",
-                                     "inputs_for_quick_render",
-                                     "p_age.RData")))
-
-# Fixed effect estimate and p-value
-age_estimate <- summary_model_glm$coefficients$cond["age", "Estimate"]
-age_se <- summary_model_glm$coefficients$cond["age", "Std. Error"]
-age_p <- summary_model_glm$coefficients$cond["age", "Pr(>|z|)"]
-
-# IRR and 95% CI (exponentiated)
-ci <- confint(model_nb, parm = "beta_", method = "Wald")
-ci_age <- ci["age", ]  # this is on the log scale
-irr_age <- exp(age_estimate)
-irr_ci_lower <- exp(ci_age[1])
-irr_ci_upper <- exp(ci_age[2])
-
-# Extract the SD of the random intercept (first random effect group)
-vc <- VarCorr(model_nb) # get var-cov structure
-re_sd <- attr(vc$cond[[1]], "stddev")[1]
-
-# Model fit metrics
-aic_val <- AIC(model_nb)
-r2_vals <- performance::r2(model_nb)
-r2_marginal <- r2_vals$R2_marginal
-r2_conditional <- r2_vals$R2_conditional
-
-# Combine into 1-row tibble
+# Model with all 123 datasets that have any of 0, 1, 2, 3 citation years:
+  
+  load(here("data", "tables_for_plots", "summary_model_glm_all.RData"))
+  
+  # Fixed effect estimate and p-value
+  age_estimate_all <- summary_model_glm_all$coefficients$cond["age", "Estimate"]
+  age_se_all <- summary_model_glm_all$coefficients$cond["age", "Std. Error"]
+  age_p_all <- summary_model_glm_all$coefficients$cond["age", "Pr(>|z|)"]
+  
+  # IRR and 95% CI (exponentiated)
+  ci_all <- confint(model_nb_all, parm = "beta_", method = "Wald")
+  ci_age_all <- ci_all["age", ]  # this is on the log scale
+  irr_age_all <- exp(age_estimate_all)
+  irr_ci_lower_all <- exp(ci_age_all[1])
+  irr_ci_upper_all <- exp(ci_age_all[2])
+  
+# Create a tibble with models' stats
 stat_glmm_age_res <- tibble(
+  
+  # All stats for model with 7 datasets that have all 0, 1, 2, 3 citation years:
   estimate_age = age_estimate,
   irr_age = irr_age,
   irr_ci_lower = irr_ci_lower,
@@ -482,7 +517,14 @@ stat_glmm_age_res <- tibble(
   sd_random_intercept = re_sd,
   aic = aic_val,
   r2_marginal = r2_marginal,
-  r2_conditional = r2_conditional
+  r2_conditional = r2_conditional,
+  
+  # Only relevant model stats for model with all 123 datasets that have any of 0, 1, 2, 3 citation years:
+  
+  irr_age_all = irr_age_all,
+  irr_ci_lower_all = irr_ci_lower_all,
+  irr_ci_upper_all = irr_ci_upper_all,
+  p_age_all = age_p_all
 )
 
 # save as RData
