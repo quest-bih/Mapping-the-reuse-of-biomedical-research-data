@@ -151,7 +151,7 @@ rep_dt |>
             size = 6, color = "black") +
   scale_y_log10(
     breaks = c(1, 3, 10, 30, 100, 300, 1000),
-    labels = c(1, 3, 10, 30, 100, 300, 1000),
+    labels = scales::label_comma(),
     expand = expansion(mult = c(0.02, 0.15))
   ) +
   coord_flip() +
@@ -434,7 +434,7 @@ dcc_years_dist_for_plot |>
 
 ```{r}
 #| label: fig-dcc-rep
-#| fig-cap: Distribution of the 20 Most Prevalent DCC Repositories (N = 4,742,484). The raw DCC dataset includes multiple entries as repositories which are in fact publishers and preprint platforms.
+#| fig-cap: Distribution of the 20 Most Prevalent DCC Repositories (N = 4,742,484)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
@@ -445,8 +445,8 @@ rep_for_plot |>
            position = "dodge",
            fill = "#FFE0B2",
            color = "black") +
-  geom_bar(stat = "identity", fill = "gray30",
-           alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
+  # geom_bar(stat = "identity", fill = "gray30",
+  #          alpha = 0.2, position = position_nudge(x = -0.05, y = -0.1)) +  # Shadow
 geom_text(aes(y = n + 2, label = perc),
             vjust = 0.5,
             hjust = -0.05,
@@ -457,14 +457,15 @@ geom_text(aes(y = n + 2, label = perc),
     labels = c("0", "0.5 Million", "1 Million", "1.5 Million", "2 Million"),
     expand = expansion(mult = c(0.005, 0.005))) +
   coord_flip() +
-  
   labs(x = "Repository", y = "Number of Cases") +
   theme_classic() +
   theme(
+    axis.title.y = element_text(size = 18, color = "black", margin = margin(r = 20)),
     axis.title.x = element_text(size = 18, color = "black"),
-    axis.title.y = element_text(size = 18, color = "black"),
     axis.text.x = element_text(size = 14, color = "black"),
-    axis.text.y = element_text(size = 14, color = "black"))  # Adjust size as needed
+    axis.text.y = element_text(size = 14, color = "black"))
+
+
 
 ```
 
