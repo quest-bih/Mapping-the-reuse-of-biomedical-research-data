@@ -76,15 +76,7 @@ load_latest_metadata_update <- function() {
 
 <br>
 
-The Charité papers' DOIs and datasets' identifiers list ("Charité list") input was derived from output tables of a separate extraction process of datasets identifiers that was originally performed in order to label datasets as "Open Data", "Restricted-Access" or "Not Open Data". This process was done using an inhoouse software ("Numbat"), and resulted in two separate outputs: One for papers published between 2020-2022 and one for paper published during 2023. After wrangling each output, both were merged into one table (see "Cleaning Steps" section). For the 2020-2022 papers, a verification step was made to make sure that only Charité papers are included (see "#Data Cleaning Steps" section). This was done by:
-(1) Filtering the papers list to contain only DOIs that are also present in Charité's open data dashboard
-(2) Excluding any DOIs that have no Charité affiliation
-<br>
-In the steps below:
-(1) The "Numbat" input is loaded
-(2) A list of Charité DOIs is loaded to later verify which to include
-(3) A list of DOIs is loaded to exclude later (for not having a Charité affiliation)
-(4) The "Data Articles" identifiers input is loaded and added to the "Numbat" input
+The Charité papers' DOIs and datasets' identifiers list ("Charité list") input was derived from output tables of a separate extraction process of datasets identifiers that was originally performed in order to label datasets as "Open Data", "Restricted-Access" or "Not Open Data". This process was done using an inhoouse software ("Numbat"), and resulted in two separate outputs: One for papers published between 2020-2022 and one for paper published during 2023. After wrangling each output, both were merged into one table (see "Cleaning Steps" section). For the 2020-2022 papers, a verification step was made to make sure that only Charité papers are included (see "#Data Cleaning Steps" section). This was done by: (1) Filtering the papers list to contain only DOIs that are also present in Charité's open data dashboard (2) Excluding any DOIs that have no Charité affiliation <br> In the steps below: (1) The "Numbat" input is loaded (2) A list of Charité DOIs is loaded to later verify which to include (3) A list of DOIs is loaded to exclude later (for not having a Charité affiliation) (4) The "Data Articles" identifiers input is loaded and added to the "Numbat" input
 
 <br>
 
@@ -183,23 +175,23 @@ rm(dashboard_dois) # clean up
 
 Following an initial inspection, the Charité input (taken from the "Numbat" output) was wrangled and cleaned further: <br>
 
-1. Checked and solved **encoding** issues; Standardized **NA** notation and remove NAs; Standardized **upper/lower** cases
+1.  Checked and solved **encoding** issues; Standardized **NA** notation and remove NAs; Standardized **upper/lower** cases
 
-2. Resolved cases with more than one **metadata entry**
+2.  Resolved cases with more than one **metadata entry**
 
-3. Filtered the input to get only **Open Data and Restricted-Access** cases
+3.  Filtered the input to get only **Open Data and Restricted-Access** cases
 
-4. Labeled each DOI if it's in the **Charité dashboard** or not
+4.  Labeled each DOI if it's in the **Charité dashboard** or not
 
-5. Excluded any DOI that has **no affiliation** to Charité, according to the second source
+5.  Excluded any DOI that has **no affiliation** to Charité, according to the second source
 
-6. Verified that for the same **doi+data_id** combination, data access is not different
+6.  Verified that for the same **doi+data_id** combination, data access is not different
 
-7. **Deduplicated** the input
+7.  **Deduplicated** the input
 
-8. Added papers and identifiers from the **data articles analysis**
+8.  Added papers and identifiers from the **data articles analysis**
 
-9. Removed **"clinvar"** datasets and a case where the DOI turned out to not have an open data dataset
+9.  Removed **"clinvar"** datasets and a case where the DOI turned out to not have an open data dataset
 
 10. Exclude DOIs that are **not in the dashboard** (based on the labeling that was done in step **4**)
 
@@ -481,7 +473,7 @@ Looking for papers citing Charité identifiers in the DCC was done by matching t
 
 (1) Automatically cleaning the typed-in accession numbers / data set identifiers / URLs, using a function written by **Vladislav Nachev**
 
-(2)  Manually validating the automatic extraction and correcting and standardizing identifiers where needed. This was done in a separate script under `scripts/manual_validation.R`.
+(2) Manually validating the automatic extraction and correcting and standardizing identifiers where needed. This was done in a separate script under `scripts/manual_validation.R`.
 
 <br>
 

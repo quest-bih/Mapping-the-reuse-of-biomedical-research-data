@@ -7,7 +7,7 @@ Sys.setenv(LANG = "EN")  # Set environment language to English
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi, fs)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, readxl, lubridate, stringi, fs, lme4)
 
 save_cr <- function(..., file) {
   dir_path <- dirname(file)
@@ -79,6 +79,24 @@ detected_dup <- dcc_detected_ids_all_sources_7_w_metadata
 
 detected_dedup_no_da <- dcc_detected_ids_all_sources_8_dedup |> dplyr::filter(source_charite != "data_articles")
 
+### 2.1 Matched Numbat before and after exclusion of author overlap cases
+
+# before
+load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_3_au_info.RData"))
+
+num_au_info <- numbat_da_dcc_joined_3_au_info |> 
+  dplyr::filter(source_charite == "numbat") |> 
+  dplyr::filter(dataset_for_matching != "10.18112/openneuro.ds001226") |> # remove this overlapping case from Numbat cases, as it belongs to Data Articles
+  dplyr::filter(!stringr::str_detect(data_identifier, "1\\.0\\.1")) # 7 identifiers of the same dataset
+
+# after
+load(here("data", "wrangling_steps", "dcc_charite", "numbat_da_dcc_joined_4_rm_au_ov.RData"))
+
+num_rm_au_ov <- numbat_da_dcc_joined_4_rm_au_ov |> 
+  dplyr::filter(source_charite == "numbat") |> 
+  dplyr::filter(dataset_for_matching != "10.18112/openneuro.ds001226") |> # remove this overlapping case from Numbat cases, as it belongs to Data Articles
+  dplyr::filter(!stringr::str_detect(data_identifier, "1\\.0\\.1")) # 7 identifiers of the same dataset
+
 # 3. For matching
 
 ## 3.1 Numbat
@@ -89,7 +107,6 @@ num_for_match <- numbat_da_dois_and_ids_9_clean_pairs |>
   dplyr::filter(source == "numbat") |> 
   dplyr::filter(dataset_for_matching != "10.18112/openneuro.ds001226") |> # remove this overlapping case from Numbat cases, as it belongs to Data Articles
   dplyr::filter(!stringr::str_detect(data_identifier, "1\\.0\\.1")) # 7 identifiers of the same dataset
-  
 
 ## 3.2 Additional IDs
 
@@ -198,9 +215,16 @@ res <- tibble(
     
     "non_matched_200_sampled_das_f",           # N ids dist not matched, with metadata, das = FALSE
     
-    "ds_matched_dois_unique",                  # Number of matched DS unique articles' DOIs (that are also not in Numbat)     
+    "ds_matched_dois_unique",                  # Number of matched DS unique articles' DOIs (that are also not in Numbat) 
     
-    "datasets_20_23"                           # Number of datasets published between 2020-2023
+    "au_ov_ids",                               # N ids omitted when removing cases with authors overlap
+    
+    "au_ov_doi_charite",                       # N charité dois omitted when removing cases with authors overlap
+    
+    "au_ov_doi_dcc",                           # N mentioning dois omitted when removing cases with authors overlap
+    
+    "au_ov_mentions"                           # N mentions omitted when removing cases with authors overlap)
+    
     ),
   count = c(
     
@@ -390,10 +414,43 @@ res <- tibble(
       distinct(doi_lc) |>
       nrow(),
     
-    # datasets_20_23 Number of datasets published between 2020-2023)
-    999
+    # au_ov_ids (Number of ids omitted when removing cases with authors overlap)
+    num_au_info |>
+      select(detected_id) |>
+      distinct() |>
+      anti_join(num_rm_au_ov |>
+                  select(detected_id) |>
+                  distinct()) |>
+      nrow(),
+    
+    # au_ov_doi_charite (Number of doi_charite omitted when removing cases with authors overlap)
+    num_au_info |>
+      select(doi_lc) |>
+      distinct() |>
+      anti_join(num_rm_au_ov |>
+                  select(doi_lc) |>
+                  distinct()) |>
+      nrow(),
+    
+    # au_ov_doi_dcc (Number of doi_dcc omitted when removing cases with authors overlap)
+    num_au_info |>
+      select(doi_dcc) |>
+      distinct() |>
+      anti_join(num_rm_au_ov |>
+                  select(doi_dcc) |>
+                  distinct()) |>
+      nrow(),
+    
+    # au_ov_mentions (Number of mentions omitted when removing cases with authors overlap)
+    num_au_info |>
+      select(doi_dcc, detected_id) |>
+      distinct() |>
+      anti_join(num_rm_au_ov |>
+                  select(doi_dcc, detected_id) |>
+                  distinct()) |>
+      nrow()
+    )
   )
-)
 
 res <- res |> pivot_wider(names_from = value, values_from = count) |> mutate(placeholder = "__")
 
