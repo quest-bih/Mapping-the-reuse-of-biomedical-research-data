@@ -12,7 +12,7 @@ figshare: 10.6084/m9.figshare.xxxxx
 
 mendeley: 10.17632/xxxxx
 
-openneuro was constructed as a DOI, as this is whe structure found in the DCC: 10.18112/open‐neuro.dsXXXXX
+openneuro was constructed as a DOI, as this is the structure found in the DCC: 10.18112/open‐neuro.dsXXXXX
 
 [accn] were removed from ending of acccesion numbers
 

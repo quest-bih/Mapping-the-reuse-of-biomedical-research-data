@@ -19,7 +19,7 @@ files <- list.files(
 results <- files |> 
   map_dfr(function(file) {
     lines <- read_lines(file)
-    matches <- which(str_detect(lines, fixed("ids_and_years_only_0_3_ages"))) # <- change the string you want to look for here
+    matches <- which(str_detect(lines, fixed("charite_dois_for_au_and_year_info_25082025.csv"))) # <- change the string you want to look for here
     
     if (length(matches) == 0) return(NULL)
     

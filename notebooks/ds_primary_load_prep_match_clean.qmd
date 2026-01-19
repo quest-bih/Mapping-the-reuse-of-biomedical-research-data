@@ -794,7 +794,7 @@ numbat_da_dcc_joined <- numbat_da_dcc_joined_primary |>
     .default = primary)) # tag secondary id matches
 
 # Save
-save_cr(numbat_da_dcc_joined, file = file.path(here("data", "processed","numbat_da_dcc_joined", "numbat_da_dcc_joined")))
+save_cr(numbat_da_dcc_joined, file = file.path(here("data", "processed","numbat_da_dcc_joined", "numbat_da_dcc_joined.RData")))
 
 rm(DCC_corpus_11_std_lbl) # clean up
 ```

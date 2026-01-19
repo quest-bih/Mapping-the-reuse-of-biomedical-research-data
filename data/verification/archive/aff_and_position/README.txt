@@ -1,0 +1,1 @@
+This folder contains inputs and outpus for the internal procedure of extracting authors affiliation and position information from mentioned datasets using the script: C:\AVIHAY\git\DCC-v3\scripts\archive\Openalex_aff_and_position_extraction.R

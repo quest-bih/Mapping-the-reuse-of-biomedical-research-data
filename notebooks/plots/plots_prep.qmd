@@ -442,102 +442,102 @@ The Sankey itself is created in "plots.qmd".
 
 # Prepare table for sankey:
 
-dcc_charite_for_sankey <- detected_no_sources_overlap |>
-  dplyr::filter(source_charite != "data_articles") |> 
-  select(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) |>
-  distinct()
-
-# Create links
-
-links_ac_lic <- dcc_charite_for_sankey |>
-  mutate(source = case_when(is_detected_id_doi == "FALSE" ~ "Accession Number",
-                            .default = "DOI"),
-         target = case_when(license_for_analysis == "TRUE" ~ "CC License",
-                            license_for_analysis == "FALSE" ~ "No CC License",
-                            .default = "license not checked yet")) |>
-  count(source, target) |>
-  rename(value = n) |>
-  as.data.frame()
-
-links_lic_access <- dcc_charite_for_sankey |>
-  mutate(source = case_when(license_for_analysis == "TRUE" ~ "CC License",
-                            license_for_analysis == "FALSE" ~ "No CC License",
-                            .default = "license not checked yet"),
-         target = case_when(data_access == "yes" ~ "Open Data",
-                            data_access == "restricted" ~ "Restricted-Access",
-                            .default = "access not checked yet")) |>
-  count(source, target) |>
-  rename(value = n) |>
-  as.data.frame()
-
-links_access_rep <- dcc_charite_for_sankey |>
-  mutate(source = case_when(data_access == "yes" ~ "Open Data",
-                            data_access == "restricted" ~ "Restricted-Access",
-                            .default = "access not checked yet"),
-         target = case_when(
-           repository %in% c("ncbi dbgap",
-                             "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
-           repository == "figshare" ~ "Figshare",
-           repository == "the european genome-phenome archive(ega)" ~ "EGA",
-           repository == "gene expression omnibus (geo)" ~ "GEO",
-           repository == "pride proteomics identification database" ~ "PRIDE",
-           repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-           repository == "european nucleotide archive" ~ "ENA",
-           repository == "the protein data bank" ~ "PDB",
-           repository == "mendeley" ~ "Mendeley",
-           repository == "bioproject" ~ "Bioproject",
-           repository == "arrayexpress" ~ "Arrayexpress",
-           repository == "openneuro" ~ "Openneuro",
-           repository == "uniprot" ~ "Uniprot",
-           repository == "zenodo" ~ "Zenodo",
-           repository == "harvard dataverse" ~ "Harvard Dataverse",
-           repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "the international genome sample resource" ~ "IGSR",
-           repository == "physionet" ~ "Physionet",
-           repository == "apollo - university of cambridge repository" ~ "Apollo",
-           .default = repository)) |>
-  count(source, target) |>
-  rename(value = n) |>
-  as.data.frame()
-
-links_rep_covid <- dcc_charite_for_sankey |>
-  mutate(source = case_when(
-    repository %in% c("ncbi dbgap",
-                      "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
-    repository == "figshare" ~ "Figshare",
-    repository == "the european genome-phenome archive(ega)" ~ "EGA",
-    repository == "gene expression omnibus (geo)" ~ "GEO",
-    repository == "pride proteomics identification database" ~ "PRIDE",
-    repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
-    repository == "european nucleotide archive" ~ "ENA",
-    repository == "the protein data bank" ~ "PDB",
-    repository == "mendeley" ~ "Mendeley",
-    repository == "bioproject" ~ "Bioproject",
-    repository == "arrayexpress" ~ "Arrayexpress",
-    repository == "openneuro" ~ "Openneuro",
-    repository == "uniprot" ~ "Uniprot",
-    repository == "zenodo" ~ "Zenodo",
-    repository == "harvard dataverse" ~ "Harvard Dataverse",
-    repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
-    repository == "the international genome sample resource" ~ "IGSR",
-    repository == "the international genome sample resource" ~ "IGSR",
-    repository == "physionet" ~ "Physionet",
-    repository == "apollo - university of cambridge repository" ~ "Apollo",
-    .default = repository),
-    target = case_when(covid_related == "TRUE" ~ "Covid Related",
-                       covid_related == "FALSE" ~ "Not Covid Related",
-                       .default = "covid not checked yet")) |>
-  count(source, target) |>
-  rename(value = n) |>
-  as.data.frame()
-
-links_all <- bind_rows(links_ac_lic, links_lic_access, links_access_rep, links_rep_covid)
-
-# save as RData
-save_cr(links_all, file = file.path(here("data",
-                                         "tables_for_plots",
-                                         "links_all.RData")))
+# dcc_charite_for_sankey <- detected_no_sources_overlap |>
+#   dplyr::filter(source_charite != "data_articles") |> 
+#   select(detected_id, is_detected_id_doi, license_for_analysis, data_access, covid_related, repository) |>
+#   distinct()
+# 
+# # Create links
+# 
+# links_ac_lic <- dcc_charite_for_sankey |>
+#   mutate(source = case_when(is_detected_id_doi == "FALSE" ~ "Accession Number",
+#                             .default = "DOI"),
+#          target = case_when(license_for_analysis == "TRUE" ~ "CC License",
+#                             license_for_analysis == "FALSE" ~ "No CC License",
+#                             .default = "license not checked yet")) |>
+#   count(source, target) |>
+#   rename(value = n) |>
+#   as.data.frame()
+# 
+# links_lic_access <- dcc_charite_for_sankey |>
+#   mutate(source = case_when(license_for_analysis == "TRUE" ~ "CC License",
+#                             license_for_analysis == "FALSE" ~ "No CC License",
+#                             .default = "license not checked yet"),
+#          target = case_when(data_access == "yes" ~ "Open Data",
+#                             data_access == "restricted" ~ "Restricted-Access",
+#                             .default = "access not checked yet")) |>
+#   count(source, target) |>
+#   rename(value = n) |>
+#   as.data.frame()
+# 
+# links_access_rep <- dcc_charite_for_sankey |>
+#   mutate(source = case_when(data_access == "yes" ~ "Open Data",
+#                             data_access == "restricted" ~ "Restricted-Access",
+#                             .default = "access not checked yet"),
+#          target = case_when(
+#            repository %in% c("ncbi dbgap",
+#                              "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
+#            repository == "figshare" ~ "Figshare",
+#            repository == "the european genome-phenome archive(ega)" ~ "EGA",
+#            repository == "gene expression omnibus (geo)" ~ "GEO",
+#            repository == "pride proteomics identification database" ~ "PRIDE",
+#            repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+#            repository == "european nucleotide archive" ~ "ENA",
+#            repository == "the protein data bank" ~ "PDB",
+#            repository == "mendeley" ~ "Mendeley",
+#            repository == "bioproject" ~ "Bioproject",
+#            repository == "arrayexpress" ~ "Arrayexpress",
+#            repository == "openneuro" ~ "Openneuro",
+#            repository == "uniprot" ~ "Uniprot",
+#            repository == "zenodo" ~ "Zenodo",
+#            repository == "harvard dataverse" ~ "Harvard Dataverse",
+#            repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+#            repository == "the international genome sample resource" ~ "IGSR",
+#            repository == "the international genome sample resource" ~ "IGSR",
+#            repository == "physionet" ~ "Physionet",
+#            repository == "apollo - university of cambridge repository" ~ "Apollo",
+#            .default = repository)) |>
+#   count(source, target) |>
+#   rename(value = n) |>
+#   as.data.frame()
+# 
+# links_rep_covid <- dcc_charite_for_sankey |>
+#   mutate(source = case_when(
+#     repository %in% c("ncbi dbgap",
+#                       "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)") ~ "NCBI dbGaP",
+#     repository == "figshare" ~ "Figshare",
+#     repository == "the european genome-phenome archive(ega)" ~ "EGA",
+#     repository == "gene expression omnibus (geo)" ~ "GEO",
+#     repository == "pride proteomics identification database" ~ "PRIDE",
+#     repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+#     repository == "european nucleotide archive" ~ "ENA",
+#     repository == "the protein data bank" ~ "PDB",
+#     repository == "mendeley" ~ "Mendeley",
+#     repository == "bioproject" ~ "Bioproject",
+#     repository == "arrayexpress" ~ "Arrayexpress",
+#     repository == "openneuro" ~ "Openneuro",
+#     repository == "uniprot" ~ "Uniprot",
+#     repository == "zenodo" ~ "Zenodo",
+#     repository == "harvard dataverse" ~ "Harvard Dataverse",
+#     repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+#     repository == "the international genome sample resource" ~ "IGSR",
+#     repository == "the international genome sample resource" ~ "IGSR",
+#     repository == "physionet" ~ "Physionet",
+#     repository == "apollo - university of cambridge repository" ~ "Apollo",
+#     .default = repository),
+#     target = case_when(covid_related == "TRUE" ~ "Covid Related",
+#                        covid_related == "FALSE" ~ "Not Covid Related",
+#                        .default = "covid not checked yet")) |>
+#   count(source, target) |>
+#   rename(value = n) |>
+#   as.data.frame()
+# 
+# links_all <- bind_rows(links_ac_lic, links_lic_access, links_access_rep, links_rep_covid)
+# 
+# # save as RData
+# save_cr(links_all, file = file.path(here("data",
+#                                          "tables_for_plots",
+#                                          "links_all.RData")))
 
 ```
 
