@@ -4,6 +4,12 @@
 # 2. Validates and Standardizes identifiers of general repositories (zenodo, osf, figshare, dryad)
 # 3. Creates a csv for manual validation of the rest of the accession numbers
 
+# NOTICE!
+# This file eventually creates a csv with the finished manual validation: "numbat_da_dois_and_ids_5_m_val_joined_done.csv".
+# There is another file that is created earlier in the script ("charite_dois_and_ids_6_m_val_done.csv"),
+# but it is not relevant and not being used! Meaning, it's not being loaded in the "ds_primary..." qmd.
+# The script that creates the non-relevant file, as well as the file itself, are kept for documentation puproses only.
+
 # 1. Load charite_dois_and_ids_3_auto_cleaned.RData -----------------------
 
 load(here("data", "wrangling_steps", "charite", "charite_dois_and_ids_3_auto_cleaned.RData"))

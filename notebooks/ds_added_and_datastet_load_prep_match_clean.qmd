@@ -433,15 +433,15 @@ write_csv_cr(ds_and_addde_dois_distinct, file = file.path(here("data",
               row.names = FALSE)
 
 
-dcc_of_ds_and_addde_dois_distinct <- dcc_ds_and_added_joined_1_rm_self |> 
+dcc_of_ds_and_added_dois_distinct <- dcc_ds_and_added_joined_1_rm_self |> 
   select(doi_dcc) |> 
   distinct()
 
-write_csv_cr(dcc_of_ds_and_addde_dois_distinct, file = file.path(here("data",
+write_csv_cr(dcc_of_ds_and_added_dois_distinct, file = file.path(here("data",
                                                      "verification",
                                                      "metadata matched",
                                                      "ds_and_added",
-                                                     "dcc_of_ds_and_addde_dois_distinct.csv")),
+                                                     "dcc_of_ds_and_added_dois_distinct.csv")),
               row.names = FALSE)
 
 # Get authors and years info:
@@ -613,15 +613,15 @@ write_csv_cr(missed_ds_and_added_dois_distinct, file = file.path(here("data",
               row.names = FALSE)
 
 
-missed_dcc_of_ds_and_addde_dois_distinct <- missed_cases |> 
+missed_dcc_of_ds_and_added_dois_distinct <- missed_cases |> 
   select(doi_dcc) |> 
   distinct()
 
-write_csv_cr(missed_dcc_of_ds_and_addde_dois_distinct, file = file.path(here("data",
+write_csv_cr(missed_dcc_of_ds_and_added_dois_distinct, file = file.path(here("data",
                                                      "verification",
                                                      "metadata matched",
                                                      "ds_and_added",
-                                                     "missed_dcc_of_ds_and_addde_dois_distinct.csv")),
+                                                     "missed_dcc_of_ds_and_added_dois_distinct.csv")),
               row.names = FALSE)
 
 # I then ran the OpenAlex dois metadata function to get their authors and years info. Below I'm loading the results of this run.
