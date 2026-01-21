@@ -1,7 +1,7 @@
 # (Please see end of script for pseudo-code)
 
 # Load datastet output for identifier extraction and cleaning
-load(here("data", "raw", "datastet", "archive", "all_results_unique.RData"))
+load(here("data", "raw", "datastet", "prep", "all_results_unique.RData"))
 
 # Define function to extract dataset identifiers from text
 extract_ids <- function(text) {
@@ -91,7 +91,7 @@ datastet_results <- all_results_unique |>
 
 #save
 save_cr(datastet_results, file = file.path(
-  here("data", "raw", "datastet", "archive", "datastet_results.RData")))
+  here("data", "raw", "datastet", "prep", "datastet_results.RData")))
 
 # Apply extraction function to extract identifiers
 # datastet_results_1_ext_ids <- datastet_results |>
@@ -109,7 +109,7 @@ datastet_results_1_ext_ids <- datastet_results |>
 
 #save
 save_cr(datastet_results_1_ext_ids, file = file.path(
-  here("data", "raw", "datastet", "archive", "datastet_results_1_ext_ids.RData")))
+  here("data", "raw", "datastet", "prep", "datastet_results_1_ext_ids.RData")))
 
 # Reshape extracted_id from semicolon-separated to long format
 datastet_results_2_reshaped <- datastet_results_1_ext_ids |> 
