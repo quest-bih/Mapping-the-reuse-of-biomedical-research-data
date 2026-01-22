@@ -1,0 +1,1 @@
+This folder contains outputs of qmd and R files that are then served as an input for a plot, a number in the article, a table or a presentation.

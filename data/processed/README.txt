@@ -1,0 +1,1 @@
+This folder contains outputs of a key wrangling stepfor each raw data. All other wrangling steps of the data are in data/wrangling_steps.

@@ -434,8 +434,7 @@ dcc_years_dist_for_plot |>
 # DCC Repositories distribution (Top 20)
 
 ```{r}
-#| label: fig-dcc-rep
-#| fig-cap: Distribution of the 20 Most Prevalent DCC Repositories (N = 4,742,484)
+#| label: dcc-rep
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
@@ -621,8 +620,7 @@ not_mentioned_years |>
 # Distribution of Datasets Across Repositories
 
 ```{r}
-#| label: fig-repo-dist-ds
-#| fig-cap: Distribution of Datasets Across Repositories (N = 175)
+#| label: repo-dist-ds
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
@@ -723,8 +721,7 @@ ids_and_years_only_0_3_ages |>
 # Relationship between age and number of citations: all datasets that have ages 0, 1, 2, and or 3 are visible; log scale
 
 ```{r}
-#| label: fig-age-citation-2
-#| fig-cap: Dataset Citations by Year (N = 123)
+#| label: age-citation-2
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10

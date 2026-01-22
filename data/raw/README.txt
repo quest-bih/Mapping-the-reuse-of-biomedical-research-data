@@ -1,0 +1,2 @@
+This folder contains raw data that was fed into the analysis pipeline for preprocessing ("wrangling") before analyzing it.
+Note: Although "data articles" are being loaded and preprocessed in the pipeline, the actual analysis was done in excel.

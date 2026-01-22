@@ -1,0 +1,1 @@
+This folder contains helper scripts for different steps of the analysis.

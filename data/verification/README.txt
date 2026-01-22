@@ -1,0 +1,1 @@
+This folder contains various data verification measures and steps that were taken along the way. It includes the datasets' metadata table as well.

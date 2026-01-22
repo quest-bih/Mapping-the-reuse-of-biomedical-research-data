@@ -19,7 +19,7 @@ files <- list.files(
 results <- files |> 
   map_dfr(function(file) {
     lines <- read_lines(file)
-    matches <- which(str_detect(lines, fixed('"archive"'))) # <- change the string you want to look for here
+    matches <- which(str_detect(lines, fixed("distinct_id_list - covid or not.xlsx"))) # <- change the string you want to look for here
     
     if (length(matches) == 0) return(NULL)
     

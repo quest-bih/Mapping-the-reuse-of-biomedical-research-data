@@ -1,0 +1,1 @@
+This folder contains outputs of each wrangling step that was done during the preprocessing phase. Each folder has the wrangling steps of a different source, with the last step being what's fed into the analysis. the folder "all_sources_binded" is the exception of that, since it contains the wrangling steps of the already unified table created from all the different sources.

@@ -1,0 +1,1 @@
+This folder contains outputs of notebooks/plots_prep.qmd that are then loaded in notebooks/plots.qmd where the actual plots are created for the article.
