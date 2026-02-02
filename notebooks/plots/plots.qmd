@@ -225,7 +225,7 @@ year_dcc_dt_all_for_plot_collapsed |>
       "gse44076" = "#E89FB4",
       "gse14764" = "#5DAF9E",
       "6y2g" = "#F4A261",
-      "gse45547" = "#87CEFA",
+      "gse45547" = "#1F77B4",
       "Others" = "grey"
     )
   ) +
