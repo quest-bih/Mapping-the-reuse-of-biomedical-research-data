@@ -368,7 +368,7 @@ res <- tibble(
     counts_ids_and_dois_da |> dplyr::filter(category == "da_datasets") |> dplyr::pull(count) |> unlist() |> as.integer() + 1, # 35
     
     # da_mentions" (DA confirmed citations)
-    counts_ids_and_dois_da |> dplyr::filter(category == "n_citations") |> dplyr::pull(count) |> unlist() |> as.integer() + 59, # 1722 citations overall
+    counts_ids_and_dois_da |> dplyr::filter(category == "n_citations") |> dplyr::pull(count) |> unlist() |> as.integer() + 65, # 1728 citations overall
     
     # da_citing_papers" (DA number of reusing papers)
     counts_ids_and_dois_da |> dplyr::filter(category == "reusing_papaers") |> dplyr::pull(count) |> unlist() |> as.integer(), # 113 confirmed data citations

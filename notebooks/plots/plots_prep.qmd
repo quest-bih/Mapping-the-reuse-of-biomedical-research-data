@@ -687,7 +687,7 @@ id_source_for_venn <- detected_with_dup_sources |>
   select(detected_id, source_charite) |> 
   distinct() |> 
   mutate(source_charite = case_when(
-    source_charite %in% c("numbat", "additional_ids") ~ "ODDPub/Numbat",
+    source_charite %in% c("numbat", "additional_ids") ~ "ODDPub",
     source_charite == "datastet" ~ "DataStet",
     .default = source_charite)) |> 
   dplyr::filter(detected_id != "10.18112/openneuro.ds001226") # remove this overlapping case from Numbat cases, as it belongs to Data Articles
@@ -750,12 +750,13 @@ save_cr(rep_dt_ds, file = file.path(here("data",
 
 rep_dt_da_ds <- charite_da_dois_and_ids |>
   dplyr::filter(
-    !identifier_from_data_article_analysis %in% c("10.5281/zenodo.4059716", "NULL")) |> # exclude 2 invalid identifiers (See original "v10" xslx for details)
+    !identifier_from_data_article_analysis %in% c("NULL")) |> # exclude invalid identifiers
   mutate(repository = case_when(repository == "2020" ~ "Zenodo",
                                 repository == "OpenNEURO" ~ "Openneuro",
                                 repository == "Proteomics Identification Database (PRIDE)" ~ "PRIDE",
+                                identifier_from_data_article_analysis == "http://www.vocaltractlab.de/dvtd.zip" ~ "VocalTractLab",
+                                identifier_from_data_article_analysis == "https://alteredstatesdb.org/" ~ "Altered States Database",
                                 .default = repository)) |>
-  dplyr::filter(repository != "n/a") |> # 2 repositories with "n/a" are excluded as well
   select(identifier_from_data_article_analysis, repository) |>
   group_by(repository) |>
   summarise(n = n_distinct(identifier_from_data_article_analysis))

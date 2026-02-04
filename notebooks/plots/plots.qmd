@@ -65,7 +65,7 @@ load(here("data", "inputs_for_quick_render", "ids_and_years.RData")) # fig-age-c
 
 ```{r}
 #| label: fig-datasets-freq-dist
-#| fig-cap: Distribution Frequency of Datasets References (N = 175)
+#| fig-cap: Distribution Frequency of Datasets Mentions (N=175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset, while the y-axis shows the number of datasets corresponding to each mention frequency.
 #| fig-format: png
 #| fig.height: 6
 #| fig.width: 8
@@ -106,7 +106,7 @@ ds_freq |>
 
 ```{r}
 #| label: fig-repo-dist
-#| fig-cap: Distribution of References Across Repositories (N = 1,497)
+#| fig-cap: Distribution of Mentions Across Repositories (N = 1,497). The bar plot shows the frequency of dataset mentions by repository across all mentioning articles, with bars representing the total number of mentions associated with each data repository. Individual datasets may be counted multiple times within a repository if they were mentioned more than once. All 175 mentioned datasets are included in this figure.
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
@@ -172,7 +172,7 @@ rep_dt |>
 
 ```{r}
 #| label: fig-ref-by-year-top-7
-#| fig-cap: Most Cited Datasets by Year (N = 7)
+#| fig-cap: Distribution of Mentions by Year (N = 1,495). The bar plot displays the frequency of dataset mentions across all mentioning articles by the year of mention, defined as the publication year of the corresponding mentioning article. The seven most frequently mentioned datasets are highlighted in color, while all other datasets are shown in grey. Two mentions from 2024 are not presented in the plot.
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
@@ -207,8 +207,8 @@ year_dcc_dt_all_for_plot_collapsed |>
     size = 4
   ) +
   labs(
-    x = "Year",
-    y = "Count",
+    x = "Publication Year of Mentioning Article",
+    y = "Number of Mentions",
     fill = "Accession Number"
   ) +
   scale_x_discrete(
@@ -473,7 +473,7 @@ geom_text(aes(y = n + 2, label = perc),
 
 ```{r}
 #| label: fig-venn-ids
-#| fig-cap: Sources of Matched Identifiers (N = 175)
+#| fig-cap: Contribution of each data source to identified mentioned datasets (N = 175). The Venn diagram shows the number of mentioned datasets that originated from each source (ODDPub and DataStet), including the overlap between the sources. ODDPub includes datasets that were added using ODDPub-identified datasets as a seed.
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 8
@@ -660,7 +660,7 @@ rep_dt_ds |>
 
 ```{r}
 #| label: fig-age-citation-1
-#| fig-cap: Datasets Citations by Year (N = 7)
+#| fig-cap: Datasets Citations by Year (N = 7) (WIP)
 #| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
@@ -780,7 +780,7 @@ ids_and_years |>
 
 ```{r}
 #| label: fig-matched-non
-#| fig-cap: Determinants of institutional dataset reuse (N = 375)
+#| fig-cap: Determinants of institutional dataset reuse (N = 375) (WIP)
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
@@ -825,7 +825,7 @@ tidy_model_matched_non_matched |>
 
 ```{r}
 #| label: fig-repo-dist-ds-da
-#| fig-cap: Repositories Distribution of Data Articles identifiers (N = 32)
+#| fig-cap: Repositories Distribution of Data Articles identifiers (N = 35) (WIP)
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
