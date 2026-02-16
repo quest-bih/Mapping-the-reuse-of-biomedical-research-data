@@ -19,7 +19,6 @@ editor: visual
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue, broom)
-
 # Load tables for plots (in the comment beside each load() is the label of each plot for easy searching)
 
 load(here("data", "tables_for_plots", "combined_long_counts.RData")) # fig-distinct-numbers
@@ -52,9 +51,9 @@ load(here("data", "tables_for_plots", "rep_dt_da_ds.RData")) # fig-repo-dist-ds-
 
 load(here("data", "tables_for_plots", "tidy_model_matched_non_matched.RData")) # fig-matched-non
 
-load(here("data", "inputs_for_quick_render", "ids_and_years_only_0_3_ages.RData")) # fig-age-citation-1
+load(here("data", "tables_for_plots", "ids_and_years_only_0_3_ages_for_plot.RData")) # fig-age-citation-1
 
-load(here("data", "inputs_for_quick_render", "ids_and_years.RData")) # fig-age-citation-2
+load(here("data", "tables_for_plots", "ids_and_years_for_plot.RData")) # fig-age-citation-2
 
 
 ```
@@ -177,7 +176,10 @@ rep_dt |>
 #| fig.height: 10
 #| fig.width: 10
 
+
+# The most mentioned dataset *ovearll* (i.e. across all years) will be shown at the top of each bar:
 desired_order <- c("6y2f", "gse55235", "6y2e", "gse44076", "gse14764", "6y2g", "gse45547", "Others")
+
 
 year_dcc_dt_all_for_plot_collapsed |>
   dplyr::mutate(
@@ -204,7 +206,7 @@ year_dcc_dt_all_for_plot_collapsed |>
       )),
     aes(y = count, label = label),
     position = position_stack(vjust = 0.5),
-    size = 4
+    size = 4.3
   ) +
   labs(
     x = "Publication Year of Mentioning Article",
@@ -234,7 +236,11 @@ year_dcc_dt_all_for_plot_collapsed |>
     axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
     axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
     axis.text.y = element_text(size = 16, color = "black"),
-    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1)
+    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1),
+    legend.title = element_text(size = 20, margin = margin(b = 15)),
+    legend.text  = element_text(size = 16),
+    legend.key.height = unit(25, "pt"),
+    legend.box.margin = margin(l = 16)  # space between plot and legend area
   )
 
 
@@ -660,12 +666,12 @@ rep_dt_ds |>
 
 ```{r}
 #| label: fig-age-citation-1
-#| fig-cap: Datasets Citations by Year (N = 7) (WIP)
+#| fig-cap: Distribution of Mentions by Age of Dataset. The plot shows the relation between the age of each dataset and the number of times it was mentioned. The plot includes only the 7 most mentioned datasets among the datasets that were mentioned in all "ages", i.e. 0, 1, 2 and 3 years after their publication years. The dataset age (X axis) is indicated by the number of years that have passed since the dataset publication year until the mentioning article was published. Each black point in the plot represents a dataset, with its identifier in blue text to the right of the point, and the number of mentions during a particular age in red text to the left of the point. The colorful lines describe the change in number of mentions throughout the years for each dataset. The dashed line describes the overall trend in number of mentions along the years. 
 #| fig-format: png
-#| fig.height: 8
-#| fig.width: 10
+#| fig.height: 12
+#| fig.width: 12
 
-ids_and_years_only_0_3_ages |>
+ids_and_years_only_0_3_ages_for_plot |>
 
   dplyr::group_by(detected_id) |>
   dplyr::filter(dplyr::n_distinct(age) == 4) |>
@@ -676,23 +682,25 @@ ids_and_years_only_0_3_ages |>
   geom_point(size = 2, color = "black") +
 
   geom_text(
+    data = ids_and_years_only_0_3_ages_for_plot |> dplyr::filter(age == 0),
     aes(label = detected_id),
-    vjust = -1.1,
+    hjust = 0,
+    nudge_x = 0.03,
     size = 5,
-    color = "blue",
-    check_overlap = TRUE
+    color = "blue"
   ) +
 
   geom_text(
     aes(label = number_of_citations_in_age),
-    vjust = 1.5,
-    size = 4,
-    color = "darkred",
-    check_overlap = TRUE
+    hjust = 0,
+    nudge_x = -0.1,
+    size = 5,
+    color = "darkred"
   ) +
 
   geom_smooth(
     aes(group = 1),
+    hjust = -0.1,
     method = "lm",
     se = FALSE,
     color = "black",
@@ -704,7 +712,7 @@ ids_and_years_only_0_3_ages |>
   #scale_y_log10() +
   labs(
     x = "Age of Dataset (Years Since Publication)",
-    y = "Number of Citations"
+    y = "Number of Mentions"
   ) +
   theme_classic() +
   theme(
@@ -723,11 +731,11 @@ ids_and_years_only_0_3_ages |>
 ```{r}
 #| label: age-citation-2
 #| fig-format: png
-#| fig.height: 8
-#| fig.width: 10
+#| fig.height: 12
+#| fig.width: 12
 
 
-ids_and_years |>
+ids_and_years_for_plot |>
   dplyr::mutate(
     label_full = glue("{detected_id}\n{number_of_citations_in_age}")
   ) |>
@@ -738,32 +746,29 @@ ids_and_years |>
   geom_point(
     size = 1,
     color = "black",
-    alpha = 0.5,
-    position = position_jitter(width = 0.01, height = 0)
-  ) +
+    alpha = 0.5) +
   
+geom_text(
+    data = ids_and_years_only_0_3_ages_for_plot |> dplyr::filter(age == 0),
+    aes(label = detected_id),
+    hjust = 0,
+    nudge_x = 0.03,
+    size = 5,
+    color = "blue"
+  ) +
+
   geom_text(
-    aes(label = label_full),
-    size = 4.5,
-    color = "blue",
-    check_overlap = TRUE,
-    position = position_jitter(width = 0.01, height = 0)
+    aes(label = number_of_citations_in_age),
+    hjust = 1.5,
+    size = 5,
+    color = "darkred"
   ) +
-  
-  # geom_smooth(
-  #   aes(group = 1),
-  #   method = "lm",
-  #   se = FALSE,
-  #   color = "black",
-  #   linetype = "dashed",
-  #   linewidth = 1
-  # ) +
-  # 
+
   scale_x_continuous(breaks = 0:3) +
   scale_y_log10() +
   labs(
     x = "Age of Dataset (Years Since Publication)",
-    y = "Number of Citations (Log Scale)"
+    y = "Number of Mentions (Log Scale)"
   ) +
   theme_classic() +
   theme(
@@ -780,8 +785,7 @@ ids_and_years |>
 
 ```{r}
 #| label: fig-matched-non
-#| fig-cap: Determinants of institutional dataset reuse (N = 375) (WIP)
-#| fig-format: png
+#| fig-cap: Determinants of institutional dataset reuse. The figure shows odds ratios for inclusion in the DCC. 175 reused datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values greater than 1 indicate higher odds and values smaller than 1 indicate lower odds. For example, human data datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 85% (1 - 0.15) lower odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC while controlling for the other determinants in the model.
 #| fig.height: 10
 #| fig.width: 10
 
@@ -808,7 +812,7 @@ tidy_model_matched_non_matched |>
   
   labs(
     x = "Predictor",
-    y = "Likelihood of Citation (Odds Ratio)"
+    y = "Likelihood of Reuse (Odds Ratio)"
   ) +
   theme_classic() +
   theme(

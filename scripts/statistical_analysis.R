@@ -111,7 +111,7 @@ data_for_glm <- datasets_metadata_master_updated_021 |>
   mutate(in_dcc = as.factor(in_dcc)) |> 
   dplyr::filter(dataset != "10.18112/openneuro.ds001226") # remove this overlapping case from Numbat cases, as it belongs to Data Articles
 
-data_for_glm |>dplyr::filter(if_any(everything(), is.na)) # check for NAs
+data_for_glm |> dplyr::filter(if_any(everything(), is.na)) # check for NAs
 
 model <- glm(in_dcc ~ human_data + covid_related + license_for_analysis + das_for_analysis + is_detected_id_doi,
              data = data_for_glm,
@@ -277,6 +277,22 @@ save_cr(model_nb, file = file.path(here("data",
 save_cr(summary_model_glm, file = file.path(here("data",
                                                  "tables_for_plots",
                                                  "summary_model_glm.RData")))
+
+# Create and sagve tables for plots:
+
+ids_and_years_only_0_3_ages_for_plot <- ids_and_years_only_0_3_ages |> 
+  mutate(id_citations = glue::glue("{detected_id} ({number_of_citations_in_age})"))
+
+save_cr(ids_and_years_only_0_3_ages_for_plot, file = file.path(here("data",
+                                                                    "tables_for_plots",
+                                                                    "ids_and_years_only_0_3_ages_for_plot.RData")))
+ids_and_years_for_plot <- ids_and_years |> 
+  mutate(id_citations = glue::glue("{detected_id} ({number_of_citations_in_age})"))
+
+save_cr(ids_and_years_for_plot, file = file.path(here("data",
+                                             "tables_for_plots",
+                                             "ids_and_years_for_plot.RData")))
+
 
 
 

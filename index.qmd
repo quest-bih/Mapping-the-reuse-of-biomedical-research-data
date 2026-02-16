@@ -367,8 +367,6 @@ With our analysis we contribute to developing an evidence base for questions aro
 
 {{< embed notebooks/plots/plots.qmd#fig-age-citation-1 >}}
 
-This plot shows datasets that were mentioned every year since their publication year until 3 years later.
-
 {{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds-da >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-matched-non >}}
@@ -404,5 +402,5 @@ Distribution of the 20 Most Prevalent Repositories in the DCC (N = 4,742,484). T
 ::: {#suppfig-age-citation-2}
 {{< embed notebooks/plots/plots.qmd#age-citation-2 >}}
 
-Development of citations over the first 3 years (N = 123). This plot shows datasets that were mentioned at any point between 0 and 3 years after their publication. (WIP)
+Distribution of Mentions by Age of Dataset. The plot shows the relation between the age of each dataset and the number of times it was mentioned. The plot includes only datasets that were mentioned in all "ages", i.e. 0, 1, 2 and 3 years after their publication years. The dataset age (X axis) is indicated by the number of years that have passed since the dataset publication year until the mentioning article was published. Each black point in the plot represents a dataset, with its identifier in blue text to the right of the point, and the number of mentions during a particular age in red text to the left of the point. The colorful lines describe the change in number of mentions throughout the years for each dataset. The vast majority of datasets and mentions are not shown in the figure, as they were mentioned only once. Therefore, datasets identifiers shown under 1 mention are representative examples of the larger set of single-mention datasets.
 :::
