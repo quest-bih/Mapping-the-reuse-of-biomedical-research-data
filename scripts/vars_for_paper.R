@@ -155,7 +155,7 @@ load(here("data", "inputs_for_quick_render", "doi_is_id_count.RData")) # number 
 rm(dcc_detected_ids_all_sources_7_w_metadata,
    dcc_detected_ids_all_sources_8_dedup,
    added_and_ds_for_matching_4_rm_exist,
-   datasets_metadata_master_updated_021)
+   datasets_metadata_master_updated_022)
 
 # 3. Build results tables --------------------------------------------------
 
@@ -192,7 +192,11 @@ res <- tibble(
     "all_mentions_mendeley",                   # All  refs dist detected in mendeley
     "all_mentions_emdb",                       # All  refs dist detected in emdb
     
-    "all_mentions_gen_and_discp",              # All  refs dist detected in general purpose / disciplinary
+    "n_mentions_gen",                          # N    refs dist detected in general purpose only
+    
+    "all_mentions_gen",                        # All  refs dist detected in general purpose only
+    
+    "all_mentions_gen_and_discp_non_omcis",    # All  refs dist detected in general purpose / disciplinary that are non-omics
 
     "human_data",                              # All  ids dist detected human-data
     
@@ -299,7 +303,7 @@ res <- tibble(
       dplyr::filter(
         str_detect(
           dataset_for_matching,
-          regex("osf|zenodo|openneuro|figshare|harvard|10\\.7910/dvn|10\\.17632|10\\.17863/cam|emd", ignore_case = TRUE)
+          regex("osf|zenodo|figshare|10\\.7910/dvn|10\\.17632|10\\.17863/cam|dryad", ignore_case = TRUE)
         )
       ) |>
       select(dataset_for_matching) |> 
@@ -308,7 +312,7 @@ res <- tibble(
                    dplyr::filter(
                      str_detect(
                        dataset_for_matching,
-                       regex("osf|zenodo|openneuro|figshare|harvard|10\\.7910/dvn|10\\.17632|10\\.17863/cam|emd", ignore_case = TRUE)
+                       regex("osf|zenodo|figshare|10\\.7910/dvn|10\\.17632|10\\.17863/cam|dryad", ignore_case = TRUE)
                        )
                      ) |>
                    select(dataset_for_matching) |> 
@@ -339,7 +343,32 @@ res <- tibble(
     # all_mentions_emdb
     detected_dedup_no_da |> dplyr::filter(repository == "the electron microscopy data bank (emdb)") |> distinct(detected_id, doi_dcc) |> nrow(),
     
-    # all_mentions_gen_and_discp
+    # n_mentions_gen
+    detected_dedup_no_da |>
+      dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |> 
+      dplyr::filter(repository %in% c(
+        "osf",
+        "dryad",
+        "zenodo",
+        "figshare",
+        "mendeley",
+        "harvard dataverse",
+        "apollo - university of cambridge repository")) |>
+      distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_mentions_gen
+    detected_dedup_no_da |>
+      dplyr::filter(repository %in% c(
+        "osf",
+        "dryad",
+        "zenodo",
+        "figshare",
+        "mendeley",
+        "harvard dataverse",
+        "apollo - university of cambridge repository")) |>
+      distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_mentions_gen_and_discp_non_omcis
     detected_dedup_no_da |> dplyr::filter(repository %in% c(
       "the electron microscopy data bank (emdb)",
       "openneuro",

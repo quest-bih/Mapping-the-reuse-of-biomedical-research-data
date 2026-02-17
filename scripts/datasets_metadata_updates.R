@@ -1906,3 +1906,46 @@ datasets_metadata_master_updated_021 <- datasets_metadata_master_updated_020 |>
 
 # save
 metadata_update(datasets_metadata_master_updated_021) # call function to save as csv, xlsx, rda
+
+# 22. Correct "is_gen_rep" values -----------------------------
+
+load_latest_metadata_update() # call function to load latest version
+
+# Some is_gen_rep values were not correct, so I'll correct them manually here.
+# I'll then merge them again to _7 and _8 in "joined_bind...qmd".
+# The values will then be verified in "vars_for_paper" script, “table for plots” qmd and the article’s text (index.qmd) as well.
+
+# 1. Get values to correct
+
+# View to decide which values are incorrect
+
+datasets_metadata_master_updated_021 |> 
+  select(detected_id, dataset_for_matching, source_charite, is_gen_rep, covid_related) |>
+  dplyr::filter(!is.na(covid_related)) |>
+  distinct() |>
+  dplyr::filter(is_gen_rep == "TRUE") |> 
+  arrange(dataset_for_matching) |>
+  View() # TRUE are correct
+
+datasets_metadata_master_updated_021 |> 
+  select(detected_id, dataset_for_matching, source_charite, is_gen_rep, covid_related) |>
+  dplyr::filter(!is.na(covid_related)) |>
+  distinct() |>
+  dplyr::filter(is_gen_rep == "FALSE") |> 
+  arrange(dataset_for_matching) |>
+  View() # Some FALSE cases need to be corrected
+
+# The cases are of "harvard" ("10.7910/dvn") and "mendeley" ("10.17632") datasets identifiers. Let's correct them:
+
+datasets_metadata_master_updated_022 <- datasets_metadata_master_updated_021 |>
+  dplyr::mutate(
+    is_gen_rep = dplyr::case_when(
+      str_detect(dataset_for_matching, fixed("10.17632"))
+      | str_detect(dataset_for_matching, fixed("10.7910/dvn"))
+      ~ "TRUE",
+      .default = is_gen_rep
+    )
+  )
+
+# save
+metadata_update(datasets_metadata_master_updated_022) # call function to save as csv, xlsx, rda

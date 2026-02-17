@@ -105,7 +105,6 @@ ds_freq |>
 
 ```{r}
 #| label: fig-repo-dist
-#| fig-cap: Distribution of Mentions Across Repositories (N = 1,497). The bar plot shows the frequency of dataset mentions by repository across all mentioning articles, with bars representing the total number of mentions associated with each data repository. Individual datasets may be counted multiple times within a repository if they were mentioned more than once. All 175 mentioned datasets are included in this figure.
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
@@ -174,7 +173,7 @@ rep_dt |>
 #| fig-cap: Distribution of Mentions by Year (N = 1,495). The bar plot displays the frequency of dataset mentions across all mentioning articles by the year of mention, defined as the publication year of the corresponding mentioning article. The seven most frequently mentioned datasets are highlighted in color, while all other datasets are shown in grey. Two mentions from 2024 are not presented in the plot.
 #| fig-format: png
 #| fig.height: 10
-#| fig.width: 10
+#| fig.width: 12
 
 
 # The most mentioned dataset *ovearll* (i.e. across all years) will be shown at the top of each bar:
@@ -626,7 +625,8 @@ not_mentioned_years |>
 # Distribution of Datasets Across Repositories
 
 ```{r}
-#| label: repo-dist-ds
+#| label: fig-repo-dist-ds
+#| fig-cap: Distribution of Datasets Across Repositories (N = 175). The bar plot shows the number of mentioned datasets associated with each repository across all mentioning articles.
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
@@ -668,8 +668,8 @@ rep_dt_ds |>
 #| label: fig-age-citation-1
 #| fig-cap: Distribution of Mentions by Age of Dataset. The plot shows the relation between the age of each dataset and the number of times it was mentioned. The plot includes only the 7 most mentioned datasets among the datasets that were mentioned in all "ages", i.e. 0, 1, 2 and 3 years after their publication years. The dataset age (X axis) is indicated by the number of years that have passed since the dataset publication year until the mentioning article was published. Each black point in the plot represents a dataset, with its identifier in blue text to the right of the point, and the number of mentions during a particular age in red text to the left of the point. The colorful lines describe the change in number of mentions throughout the years for each dataset. The dashed line describes the overall trend in number of mentions along the years. 
 #| fig-format: png
-#| fig.height: 12
-#| fig.width: 12
+#| fig.height: 10
+#| fig.width: 10
 
 ids_and_years_only_0_3_ages_for_plot |>
 
@@ -677,10 +677,16 @@ ids_and_years_only_0_3_ages_for_plot |>
   dplyr::filter(dplyr::n_distinct(age) == 4) |>
   dplyr::ungroup() |> 
 
-  ggplot(aes(x = age, y = number_of_citations_in_age, group = detected_id)) +
-  geom_line(aes(color = detected_id), linewidth = 1, alpha = 0.5) +
-  geom_point(size = 2, color = "black") +
-
+  ggplot(aes(x = age,
+             y = number_of_citations_in_age,
+             group = detected_id)) +
+  
+  geom_line(aes(color = detected_id),
+            linewidth = 1, alpha = 0.5) +
+  
+  geom_point(size = 2,
+             color = "black") +
+  
   geom_text(
     data = ids_and_years_only_0_3_ages_for_plot |> dplyr::filter(age == 0),
     aes(label = detected_id),
@@ -694,7 +700,7 @@ ids_and_years_only_0_3_ages_for_plot |>
     aes(label = number_of_citations_in_age),
     hjust = 0,
     nudge_x = -0.1,
-    size = 5,
+    size = 4,
     color = "darkred"
   ) +
 
@@ -709,10 +715,10 @@ ids_and_years_only_0_3_ages_for_plot |>
   ) +
 
   scale_x_continuous(breaks = 0:3) +
-  #scale_y_log10() +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 12, sigma = 10)) +
   labs(
     x = "Age of Dataset (Years Since Publication)",
-    y = "Number of Mentions"
+    y = "Number of Mentions (Log Scale)"
   ) +
   theme_classic() +
   theme(
@@ -731,14 +737,25 @@ ids_and_years_only_0_3_ages_for_plot |>
 ```{r}
 #| label: age-citation-2
 #| fig-format: png
-#| fig.height: 12
-#| fig.width: 12
+#| fig.height: 10
+#| fig.width: 10
 
+# Prevent overlapping of text
+
+labels_red <- ids_and_years_for_plot |>
+  dplyr::group_by(age, number_of_citations_in_age) |>
+  dplyr::slice_head(n = 1) |>
+  dplyr::ungroup()
+
+labels_blue <- ids_and_years_for_plot |>
+  dplyr::filter(age == 0) |>
+  dplyr::group_by(age, number_of_citations_in_age) |>
+  dplyr::slice_head(n = 1) |>
+  dplyr::ungroup()
+
+# Plot
 
 ids_and_years_for_plot |>
-  dplyr::mutate(
-    label_full = glue("{detected_id}\n{number_of_citations_in_age}")
-  ) |>
   ggplot(aes(x = age, y = number_of_citations_in_age, group = detected_id)) +
   
   geom_line(aes(color = detected_id), linewidth = 1, alpha = 0.5) +
@@ -749,7 +766,7 @@ ids_and_years_for_plot |>
     alpha = 0.5) +
   
 geom_text(
-    data = ids_and_years_only_0_3_ages_for_plot |> dplyr::filter(age == 0),
+    data = labels_blue |> dplyr::filter(age == 0),
     aes(label = detected_id),
     hjust = 0,
     nudge_x = 0.03,
@@ -758,14 +775,15 @@ geom_text(
   ) +
 
   geom_text(
+    data = labels_red,
     aes(label = number_of_citations_in_age),
     hjust = 1.5,
-    size = 5,
+    size = 4,
     color = "darkred"
   ) +
 
   scale_x_continuous(breaks = 0:3) +
-  scale_y_log10() +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 12, sigma = 10)) +
   labs(
     x = "Age of Dataset (Years Since Publication)",
     y = "Number of Mentions (Log Scale)"

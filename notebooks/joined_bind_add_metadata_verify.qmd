@@ -770,7 +770,7 @@ load_latest_metadata_update()
 
 # prepare for joining
 
-metadata_matched_for_joining <- datasets_metadata_master_updated_021 |>
+metadata_matched_for_joining <- datasets_metadata_master_updated_022 |>
   dplyr::filter(in_dcc == "TRUE") |> 
   select(doi_id_clean_pair_with_source,
          license,
@@ -821,12 +821,31 @@ dcc_detected_ids_all_sources_7_w_metadata |>
     | das_for_analysis == ""
     ) |>  View()
 
-# label appollo as gen_rep and merge "ncbi dbgap" repository values
+# Check general purpose repositories "is_gen_rep" values (since I didn't join the is_gen_rep col from metadata above)
+
+dcc_detected_ids_all_sources_7_w_metadata |> 
+  select(detected_id, repository, is_gen_rep) |> 
+  distinct() |>
+  dplyr::filter(is_gen_rep == "TRUE") |> 
+  arrange(detected_id) |>
+  View() # TRUE are correct
+
+dcc_detected_ids_all_sources_7_w_metadata |> 
+  select(detected_id, repository, is_gen_rep) |> 
+  distinct() |>
+  dplyr::filter(is_gen_rep == "FALSE") |> 
+  arrange(detected_id) |>
+  View() # FALSE have apollo, mendeley and harvard - they need to be corrected
+
+# Label apollo, mendeley and harvard as gen_rep; Merge "ncbi dbgap" repository values
 
 dcc_detected_ids_all_sources_7_w_metadata <- dcc_detected_ids_all_sources_7_w_metadata |>
   mutate(
     is_gen_rep = case_when(
-      stringr::str_detect(detected_id, "cam") ~ "TRUE",
+      stringr::str_detect(repository, "cam")
+      | stringr::str_detect(repository, "mendeley")
+      | stringr::str_detect(repository, "harvard")
+      ~ "TRUE",
       .default = as.character(is_gen_rep)
     ),
     repository = case_when(
@@ -968,7 +987,7 @@ This is a quick sanity check to verify that after getting the final results tabl
 
 # detected from metadata
 
-t1 <- datasets_metadata_master_updated_021 |> dplyr::filter(in_dcc == "TRUE") |> dplyr::filter(source_charite != "data_articles") |> select(detected_id) |> distinct() |> arrange(detected_id)
+t1 <- datasets_metadata_master_updated_022 |> dplyr::filter(in_dcc == "TRUE") |> dplyr::filter(source_charite != "data_articles") |> select(detected_id) |> distinct() |> arrange(detected_id)
 
 # without sources overlap
 
