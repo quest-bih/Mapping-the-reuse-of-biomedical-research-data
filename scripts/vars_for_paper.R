@@ -227,7 +227,9 @@ res <- tibble(
     
     "au_ov_doi_dcc",                           # N mentioning dois omitted when removing cases with authors overlap
     
-    "au_ov_mentions"                           # N mentions omitted when removing cases with authors overlap)
+    "au_ov_mentions",                          # N mentions omitted when removing cases with authors overlap)
+    
+    "n_matched_ids_count_dist_gen_rep"         # N+AD ids dist detected: Only General-purpose repositories
     
     ),
   count = c(
@@ -477,7 +479,23 @@ res <- tibble(
       anti_join(num_rm_au_ov |>
                   select(doi_dcc, detected_id) |>
                   distinct()) |>
+      nrow(),
+    
+    # n_matched_ids_count_dist_gen_rep
+    detected_dedup |>
+      dplyr::filter(source_charite %in% c("numbat", "additional_ids")) |>
+      dplyr::filter(repository %in% c(
+        "osf",
+        "dryad",
+        "zenodo",
+        "figshare",
+        "mendeley",
+        "harvard dataverse",
+        "apollo - university of cambridge repository")) |>
+      select(detected_id) |>
+      distinct() |>
       nrow()
+    
     )
   )
 
