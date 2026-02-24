@@ -64,9 +64,8 @@ load(here("data", "tables_for_plots", "ids_and_years_for_plot.RData")) # fig-age
 
 ```{r}
 #| label: fig-datasets-freq-dist
-#| fig-cap: Distribution Frequency of Datasets Mentions (N=175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset, while the y-axis shows the number of datasets corresponding to each mention frequency.
 #| fig-format: png
-#| fig.height: 6
+#| fig.height: 7
 #| fig.width: 8
 
 ds_freq |> 
@@ -80,7 +79,7 @@ ds_freq |>
     geom = "text",
     aes(label = ..count..),
     vjust = -0.3,               # Position labels above bars
-    size = 6                    # Font size of labels
+    size = 7                    # Font size of labels
   ) +
   scale_x_log10(
     breaks = c(1, 3, 10, 30, 100),  # Custom breaks for the x-axis
@@ -93,10 +92,10 @@ ds_freq |>
   theme_classic() +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(size = 16, color = "black", margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 16, color = "black", margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 14, color = "black")
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 22, color = "black"),
+    axis.text.x = element_text(size = 22, color = "black")
     )
 
 ```
@@ -478,9 +477,8 @@ geom_text(aes(y = n + 2, label = perc),
 
 ```{r}
 #| label: fig-venn-ids
-#| fig-cap: Contribution of each data source to identified mentioned datasets (N = 175). The Venn diagram shows the number of mentioned datasets that originated from each source (ODDPub and DataStet), including the overlap between the sources. ODDPub includes datasets that were added using ODDPub-identified datasets as a seed.
 #| fig-format: png
-#| fig.height: 8
+#| fig.height: 7
 #| fig.width: 8
 
 setlist <- id_source_for_venn |>
@@ -558,7 +556,7 @@ venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#A6CEE3", "
   titles <- tibble(
     group = names(setlist),
     x = c(0.6, 2.4),
-    y = c(-0.2, -0.2)  # top/top/bottom
+    y = c(-0.15, -0.15)  # top/top/bottom
   )
   
   ggplot() +
@@ -582,8 +580,8 @@ venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#A6CEE3", "
     scale_fill_manual(values = colors) +
     coord_fixed() +
     theme_void() +
-    theme(legend.position = "none") # comment out in order to include legends
-}
+    theme(legend.position = "none")
+  }
 
 venn_ellipse_plot(setlist, a=1.3, b=1) # global circle control 
 
@@ -847,9 +845,8 @@ tidy_model_matched_non_matched |>
 
 ```{r}
 #| label: fig-repo-dist-ds-da
-#| fig-cap: Repositories Distribution of Data Articles identifiers (N = 35) (WIP)
 #| fig-format: png
-#| fig.height: 10
+#| fig.height: 9
 #| fig.width: 10
 
 # log scale
