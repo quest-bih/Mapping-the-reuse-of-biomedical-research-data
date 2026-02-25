@@ -18,7 +18,8 @@ editor: visual
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
-pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue, broom)
+pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue, broom,
+               scales, tibble, grid, purrr)
 # Load tables for plots (in the comment beside each load() is the label of each plot for easy searching)
 
 load(here("data", "tables_for_plots", "combined_long_counts.RData")) # fig-distinct-numbers
@@ -846,8 +847,8 @@ tidy_model_matched_non_matched |>
 ```{r}
 #| label: fig-repo-dist-ds-da
 #| fig-format: png
-#| fig.height: 9
-#| fig.width: 10
+#| fig.height: 8
+#| fig.width: 8
 
 # log scale
 
@@ -866,8 +867,8 @@ rep_dt_da_ds |>
     legend.position = "none",
     axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
     axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 20, color = "black"),
-    axis.text.x = element_text(size = 20, color = "black"),
+    axis.text.y = element_text(size = 18, color = "black"),
+    axis.text.x = element_text(size = 18, color = "black"),
     panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
     panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
     panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
@@ -907,5 +908,188 @@ rep_dt_da_ds |>
 #     panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
 #     panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
 #   )
+
+```
+
+# Data Articles Analysis Flowchart
+
+```{r}
+#| label: fig-da-flowchart
+#| fig-format: png
+#| fig.height: 8
+#| fig.width: 8
+
+df <- tibble(
+  charite_da = 21L,
+  charite_datasets = 35L,
+  confirmed = 113L,
+  overall = 1728L,
+  estimated = 846L
+)
+
+# ---- controls (edit these) ----
+x_box <- 0
+y_top <- 4
+y_step <- 2.5
+
+box_width <- 2.2
+box_height <- 1.2
+corner_radius <- 0.20
+
+x_label <- x_box + box_width / 2 + 0.2
+line2_y_offset <- 0.6
+
+num_size <- 9
+label_size <- 8
+line2_size <- 8
+line2_color <- "grey45"
+
+arrow_color <- "grey70"
+arrow_lwd <- 0.6      # thinner arrows
+arrow_len_mm <- 4.0
+
+# Gradient colors
+box_color <- "#00B0F0"
+box_highlight <- "#F3FAFF"
+gradient_alpha <- 1
+
+nodes <- tibble(
+  key   = c(
+    "Charite Data Articles",
+    "Charité Datasets",
+    "Confirmed Indireect Data Citations",
+    "Estimated Citations"),
+  value = c(df$charite_da, df$charite_datasets, df$confirmed, df$estimated),
+  line2 = c(NA_character_, NA_character_, paste0("(", comma(df$overall), " Citations Overall)"), NA_character_)
+) |>
+  mutate(
+    idx = row_number(),
+    y = y_top - (idx - 1) * y_step,
+    xmin = x_box - box_width / 2,
+    xmax = x_box + box_width / 2,
+    ymin = y - box_height / 2,
+    ymax = y + box_height / 2,
+    value_chr = comma(value),
+    line2 = case_when(is.na(line2) ~ NA_character_, .default = line2),
+    label_y = y + case_when(!is.na(line2) ~ line2_y_offset / 2, .default = 0),
+    line2_y = y - line2_y_offset / 2
+  )
+
+edges <- nodes |>
+  mutate(y_next_top = lead(ymax)) |>
+  dplyr::filter(!is.na(y_next_top)) |>
+  transmute(
+    x = x_box, y = ymin,
+    xend = x_box, yend = y_next_top
+  )
+
+rect_grob_solid <- function() {
+  roundrectGrob(
+    r = unit(corner_radius, "snpc"),
+    gp = gpar(col = NA, fill = box_color)
+  )
+}
+
+rect_grob_gradient <- function() {
+  n_w <- 260
+  n_h <- 120
+  
+  # ---- diagonal gradient bottom-left -> top-right ----
+  gx <- seq(0, 1, length.out = n_w)
+  gy <- seq(0, 1, length.out = n_h)
+  g  <- outer(gy, gx, \(yy, xx) (xx + (1 - yy)) / 2)
+  
+  # PowerPoint-ish tweak: smaller exponent => stronger highlight
+  g <- g^0.9
+  
+  c0 <- col2rgb(box_color) / 255
+  c1 <- col2rgb(box_highlight) / 255
+  
+  r <- c0[1, 1] * (1 - g) + c1[1, 1] * g
+  gg <- c0[2, 1] * (1 - g) + c1[2, 1] * g
+  b <- c0[3, 1] * (1 - g) + c1[3, 1] * g
+  
+  # ---- rounded-rect alpha mask (matrix-safe) ----
+  x <- seq(-1, 1, length.out = n_w)
+  y <- seq(-1, 1, length.out = n_h)
+  
+  xx <- outer(rep(1, n_h), x)  # n_h x n_w
+  yy <- outer(y, rep(1, n_w))  # n_h x n_w
+  
+  rr <- corner_radius * 1.6
+  
+  ax <- pmax(abs(xx) - (1 - rr), 0)
+  ay <- pmax(abs(yy) - (1 - rr), 0)
+  inside <- (ax^2 + ay^2) <= rr^2
+  
+  alpha <- inside * gradient_alpha  # logical -> 0/1, stays a matrix
+  
+  rgba <- array(0, dim = c(n_h, n_w, 4))
+  rgba[, , 1] <- r
+  rgba[, , 2] <- gg
+  rgba[, , 3] <- b
+  rgba[, , 4] <- alpha
+  
+  grid::rasterGrob(rgba, interpolate = TRUE)
+}
+
+rect_layers <- nodes |>
+  transmute(idx, xmin, xmax, ymin, ymax) |>
+  mutate(
+    grob_solid = map(idx, ~ rect_grob_solid()),
+    grob_grad  = map(idx, ~ rect_grob_gradient())
+  )
+
+base <- ggplot() +
+  coord_cartesian(
+    xlim = c(min(nodes$xmin) - 1.2, x_label + 6),
+    ylim = c(min(nodes$ymin) - 0.9, max(nodes$ymax) + 0.9),
+    expand = FALSE
+  ) +
+  theme_void()
+
+p <- rect_layers |>
+  (\(x) split(x, x$idx))() |>
+  reduce(
+    .init = base,
+    .f = function(acc, d) {
+      acc +
+        # gradient overlay (shows when device supports it)
+        annotation_custom(
+          grob = d$grob_grad[[1]],
+          xmin = d$xmin, xmax = d$xmax,
+          ymin = d$ymin, ymax = d$ymax
+        )
+    }
+  )
+
+p +
+  geom_segment(
+    data = edges,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    linewidth = arrow_lwd,
+    colour = arrow_color,
+    arrow = arrow(type = "closed", length = unit(arrow_len_mm, "mm"))
+  ) +
+  geom_text(
+    data = nodes,
+    aes(x = x_box, y = y, label = value_chr),
+    colour = "black",
+    size = num_size
+  ) +
+  geom_text(
+    data = nodes,
+    aes(x = x_label, y = label_y, label = key),
+    hjust = 0,
+    colour = "black",
+    size = label_size
+  ) +
+  geom_text(
+    data = nodes |> dplyr::filter(!is.na(line2)),
+    aes(x = x_label, y = line2_y, label = line2),
+    hjust = 0,
+    colour = line2_color,
+    size = line2_size
+  )
 
 ```
