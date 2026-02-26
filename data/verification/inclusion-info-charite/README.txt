@@ -1,0 +1,1 @@
+This folder contains files relevant to the inclusion criteria of Charité identifiers in the analysis.

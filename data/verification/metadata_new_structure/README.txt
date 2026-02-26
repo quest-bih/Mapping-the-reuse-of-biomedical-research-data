@@ -1,0 +1,1 @@
+This is an internal folder containing the outputs of a certain chunk in "C:/AVIHAY/git/DCC-v3/scripts/datasets_metadata_updates.R" that was revising the datasets metadata table structure

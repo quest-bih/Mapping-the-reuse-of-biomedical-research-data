@@ -1,0 +1,1 @@
+These files are the first files that were created in order to add metadata to the datasets and are not relevant for the final output. The process is depicted in "scripts\datasets_metadata_updates.R".

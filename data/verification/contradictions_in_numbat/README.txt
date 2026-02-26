@@ -1,0 +1,1 @@
+This folder contains the output of an internal quality check that was made on the Charité raw input data.

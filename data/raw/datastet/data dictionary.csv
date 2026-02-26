@@ -1,0 +1,8 @@
+﻿column name,description
+doi,Charité paper's DOI
+year,Charité paper's publication year
+context,"extracted text from paper using DataStet, indicating a dataset identifier in the text"
+extracted_id,"extracted dataset identifier from ""context"""
+slug,osf suffix for standardization process (internal)
+data_id_auto_cleaned,"clean ""data_identifier"" using an automated function"
+dataset_for_matching,"most clean and standardized ""data_identifier"" (either ""data_identifier"", ""data_id_auto_cleaned"" or ""data_id_m_val"") - coalesced: this is the value that was looked for in the DCC"

@@ -1,0 +1,1 @@
+This is an internal folder that wrangled the DataStet output of extracted identifiers (combined with additional identifiers extracted from matched ODDPub datasets). These tables were then filled out by the team to conclude which cases are open data / restricted datasets and should be included

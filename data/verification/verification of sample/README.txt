@@ -1,0 +1,1 @@
+This folder contains the output of the sampling process of 200 cases that were not found in the DCC.

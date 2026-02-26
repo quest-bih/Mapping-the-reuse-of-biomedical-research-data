@@ -1,3 +1,5 @@
+This folder contains the output of Evgeny's validation process of publication dates to make sure that they all make sense.
+
 dcc_paper_2016_and_earlier:
 	datasets mentioned in dcc papers where the papers were published in 2016 and 	earlier.
 	(_full includes dcc paper's doi as well)

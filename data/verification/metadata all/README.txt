@@ -1,0 +1,1 @@
+the sub-folder "datasets_metadata_master_updated" contains outputs of every version of the table with dataset's metadata, in 3 formats: csv, xslx and rda. the last .rda file is the file that is being loaded into results and analysis scripts.

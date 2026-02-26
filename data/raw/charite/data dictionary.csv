@@ -1,0 +1,64 @@
+﻿column name,description
+doi,Charité paper's DOI
+year,Charité paper's publication year
+form_version,internal
+referenceid,internal
+username,internal
+is_open_data,is the dataset of the paper an open data / restricted / other categories
+open_data_category,internal
+is_reuse,did the paper reuse an existing dataset
+is_open_code,internal
+das,is the dataset listed in data availability statement
+open_data_statements,internal
+cas,internal
+open_code_statements,internal
+reference_to_data,internal
+comment_1_reference,internal
+comments_vladi,internal
+data_availability_statement,is the dataset listed in data availability statement
+comment_2_das,internal
+findability,internal
+comment_4_findability,internal
+not_a_supplement,internal
+comment_3_repository,internal
+data_identifier,dataset identifier of Charité paper
+comment_identifier,internal
+repository,repository where the dataset was deposited
+data_access,is the dataset restricted / other categories
+comment_5_data_access,internal
+restricted_authorship,internal
+comment_restricted_authorship,internal
+year_of_data_publication,year of dataset publication
+comment_year,internal
+dataset_license,is the dataset under a license
+comment_4_license,internal
+license_name,type of license of dataset
+own_or_reuse_data,is the dataset reused or is it own data
+comment_2_own_data,internal
+machine_readable_format,internal
+comment_6_machine_readability,internal
+multi_select_excel,internal
+multi_select_csv_tsv,internal
+multi_select_txt_docs,internal
+multi_select_other_text_formats,internal
+multi_select_video,internal
+multi_select_audio,internal
+multi_select_picture,internal
+multi_select_fasta_fastq,internal
+multi_select_raw,internal
+multi_select_generic_format,internal
+multi_select_genetic_sequences,internal
+multi_select_subject_specific_format,internal
+multi_select_spss,internal
+multi_select_unsure,internal
+comment_7_format,internal
+illustrative_files,internal
+comment_8_illustrative_files,internal
+analytical_replication,internal
+comment_9_analytical_replication,internal
+open_data_assessment,final assessment: is the dataset open data or not
+comment_10_assessment,internal
+other_comments,internal
+comment_other_datasets,internal
+open_data_manual_check,internal
+restricted_manual_check,internal

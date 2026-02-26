@@ -1,0 +1,59 @@
+﻿column name,description
+doi_charite,Charité paper with restricted / open access dataset
+doi_lc,"lower case ""doi_charite"" (internal)"
+doi_no_ver_info,"""doi_charite"" stripped of version information (internal)"
+data_identifier,Charité  restricted / open access dataset identifier as typed in when manually extracted
+data_identifier_2nd_numbat_entry,Second Charité  restricted / open access dataset identifier as typed in when manually extracted
+data_id_lc,"lower case ""data_identifier"""
+data_id_auto_cleaned,"clean ""data_identifier"" using an automated function"
+slug_charite,osf suffix for standardization process (internal)
+data_id_m_val,"""data identifier"" as corrected manually after the automated cleaning"
+dataset_for_matching,"most clean and standardized ""data_identifier"" (either ""data_identifier"", ""data_id_auto_cleaned"" or ""data_id_m_val"") - coalesced: this is the value that was looked for in the DCC"
+data_id_secondary,different identifier for the same dataset
+detected_id,Charité dataset as detected in the DCC
+data_access,is the dataset restricted access / open access
+in_dashboard,"is the doi_charite listed in the Charité open data dashboard (internal, to filter out those who aren't)"
+source_charite,"from which pool did the dataset identifier is? ""numbat"" (ODDPub), ""additional_ids"" (more datasets extracted from detected numbat datasets in DCC), ""datastet"" and ""data_articles"""
+numbat_id_of_da_id,"where a data article was listed in numbat as well, the typed-in dataset of it in numbat"
+numbat_id_of_da_id_lc,"lower case ""numbat_id_of_da_id"""
+listed_in_numbat_output,is a data article identifier listed in numbat as well
+validated,internal validation
+Category,is dataset identifier DOI or accession number
+is_gen_rep,is the dataset deposited in a general purpose repository or not
+doi_id_orig_pair,internal: paired values of Charité DOI and deteected dataset
+doi_id_lc_pair_for_joining,internal: paired values of Charité DOI and deteected dataset
+doi_id_clean_pair,internal: paired values of Charité DOI and deteected dataset
+doi_id_clean_pair_with_source,internal: paired values of Charité DOI and deteected dataset
+id,internal DCC column
+created,internal DCC column
+updated,internal DCC column
+repository,repository where the detected dataset was deposited
+publisher,internal DCC column
+journal,internal DCC column
+title,internal DCC column
+dataset,"original dataset identifier column of the DCC before cleaning. ""dataset_for_matching"" is the clean DCC column to match with the clean Charité one"
+data_id_or_acc_nr,"internal cleaning step of ""dataset"""
+slug_dcc,osf suffix for standardization process (internal)
+doi_dcc,mentioning paper as listed in the DCC
+publishedDate,publication date of mentioning paper as listed in the DCC
+source_dcc,internal DCC column
+subjects,internal DCC column
+affiliations,internal DCC column
+affiliationsROR,internal DCC column
+funders,internal DCC column
+fundersROR,internal DCC column
+was_the_id_standardized,internal verification
+primary,internal verification
+authors_charite,list of authors of the Charité paper as extracted from OpenAlex
+publication_year_charite,publication year of Charité paper as extracted from OpenAlex
+authors_dcc,list of authors of the mentioning paper as extracted from OpenAlex
+publication_year_dcc,publication year of mentioning paper as extracted from OpenAlex
+detected_in_numbat_originally_only_for_added,internal verification
+license,dataset metadata: type of license as extracted manually
+human_data,"dataset metadata: is the dataset of human data, as extracted manually"
+covid_related,"dataset metadata: is the dataset related to covid, as extracted manually"
+is_detected_id_doi,"dataset metadata: is it a DOI or not, as extracted manually"
+data_availability_statement,dataset metadata: location of dataset in Charité paper as extracted manually
+das_for_analysis,is dataset in data availability statement or not
+license_for_analysis,is license CC or not
+charite_id_year,dataset metadata: dataset publication year as extracted manually

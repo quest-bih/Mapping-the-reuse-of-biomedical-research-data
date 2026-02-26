@@ -1,0 +1,5 @@
+﻿column name,description
+doi,"Charité paper DOI from which an extracted dataset was mentioned by other paper(s), meaning it was found in the DCC"
+data_id_merged,"Charité dataset that was mentioned by other paper(s), meaning it was found in the DCC"
+further_data_ids (not checked for own vs reuse!),Manually extracted additional datasets from the same Charité DOI
+Notes,Internal notes

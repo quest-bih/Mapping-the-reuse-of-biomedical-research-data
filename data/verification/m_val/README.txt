@@ -1,3 +1,5 @@
+This folder contains the various outputs and results of the process of manually validating the standardization and cleaning of datasets identifiers. ODDPub datasets are in the folder and additional identifiers and DataStet datasets are in the "added and datastet" sub-folder.
+
 The last modified csv file is the one with the most recent manual validation.
 
 _16122024_AC.csv:
