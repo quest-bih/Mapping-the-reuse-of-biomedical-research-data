@@ -1,0 +1,7 @@
+Number;Article Number
+Charité article DOI;Article DOI
+data in repository (1 = yes, 0 = no);is data deposited in a repository (not website)
+dataset DOI, accession code, or link;dataset doi or other link if no doi exists
+dataset publication year (earliest version);year when the dataset was first published
+dataset publication year (version listed here);year of the version mentioned in article if there is a newer version
+license;license of dataset if stated
