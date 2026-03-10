@@ -20,7 +20,18 @@ format:
     comments:
       hypothesis: true
   docx: default
-  pdf: default
+  pdf:
+    keep-tex: true
+    cite-method: citeproc
+    include-in-header:
+      text: |
+        \usepackage{float}
+        \usepackage{caption}
+        \usepackage{subcaption}
+        \floatstyle{plain}
+        \newfloat{suppfig}{htbp}{losf}
+        \floatname{suppfig}{Supplementary Figure}
+        \DeclareCaptionSubType{suppfig}
   jats: default
 
 editor: visual

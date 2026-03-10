@@ -17,6 +17,7 @@ crossref:
   custom:
     - kind: float
       key: suppfig
+      latex-env: suppfig
       reference-prefix: "Supplementary Figure"
       caption-prefix: "Supplementary Figure"
 ---
@@ -227,7 +228,7 @@ We started from a set of `r format(res$total_published_charite_dois, scientific 
 
 <br>
 
-::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="​(a) Frequency Distribution of Datasets Mentions (N=175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset, while the y-axis shows the number of datasets corresponding to each mention frequency. (b) Contribution of each data source to identified mentioned datasets (N = 175). The Venn diagram shows the number of mentioned datasets that originated from each source (ODDPub and DataStet), including the overlap between the sources. ODDPub includes datasets that were added using ODDPub-identified datasets as a seed."}
+::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="​(a) Frequency Distribution of Datasets Mentions (N=175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset, while the y-axis shows the number of datasets corresponding to each mention frequency. (b) Contribution of each data source to identified mentioned datasets (N = 175). The Venn diagram shows the number of mentioned datasets that originated from each source (ODDPub and DataStet), including the overlap between the sources. ODDPub includes datasets that were added using ODDPub-identified datasets as a seed." fig-height=4 fig-width=10}
 {{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
@@ -259,8 +260,14 @@ We investigated further determinants of dataset reuse and found that human data,
 
 <br>
 
+::: {.content-visible when-format="html"}
 ::: quarto-figure
 ![Properties of Institutional Dataset Reuse (N = 175). The Sankey plot maps characteristics of mentioned datasets and the relations between them. The documented dataset properties were whether they were identified using a DOI or an accession number, the existence of a CC license, were they open data or restricted-access, which repository they were deposited in, whether they were containing human data and whether their data was related to Covid-19 research.](plots_files/sankey/sankey_interactive_plot_2.html){#fig-sankey-2 .embedded width="100%" height="600px"}
+:::
+:::
+
+::: {.content-visible when-format="pdf"}
+![Properties of Institutional Dataset Reuse (N = 175). The Sankey plot maps characteristics of mentioned datasets and the relations between them. The documented dataset properties were whether they were identified using a DOI or an accession number, the existence of a CC license, were they open data or restricted-access, which repository they were deposited in, whether they were containing human data and whether their data was related to Covid-19 research.](plots_files/sankey/sankey_interactive_plot_2.png){#fig-sankey-2}
 :::
 
 <br>
@@ -287,7 +294,7 @@ However, this analysis is limited by the short time period observed. In addition
 
 In addition to an analysis of data references, we conducted an independent analysis of indirect data citations. As described in detail in the methods section (see @sec-methods-charite-data-articles), this analysis is based on a forward citation search on a set of data articles. Subsequently, we manually detected whether a specific reference was pointing to the content of the data article itself, or was rather an indirect dataset citation, where the data article citation stood in for the dataset. In this analysis of data articles published between 2019 (i.e., starting a year earlier than the DCC analysis) and 2022 in the journals Scientific Data and Data in Brief (n = `r res$da_dois`), we detected `r res$da_ids` shared datasets overall. These articles had been cited `r format(res$da_mentions, scientific = FALSE, big.mark = ",")` times. In the 4 cases where data articles were cited \>60 times, we restricted manual checks to 60 references. In this "truncated" set, we found that out of 537 references, 113 references (21%) where in fact indirect data citations. We used this to extrapolate numbers for the additional references to the three most-cited articles for which not all referencing articles could be screened. Adding these extrapolations, we estimated `r res$da_est_mentions` citations for these `r res$da_ids` datasets (@fig-da-flowchart). It should be mentioned that the overall number of indirect data citations is strongly impacted by one outlier, which received an extrapolated number of 662 references. However, even after removing this outlier, we would still estimate 184 indirect data citations. Thus, indirect data citations are very common, and if they are not taken into account, a major fraction of institutional dataset references would be missed. In addition, the fact that these datasets were rarely published in OMICS repositories (only 5 out of `r res$da_ids` datasets; @fig-repo-dist-ds-da) suggests a very different pattern of sharing and reuse for datasets presented in data articles.
 
-::: {#fig-da-side-by-side layout-ncol="2" fig-cap="​(a) Charité Data Articles Citations Analysis. (b) Repositories Distribution of Data Articles identifiers (N = 35) (WIP)"}
+::: {#fig-da-side-by-side layout-ncol="2" fig-cap="​(a) Charité Data Articles Citations Analysis. (b) Repositories Distribution of Data Articles identifiers (N = 35) (WIP)" fig-height=4 fig-width=10}
 {{< embed notebooks/plots/plots.qmd#fig-da-flowchart >}}
 
 {{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds-da >}}
@@ -421,4 +428,8 @@ Distribution of the 20 Most Prevalent Repositories in the DCC (N = 4,742,484). T
 {{< embed notebooks/plots/plots.qmd#age-citation-2 >}}
 
 Distribution of Mentions by Age of Dataset. The plot shows the relation between the age of each dataset and the number of times it was mentioned. The plot includes only datasets that were mentioned in all "ages", i.e. 0, 1, 2 and 3 years after their publication years. The dataset age (X axis) is indicated by the number of years that have passed since the dataset publication year until the mentioning article was published. Each black point in the plot represents a dataset, with its identifier in blue text to the right of the point, and the number of mentions during a particular age in red text to the left of the point. The colored lines describe the change in number of mentions throughout the years for each dataset. The vast majority of datasets and mentions are not shown in the figure, as they were mentioned only once at each age. Therefore, datasets identifiers shown under 1 mention are representative examples of the larger set of single-mention datasets.
+:::
+
+::: {.content-visible when-format="pdf"}
+# References
 :::

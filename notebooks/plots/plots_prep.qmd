@@ -653,6 +653,11 @@ save_cr(links_all_2, file = file.path(here("data",
                                          "tables_for_plots",
                                          "links_all_2.RData")))
 
+saveRDS(
+  dcc_charite_for_sankey_2,
+  file = here::here("data", "tables_for_plots", "dcc_charite_for_sankey_2.rds")
+)
+
 ```
 
 # 5. Non mentioned datasets: publication years of datasets over time

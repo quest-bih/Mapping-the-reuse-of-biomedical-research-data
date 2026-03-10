@@ -322,11 +322,7 @@ year_dcc_dt_all_for_plot_collapsed |>
 # Datasets Properties Including Human Data (Sankey Plot)
 
 ```{r}
-#| label: fig-datasets-properties-2
-#| fig-cap: Determinants of institutional dataset reuse (N = 175)
-#| fig-format: png
-#| fig.height: 8
-#| fig.width: 12
+#| include: false
 
 # Create a function for verifying the links df structure, extracting its entities and finally plotting it:
 
@@ -338,11 +334,8 @@ get_nodes_from_links <- function(links) {
 }
 
 plot_Sankey <- function(links, ...) {
-  
   nodes <- get_nodes_from_links(links)
-  
-  # Assign group labels to nodes
-  # Map directly to colors
+
   highlight_colors <- list(
     "Accession Number" = "blue",
     "DOI" = "red",
@@ -352,19 +345,19 @@ plot_Sankey <- function(links, ...) {
     "Covid Related" = "pink",
     "No CC License" = "darkgrey",
     "CC License" = "white",
-    "Human Data" = "#E1F5FE", 
+    "Human Data" = "#E1F5FE",
     "Non-human Data" = "#FFE082"
   )
 
-  # Assign group (color name) to each node, default to gray
-  nodes$group <- sapply(nodes$name, function(n) {
-    if (!is.null(highlight_colors[[n]])) highlight_colors[[n]] else "gray"
-  })
+  nodes$group <- vapply(
+    nodes$name,
+    \(n) dplyr::coalesce(highlight_colors[[n]], "gray"),
+    character(1)
+  )
 
   links$IDsource <- match(links$source, nodes$name) - 1
   links$IDtarget <- match(links$target, nodes$name) - 1
 
-  # Color scale: domain = unique group values (colors), range = same
   color_domain <- unique(nodes$group)
   domain_str <- paste0('"', color_domain, '"', collapse = ", ")
   range_str <- paste0('"', color_domain, '"', collapse = ", ")
@@ -374,28 +367,129 @@ plot_Sankey <- function(links, ...) {
     ".range([", range_str, "])"
   )
 
-  sankeyNetwork(
-    Links = links, Nodes = nodes,
-    Source = "IDsource", Target = "IDtarget",
-    Value = "value", NodeID = "name",
-    NodeGroup = "group",  # ← now using color group directly
+  networkD3::sankeyNetwork(
+    Links = links,
+    Nodes = nodes,
+    Source = "IDsource",
+    Target = "IDtarget",
+    Value = "value",
+    NodeID = "name",
+    NodeGroup = "group",
     colourScale = my_color,
     ...
   )
 }
+```
 
-# Plot
-
-plot_Sankey(links_all_2, sinksRight = FALSE, fontSize = 18)
+::: {.content-visible when-format="html"}
+```{r}
+#| label: fig-datasets-properties-2
+#| fig-cap: Determinants of institutional dataset reuse (N = 175)
+#| fig-height: 8
+#| fig-width: 12
+#| eval: true
 
 s_plot <- plot_Sankey(links_all_2, sinksRight = FALSE, fontSize = 18)
 
-# saveWidget(s_plot, file = here("data", "processed", "dcc_charite_joined", "sankey_interactive_plot_2.html"), selfcontained = TRUE)
+htmlwidgets::saveWidget(
+  s_plot,
+  file = here::here("plots_files", "sankey", "sankey_interactive_plot_2.html"),
+  selfcontained = TRUE
+)
 
-saveWidget(s_plot, file = here("plots_files", "sankey", "sankey_interactive_plot_2.html"), selfcontained = TRUE)
-
-
+s_plot
 ```
+:::
+
+::: {.content-visible when-format="pdf"}
+```{r}
+#| label: fig-datasets-properties-2-pdf-static
+#| include: false
+
+# Static Sankey for PDF generated from the original row-level data (regenerated every render)
+
+out_dir <- here::here("plots_files", "sankey")
+png_file <- file.path(out_dir, "sankey_interactive_plot_2.png")
+
+dcc_charite_for_sankey_2 <- readRDS(
+  here::here("data", "tables_for_plots", "dcc_charite_for_sankey_2.rds")
+) |>
+  dplyr::mutate(
+    id_type = dplyr::case_when(
+      is_detected_id_doi == "FALSE" ~ "Accession Number",
+      .default = "DOI"
+    ),
+    license = dplyr::case_when(
+      license_for_analysis == "TRUE" ~ "CC License",
+      license_for_analysis == "FALSE" ~ "No CC License",
+      .default = "license not checked yet"
+    ),
+    access = dplyr::case_when(
+      data_access == "yes" ~ "Open Data",
+      data_access == "restricted" ~ "Restricted-Access",
+      .default = "access not checked yet"
+    ),
+    repo = dplyr::case_when(
+      repository %in% c(
+        "ncbi dbgap",
+        "ncbi dbgap (database of genotypes and phenotypesgenotypes and phenotypes)"
+      ) ~ "NCBI dbGaP",
+      repository == "figshare" ~ "Figshare",
+      repository == "the european genome-phenome archive(ega)" ~ "EGA",
+      repository == "gene expression omnibus (geo)" ~ "GEO",
+      repository == "pride proteomics identification database" ~ "PRIDE",
+      repository == "ncbi reference sequence database" ~ "NCBI RefSeq",
+      repository == "european nucleotide archive" ~ "ENA",
+      repository == "the protein data bank" ~ "PDB",
+      repository == "mendeley" ~ "Mendeley",
+      repository == "bioproject" ~ "Bioproject",
+      repository == "arrayexpress" ~ "Arrayexpress",
+      repository == "openneuro" ~ "Openneuro",
+      repository == "uniprot" ~ "Uniprot",
+      repository == "zenodo" ~ "Zenodo",
+      repository == "harvard dataverse" ~ "Harvard Dataverse",
+      repository == "the electron microscopy data bank (emdb)" ~ "EMDB",
+      repository == "the international genome sample resource" ~ "IGSR",
+      repository == "physionet" ~ "Physionet",
+      repository == "apollo - university of cambridge repository" ~ "Apollo",
+      .default = repository
+    ),
+    human = dplyr::case_when(
+      human_data == "TRUE" ~ "Human Data",
+      human_data == "FALSE" ~ "Non-human Data",
+      .default = "human not checked yet"
+    ),
+    covid = dplyr::case_when(
+      covid_related == "TRUE" ~ "Covid Related",
+      covid_related == "FALSE" ~ "Not Covid Related",
+      .default = "covid not checked yet"
+    )
+  ) |>
+  dplyr::select(detected_id, id_type, license, access, repo, human, covid)
+sankey_lodes <- ggalluvial::to_lodes_form(
+  dcc_charite_for_sankey_2,
+  axes = c("id_type", "license", "access", "repo", "human", "covid"),
+  id = "detected_id"
+) |>
+  dplyr::mutate(value = 1)
+
+p_static <- ggplot2::ggplot(
+  sankey_lodes,
+  ggplot2::aes(
+    x = x,
+    stratum = stratum,
+    alluvium = detected_id,
+    y = value
+  )
+) +
+  ggalluvial::geom_alluvium(alpha = 0.6) +
+  ggalluvial::geom_stratum() +
+  ggplot2::scale_x_discrete(expand = ggplot2::expansion(mult = c(0.02, 0.02))) +
+  ggplot2::theme_minimal()
+
+ggplot2::ggsave(filename = png_file, plot = p_static, width = 12, height = 8, dpi = 300)
+```
+:::
 
 # DCC Publication years distribution
 
