@@ -1,3 +1,4 @@
+source("renv/activate.R")
 Sys.setenv(LANG = "EN")  # Set environment language to English
 
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
