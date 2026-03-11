@@ -32,6 +32,8 @@ format:
         \newfloat{suppfig}{htbp}{losf}
         \floatname{suppfig}{Supplementary Figure}
         \DeclareCaptionSubType{suppfig}
+        \usepackage{placeins}
+        \floatplacement{suppfig}{H}
   jats: default
 
 editor: visual

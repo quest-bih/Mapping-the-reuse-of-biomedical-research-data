@@ -134,6 +134,8 @@
 \newfloat{suppfig}{htbp}{losf}
 \floatname{suppfig}{Supplementary Figure}
 \DeclareCaptionSubType{suppfig}
+\usepackage{placeins}
+\floatplacement{suppfig}{H}
 \KOMAoption{captions}{tableheading}
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
@@ -1164,7 +1166,7 @@ Covid-19-related data were mostly shared though GEO, EGA, and PDB.
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{plots_files/sankey/sankey_interactive_plot_2.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{plots_files/sankey/sankey_for_pdf.png}}
 
 }
 
@@ -2094,6 +2096,8 @@ shown under 1 mention are representative examples of the larger set of
 single-mention datasets.}
 
 \end{suppfig}%
+
+\FloatBarrier
 
 \section*{References}\label{references}
 \addcontentsline{toc}{section}{References}
