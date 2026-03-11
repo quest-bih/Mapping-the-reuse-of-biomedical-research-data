@@ -19,8 +19,9 @@ _freeze/
 # macOS
 .DS_Store
 
-# Your project-specific outputs
+# Project-specific outputs
 notebooks/plots/
 data/raw/dcc/
 data/wrangling_steps/dcc/
 data/processed/dcc/
+/.quarto/
