@@ -202,7 +202,8 @@
 
 \title{Matching data references and institutional output to map the
 reuse of biomedical research data}
-\author{Evgeny Bobrov \and name \and name \and name \and name}
+\author{Avihay Cohen \and Blanka Ivanovic \and Anastasiia
+Iarkaeva \and Vladislav Nachev \and Evgeny Bobrov}
 \date{}
 
 \begin{document}
@@ -786,7 +787,7 @@ taken during our study to ensure validity:
 \subsection{2.8. Indirect citation detection via data
 articles}\label{sec-methods-charite-data-articles}
 
-The purpose of this analysis was to investigate for a sample of data
+The purpose of this analysis was to investigate, for a sample of data
 articles by Charité authors, in how many instances the articles citing
 these data articles referred to reuse of the presented data. In other
 words, we aimed at detecting indirect data citations.
@@ -1032,24 +1033,23 @@ datasets that were added using ODDPub-identified datasets as a seed.}
 \subsection{3.2. Determinants of institutional dataset
 reuse}\label{sec-results-determinants}
 
-(\citeproc{ref-AC}{\textbf{AC?}})\textbf{:} \textbf{This paragraph needs
-to be rephrased to have fig.2 first and only then supp.fig 1.} To better
-understand the patterns of institutional dataset reuse, we analyzed in
-which repositories the reused datasets were deposited. We observed that
-out of 1,497 dataset references, 845 (56.4\%) were to deposits in the
-Gene Expression Omnibus (GEO)
+To better understand the patterns of institutional dataset reuse, we
+analyzed in which repositories the reused datasets were deposited. We
+observed that out of 175 datasets which had been referenced, 86 (49.1\%)
+had been deposited in the Gene Expression Omnibus (GEO)
+(Figure~\ref{fig-repo-dist-ds}). The overall pattern was very similar
+when looking at the level of mentions rather than datasets
 (Supplementary Figure~\ref{suppfig-repo-dist}). Overall, references were
 overwhelmingly to datasets from the fields of genomics and proteomics,
-i.e., sequences of DNA, RNA, and proteins. The ten most-referenced
-repositories contain datasets which are predominantly constituted by
-sequence data. Only 11 of 1,497 data references (0.7\%) referred to
-datasets of other type, deposited in either disciplinary repositories
-(e.g.~Electron Microscopy Data Bank, 4 references) or general-purpose
-repositories (e.g.~Mendeley, 3 references). The overall pattern was very
-similar when looking at the level of datasets rather than references
-(Figure~\ref{fig-repo-dist-ds}). This clearly shows that `omics' fields
-currently contribute the large majority of data references, and thus at
-least a major fraction of data reuse cases overall.
+i.e., sequences of DNA, RNA, and proteins. On the level of individual
+references, the ten most-referenced repositories contain datasets which
+are predominantly constituted by sequence data. Only 11 of 1,497 data
+references (0.7\%) referred to datasets of other type, deposited in
+either disciplinary repositories (e.g.~Electron Microscopy Data Bank, 4
+references) or general-purpose repositories (e.g.~Mendeley, 3
+references). This clearly shows that `omics' fields currently contribute
+the large majority of data references, and thus at least a major
+fraction of data reuse cases overall.
 
 \begin{figure}[H]
 
@@ -1160,7 +1160,7 @@ Charité datasets, with a focus on how these different characteristics
 are interrelated. It can be observed that reused datasets were, in their
 majority, shared openly, without either DOI or CC license.
 Restricted-access reused data were mostly shared through dbGaP.
-Covid-19-related data were mostly shared though GEO, EGA, and PDB.
+COVID-19-related data were mostly shared though GEO, EGA, and PDB.
 
 \begin{figure}[H]
 
@@ -1174,7 +1174,7 @@ between them. The documented dataset properties were whether they were
 identified using a DOI or an accession number, the existence of a CC
 license, were they open data or restricted-access, which repository they
 were deposited in, whether they were containing human data and whether
-their data was related to Covid-19 research.}
+their data was related to COVID-19 research.}
 
 \end{figure}%
 
@@ -1236,8 +1236,8 @@ in number of mentions over the years.}
 
 However, this analysis is limited by the short time period observed. In
 addition, the time period covered opens the possibility for a one-off
-effect of the reuse of Covid-related datasets. Indeed, the two
-most-referenced datasets were Covid-19 protein structures, which
+effect of the reuse of COVID-19-related datasets. Indeed, the two
+most-referenced datasets were COVID-19 protein structures, which
 supports such an effect. Taken together, this analysis would support the
 conclusion that dataset references do not follow a clear trend in the
 first years after publication, except for particularly timely and highly
@@ -1388,18 +1388,16 @@ observed, in addition to 1,497 cases of dataset reuse (also see below
 for a discussion of data sharing vs reuse), 275 cases where authors
 mentioned datasets they had themselves created, with this number
 applying to the subset of datasets detected using ODDPub. It is because
-of the exclusion of articles with author overlap, as well as the
-original Charité articles with which data had been shared, that our
-results do not contradict (\citeproc{ref-strecker2025}{Strecker, Soltau,
-and Bach 2025}). They report for the RADAR repository that 27.9\% of
-datasets were referenced, with 21.4\% of these being data citations.
-This is far off from the numbers we observe, but is explained by their
-inclusion of self-references, as only 1.3\% of datasets in this
-repository had been referenced in articles without author overlap.
+of the exclusion of articles with author overlap (i.e., own data use),
+as well as the original Charité articles with which data had been
+shared, that our results do not contradict
+(\citeproc{ref-strecker2025}{Strecker, Soltau, and Bach 2025}). The
+authors report for the RADAR repository that 27.9\% of datasets were
+referenced, with 21.4\% of these being data citations.
 
-On a methodological level, we also show that, given a list of dataset
-identifiers, this can be matched to the DCC to obtain a corresponding
-list of data citations. As we also describe, this process is far from
+On a methodological level, we also show that a list of dataset
+identifiers can be matched to the DCC to obtain a corresponding list of
+data references. As we also describe, this process is far from
 straightforward, however. Even if the institutional data identifier list
 is highly standardized, the variability of dataset IDs in the DCC poses
 considerable challenges. The same dataset can be referred to in several
@@ -1429,10 +1427,10 @@ does not report results derived from its analysis. We examined a sample
 of 21 data articles published by Charité researchers between 2019 and
 2022 in the two most common, non-disciplinary data journals. These
 articles shared 35 datasets overall. We found 2,574 references to these
-datasets, including extrapolated references (see below, as well as
-Section~\ref{sec-methods-charite-data-articles}). Thus, indirect data
-citations constitute a substantial fraction of all instances, in which
-data reuse is visible in the literature.
+datasets through Google Scholar, including extrapolated references (see
+below, as well as Section~\ref{sec-methods-charite-data-articles}).
+Thus, indirect data citations constitute a substantial fraction of all
+instances in which data reuse is visible in the literature.
 
 Our analysis has confirmed the finding of Jiao and Darch
 (\citeproc{ref-jiao2020}{2020}) that it is common practice in the
@@ -1443,18 +1441,18 @@ article indicates a reuse of the data. Jiao and Darch
 as well as physical and chemical sciences that 56\% of citations to data
 articles indicate actual data reuse. Li, Huang, and Jeng
 (\citeproc{ref-liAreDataPapers2025}{2025}) observed a much lower
-fraction of just 11\%. This lower number might partly be explained be
-their sampling, which included only data articles from \emph{Data in
+fraction of just 11\%. This lower number might partly be explained by
+their sampling, exclusively focused on data articles from \emph{Data in
 Brief}, which we observed to have low reusability on average. In our
 case, 21.04\% of citations to data articles (113 of 537) in fact
 referred to the underlying dataset (or one of several shared datasets).
 Thus, studies on the reuse of data need to take such ``indirect
 citations'' into account. These constitute a substantial fraction of all
-dataset references, and could be of particular importance for some
+dataset references and could be of particular importance for some
 purposes of monitoring, as data articles could describe datasets of
 particular value, especially for communities where data sharing and
 reuse are not common. Also, we see indications that this sample is
-characterized by both data types and types of data reuse distinct form
+characterized by both data types and types of data reuse distinct from
 the sample found via the DCC. However, this warrants further research.
 
 To extract the information whether a data article reference in fact
@@ -1464,28 +1462,27 @@ up to 60 citations per data article. For five out of 21 articles, the
 number of citations exceeded this number. In these instances, we have
 extrapolated the number of expected data reuse cases based on the number
 of data reuse cases within the 60 citations we analyzed. This
-extrapolation yielded a staggering number of \textbf{695 putative data
-reuse cases {[}I have 662 elsewhere - check; maybe replace by
-reference{]}} for the most-cited dataset. While there is certainly an
-error margin attached to this number, it does clearly indicate the reuse
-value of certain unique and well-curated datasets.
+extrapolation yielded a staggering number of 662 putative data reuse
+casesfor the most-cited dataset. While there is certainly an error
+margin attached to this number, it does clearly indicate the reuse value
+of certain unique and well-curated datasets.
 
 \subsection{4.3. Putative undetected data
 reuse}\label{sec-discussion-undetected}
 
 We report references to Charité datasets detected via two sources:
 mentions of datasets in the literature on the one hand and indirect data
-citations on the other. Combining these two sources, we obtain an
-overall number of 210 Charité datasets which have been referenced 3,225
-times. Thus, we observe that datasets shared alongside articles
-co-authored by Charité researchers in a given year are referred to
-(directly or indirectly) on average 806.25 times. However, the numbers
-on data reuse reported for the DCC analysis, which is the main source of
-data references, are probably very substantially underestimated. This is
-due to several reasons, listed below in what we estimate to be a
-descending order of influence on the results. For further limitations,
-which do not introduce an obvious directionality by decreasing the
-number of detected reuse cases, see section 4.5.
+citations through data articles on the other. Combining these two
+sources, we obtain an overall number of 210 Charité datasets which have
+been referenced 3,225 times. Thus, we observe that datasets shared
+alongside articles co-authored by Charité researchers in a given year
+are referred to (directly or indirectly) on average 806.25 times.
+However, the numbers on data reuse reported for the DCC analysis, which
+is the main source of data references, are probably very substantially
+underestimated. This is due to several reasons listed below in what we
+estimate to be a descending order of influence on the results. For
+further limitations, which do not introduce an obvious directionality by
+decreasing the number of detected reuse cases, see section 4.5.
 
 \begin{enumerate}
 \def\labelenumi{(\arabic{enumi})}
@@ -1493,7 +1490,7 @@ number of detected reuse cases, see section 4.5.
   We extracted per article by Charité authors one dataset identifier per
   repository. However, especially for omics data, which are the most
   reused in our sample, it is common to share more than one dataset per
-  repository. E.g., if an articles shared 10 datasets in GEO, the
+  repository. E.g., if an article shared 10 datasets in GEO, the
   probability of detecting a reuse case is thus only 10\%, as we
   extracted only one out of these 10 identifiers (at least under the
   simplifying assumption that dataset citations are independent of each
@@ -1517,10 +1514,11 @@ number of detected reuse cases, see section 4.5.
   indicate that a substantial number of references was missed due to
   incomplete coverage in the DCC.
 \item
-  While some repositories create versioned identifiers or allow
-  additions to a deposit under the same identifier, in other cases new
-  versions of a dataset receive a fully new identifier. In such cases,
-  detection by our method becomes impossible.
+  While some repositories create versioned identifiers (e.g.~dbGaP,
+  figshare) or allow additions to a deposit under the same identifier
+  (e.g.~GEO), in other cases new versions of a dataset receive a fully
+  new identifier (e.g.~Zenodo). In such cases, detection by our method
+  becomes impossible.
 \item
   The screen for shared datasets on which our analysis relies could not
   be performed on ca. 20\% of all research articles published by our
@@ -1592,8 +1590,8 @@ We searched for reuse of datasets associated with Charité publications
 starting in 2020. Although some datasets were older, the majority was
 published in temporal proximity to the article through which we detected
 it. Thus, at the time of the creation of DCC version three, which we
-used (February 25th, 2025), most datasets were still comparatively new.
-The literature on data reuse
+used (February 1\textsuperscript{st} 2025), most datasets were still
+comparatively new. The literature on data reuse
 (\citeproc{ref-vriesSharingNeurophysiologyData2022}{Vries, Siegle, and
 Koch 2022}) as well as our own analyses (see
 Figure~\ref{fig-ref-by-year-top-7}) indicate that dataset reuse
@@ -1634,37 +1632,37 @@ impact on the literature. The reasons would warrant deeper
 investigation, but it seems plausible that the higher effort to collect
 human data would contribute to this effect. Another predictor which was
 positively correlated with data reuse is a relation of the data to
-covid-19. This is based on a small sample (19 of 175 references datasets
-had a covid relation), but a higher rate of reuse for covid data seems
+COVID-19. This is based on a small sample (19 of 175 references datasets
+had a COVID relation), but a higher rate of reuse for COVID data seems
 plausible, as data reuse increased in the pandemic
 (\citeproc{ref-scienceStateOpenData2021}{Science et al. 2021}) and some
-of the most-referenced datasets in our sample were related to covid.
+of the most-referenced datasets in our sample were related to COVID.
 
 In addition, we observed negative correlations with three additional
 predictors. However, in all three cases we interpret these correlations
-as incidental rather than causal. We observed that the probability of
-data reuse is much \textbf{lower} for data with a DOI and data with a CC
-license, as well as for data mentioned in a DAS. The first two
-observations are easily explained by the pattern of data use by
-repository (also see below). The most popular repositories in omics
-fields, many of them offered by the NIH, do not provide DOI or offer to
-select CC licenses. It remains open whether the comparatively high reuse
-of data from these repositories occurs \textbf{despite} the lack of DOI
-and CC licenses, or whether this has no effect on reuse whatsoever. The
-remaining observation that datasets \textbf{not} mentioned in a DAS have
-a higher probability of being reused is more puzzling. The most probable
-explanation seems to be an interplay of research field and prevalence of
-DAS in journals from this field, but we did not investigate this
-further. What can be said, however, summing up these three negative
-correlations, is that the overall compliance of datasets with FAIR
-criteria is not the determining factor for data reuse.
+as spurious. We observed that the probability of data reuse is much
+\textbf{lower} for data with a DOI and data with a CC license, as well
+as for data mentioned in a DAS. The first two observations are easily
+explained by the pattern of data use by repository (also see below). The
+most popular repositories in omics fields, many of them offered by the
+NIH, do not provide DOI or offer to select CC licenses. It remains open
+whether the comparatively high reuse of data from these repositories
+occurs \textbf{despite} the lack of DOI and CC licenses, or whether this
+has no effect on reuse whatsoever. The remaining observation that
+datasets \textbf{not} mentioned in a DAS have a higher probability of
+being reused is more puzzling. The most probable explanation seems to be
+an interplay of research field and prevalence of DAS in journals from
+this field, but we did not investigate this further. What can be said,
+however, summing up these three negative correlations, is that the
+overall compliance of datasets with FAIR criteria is not the determining
+factor for data reuse.
 
 Most reused datasets were shared via disciplinary repositories,
 substantially beyond the fraction expected based on both the overall
 sample of Charité datasets and the distribution within the DCC. The DCC
 dashboard (\citeproc{ref-DashboardPageData}{{``Dashboard Page - {Data
-Citation Corpus},''} n.d.}) indicated as of August
-14\textsuperscript{th} 2024, when it displayed numbers pertinent to the
+Citation Corpus},''} n.d.}) indicated as of February
+1\textsuperscript{st} 2025, when it displayed numbers pertinent to the
 DCC v3 used in our analysis, that 85\% of identifiers in the DCC were
 accession numbers and 15\% were DOIs. This is in line with our
 quantification of the most prevalent repositories in the DCC, as
@@ -1704,27 +1702,29 @@ trust, (iii) extensive description of data, (iv) higher quality through
 curation, and (v) higher quality due to selection bias. More research is
 needed on which of these or possibly other factors contribute to the
 mediating role of data articles for reuse of datasets in general-purpose
-repositories, and to which extent. Especially if not accompanied by a
-data article, the reusability of data in disciplinary repositories seems
-much higher, despite lower FAIRness scores
-(\citeproc{ref-chariteFair}{{``Charité Metrics Dashboard: Data
-Reusability (FAIR Data),''} n.d.}). This is also supported by the
-observation that even within the indirect data citation sample, the
+repositories, and to which extent. Where data are not accompanied by a
+data article, their reusability seems much higher for data deposited in
+disciplinary repositories as compared to general-purpose repositories.
+This predominance occurs despite substantially lower FAIRness scores in
+general-purpose repositories (\citeproc{ref-chariteFair}{{``Charité
+Metrics Dashboard: Data Reusability (FAIR Data),''} n.d.}). The higher
+reusability of data in disciplinary repositories is also supported by
+the observation that even within the indirect data citation sample, the
 datasets which were most referenced were shared via disciplinary
 repositories, interestingly outside of omics fields (ICPSR for social
 sciences, OpenNeuro for neuroimaging, PhysioNet for physiology).
 
 In our exploratory analysis of the development of dataset reuse over
-time, we observed that data are reused over several years after they
-have been published. For the most-referenced datasets we observed a
-trend for a maximum of references to be reached right after publication,
-with a subsequent decrease in references. However, we interpret this is
-a spurious effect due to a peak in the use of covid-related datasets
+time, we observed that data are reused over several years after
+publication. For the most-referenced datasets we observed a trend for a
+maximum of references to be reached right after publication, with a
+subsequent decrease in references. However, we interpret this is a
+spurious effect due to a peak in the use of COVID-19-related datasets
 during the first two years of the pandemic. The four datasets which were
 cited most and which contribute most to this temporal pattern are all
-related to covid-19. This interpreation is also supported by our
-observation that covid-related datasets had a higher probability to be
-refereced on the dataset level, i.e., disregarding the number of
+related to COVID. This interpretation is also supported by our
+observation that COVID-related datasets had a higher probability to be
+referenced on the dataset level, i.e., disregarding the number of
 references a dataset accrued. Overall, we observed a varied pattern over
 time, with some datasets increasing the number of references within the
 first three years after publication.
@@ -1822,8 +1822,8 @@ references, being ``critique'', ``describe'', ``illustrate'',
 reference are indicative of data reuse, depends entirely on the
 definition of data use (and thus, reuse) applied. The observation by
 Lafia et al. (\citeproc{ref-lafia2023}{2023}) that only a subset of
-references indicates ``interactions'' with the dataset suggests to us
-that not all references to datasets we observed are indicative of active
+references indicates ``interactions'' with the dataset suggests that not
+all references to datasets we observed are indicative of active
 engagement with the data. An additional consideration then is to assess
 which kind of value is created by other types of data reuse than
 ``interaction'', and whether these other uses are then still in scope
@@ -1831,7 +1831,7 @@ for the monitoring exercise conducted. We assume that every data use has
 contributed at least \textbf{some} value. While we cannot estimate this
 value for different types of use, we would like to point out that the
 same question of case-specific value is also true for article
-publications. Thus any assessment of the relationship between data
+publications. Thus, any assessment of the relationship between data
 references and value creation should be interpreted in light of similar
 assessments of the relationship between article references and value
 creation.
@@ -1922,24 +1922,22 @@ including a majority of datasets shared via general-purpose
 repositories. As discussed in Section~\ref{sec-discussion-undetected},
 we expect that a large fraction -- and probably a majority -- of data
 reuse cases still goes undetected. We recommend to address some of these
-limitations in future studies. LLMs are already applied to scale the
-analysis of context, in which a dataset has been referenced, and this
-could be applied to the institutional use case. The combination of
-different sources of data references, in addition to the DCC, could be
-particularly fruitful for a full picture. In addition, it would be
-highly useful to start from data access and quantitatively determine all
-purposes of data use, which often go beyond the uses visible in research
-articles. The data usage typology currently being developed
-(\citeproc{ref-force11}{FORCE11, n.d.}) might help to capture some of
-this information on the repository level, although for repositories
-which do not require registration for download a full picture will
-remain very difficult to determine. Going beyond the types of links we
-have analyzed, it would be highly informative to investigate the
-individual contributor roles and in which way datasets link authorship
-collectives. This would also help to overcome the simplistic dichotomy
-of ``own data use'' vs.~``data reuse''. A further important addition to
-the picture would be a long-term analysis of data use, which goes beyond
-our time window of one to four years for most datasets.
+limitations in future studies. The combination of different sources of
+data references, in addition to the DCC, could be particularly fruitful
+for a full picture. In addition, it would be highly useful to start from
+data access and quantitatively determine all purposes of data use, which
+often go beyond the uses visible in research articles. The data usage
+typology currently being developed (\citeproc{ref-force11}{FORCE11,
+n.d.}) might help to capture some of this information on the repository
+level, although for repositories which do not require registration for
+download a full picture will remain very difficult to determine. Going
+beyond the types of links we have analyzed, it would be highly
+informative to investigate the individual contributor roles and in which
+way datasets link authorship collectives. This would also help to
+overcome the simplistic dichotomy of ``own data use'' vs.~``data
+reuse''. A further important addition to the picture would be a
+long-term analysis of data use, which goes beyond our time window of one
+to four years for most datasets.
 
 One of the resource-intensive steps in our analysis was the
 standardization and cleaning of the DCC. Data quality in the DCC has
@@ -1974,13 +1972,13 @@ datasets outside of omics fields. However, the pool of such datasets,
 especially for human data underlying data protection frameworks, is not
 known, and we do not have an overview of data articles in disciplinary
 journals. It would also be informative to analyze the sharing and reuse
-patten in more detail, including a comparison of Charité data reuse with
-data reuse by Charité researchers. This could surface both areas where
-the institution is very strong with regard to its data impact, and areas
-where data is either shared or reused below the expected level. On the
-level of individual researchers, the references to datasets we analyzed
-could be used to inform about the reuse of shared datasets. We assume
-that this would be of major interest to at least some of the data
+pattern in more detail, including a comparison of Charité data reuse
+with data reuse by Charité researchers. This could surface both areas
+where the institution is very strong with regard to its data impact, and
+areas where data is either shared or reused below the expected level. On
+the level of individual researchers, the references to datasets we
+analyzed could be used to inform about the reuse of shared datasets. We
+assume that this would be of major interest to at least some of the data
 providers, and could result to be a relevant motivational factor
 regarding data sharing in the future. This seems plausible, but despite
 a body of literature on researcher motivation to share data
@@ -1990,8 +1988,8 @@ Hebing 2015};
 Jeng 2020}; \citeproc{ref-rosenbloomSharingResearchData2025}{Rosenbloom
 2025}), there seems to be no explicit investigation of the impact of
 reuse on sharing motivations. Possibly this is because until recently
-the was no way to show to researchers at scale, how the data they shared
-had been reused.
+there was no way to show to researchers at scale, how the data they
+shared had been reused.
 
 With our analysis we contribute to developing an evidence base for
 questions around data reuse practices, but even more so around the
