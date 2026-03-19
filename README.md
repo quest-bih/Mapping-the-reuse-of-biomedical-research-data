@@ -18,12 +18,6 @@ output: html_document
 
 ------------------------------------------------------------------------
 
-## Repository Structure
-
-library(here) library(fs) fs::dir_tree(path = here(), recurse = TRUE, max_depth = 3, type = "directory")
-
-------------------------------------------------------------------------
-
 ## Installation and Setup:
 
 Clone the repository to your local machine. Then, in RStudio's Console, run `renv::restore()` in order to install the exact R package versions recorded in `renv.lock` and recreate the project library on your machine.
