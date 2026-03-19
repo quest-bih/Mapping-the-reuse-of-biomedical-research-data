@@ -24,10 +24,11 @@ library(here) library(fs) fs::dir_tree(path = here(), recurse = TRUE, max_depth 
 
 ------------------------------------------------------------------------
 
-## Installation and Setup: 
+## Installation and Setup:
 
-Clone the repository to your local machine.
-Then, in RStudio's Console, run `renv::restore()` in order to install the exact R package versions recorded in `renv.lock` and recreate the project library on your machine.
+Clone the repository to your local machine. Then, in RStudio's Console, run `renv::restore()` in order to install the exact R package versions recorded in `renv.lock` and recreate the project library on your machine.
+
+Install TinyTeX and orcidlink via tinytex::tlmgr_install('orcidlink')
 
 Rendering **index.qmd** will recreate the article.
 
