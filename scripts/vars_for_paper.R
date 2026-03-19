@@ -192,6 +192,8 @@ res <- tibble(
     "all_mentions_mendeley",                   # All  refs dist detected in mendeley
     "all_mentions_emdb",                       # All  refs dist detected in emdb
     
+    "all_matched_ids_count_dist_geo",          # All  ids dist detected in GEO          
+    
     "n_mentions_gen",                          # N    refs dist detected in general purpose only
     
     "all_mentions_gen",                        # All  refs dist detected in general purpose only
@@ -344,6 +346,9 @@ res <- tibble(
     
     # all_mentions_emdb
     detected_dedup_no_da |> dplyr::filter(repository == "the electron microscopy data bank (emdb)") |> distinct(detected_id, doi_dcc) |> nrow(),
+    
+    # all_matched_ids_count_dist_geo
+    detected_dedup_no_da |> dplyr::filter(repository == "gene expression omnibus (geo)") |> distinct(detected_id) |> nrow(),
     
     # n_mentions_gen
     detected_dedup_no_da |>
