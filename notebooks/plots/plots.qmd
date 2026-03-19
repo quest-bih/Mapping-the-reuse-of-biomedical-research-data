@@ -719,7 +719,7 @@ not_mentioned_years |>
 
 ```{r}
 #| label: fig-repo-dist-ds
-#| fig-cap: Distribution of Datasets Across Repositories (N = 175). The bar plot shows the number of mentioned datasets associated with each repository across all mentioning articles.
+#| fig-cap: Distribution of mentioned datasets across repositories (n = 175). The bar plot displays the number of mentioned datasets across all mentioning articles, split by the repository where data were deposited.
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
@@ -896,7 +896,7 @@ geom_text(
 
 ```{r}
 #| label: fig-matched-non
-#| fig-cap: Determinants of institutional dataset reuse. The figure shows odds ratios for inclusion in the DCC. 175 reused datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values greater than 1 indicate higher odds and values smaller than 1 indicate lower odds. For example, human data datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 85% (1 - 0.15) lower odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC while controlling for the other determinants in the model.
+#| fig-cap: Determinants of institutional dataset reuse. The figure shows odds ratios for inclusion in the DCC. 175 reused datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model.
 #| fig.height: 10
 #| fig.width: 10
 
