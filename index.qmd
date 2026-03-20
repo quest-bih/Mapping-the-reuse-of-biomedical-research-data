@@ -51,6 +51,10 @@ load(here::here("data", "inputs_for_quick_render", "stat_glmm_age_res.RData"))
 
 ```
 
+# Abstract
+
+Insert text here.
+
 # 1. Introduction {#sec-intro}
 
 ## 1.1. The relevance of investigating dataset reuse {#sec-intro-rational}
@@ -248,7 +252,7 @@ We started from a set of `r format(res$total_published_charite_dois, scientific 
 
 <br>
 
-::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="​(a) Frequency Distribution of Datasets Mentions (n=175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset and the y-axis shows the number of datasets corresponding to each mention frequency. (b) Venn diagram showing the contribution of each data source (ODDPub and DataStet) to identified mentioned datasets (n = 175). ODDPub includes datasets that were added using ODDPub-identified datasets as a seed."}
+::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="​(a) Frequency Distribution of Datasets Mentions (N = 175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset and the y-axis shows the number of datasets corresponding to each mention frequency. (b) Venn diagram showing the contribution of each data source (ODDPub and DataStet) to identified mentioned datasets (N = 175). ODDPub includes datasets that were added using ODDPub-identified datasets as a seed."}
 ::: {style="height: 420px;"}
 {{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
 :::

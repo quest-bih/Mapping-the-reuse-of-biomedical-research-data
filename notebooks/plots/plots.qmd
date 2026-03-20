@@ -719,7 +719,7 @@ not_mentioned_years |>
 
 ```{r}
 #| label: fig-repo-dist-ds
-#| fig-cap: Distribution of mentioned datasets across repositories (n = 175). The bar plot displays the number of mentioned datasets across all mentioning articles, split by the repository where data were deposited.
+#| fig-cap: Distribution of mentioned datasets across repositories (N = 175). The bar plot displays the number of mentioned datasets across all mentioning articles, split by the repository where data were deposited.
 #| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
