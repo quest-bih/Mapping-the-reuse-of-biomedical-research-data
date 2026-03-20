@@ -6,7 +6,6 @@ manuscript:
   article: index.qmd
   notebooks: 
     - notebook: notebooks/plots/plots.qmd  # plots
-
 execute:
   echo: false
   warning: false
@@ -15,16 +14,26 @@ execute:
 
 format:
   html:
+    number-sections: true
+    number-depth: 3
     css: styles.css
     fig-path: _output/notebooks/plots
     comments:
       hypothesis: true
   docx: default
   pdf:
+    fig-format: pdf
+    fig-dpi: 600
+    number-sections: true
+    number-depth: 3
     keep-tex: true
     cite-method: citeproc
+    geometry:
+      - bottom=38mm
+      - includefoot
     include-in-header:
       text: |
+        \setlength{\footskip}{18mm}
         \usepackage{float}
         \usepackage{caption}
         \usepackage{subcaption}
@@ -34,6 +43,9 @@ format:
         \DeclareCaptionSubType{suppfig}
         \usepackage{placeins}
         \floatplacement{suppfig}{H}
+        \captionsetup[figure]{format=plain,justification=raggedright,singlelinecheck=false}
+        \captionsetup[table]{format=plain,justification=raggedright,singlelinecheck=false}
+    notebook-links: false
   jats: default
 
 editor: visual

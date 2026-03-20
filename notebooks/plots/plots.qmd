@@ -65,7 +65,6 @@ load(here("data", "tables_for_plots", "ids_and_years_for_plot.RData")) # fig-age
 
 ```{r}
 #| label: fig-datasets-freq-dist
-#| fig-format: png
 #| fig.height: 7
 #| fig.width: 8
 
@@ -105,7 +104,6 @@ ds_freq |>
 
 ```{r}
 #| label: fig-repo-dist
-#| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
 
@@ -171,7 +169,6 @@ rep_dt |>
 ```{r}
 #| label: fig-ref-by-year-top-7
 #| fig-cap: Distribution of Mentions by Year (N = 1,495). The bar plot displays the frequency of dataset mentions across all mentioning articles by the year of mention, defined as the publication year of the corresponding mentioning article. The seven most frequently mentioned datasets are highlighted in color, while all other datasets are shown in grey. Two mentions from 2024 are not presented in the plot.
-#| fig-format: png
 #| fig.height: 10
 #| fig.width: 12
 
@@ -251,7 +248,6 @@ year_dcc_dt_all_for_plot_collapsed |>
 ```{r}
 #| label: fig-datasets-properties
 #| fig-cap: Properties of Mentioned Datasets (N = 175)
-#| fig-format: png
 #| fig.height: 8
 #| fig.width: 12
 
@@ -496,7 +492,6 @@ ggplot2::ggsave(filename = png_file, plot = p_static, width = 12, height = 8, dp
 ```{r}
 #| label: fig-dcc-pub-years
 #| fig-cap: DCC papers publication years distribution
-#| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
 
@@ -534,7 +529,6 @@ dcc_years_dist_for_plot |>
 
 ```{r}
 #| label: dcc-rep
-#| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
 
@@ -572,7 +566,6 @@ geom_text(aes(y = n + 2, label = perc),
 
 ```{r}
 #| label: fig-venn-ids
-#| fig-format: png
 #| fig.height: 7
 #| fig.width: 8
 
@@ -687,7 +680,6 @@ venn_ellipse_plot(setlist, a=1.3, b=1) # global circle control
 ```{r}
 #| label: fig-non-years
 #| fig-cap: Publication Years of Non-matched Datasets (N = 199)
-#| fig-format: png
 #| fig.height: 8
 #| fig.width: 10
 
@@ -720,7 +712,6 @@ not_mentioned_years |>
 ```{r}
 #| label: fig-repo-dist-ds
 #| fig-cap: Distribution of mentioned datasets across repositories (N = 175). The bar plot displays the number of mentioned datasets across all mentioning articles, split by the repository where data were deposited.
-#| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
 
@@ -760,7 +751,6 @@ rep_dt_ds |>
 ```{r}
 #| label: fig-age-citation-1
 #| fig-cap: Distribution of Mentions by Age of Dataset. The plot shows the relation between the age of each dataset and the number of times it was mentioned. The plot includes only the 7 most mentioned datasets among the datasets that were mentioned in all "ages", i.e. 0, 1, 2 and 3 years after their publication years. The dataset age (X axis) is indicated by the number of years that have passed since the dataset publication year until the mentioning article was published. Each black point in the plot represents a dataset, with its identifier in blue text to the right of the point, and the number of mentions during a particular age in red text to the left of the point. The colorful lines describe the change in number of mentions throughout the years for each dataset. The dashed line describes the overall trend in number of mentions over the years. 
-#| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
 
@@ -829,7 +819,6 @@ ids_and_years_only_0_3_ages_for_plot |>
 
 ```{r}
 #| label: age-citation-2
-#| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
 
@@ -940,7 +929,6 @@ tidy_model_matched_non_matched |>
 
 ```{r}
 #| label: fig-repo-dist-ds-da
-#| fig-format: png
 #| fig.height: 8
 #| fig.width: 8
 
@@ -975,7 +963,6 @@ rep_dt_da_ds |>
 ```{r}
 #| label: fig-repo-dist-ref-da
 #| fig-cap: Repositories Distribution of Data Articles Identifiers Mentions
-#| fig-format: png
 #| fig.height: 10
 #| fig.width: 10
 
@@ -1009,7 +996,6 @@ rep_dt_da_ds |>
 
 ```{r}
 #| label: fig-da-flowchart
-#| fig-format: png
 #| fig.height: 8
 #| fig.width: 8
 

@@ -40,8 +40,9 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
+\usepackage[bottom=38mm,includefoot]{geometry}
 \setlength{\emergencystretch}{3em} % prevent overfull lines
-\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\setcounter{secnumdepth}{3}
 % Make \paragraph and \subparagraph free-standing
 \makeatletter
 \ifx\paragraph\undefined\else
@@ -127,6 +128,7 @@
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
+\setlength{\footskip}{18mm}
 \usepackage{float}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -136,6 +138,8 @@
 \DeclareCaptionSubType{suppfig}
 \usepackage{placeins}
 \floatplacement{suppfig}{H}
+\captionsetup[figure]{format=plain,justification=raggedright,singlelinecheck=false}
+\captionsetup[table]{format=plain,justification=raggedright,singlelinecheck=false}
 \KOMAoption{captions}{tableheading}
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
@@ -210,13 +214,13 @@ Iarkaeva \and Vladislav Nachev \and Evgeny Bobrov}
 \maketitle
 
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/index.qmd.html}{Article
-Notebook}}
+\section{Abstract}\label{abstract}
 
-\section{1. Introduction}\label{sec-intro}
+Insert text here.
 
-\subsection{1.1. The relevance of investigating dataset
+\section{Introduction}\label{sec-intro}
+
+\subsection{The relevance of investigating dataset
 reuse}\label{sec-intro-rational}
 
 A lot of effort is invested into the sharing of data by researchers by
@@ -252,7 +256,7 @@ answering questions around data reuse is central to advance and focus
 efforts regarding data sharing in the future
 (\citeproc{ref-eosceden}{EOSC EDEN, n.d.}).
 
-\subsection{1.2. Terminology}\label{sec-intro-terminology}
+\subsection{Terminology}\label{sec-intro-terminology}
 
 We are aware that data reuse is in itself not a self-evident concept,
 and it has been even argued that it cannot be defined at all
@@ -303,7 +307,7 @@ references which we analyze are `indirect data citations'
 to cases where a data article rather than the dataset itself is
 referenced.
 
-\subsection{1.3. Institutional dataset reuse as specific
+\subsection{Institutional dataset reuse as specific
 application}\label{sec-intro-application}
 
 We were interested in the reuse of data published by researchers from
@@ -337,8 +341,7 @@ used to obtain a list of published datasets is briefly described in the
 methods section, which also provides references to detailed
 descriptions.
 
-\subsection{1.4. Data Citation Corpus as data
-source}\label{sec-intro-dcc}
+\subsection{Data Citation Corpus as data source}\label{sec-intro-dcc}
 
 The use of references to datasets is complicated by the fact that data
 reuse is rarely acknowledged by data citations
@@ -368,7 +371,7 @@ lack of large and diverse sets of data references which are in
 themselves validated precludes an extensive validation of the DCC at the
 time being.
 
-\subsection{1.5. Indirect data citations via data
+\subsection{Indirect data citations via data
 articles}\label{sec-intro-data-articles}
 
 In addition to data citations and data mentions, many authors reference
@@ -390,9 +393,9 @@ generally. We have used dataset articles in two common data journals to
 track such indirect data citations. This complements the analysis of the
 DCC and allows for a more comprehensive picture of dataset reuse.
 
-\section{2. Methods}\label{sec-methods}
+\section{Methods}\label{sec-methods}
 
-\subsection{2.1. High-level overview of the
+\subsection{High-level overview of the
 process}\label{sec-methods-overview}
 
 The process of cleaning our own source dataset and matching it to
@@ -419,7 +422,7 @@ references through data articles, additional steps had to be performed,
 as described in Section~\ref{sec-methods-charite-data-articles} (See
 Figure~\ref{fig-da-flowchart}).
 
-\subsection{2.2. Preparing and quality-checking the Data Citation
+\subsection{Preparing and quality-checking the Data Citation
 Corpus}\label{sec-methods-dcc}
 
 The DCC was downloaded as separate csv files which were then combined
@@ -468,11 +471,11 @@ manual validation. Original values of the DCC were kept in the table in
 their original respective columns for documentation, while the
 standardized values were the ones used for analysis.
 
-\subsection{2.3. Detecting datasets published by our
+\subsection{Detecting datasets published by our
 institution}\label{sec-methods-charite}
 
-\subsubsection{2.3.1. Detecting datasets via text mining of
-institutional articles with ODDPub}\label{sec-methods-charite-oddpub}
+\subsubsection{Detecting datasets via text mining of institutional
+articles with ODDPub}\label{sec-methods-charite-oddpub}
 
 The process through which we obtained the list of shared datasets has
 been described in detail in our publication Iarkaeva, Nachev, and Bobrov
@@ -521,8 +524,8 @@ code, where both are available. However, in some instances cleaning of
 this list was still necessary before a matching with the DCC could take
 place.
 
-\subsubsection{2.3.2. Using datasets detected with ODDPub as seeds to
-detect additional datasets}\label{sec-methods-charite-added}
+\subsubsection{Using datasets detected with ODDPub as seeds to detect
+additional datasets}\label{sec-methods-charite-added}
 
 In the detection procedure described in Iarkaeva, Nachev, and Bobrov
 (\citeproc{ref-iarkaeva2024}{2024}), as well as briefly in
@@ -537,7 +540,7 @@ clearly indicated there as containing further identifiers. We did not
 use identifiers as seeds if the dataset had not been referenced in the
 literature, and thus cases of dataset reuse were probably missed.
 
-\subsubsection{2.3.3. Detecting dataset references via text mining using
+\subsubsection{Detecting dataset references via text mining using
 DataStet}\label{sec-methods-charite-datastet}
 
 DataStet (\citeproc{ref-lopez}{Lopez and L'Hôte, n.d.}) is an
@@ -565,7 +568,7 @@ deposit. We did not perform a consistent disambiguation of such cases,
 but based on the identifier list it seems very improbable this had a
 substantial effect.
 
-\subsection{2.4. Data cleaning and
+\subsection{Data cleaning and
 standardization}\label{sec-methods-std-charite}
 
 The list of datasets obtained from all sources had to be cleaned and
@@ -593,7 +596,7 @@ probability of matching. This processing included the following steps:
   contains each identifier only once)
 \end{enumerate}
 
-\subsection{2.5. Matching of institutional and DCC
+\subsection{Matching of institutional and DCC
 references}\label{sec-methods-match}
 
 Following the preprocessing steps described above, we matched Charité
@@ -641,7 +644,7 @@ screening effort. Instead of manually validating the open data status of
 all `additional' and DataStet identifiers, only those identifiers
 referenced in the literature by other authors needed to be validated.
 
-\subsection{2.6. Enrichment of the dataset
+\subsection{Enrichment of the dataset
 information}\label{sec-methods-metadata}
 
 As we were interested in the determinants of data reuse, we manually
@@ -726,7 +729,7 @@ most cases this is because the dataset had already been the basis for
 other articles which were (co-)authored by the same authors as the
 Charité article for which we detected data sharing.
 
-\subsection{2.7. Validation}\label{sec-methods-validation}
+\subsection{Validation}\label{sec-methods-validation}
 
 We conducted iterative checks to confirm that the publication dates of
 datasets were plausible in relation to the articles referencing them.
@@ -784,7 +787,7 @@ taken during our study to ensure validity:
   data
 \end{enumerate}
 
-\subsection{2.8. Indirect citation detection via data
+\subsection{Indirect citation detection via data
 articles}\label{sec-methods-charite-data-articles}
 
 The purpose of this analysis was to investigate, for a sample of data
@@ -895,7 +898,7 @@ not include these two additional datasets to the DCC analysis, both for
 simplicity and to not influence any putative interpretations drawn from
 our coverage via ODDPub and DataStet.
 
-\section{3. Results}\label{sec-results}
+\section{Results}\label{sec-results}
 
 We conducted analyses of two independent sets of dataset references.
 First, we compiled a list of identifiers of datasets which were shared
@@ -932,7 +935,7 @@ first, with analyses of their respective properties. Subsequently, we
 combine the numbers of dataset references to quantify the overall
 citation impact of institutional datasets.
 
-\subsection{3.1. Quantification of institutional dataset reuse using the
+\subsection{Quantification of institutional dataset reuse using the
 DCC}\label{sec-results-quant}
 
 We started from a set of 15,748 articles (co-)authored by Charité
@@ -997,9 +1000,6 @@ method, and only 35.4\% of articles were detected using both approaches.
 
 \subcaption{\label{fig-datasets-freq-dist}}
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-datasets-freq-dist}{plots}}
-
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
@@ -1012,24 +1012,21 @@ method, and only 35.4\% of articles were detected using both approaches.
 
 \subcaption{\label{fig-venn-ids}}
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-venn-ids}{plots}}
-
 \end{minipage}%
 
 \caption{\label{fig-dcc-side-by-side}\hspace{0pt}(a) Frequency
-Distribution of Datasets Mentions (n=175). The histogram displays the
+Distribution of Datasets Mentions (N = 175). The histogram displays the
 number of times individual datasets were mentioned across all mentioning
 articles. The x-axis indicates the frequency of mentions per dataset and
 the y-axis shows the number of datasets corresponding to each mention
 frequency. (b) Venn diagram showing the contribution of each data source
-(ODDPub and DataStet) to identified mentioned datasets (n = 175). ODDPub
+(ODDPub and DataStet) to identified mentioned datasets (N = 175). ODDPub
 includes datasets that were added using ODDPub-identified datasets as a
 seed.}
 
 \end{figure}%
 
-\subsection{3.2. Determinants of institutional dataset
+\subsection{Determinants of institutional dataset
 reuse}\label{sec-results-determinants}
 
 To better understand the patterns of institutional dataset reuse, we
@@ -1059,14 +1056,11 @@ fraction of data reuse cases overall.
 }
 
 \caption{\label{fig-repo-dist-ds}Distribution of mentioned datasets
-across repositories (n = 175). The bar plot displays the number of
+across repositories (N = 175). The bar plot displays the number of
 mentioned datasets across all mentioning articles, split by the
 repository where data were deposited.}
 
 \end{figure}%
-
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-repo-dist-ds}{plots}}
 
 We then used a logistic regression to examine which dataset-level
 characteristics were associated with the likelihood of being reused,
@@ -1123,11 +1117,11 @@ sample, as of 200 datasets not referenced, only 7\% were not mentioned
 in a data availability statement. All \emph{p}-values in this analysis
 were adjusted for multiple comparisons using the False Discovery Rate
 (Benjamini--Hochberg) procedure. Overall, the logistic regression
-explained meaningful variation in dataset reuse (χ²(5) = 86.59, \emph{p}
-\textless{} 0.001, AIC = 443.6). However, while the data show reuse to
-be shaped by data content, the impact of repository practices on reuse
-is difficult to interpret against the backdrop of the specific practices
-of a set of highly-used disciplinary repositories.
+explained meaningful variation in dataset reuse (\(\chi^2\)(5) = 86.59,
+\emph{p} \textless{} 0.001, AIC = 443.6). However, while the data show
+reuse to be shaped by data content, the impact of repository practices
+on reuse is difficult to interpret against the backdrop of the specific
+practices of a set of highly-used disciplinary repositories.
 
 \begin{figure}[H]
 
@@ -1151,33 +1145,32 @@ in the model.}
 
 \end{figure}%
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-matched-non}{plots}}
-
-\textbf{?@fig-sankey-2} presents an overall characterization of reused
+Figure~\ref{fig-sankey-2} presents an overall characterization of reused
 Charité datasets, with a focus on how these different characteristics
 are interrelated. It can be observed that reused datasets were, in their
 majority, shared openly, without either DOI or CC license.
 Restricted-access reused data were mostly shared through dbGaP.
 COVID-19-related data were mostly shared though GEO, EGA, and PDB.
 
-\begin{figure}[H]
+\begin{figure}
 
-{\centering \pandocbounded{\includegraphics[keepaspectratio]{plots_files/sankey/sankey_for_pdf.png}}
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{plots_files/sankey/sankey_for_pdf.png}}
 
 }
 
-\caption{Properties of Institutional Dataset Reuse (N = 175). The Sankey
-plot maps characteristics of mentioned datasets and the relations
-between them. The documented dataset properties were whether they were
-identified using a DOI or an accession number, the existence of a CC
-license, were they open data or restricted-access, which repository they
-were deposited in, whether they were containing human data and whether
-their data was related to COVID-19 research.}
+\caption{\label{fig-sankey-2}Properties of Institutional Dataset Reuse
+(N = 175). The Sankey plot maps characteristics of mentioned datasets
+and the relations between them. The documented dataset properties were
+whether they were identified using a DOI or an accession number, the
+existence of a CC license, were they open data or restricted-access,
+which repository they were deposited in, whether they were containing
+human data and whether their data was related to COVID-19 research.}
 
 \end{figure}%
 
-\subsection{3.3. Data reuse as a function of dataset
+\subsection{Data reuse as a function of dataset
 age}\label{sec-results-age}
 
 We investigated whether there is a correlation between dataset age and
@@ -1230,9 +1223,6 @@ in number of mentions over the years.}
 
 \end{figure}%
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-age-citation-1}{plots}}
-
 However, this analysis is limited by the short time period observed. In
 addition, the time period covered opens the possibility for a one-off
 effect of the reuse of COVID-19-related datasets. Indeed, the two
@@ -1266,10 +1256,7 @@ the plot.}
 
 \end{figure}%
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-ref-by-year-top-7}{plots}}
-
-\subsection{3.4. Analysis of references to data
+\subsection{Analysis of references to data
 articles}\label{sec-results-data-articles}
 
 In addition to an analysis of data references, we conducted an
@@ -1314,9 +1301,6 @@ articles.
 
 \subcaption{\label{fig-da-flowchart}}
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-da-flowchart}{plots}}
-
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
@@ -1329,9 +1313,6 @@ articles.
 
 \subcaption{\label{fig-repo-dist-ds-da}}
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-repo-dist-ds-da}{plots}}
-
 \end{minipage}%
 
 \caption{\label{fig-da-side-by-side}\hspace{0pt}(a) Charité Data
@@ -1340,9 +1321,9 @@ Articles identifiers (N = 35) (WIP)}
 
 \end{figure}%
 
-\section{4. Discussion}\label{sec-discussion}
+\section{Discussion}\label{sec-discussion}
 
-\subsection{4.1. Detecting data reuse through the
+\subsection{Detecting data reuse through the
 DCC}\label{sec-discussion-dcc}
 
 Using two approaches, we charted the reuse of datasets shared alongside
@@ -1416,7 +1397,7 @@ compared to the DCC (see Section~\ref{sec-discussion-undetected} for a
 discussion). Still, it is overall not yet sufficiently investigated, how
 other databases compare to the DCC.
 
-\subsection{4.2. Detecting data reuse by indirect citations of data
+\subsection{Detecting data reuse by indirect citations of data
 articles}\label{sec-discussion-data-articles}
 
 We complemented this approach by an analysis of references to data
@@ -1466,7 +1447,7 @@ casesfor the most-cited dataset. While there is certainly an error
 margin attached to this number, it does clearly indicate the reuse value
 of certain unique and well-curated datasets.
 
-\subsection{4.3. Putative undetected data
+\subsection{Putative undetected data
 reuse}\label{sec-discussion-undetected}
 
 We report references to Charité datasets detected via two sources:
@@ -1615,7 +1596,7 @@ project they are part of is itself not published. Lastly, certain reuse
 purposes, in particular teaching, typically do not contribute to
 academic publishing, and thus cannot at all be detected.
 
-\subsection{4.4. Determinants and patterns of data
+\subsection{Determinants and patterns of data
 reuse}\label{sec-discussion-determinants}
 
 We compared the 175 reused datasets, as detected via the DCC, with a
@@ -1728,7 +1709,7 @@ references a dataset accrued. Overall, we observed a varied pattern over
 time, with some datasets increasing the number of references within the
 first three years after publication.
 
-\subsection{4.5. What is data reuse anyway?}\label{sec-discussion-reuse}
+\subsection{What is data reuse anyway?}\label{sec-discussion-reuse}
 
 In this article, we have taken a pragmatic approach to data reuse. We
 have assumed data reuse to have taken place, if three conditions were
@@ -1848,7 +1829,7 @@ Necessarily, the distinction between data and datasets is a matter of
 definition and remains contentious, as is the related distinction
 between data and metadata.
 
-\subsection{4.6. Limitations}\label{sec-discussion-limitations}
+\subsection{Limitations}\label{sec-discussion-limitations}
 
 The following restrictions and limitations apply to our analysis:
 
@@ -1907,7 +1888,7 @@ The following restrictions and limitations apply to our analysis:
 
 For steps to ensure the validity of data, see the methods section.
 
-\subsection{4.7. Outlook}\label{sec-discussion-outlook}
+\subsection{Outlook}\label{sec-discussion-outlook}
 
 In this article, we show the extent of the reuse of biomedical research
 data associated with a specific research institution. In addition, we
@@ -2012,7 +1993,12 @@ determine the expediency of data sharing seems hardly feasible, but
 despite considerable unknowns, this topic needs to be approached, and
 with our study we contribute evidence for this discussion.
 
-\section{5. Supplementary Materials}\label{sec-supp}
+\section{Data and code availability
+statement}\label{data-and-code-availability-statement}
+
+Insert text here
+
+\section{Supplementary Materials}\label{sec-supp}
 
 \begin{suppfig}
 
@@ -2025,9 +2011,6 @@ with our study we contribute evidence for this discussion.
 }
 
 \subcaption{\label{fig-repo-dist}}
-
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-fig-repo-dist}{plots}}
 
 }
 
@@ -2047,9 +2030,6 @@ datasets are included in this figure.}
 
 \pandocbounded{\includegraphics[keepaspectratio]{index_files/figure-latex/notebooks-plots-plots-dcc-rep-output-1.png}}
 
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-dcc-rep}{plots}}
-
 }
 
 \caption{\label{suppfig-dcc-rep}Distribution of the 20 Most Prevalent
@@ -2064,9 +2044,6 @@ the DCC.}
 \centering{
 
 \pandocbounded{\includegraphics[keepaspectratio]{index_files/figure-latex/notebooks-plots-plots-age-citation-2-output-1.png}}
-
-\textsubscript{Source:
-\href{https://quest-bih.github.io/DCC-v3/notebooks/plots/plots.qmd.html\#cell-age-citation-2}{plots}}
 
 }
 
