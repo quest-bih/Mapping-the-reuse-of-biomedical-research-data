@@ -339,16 +339,16 @@ statements which refer to utilized datasets. We follow the terminology
 employed by Gregory et al. (\citeproc{ref-gregory2023}{2023}). Thus, we
 use the term `data citation' for data objects in reference lists, while
 the term `data mention' is used for statements in the publication text.
-As a consequence, the Data Citation Corpus analyzed here is, in this
-terminology, a corpus of both `data mentions' and `data citations' and,
-in a summarizing fashion, is denoted as a corpus of `data references'.
-`Data citations' and `data mentions' are synonymous with `formal data
-citations' and `informal data citations', respectively, as used by Park,
-You, and Wolfram (\citeproc{ref-park2018}{2018}). The third type of data
-references which we analyze are `indirect data citations'
-(\citeproc{ref-sandt2019}{Sandt et al. 2019}). In our case, this applies
-to cases where a data article rather than the dataset itself is
-referenced.
+As a consequence, \textbf{the Data Citation Corpus analyzed here} is, in
+this terminology, a corpus of both `data mentions' and `data citations'
+and, \textbf{in a summarizing fashion, is denoted as a corpus of `data
+references'}. `Data citations' and `data mentions' are synonymous with
+`formal data citations' and `informal data citations', respectively, as
+used by Park, You, and Wolfram (\citeproc{ref-park2018}{2018}). The
+third type of data references which we analyze are `indirect data
+citations' (\citeproc{ref-sandt2019}{Sandt et al. 2019}). In our case,
+this applies to cases where a data article rather than the dataset
+itself is referenced.
 
 \subsection{Institutional dataset reuse as specific
 application}\label{sec-intro-application}
@@ -393,13 +393,12 @@ reuse is rarely acknowledged by data citations
 reuse is mentioned in a more or less informal way in different article
 sections (\citeproc{ref-park2018}{Park, You, and Wolfram 2018};
 \citeproc{ref-sandt2019}{Sandt et al. 2019}). The Data Citation Corpus
-(DCC) (\citeproc{ref-dataciteDataCitationCorpus2024}{DataCite 2024})
-\textbf{{[}ref2{]}} is the first comprehensive approach to address this
-issue by text-mining a large body of the published literature for
-references to reused data. It includes 4,892,673 dataset references to
-3,092,951 datasets in 1,837 repositories, mentioned in 1,879,482
-research articles from 18,677 journals. These and further numbers are
-displayed in the DCC dashboard
+(DCC) (\citeproc{ref-dataciteDataCitationCorpus2024}{DataCite 2024}) is
+the first comprehensive approach to address this issue by text-mining a
+large body of the published literature for references to reused data. It
+includes 4,892,673 dataset references to 3,092,951 datasets in 1,837
+repositories, mentioned in 1,879,482 research articles from 18,677
+journals. These and further numbers are displayed in the DCC dashboard
 (\citeproc{ref-DashboardPageData}{{``Dashboard Page - {Data Citation
 Corpus},''} n.d.}) Beyond this dashboard, so far only two analyses
 making use of the DCC have been published to date
@@ -1078,7 +1077,7 @@ analyzed in which repositories the reused datasets were deposited. We
 observed that out of 175 datasets which had been referenced, 86 (49.1\%)
 had been deposited in the Gene Expression Omnibus (GEO)
 (Figure~\ref{fig-repo-dist-ds}). The overall pattern was very similar
-when looking at the level of mentions rather than datasets
+when looking at the level of references rather than datasets
 (Supplementary Figure~\ref{suppfig-repo-dist}). Overall, references were
 overwhelmingly to datasets from the fields of genomics and proteomics,
 i.e., sequences of DNA, RNA, and proteins. On the level of individual
@@ -1110,8 +1109,8 @@ We then used a logistic regression to examine which dataset-level
 characteristics were associated with the likelihood of being reused,
 defined as inclusion in the DCC in comparison to 200 randomly drawn
 datasets that were not found to be reused. This analysis examined
-factors associated with the probability of a dataset to be mentioned. We
-found that the use of DOIs is \textbf{negatively} correlated with
+factors associated with the probability of a dataset to be referenced.
+We found that the use of DOIs is \textbf{negatively} correlated with
 dataset reuse, as shown by logistic regression (\emph{p} \textless{}
 0.001; Odds Ratio = 0.15; Figure~\ref{fig-matched-non}). This result,
 which seems counterintuitive at first, can be explained by the higher
@@ -1127,9 +1126,9 @@ references belonging to Dryad, Figshare, Mendeley, and Zenodo
 (Supplementary Figure~\ref{suppfig-dcc-rep}). However, even this small
 number is not reflected in the references to Charité datasets. While
 datasets in general-purpose repositories constitute 20.5\% of shared
-datasets as detected using ODDPub, only 2.5\% of mentioned datasets were
-shared in general-purpose repositories. On the level of references, the
-contrast was even more stark, with only 0.5\% of dataset references
+datasets as detected using ODDPub, only 2.5\% of referenced datasets
+were shared in general-purpose repositories. On the level of references,
+the contrast was even more stark, with only 0.5\% of dataset references
 referring to datasets in general-purpose repositories. Thus, the
 negative correlation between DOIs and dataset reuse is highly likely a
 collateral effect of the fact that data from disciplinary repositories
@@ -1417,7 +1416,7 @@ It has been described extensively before (e.g.
 indicate both the sharing and the reuse of data. Correspondingly, we
 observed, in addition to 1,497 cases of dataset reuse (also see below
 for a discussion of data sharing vs reuse), 275 cases where authors
-mentioned datasets they had themselves created, with this number
+referenced datasets they had themselves created, with this number
 applying to the subset of datasets detected using ODDPub. It is because
 of the exclusion of articles with author overlap (i.e., own data use),
 as well as the original Charité articles with which data had been
@@ -1502,8 +1501,8 @@ of certain unique and well-curated datasets.
 reuse}\label{sec-discussion-undetected}
 
 We report references to Charité datasets detected via two sources:
-mentions of datasets in the literature on the one hand and indirect data
-citations through data articles on the other. Combining these two
+references to datasets in the literature on the one hand and indirect
+data citations through data articles on the other. Combining these two
 sources, we obtain an overall number of 210 Charité datasets which have
 been referenced 3,225 times. Thus, we observe that datasets shared
 alongside articles co-authored by Charité researchers in a given year
@@ -1539,11 +1538,11 @@ decreasing the number of detected reuse cases, see section 4.5.
   6.1\% of all references detected. We expect that the coverage of the
   DCC for our use case is far higher, both because of our extensive
   standardization and cleaning, and because of the nature of the
-  references we aimed to detect (mentions of reused data, rather than
-  citations of own data). Nevertheless, the sources of data references
-  in Strecker, Soltau, and Bach (\citeproc{ref-strecker2025}{2025})
-  indicate that a substantial number of references was missed due to
-  incomplete coverage in the DCC.
+  references we aimed to detect (primarily mentions of reused data,
+  rather than citations of own data). Nevertheless, the sources of data
+  references in Strecker, Soltau, and Bach
+  (\citeproc{ref-strecker2025}{2025}) indicate that a substantial number
+  of references was missed due to incomplete coverage in the DCC.
 \item
   While some repositories create versioned identifiers (e.g.~dbGaP,
   figshare) or allow additions to a deposit under the same identifier
@@ -1634,7 +1633,7 @@ future.
 
 On a more general note, the approach we follow can only capture one type
 of data reuse, namely the reuse which contributes to published research
-and is considered by researchers to be worthy of a mention. Data
+and is considered by researchers to be worthy of a reference. Data
 referencing practices differ between communities
 (\citeproc{ref-gregory2023}{Gregory et al. 2023}), and it has been shown
 that not all data uses will be referenced in publications with equal
