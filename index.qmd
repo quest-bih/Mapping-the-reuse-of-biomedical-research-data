@@ -45,6 +45,7 @@ crossref:
 ---
 
 ::: {.content-visible when-format="pdf"}
+```{=tex}
 \begin{center}
 {\LARGE Matching data references and institutional output to map the reuse of biomedical research data\par}
 \vspace{0.8em}
@@ -55,6 +56,7 @@ Avihay Cohen$^{1}$, Blanka Ivanovic$^{1}$, Anastasiia Iarkaeva$^{1}$, Vladislav 
 {\small $\ast$ Corresponding author\par}
 \end{center}
 \vspace{1em}
+```
 :::
 
 ```{r}
@@ -259,7 +261,13 @@ We started from a set of `r format(res$total_published_charite_dois, scientific 
 
 <br>
 
-![Flowchart detailing the detection of Charité datasets mentioned in the DCC. The flowchart shows the process from obtaining open and restricted-access dataset identifiers using both ODDPub and DataStet sources, through identification of datasets mentioned in the DCC, up to the overall number of instances of dataset reuse. Data identified using ODDPub include datasets added after using ODDPub-identified datasets as a seed.](plots_files/plots_png/fig-dist-counts.png){#fig-dist-counts width="\\linewidth" height="0.82\\textheight"}
+::: {.content-visible when-format="html"}
+![Flowchart detailing the detection of Charité datasets mentioned in the DCC. The flowchart shows the process from obtaining open and restricted-access dataset identifiers using both ODDPub and DataStet sources, through identification of datasets mentioned in the DCC, up to the overall number of instances of dataset reuse. Data identified using ODDPub include datasets added after using ODDPub-identified datasets as a seed.](plots_files/plots_png/flowchart_high_res/flowchart.svg){#fig-dist-counts width="100%"}
+:::
+
+::: {.content-visible when-format="pdf"}
+![Flowchart detailing the detection of Charité datasets mentioned in the DCC. The flowchart shows the process from obtaining open and restricted-access dataset identifiers using both ODDPub and DataStet sources, through identification of datasets mentioned in the DCC, up to the overall number of instances of dataset reuse. Data identified using ODDPub include datasets added after using ODDPub-identified datasets as a seed.](plots_files/plots_png/flowchart_high_res/flowchart.pdf){#fig-dist-counts width=\linewidth}
+:::
 
 <br>
 
@@ -278,7 +286,6 @@ We started from a set of `r format(res$total_published_charite_dois, scientific 
 :::
 
 :::
-
 
 <br>
 

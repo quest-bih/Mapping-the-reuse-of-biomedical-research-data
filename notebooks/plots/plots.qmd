@@ -6,6 +6,10 @@ format:
   html:
     self-contained: true
     htmlwidgets: true
+    fig-format: svg
+  pdf:
+    fig-format: pdf
+    fig-dpi: 300
 prefer-html: true
 editor: visual
 ---

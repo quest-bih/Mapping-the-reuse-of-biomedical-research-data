@@ -5,7 +5,7 @@ project:
 manuscript:
   article: index.qmd
   notebooks: 
-    - notebook: notebooks/plots/plots.qmd  # plots
+    - notebook: notebooks/plots/plots.qmd  # plots for html rendering
 execute:
   echo: false
   warning: false
