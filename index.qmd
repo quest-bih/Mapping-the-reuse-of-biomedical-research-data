@@ -27,6 +27,8 @@ authors:
     corresponding: true
     orcid: "0000-0002-2368-464X"
 format:
+  pdf:
+    title-block-style: none
   html:
     self-contained: true
     page-layout: full
@@ -41,6 +43,19 @@ crossref:
       reference-prefix: "Supplementary Figure"
       caption-prefix: "Supplementary Figure"
 ---
+
+::: {.content-visible when-format="pdf"}
+\begin{center}
+{\LARGE Matching data references and institutional output to map the reuse of biomedical research data\par}
+\vspace{0.8em}
+Avihay Cohen$^{1}$, Blanka Ivanovic$^{1}$, Anastasiia Iarkaeva$^{1}$, Vladislav Nachev$^{1}$, Evgeny Bobrov$^{1,\ast}$\par
+\vspace{0.4em}
+{\small $^{1}$ Berlin Institute of Health at Charité - Universitätsmedizin Berlin (BIH), QUEST Center for Responsible Research\par}
+\vspace{0.2em}
+{\small $\ast$ Corresponding author\par}
+\end{center}
+\vspace{1em}
+:::
 
 ```{r}
 
@@ -295,7 +310,7 @@ We investigated further determinants of dataset reuse and found that human data,
 :::
 
 ::: {.content-visible when-format="pdf"}
-![Properties of Institutional Dataset Reuse (N = 175). The Sankey plot maps characteristics of mentioned datasets and the relations between them. The dataset properties displayed are, from left to right: (i) is the data identified using a DOI or an accession number, (ii) is the data shared with a CC license, (iii) is the data openly available or restricted-access, (iv) which repository is the data deposited in, (v) is the data collected from human subjects, and (vi) is the data related to COVID-19 research.](plots_files/sankey/sankey_for_pdf.png)
+![Properties of Institutional Dataset Reuse (N = 175). The Sankey plot maps characteristics of mentioned datasets and the relations between them. The dataset properties displayed are, from left to right: (i) is the data identified using a DOI or an accession number, (ii) is the data shared with a CC license, (iii) is the data openly available or restricted-access, (iv) which repository is the data deposited in, (v) is the data collected from human subjects, and (vi) is the data related to COVID-19 research.](plots_files/sankey/sankey_for_pdf.png){#fig-sankey-2 width=\linewidth height=0.82\textheight}
 :::
 
 <br>
