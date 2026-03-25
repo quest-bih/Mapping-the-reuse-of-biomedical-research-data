@@ -267,15 +267,18 @@ We started from a set of `r format(res$total_published_charite_dois, scientific 
 
 <br>
 
-::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="(a) Frequency Distribution of Datasets Mentions (N = 175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset and the y-axis shows the number of datasets corresponding to each mention frequency. (b) Venn diagram showing the contribution of each data source (ODDPub and DataStet) to identified mentioned datasets (N = 175). ODDPub includes datasets that were added using ODDPub-identified datasets as a seed."}
+::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="(a) Frequency Distribution of Datasets Mentions (N=175). The histogram displays the number of times individual datasets were mentioned across all mentioning articles. The x-axis indicates the frequency of mentions per dataset, while the y-axis shows the number of datasets corresponding to each mention frequency. (b) Contribution of each data source to identified mentioned datasets (N = 175). The Venn diagram shows the number of mentioned datasets that originated from each source (ODDPub and DataStet), including the overlap between the sources. ODDPub includes datasets that were added using ODDPub-identified datasets as a seed."}
+
 ::: {style="height: 420px;"}
-{{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist >}}
+{{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist width="100%" height="420px" >}}
 :::
 
 ::: {style="height: 420px;"}
-{{< embed notebooks/plots/plots.qmd#fig-venn-ids >}}
+{{< embed notebooks/plots/plots.qmd#fig-venn-ids width="100%" height="420px" >}}
 :::
+
 :::
+
 
 <br>
 
@@ -338,13 +341,15 @@ However, this analysis is limited by the short time period observed. In addition
 In addition to an analysis of data references, we conducted an independent analysis of indirect data citations. As described in detail in the methods section (see @sec-methods-charite-data-articles), this analysis is based on a forward citation search on a set of data articles. Subsequently, we manually detected whether a specific reference was pointing to the content of the data article itself, or was rather an indirect dataset citation, where the data article citation stood in for the dataset. In this analysis of data articles published between 2019 (i.e., starting a year earlier than the DCC analysis) and 2022 in the journals Scientific Data and Data in Brief (n = `r res$da_dois`), we detected `r res$da_ids` shared datasets overall. These articles had been cited `r format(res$da_mentions, scientific = FALSE, big.mark = ",")` times. In the 4 cases where data articles were cited \>60 times, we restricted manual checks to 60 references. In this "truncated" set, we found that out of 537 references, 113 references (21%) where in fact indirect data citations. We used this to extrapolate numbers for the additional references to the three most-cited articles for which not all referencing articles could be screened. Adding these extrapolations, we estimated `r res$da_est_mentions` citations for these `r res$da_ids` datasets (@fig-da-flowchart). It should be mentioned that the overall number of indirect data citations is strongly impacted by one outlier, which received an extrapolated number of 662 references. However, even after removing this outlier, we would still estimate 184 indirect data citations. Thus, indirect data citations are very common, and if they are not taken into account, a major fraction of institutional dataset references would be missed. In addition, the fact that these datasets were rarely published in OMICS repositories (only 5 out of `r res$da_ids` datasets; @fig-repo-dist-ds-da) suggests a very different pattern of sharing and reuse for datasets presented in data articles.
 
 ::: {#fig-da-side-by-side layout-ncol="2" fig-cap="(a) Overview of Charité datasets indirectly cited through data articles. The flowchart diagram shows how many data articles were analyzed, the number of datasets shared, how often indirect data citations were detected, and how many were extrapolated based on the manually screened sample. (b) Distribution of repositories in which datasets shared with data articles had been deposited (N = 35)."}
+
 ::: {style="height: 420px;"}
-{{< embed notebooks/plots/plots.qmd#fig-da-flowchart >}}
+{{< embed notebooks/plots/plots.qmd#fig-da-flowchart width="100%" height="420px" >}}
 :::
 
 ::: {style="height: 420px;"}
-{{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds-da >}}
+{{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds-da width="100%" height="420px" >}}
 :::
+
 :::
 
 # Discussion {#sec-discussion}
