@@ -143,6 +143,7 @@
 \floatplacement{suppfig}{H}
 \captionsetup[figure]{format=plain,justification=raggedright,singlelinecheck=false}
 \captionsetup[table]{format=plain,justification=raggedright,singlelinecheck=false}
+\captionsetup[suppfig]{format=plain,justification=raggedright,singlelinecheck=false}
 \KOMAoption{captions}{tableheading}
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
@@ -243,7 +244,7 @@ indicative of reuse. We observed that 4.9\% of datasets shared between
 datasets from this period were reused, which had been referenced 1497
 times. The large majority of reused datasets were from `omics' fields,
 which generate particularly structured and standardized data. Data from
-humans had a higher probability of reuse, as well as Covid-19-related
+humans had a higher probability of reuse, as well as COVID-19-related
 data. Dataset properties indicative of technical reusability as DOIs and
 CC licenses had no positive influence on reuse probability. We conducted
 a complimentary analysis of datasets shared alongside data articles.
@@ -1010,12 +1011,13 @@ were cited 1,497 times.
 }
 
 \caption{\label{fig-dist-counts}Flowchart detailing the detection of
-Charité datasets mentioned in the DCC. The flowchart shows the process
-from obtaining open and restricted-access dataset identifiers using both
-ODDPub and DataStet sources, through identification of datasets
-mentioned in the DCC, up to the overall number of instances of dataset
-reuse. Data identified using ODDPub include datasets added after using
-ODDPub-identified datasets as a seed.}
+Charité datasets referenced in the literature, as listed in the DCC. The
+flowchart shows the process from obtaining open and restricted-access
+dataset identifiers using both ODDPub and DataStet sources, through
+identification of datasets included in the DCC, up to determining the
+overall number of instances of dataset reuse. Data identified using
+ODDPub include datasets added after using ODDPub-identified datasets as
+a seed.}
 
 \end{figure}%
 
@@ -1057,15 +1059,15 @@ method, and only 35.4\% of articles were detected using both approaches.
 \end{minipage}%
 
 \caption{\label{fig-dcc-side-by-side}Frequency Distribution of Datasets
-Mentions (N=175). The histogram displays the number of times individual
-datasets were mentioned across all mentioning articles. The x-axis
-indicates the frequency of mentions per dataset, while the y-axis shows
-the number of datasets corresponding to each mention frequency. (b)
-Contribution of each data source to identified mentioned datasets (N =
-175). The Venn diagram shows the number of mentioned datasets that
-originated from each source (ODDPub and DataStet), including the overlap
-between the sources. ODDPub includes datasets that were added using
-ODDPub-identified datasets as a seed.}
+References (N=175). The histogram displays the number of times
+individual datasets were referenced across all referencing articles. The
+x-axis indicates the frequency of references per dataset, while the
+y-axis shows the number of datasets corresponding to each reference
+frequency. (b) Contribution of each data source to identified referenced
+datasets (N = 175). The Venn diagram shows the number of referenced
+datasets that originated from each source (ODDPub and DataStet),
+including the overlap between the sources. ODDPub includes datasets that
+were added using ODDPub-identified datasets as a seed.}
 
 \end{figure}%
 
@@ -1098,9 +1100,9 @@ fraction of data reuse cases overall.
 
 }
 
-\caption{\label{fig-repo-dist-ds}Distribution of mentioned datasets
-across repositories (N = 175). The bar plot displays the number of
-mentioned datasets across all mentioning articles, split by the
+\caption{\label{fig-repo-dist-ds}Distribution of Referenced Datasets
+across Repositories (N = 175). The bar plot displays the number of
+referenced datasets across all mentioning articles, split by the
 repository where data were deposited.}
 
 \end{figure}%
@@ -1174,18 +1176,19 @@ a set of highly-used disciplinary repositories.
 
 }
 
-\caption{\label{fig-matched-non}Determinants of institutional dataset
-reuse. The figure shows odds ratios for inclusion in the DCC. 175 reused
-datasets (i.e., datasets that were found in the DCC) and a sample of 200
-datasets that were not found in the DCC were included in this analysis.
-Values \textgreater1 indicate higher odds and values \textless1 indicate
-lower odds. For example, human datasets have 1.97 times the odds of
-being reused, whereas datasets with DOI identifiers have 0.85 times (1 -
-0.15) the odds of being reused. All odds ratios are adjusted, meaning
-that each estimate reflects the association between a given determinant
-and inclusion in the DCC, while controlling for the other determinants
-in the model. Significance levels are indicated as follows: \emph{p
-\textless{} 0.05, \textbf{p \textless{} 0.01, }}p \textless{} 0.001.}
+\caption{\label{fig-matched-non}Determinants of Institutional Dataset
+Reuse. The figure shows odds ratios for inclusion in the DCC. 175
+referenced datasets (i.e., datasets that were found in the DCC) and a
+sample of 200 datasets that were not found in the DCC were included in
+this analysis. Values \textgreater1 indicate higher odds and values
+\textless1 indicate lower odds. For example, human datasets have 1.97
+times the odds of being reused, whereas datasets with DOI identifiers
+have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are
+adjusted, meaning that each estimate reflects the association between a
+given determinant and inclusion in the DCC, while controlling for the
+other determinants in the model. Significance levels are indicated as
+follows: \emph{p \textless{} 0.05, \textbf{p \textless{} 0.01, }}p
+\textless{} 0.001.}
 
 \end{figure}%
 
@@ -1252,17 +1255,17 @@ association was, however, not statistically significant (IRR = 0.78,
 
 }
 
-\caption{\label{fig-age-citation-1}Distribution of Mentions by dataset
-age. The plot shows the relation between the age of datasets and the
-number of times it was mentioned. The plot includes only the seven most
-mentioned datasets among the subset of those datasets which were
-mentioned in all four age bins, i.e.~0, 1, 2, and 3 years after their
+\caption{\label{fig-age-citation-1}Distribution of References by Dataset
+Age. The plot shows the relation between the age of datasets and the
+number of times it was referenced. The plot includes only the seven most
+referenced datasets among the subset of those datasets which were
+referenced in all four age bins, i.e., 0, 1, 2, and 3 years after their
 publication. The dataset age (X axis) is the number of years that have
 passed between the dataset publication year and the publication year of
-the mentioning article. Dataset identifiers are added in blue text, and
-the number of mentions during a particular age bin is added in red text.
-The dashed line displays the overall trend in the number of mentions
-over age bins for this subset of datasets.}
+the referencing article. Dataset identifiers are added in blue text, and
+the number of references during a particular age bin is added in red
+text. The dashed line displays the overall trend in the number of
+references over age bins for this subset of datasets.}
 
 \end{figure}%
 
@@ -1289,16 +1292,17 @@ publication.
 
 }
 
-\caption{\label{fig-ref-by-year-top-7}Distribution of mentions by year
-(N = 1,495). The bar plot displays the frequency of dataset mentions
-across all mentioning articles by the year of mention, defined as the
-publication year of the corresponding mentioning article. The seven most
-frequently mentioned datasets are highlighted by individual colors,
-while the sum of all other mentions is shown in grey. Two mentions from
-2024 are not presented in the plot. Note that datasets were detected
-through Charité articles from the years 2020 to 2023, but these datasets
-could have already been shared with other, earlier articles. This
-explains the detection of mentioning articles from before 2020.}
+\caption{\label{fig-ref-by-year-top-7}Distribution of References by Year
+(N = 1,495). The bar plot displays the frequency of dataset references
+across all referencing articles by the year of reference, defined as the
+publication year of the corresponding referencing article. The seven
+most frequently referenced datasets are highlighted by individual
+colors, while the sum of all other references is shown in grey. Two
+references from 2024 are not presented in the plot. Note that datasets
+were detected through Charité articles from the years 2020 to 2023, but
+these datasets could have already been shared with other, earlier
+articles. This explains the detection of referencing articles from
+before 2020.}
 
 \end{figure}%
 
@@ -1361,8 +1365,8 @@ articles.
 
 \end{minipage}%
 
-\caption{\label{fig-da-side-by-side}Overview of Charité datasets
-indirectly cited through data articles. The flowchart diagram shows how
+\caption{\label{fig-da-side-by-side}Overview of Charité Datasets
+Indirectly Cited through Data Articles. The flowchart diagram shows how
 many data articles were analyzed, the number of datasets shared, how
 often indirect data citations were detected, and how many were
 extrapolated based on the manually screened sample. (b) Distribution of
@@ -1691,11 +1695,8 @@ Most reused datasets were shared via disciplinary repositories,
 substantially beyond the fraction expected based on both the overall
 sample of Charité datasets and the distribution within the DCC. Amongst
 the datasets shared by Charité researchers in 2023, 31.6\% of datasets
-(137 out of 433) were deposited in general-purpose repositories. The DCC
-dashboard (\citeproc{ref-DashboardPageData}{{``Dashboard Page - {Data
-Citation Corpus},''} n.d.}) indicated as of February
-1\textsuperscript{st} 2025, when it displayed numbers pertinent to the
-DCC v3 used in our analysis, that 36\% of identifiers in the DCC were
+(137 out of 433) were deposited in general-purpose repositories. In DCC
+version 3 used in out analysis, 36\% of identifiers in the DCC were
 DOIs, and thus typically deposits in general-purpose repositories, and
 64\% were accession numbers. However, these fractions of 31.6\% and
 36\%, respectively, are not reflected in the reuse patterns we observe.
@@ -2042,10 +2043,11 @@ with our study we contribute evidence for this discussion.
 statement}\label{data-and-code-availability-statement}
 
 A reproducibility package which includes data, code, and text is
-deposited in \ldots{} {[}Github{]}. The release which corresponds to the
-version used to generate the article was also deposited at \ldots{}
-{[}Zenodo{]}. New versions of the article will be accompanied by new
-releases in Github and new versions of the deposit in Zenodo.
+deposited in \textbf{Github - put URL of public release}. The release
+which corresponds to the version used to generate the article was also
+deposited at http://doi.org/10.5281/zenodo.19221824. New versions of the
+article will be accompanied by new releases in Github and new versions
+of the deposit in Zenodo.
 
 \section{Supplementary Materials}\label{sec-supp}
 
@@ -2063,11 +2065,11 @@ releases in Github and new versions of the deposit in Zenodo.
 
 }
 
-\caption{\label{suppfig-repo-dist}Distribution of Mentions Across
+\caption{\label{suppfig-repo-dist}Distribution of References across
 Repositories (N = 1,497). The bar plot shows the frequency of dataset
-mentions by repository across all mentioning articles. Individual
+references by repository across all referencing articles. Individual
 datasets may be counted multiple times per repository if they were
-mentioned more than once. The figure is based on 175 mentioned
+referenced more than once. The figure is based on 175 referenced
 datasets.}
 
 \end{suppfig}%
@@ -2080,8 +2082,8 @@ datasets.}
 
 }
 
-\caption{\label{suppfig-dcc-rep}Distribution of the 20 most prevalent
-repositories in the DCC (N = 4,742,484). The bar plot shows the number
+\caption{\label{suppfig-dcc-rep}Distribution of the 20 Most Prevalent
+Repositories in the DCC (N = 4,742,484). The bar plot shows the number
 of records associated with each repository across all articles listed in
 the DCC. Note that some DCC entries contain values in the `repository'
 field which are in fact indicative of publishers rather than
@@ -2097,14 +2099,15 @@ repositories.}
 
 }
 
-\caption{\label{suppfig-age-citation-2}Distribution of Mentions by
-dataset age. The plot shows the relation between the age of datasets and
-the number of times it was mentioned. The dataset age (X axis) is the
+\caption{\label{suppfig-age-citation-2}Distribution of References by
+Dataset Age. The plot shows the relation between the age of datasets and
+the number of times it was referenced. The dataset age (X axis) is the
 number of years that have passed between the dataset publication year
-and the publication year of the mentioning article. Dataset identifiers
-are added in blue text, and the number of mentions during a particular
-age bin is added in red text. The figure includes all reused datasets (N
-= 175), many of which are used only once.}
+and the publication year of the referencing article. Dataset identifiers
+are added in blue text, and the number of references during a particular
+age bin is added in red text. The figure includes all reused datasets
+that were referenced in all four ages, i.e., 0, 1, 2, and 3 years after
+their publication (N = 123), many of which are used only once.}
 
 \end{suppfig}%
 

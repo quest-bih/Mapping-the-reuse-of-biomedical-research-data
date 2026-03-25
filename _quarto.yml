@@ -50,6 +50,7 @@ format:
         \floatplacement{suppfig}{H}
         \captionsetup[figure]{format=plain,justification=raggedright,singlelinecheck=false}
         \captionsetup[table]{format=plain,justification=raggedright,singlelinecheck=false}
+        \captionsetup[suppfig]{format=plain,justification=raggedright,singlelinecheck=false}
     notebook-links: false
   jats: default
 

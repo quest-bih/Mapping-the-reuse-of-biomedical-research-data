@@ -90,7 +90,7 @@ ds_freq |>
     labels = c(1, 3, 10, 30, 100)   # Labels for x-axis
   ) +
   labs(
-    x = "Number of Mentions (Log Scale)",
+    x = "Number of References (Log Scale)",
     y = "Number of Datasets"
   ) +
   theme_classic() +
@@ -153,7 +153,7 @@ rep_dt |>
     expand = expansion(mult = c(0.02, 0.15))
   ) +
   coord_flip() +
-  labs(x = "Repository", y = "Number of Mentions (Log Scale)") +
+  labs(x = "Repository", y = "Number of References (Log Scale)") +
   theme_classic() +
   theme(
     legend.position = "none",
@@ -172,7 +172,7 @@ rep_dt |>
 
 ```{r}
 #| label: fig-ref-by-year-top-7
-#| fig-cap: Distribution of mentions by year (N = 1,495). The bar plot displays the frequency of dataset mentions across all mentioning articles by the year of mention, defined as the publication year of the corresponding mentioning article. The seven most frequently mentioned datasets are highlighted by individual colors, while the sum of all other mentions is shown in grey. Two mentions from 2024 are not presented in the plot. Note that datasets were detected through Charité articles from the years 2020 to 2023, but these datasets could have already been shared with other, earlier articles. This explains the detection of mentioning articles from before 2020.
+#| fig-cap: Distribution of References by Year (N = 1,495). The bar plot displays the frequency of dataset references across all referencing articles by the year of reference, defined as the publication year of the corresponding referencing article. The seven most frequently referenced datasets are highlighted by individual colors, while the sum of all other references is shown in grey. Two references from 2024 are not presented in the plot. Note that datasets were detected through Charité articles from the years 2020 to 2023, but these datasets could have already been shared with other, earlier articles. This explains the detection of referencing articles from before 2020.
 #| fig.height: 10
 #| fig.width: 12
 
@@ -209,8 +209,8 @@ year_dcc_dt_all_for_plot_collapsed |>
     size = 4.3
   ) +
   labs(
-    x = "Publication Year of Mentioning Article",
-    y = "Number of Mentions",
+    x = "Publication Year of Referencing Article",
+    y = "Number of References",
     fill = "Accession Number"
   ) +
   scale_x_discrete(
@@ -251,7 +251,7 @@ year_dcc_dt_all_for_plot_collapsed |>
 
 ```{r}
 #| label: fig-datasets-properties
-#| fig-cap: Properties of Mentioned Datasets (N = 175)
+#| fig-cap: Properties of Referenced Datasets (N = 175)
 #| fig.height: 8
 #| fig.width: 12
 
@@ -384,7 +384,7 @@ plot_Sankey <- function(links, ...) {
 ::: {.content-visible when-format="html"}
 ```{r}
 #| label: fig-datasets-properties-2
-#| fig-cap: Determinants of institutional dataset reuse (N = 175)
+#| fig-cap: Determinants of Institutional Dataset Reuse (N = 175)
 #| fig-height: 8
 #| fig-width: 12
 #| eval: true
@@ -495,7 +495,7 @@ ggplot2::ggsave(filename = png_file, plot = p_static, width = 12, height = 8, dp
 
 ```{r}
 #| label: fig-dcc-pub-years
-#| fig-cap: DCC papers publication years distribution
+#| fig-cap: DCC Papers Publication Years Distribution
 #| fig.height: 8
 #| fig.width: 10
 
@@ -715,7 +715,7 @@ not_mentioned_years |>
 
 ```{r}
 #| label: fig-repo-dist-ds
-#| fig-cap: Distribution of mentioned datasets across repositories (N = 175). The bar plot displays the number of mentioned datasets across all mentioning articles, split by the repository where data were deposited.
+#| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets across all mentioning articles, split by the repository where data were deposited.
 #| fig.height: 10
 #| fig.width: 10
 
@@ -754,7 +754,7 @@ rep_dt_ds |>
 
 ```{r}
 #| label: fig-age-citation-1
-#| fig-cap: Distribution of Mentions by dataset age. The plot shows the relation between the age of datasets and the number of times it was mentioned. The plot includes only the seven most mentioned datasets among the subset of those datasets which were mentioned in all four age bins, i.e. 0, 1, 2, and 3 years after their publication. The dataset age (X axis) is the number of years that have passed between the dataset publication year and the publication year of the mentioning article. Dataset identifiers are added in blue text, and the number of mentions during a particular age bin is added in red text. The dashed line displays the overall trend in the number of mentions over age bins for this subset of datasets. 
+#| fig-cap: Distribution of References by Dataset Age. The plot shows the relation between the age of datasets and the number of times it was referenced. The plot includes only the seven most referenced datasets among the subset of those datasets which were referenced in all four age bins, i.e., 0, 1, 2, and 3 years after their publication. The dataset age (X axis) is the number of years that have passed between the dataset publication year and the publication year of the referencing article. Dataset identifiers are added in blue text, and the number of references during a particular age bin is added in red text. The dashed line displays the overall trend in the number of references over age bins for this subset of datasets. 
 #| fig.height: 10
 #| fig.width: 10
 
@@ -805,7 +805,7 @@ ids_and_years_only_0_3_ages_for_plot |>
   scale_y_continuous(trans = scales::pseudo_log_trans(base = 12, sigma = 10)) +
   labs(
     x = "Age of Dataset (Years Since Publication)",
-    y = "Number of Mentions (Log Scale)"
+    y = "Number of References (Log Scale)"
   ) +
   theme_classic() +
   theme(
@@ -872,7 +872,7 @@ geom_text(
   scale_y_continuous(trans = scales::pseudo_log_trans(base = 12, sigma = 10)) +
   labs(
     x = "Age of Dataset (Years Since Publication)",
-    y = "Number of Mentions (Log Scale)"
+    y = "Number of References (Log Scale)"
   ) +
   theme_classic() +
   theme(
@@ -890,7 +890,7 @@ geom_text(
 ```{r}
 #| label: fig-matched-non
 #| fig-cap: |
-#|   Determinants of institutional dataset reuse. The figure shows odds ratios for inclusion in the DCC. 175 reused datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model. Significance levels are indicated as follows: *p < 0.05, **p < 0.01, ***p < 0.001.
+#|   Determinants of Institutional Dataset Reuse. The figure shows odds ratios for inclusion in the DCC. 175 referenced datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model. Significance levels are indicated as follows: *p < 0.05, **p < 0.01, ***p < 0.001.
 #| fig.height: 10
 #| fig.width: 10
 
@@ -916,7 +916,7 @@ tidy_model_matched_non_matched |>
   coord_flip() +
   
   labs(
-    x = "Predictor",
+    x = "Determinant",
     y = "Likelihood of Reuse (Odds Ratio)"
   ) +
   theme_classic() +
