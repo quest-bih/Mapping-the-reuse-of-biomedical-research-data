@@ -22,17 +22,22 @@ format:
       hypothesis: true
   docx: default
   pdf:
+    title-block-style: none
+    title: ""
     fig-format: pdf
-    fig-dpi: 600
+    fig-dpi: 300
     number-sections: true
     number-depth: 3
     keep-tex: true
     cite-method: citeproc
     geometry:
-      - bottom=38mm
+      - bottom=24mm
       - includefoot
     include-in-header:
       text: |
+        \makeatletter
+        \renewcommand{\maketitle}{}
+        \makeatother
         \setlength{\footskip}{18mm}
         \usepackage{float}
         \usepackage{caption}
