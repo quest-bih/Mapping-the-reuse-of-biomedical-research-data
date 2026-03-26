@@ -15,6 +15,7 @@ output: html_document
 -   The data processing steps are described below under "Notebooks logic"
 -   All notebooks contain text and comments describing the data processing and analysis steps
 -   All raw data was processed and analyzed in R (R Studio) using a Quarto manuscript project
+-   The article is available in the root project folder in both HTML (`index.html`) and PDF (`index.pdf`) formats
 
 ------------------------------------------------------------------------
 
@@ -22,7 +23,13 @@ output: html_document
 
 Clone the repository to your local machine. Then, in RStudio's Console, run `renv::restore()` in order to install the exact R package versions recorded in `renv.lock` and recreate the project library on your machine.
 
-Rendering `index.qmd` will recreate the article.
+Generating the article in RStudio:
+
+1. Open `Investigating the Reuse of Biomedical Data Using the DCC.Rproj`
+2. Open `index.qmd`
+3. In Rstudio's terminal:
+  * `quarto render --to pdf` will recreate the article in a pdf format
+  * `quarto render --to html` will recreate the article in a html format
 
 ### Data Workflow Overview
 
@@ -33,11 +40,18 @@ Processing:
 -   Quarto notebooks in `notebooks/` load, clean and transform the data
 -   R scripts in `scripts/` contain additional data processing steps
 
-Output: Processed data is stored in `data/wrangling_steps` as the final step of data wrangling in each folder
+Output:
 
-Aggregated variables are generated for the manuscript in `scripts/vars_for_paper.R`.
+-   Processed data is stored in `data/wrangling_steps` as the final step of data wrangling in each folder
 
-Rendering: index.qmd compiles the final article.
+Results:
+
+-   In the root project folder, `results.txt` contains a all results of statistical analyses
+-   Results variables are generated in `scripts/vars_for_paper.R` and being referenced in the manuscript (`index.qmd`)
+
+Rendering:
+
+-   index.qmd compiles the final article.
 
 ## Notebooks logic and order of execution
 
@@ -69,14 +83,6 @@ Rendering: index.qmd compiles the final article.
 
 -   **Description**: Creates plots from tables created in "plots_prep.qmd". These plots are then referenced in the manuscript (`index.qmd`).
 
-## Generating the article in RStudio
-
-1. Open `Investigating the Reuse of Biomedical Data Using the DCC.Rproj`
-2. Open `index.qmd`
-3. In Rstudio's terminal:
-  * `quarto render --to pdf` will recreate the article in a pdf format
-  * `quarto render --to html` will recreate the article in a html format
-
 ## Software environment
 
 This project was developed using:
@@ -107,6 +113,10 @@ See `LICENSE` and `LICENSE-text-data.md` for details.
 Note: Third-party data or materials may have different licenses.
 
 ## Contact
+
+Name: Avihay Cohen
+Email: avihay.cohen@bih-charite.de
+Affiliation: Berlin Institute of Health at Charité - Universitätsmedizin Berlin (BIH), QUEST Center for Responsible Research
 
 Name: Evgeny Bobrov
 Email: evgeny.bobrov@bih-charite.de
