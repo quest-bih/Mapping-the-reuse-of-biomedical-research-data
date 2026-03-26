@@ -11,7 +11,7 @@ format:
     fig-format: pdf
     fig-dpi: 300
 prefer-html: true
-editor: visual
+editor: source
 ---
 
 # Setup
@@ -107,8 +107,8 @@ ds_freq |>
 # Distribution of References Across Repositories
 
 ```{r}
-#| label: fig-repo-dist
-#| fig.height: 10
+#| label: repo-dist
+#| fig.height: 7
 #| fig.width: 10
 
 # # linear scale: was created but is not used
@@ -146,7 +146,7 @@ rep_dt |>
            fill = "#80CBC4") +
   geom_text(aes(y = n, label = n),
             hjust = -0.2,
-            size = 6, color = "black") +
+            size = 5, color = "black") +
   scale_y_log10(
     breaks = c(1, 3, 10, 30, 100, 300, 1000),
     labels = scales::label_comma(),
@@ -159,7 +159,7 @@ rep_dt |>
     legend.position = "none",
     axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
     axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 20, color = "black"),
+    axis.text.y = element_text(size = 16, color = "black"),
     axis.text.x = element_text(size = 20, color = "black"),
     panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
     panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
@@ -557,10 +557,10 @@ geom_text(aes(y = n + 2, label = perc),
   labs(x = "Repository", y = "Number of Cases") +
   theme_classic() +
   theme(
-    axis.title.y = element_text(size = 18, color = "black", margin = margin(r = 20)),
-    axis.title.x = element_text(size = 18, color = "black"),
-    axis.text.x = element_text(size = 14, color = "black"),
-    axis.text.y = element_text(size = 14, color = "black"))
+    axis.title.y = element_text(size = 20, color = "black", margin = margin(r = 20)),
+    axis.title.x = element_text(size = 20, color = "black"),
+    axis.text.x = element_text(size = 16, color = "black"),
+    axis.text.y = element_text(size = 16, color = "black"))
 
 
 
@@ -716,7 +716,7 @@ not_mentioned_years |>
 ```{r}
 #| label: fig-repo-dist-ds
 #| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets across all mentioning articles, split by the repository where data were deposited.
-#| fig.height: 10
+#| fig.height: 6
 #| fig.width: 10
 
 # log scale
@@ -728,7 +728,7 @@ rep_dt_ds |>
            fill = "#80CBC4") +
   geom_text(aes(y = n, label = n),
             hjust = -0.2,
-            size = 6, color = "black") +
+            size = 5, color = "black") +
   scale_y_log10(
     breaks = c(1, 3, 10, 30, 100),
     labels = c(1, 3, 10, 30, 100),
@@ -741,7 +741,7 @@ rep_dt_ds |>
     legend.position = "none",
     axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
     axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 20, color = "black"),
+    axis.text.y = element_text(size = 16, color = "black"),
     axis.text.x = element_text(size = 20, color = "black"),
     panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
     panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
@@ -755,7 +755,7 @@ rep_dt_ds |>
 ```{r}
 #| label: fig-age-citation-1
 #| fig-cap: Distribution of References by Dataset Age. The plot shows the relation between the age of datasets and the number of times it was referenced. The plot includes only the seven most referenced datasets among the subset of those datasets which were referenced in all four age bins, i.e., 0, 1, 2, and 3 years after their publication. The dataset age (X axis) is the number of years that have passed between the dataset publication year and the publication year of the referencing article. Dataset identifiers are added in blue text, and the number of references during a particular age bin is added in red text. The dashed line displays the overall trend in the number of references over age bins for this subset of datasets. 
-#| fig.height: 10
+#| fig.height: 8
 #| fig.width: 10
 
 ids_and_years_only_0_3_ages_for_plot |>
@@ -823,7 +823,7 @@ ids_and_years_only_0_3_ages_for_plot |>
 
 ```{r}
 #| label: age-citation-2
-#| fig.height: 10
+#| fig.height: 8
 #| fig.width: 10
 
 # Prevent overlapping of text
@@ -891,7 +891,7 @@ geom_text(
 #| label: fig-matched-non
 #| fig-cap: |
 #|   Determinants of Institutional Dataset Reuse. The figure shows odds ratios for inclusion in the DCC. 175 referenced datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model. Significance levels are indicated as follows: *p < 0.05, **p < 0.01, ***p < 0.001.
-#| fig.height: 10
+#| fig.height: 8
 #| fig.width: 10
 
 tidy_model_matched_non_matched |>

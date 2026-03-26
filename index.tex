@@ -40,7 +40,7 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\usepackage[bottom=24mm,includefoot]{geometry}
+\usepackage[top=18mm,bottom=18mm,includefoot]{geometry}
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \setcounter{secnumdepth}{3}
 % Make \paragraph and \subparagraph free-standing
@@ -261,6 +261,8 @@ shared with disciplinary metadata and/or described by data articles. Our
 methods do not allow us to map data reuse in its entirety, and further
 large-scale studies on the determinants, temporal patterns and purposes
 of data reuse are needed.
+
+\newpage
 
 \section{Introduction}\label{sec-intro}
 
@@ -1002,6 +1004,38 @@ Section~\ref{sec-methods-match} for details). Including these datasets
 detected using DataStet, we obtained 175 Charité datasets overall which
 were cited 1,497 times.
 
+Figure~\ref{fig-venn-ids} shows the different data sources, and how they
+overlap. Here, we pooled in the oval depicting datasets extracted via
+ODDPub/Numbat data sources (1) and (2), as these are conceptually
+identical and will in the future be extracted in one step. The number of
+datasets found using the ODDPub text mining tool with manual validation,
+plus screening for additional identifiers was 118. This nearly exactly
+matched the number of identifiers extracted using the DataStet machine
+learning-based tool, also followed by manual validation, which was 119.
+A substantial number of dataset identifiers was detected only using one
+method, and only 35.4\% of articles were detected using both approaches.
+
+\subsection{Determinants of institutional dataset
+reuse}\label{sec-results-determinants}
+
+To better understand the patterns of institutional dataset reuse, we
+analyzed in which repositories the reused datasets were deposited. We
+observed that out of 175 datasets which had been referenced, 86 (49.1\%)
+had been deposited in the Gene Expression Omnibus (GEO)
+(Figure~\ref{fig-repo-dist-ds}). The overall pattern was very similar
+when looking at the level of references rather than datasets
+(Supplementary Figure~\ref{suppfig-repo-dist}). Overall, references were
+overwhelmingly to datasets from the fields of genomics and proteomics,
+i.e., sequences of DNA, RNA, and proteins. On the level of individual
+references, the ten most-referenced repositories contain datasets which
+are predominantly constituted by sequence data. Only 11 of 1,497 data
+references (0.7\%) referred to datasets of other type, deposited in
+either disciplinary repositories (e.g.~Electron Microscopy Data Bank, 4
+references) or general-purpose repositories (e.g.~Mendeley, 3
+references). This clearly shows that `omics' fields currently contribute
+the large majority of data references, and thus at least a major
+fraction of data reuse cases overall.
+
 \begin{figure}
 
 \centering{
@@ -1021,16 +1055,7 @@ a seed.}
 
 \end{figure}%
 
-Figure~\ref{fig-venn-ids} shows the different data sources, and how they
-overlap. Here, we pooled in the oval depicting datasets extracted via
-ODDPub/Numbat data sources (1) and (2), as these are conceptually
-identical and will in the future be extracted in one step. The number of
-datasets found using the ODDPub text mining tool with manual validation,
-plus screening for additional identifiers was 118. This nearly exactly
-matched the number of identifiers extracted using the DataStet machine
-learning-based tool, also followed by manual validation, which was 119.
-A substantial number of dataset identifiers was detected only using one
-method, and only 35.4\% of articles were detected using both approaches.
+\newpage
 
 \begin{figure}[H]
 
@@ -1068,42 +1093,6 @@ datasets (N = 175). The Venn diagram shows the number of referenced
 datasets that originated from each source (ODDPub and DataStet),
 including the overlap between the sources. ODDPub includes datasets that
 were added using ODDPub-identified datasets as a seed.}
-
-\end{figure}%
-
-\subsection{Determinants of institutional dataset
-reuse}\label{sec-results-determinants}
-
-To better understand the patterns of institutional dataset reuse, we
-analyzed in which repositories the reused datasets were deposited. We
-observed that out of 175 datasets which had been referenced, 86 (49.1\%)
-had been deposited in the Gene Expression Omnibus (GEO)
-(Figure~\ref{fig-repo-dist-ds}). The overall pattern was very similar
-when looking at the level of references rather than datasets
-(Supplementary Figure~\ref{suppfig-repo-dist}). Overall, references were
-overwhelmingly to datasets from the fields of genomics and proteomics,
-i.e., sequences of DNA, RNA, and proteins. On the level of individual
-references, the ten most-referenced repositories contain datasets which
-are predominantly constituted by sequence data. Only 11 of 1,497 data
-references (0.7\%) referred to datasets of other type, deposited in
-either disciplinary repositories (e.g.~Electron Microscopy Data Bank, 4
-references) or general-purpose repositories (e.g.~Mendeley, 3
-references). This clearly shows that `omics' fields currently contribute
-the large majority of data references, and thus at least a major
-fraction of data reuse cases overall.
-
-\begin{figure}[H]
-
-\centering{
-
-\pandocbounded{\includegraphics[keepaspectratio]{index_files/figure-latex/notebooks-plots-plots-fig-repo-dist-ds-output-1.png}}
-
-}
-
-\caption{\label{fig-repo-dist-ds}Distribution of Referenced Datasets
-across Repositories (N = 175). The bar plot displays the number of
-referenced datasets across all mentioning articles, split by the
-repository where data were deposited.}
 
 \end{figure}%
 
@@ -1168,6 +1157,23 @@ shaped by data content, the impact of repository practices on reuse is
 difficult to interpret against the backdrop of the specific practices of
 a set of highly-used disciplinary repositories.
 
+\vspace{16pt}
+
+\begin{figure}[H]
+
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{index_files/figure-latex/notebooks-plots-plots-fig-repo-dist-ds-output-1.png}}
+
+}
+
+\caption{\label{fig-repo-dist-ds}Distribution of Referenced Datasets
+across Repositories (N = 175). The bar plot displays the number of
+referenced datasets across all mentioning articles, split by the
+repository where data were deposited.}
+
+\end{figure}%
+
 \begin{figure}[H]
 
 \centering{
@@ -1199,6 +1205,8 @@ majority, shared openly, without either DOI or CC license.
 Restricted-access reused data were mostly shared through dbGaP.
 COVID-19-related data were mostly shared though GEO, EGA, and PDB.
 
+\newpage
+
 \begin{figure}
 
 \centering{
@@ -1217,6 +1225,8 @@ the data deposited in, (v) is the data collected from human subjects,
 and (vi) is the data related to COVID-19 research.}
 
 \end{figure}%
+
+\FloatBarrier
 
 \subsection{Data reuse as a function of dataset
 age}\label{sec-results-age}
@@ -1246,6 +1256,8 @@ seven datasets, we observed a negative correlation, corresponding to an
 average 22\% decrease in the number of citations per year. This
 association was, however, not statistically significant (IRR = 0.78,
 95\% CI {[}0.58-1.04{]}, \emph{p} = 0.09).
+
+\newpage
 
 \begin{figure}[H]
 
@@ -1283,6 +1295,8 @@ larger sets of data references. Figure~\ref{fig-ref-by-year-top-7} shows
 a fuller picture of citation by dataset year by including all dataset
 references and not applying a normalization to the year of dataset
 publication.
+
+\newpage
 
 \begin{figure}[H]
 
@@ -1339,6 +1353,8 @@ out of 35 datasets; Figure~\ref{fig-repo-dist-ds-da}) suggests a very
 different pattern of sharing and reuse for datasets presented in data
 articles.
 
+\vspace{30pt}
+
 \begin{figure}[H]
 
 \begin{minipage}{0.50\linewidth}
@@ -1374,6 +1390,8 @@ repositories in which datasets shared with data articles had been
 deposited (N = 35).}
 
 \end{figure}%
+
+\newpage
 
 \section{Discussion}\label{sec-discussion}
 
@@ -2049,19 +2067,17 @@ deposited at http://doi.org/10.5281/zenodo.19221824. New versions of the
 article will be accompanied by new releases in Github and new versions
 of the deposit in Zenodo.
 
+\newpage
+
 \section{Supplementary Materials}\label{sec-supp}
+
+\vspace{100pt}
 
 \begin{suppfig}
 
 \centering{
 
-\centering{
-
-\pandocbounded{\includegraphics[keepaspectratio]{index_files/figure-latex/notebooks-plots-plots-fig-repo-dist-output-2.png}}
-
-}
-
-\subcaption{\label{fig-repo-dist}}
+\pandocbounded{\includegraphics[keepaspectratio]{index_files/figure-latex/notebooks-plots-plots-repo-dist-output-2.png}}
 
 }
 
@@ -2110,6 +2126,8 @@ that were referenced in all four ages, i.e., 0, 1, 2, and 3 years after
 their publication (N = 123), many of which are used only once.}
 
 \end{suppfig}%
+
+\newpage
 
 \FloatBarrier
 

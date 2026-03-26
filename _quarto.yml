@@ -31,7 +31,8 @@ format:
     keep-tex: true
     cite-method: citeproc
     geometry:
-      - bottom=24mm
+      - top=18mm
+      - bottom=18mm
       - includefoot
     include-in-header:
       text: |
