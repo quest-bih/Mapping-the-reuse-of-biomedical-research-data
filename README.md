@@ -93,16 +93,6 @@ This project was developed using:
 
 Package versions are documented in `renv.lock`.
 
-## Citation
-
-If you use this repository, please cite:
-
-Avihay Cohen, Blanka Ivanovic, Anastasiia Iarkaeva, Vladislav Nachev, Evgeny Bobrov, 2026. **zenodo repo name**. Zenodo.  
-DOI: https://doi.org/10.5281/zenodo.19221824
-
-The corresponding code is available on GitHub:  
-**github release url**
-
 ## License
 
 - Code in this repository is licensed under the MIT License.
