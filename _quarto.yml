@@ -54,4 +54,4 @@ format:
     notebook-links: false
   jats: default
 
-editor: visual
+editor: source
