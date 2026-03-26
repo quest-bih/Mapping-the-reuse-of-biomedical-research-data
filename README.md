@@ -1,7 +1,7 @@
 ---
 title: "README"
 author: "Avihay Cohen"
-date: "2025-11-12"
+date: "2026-26-03"
 output: html_document
 ---
 
@@ -13,7 +13,7 @@ output: html_document
 
 -   This project uses the Data Citation Corpus (DCC) to map the reuse of datasets shared alongside articles published by researchers from Charité
 -   The data processing steps are described below under "Notebooks logic"
--   All notebooks contain text and comments describing the data processing steps
+-   All notebooks contain text and comments describing the data processing and analysis steps
 -   All raw data was processed and analyzed in R (R Studio) using a Quarto manuscript project
 
 ------------------------------------------------------------------------
@@ -22,7 +22,7 @@ output: html_document
 
 Clone the repository to your local machine. Then, in RStudio's Console, run `renv::restore()` in order to install the exact R package versions recorded in `renv.lock` and recreate the project library on your machine.
 
-Rendering **index.qmd** will recreate the article.
+Rendering `index.qmd` will recreate the article.
 
 ### Data Workflow Overview
 
@@ -33,15 +33,13 @@ Processing:
 -   Quarto notebooks in `notebooks/` load, clean and transform the data
 -   R scripts in `scripts/` contain additional data processing steps
 
-Output: Processed data is stored in `data/wrangling_steps` as the final step in each folder
+Output: Processed data is stored in `data/wrangling_steps` as the final step of data wrangling in each folder
 
-Plots:
+Aggregated variables are generated for the manuscript in `scripts/vars_for_paper.R`.
 
-Aggregated variables are generated for the manuscript
+Rendering: index.qmd compiles the final article.
 
-Rendering: index.qmd compiles the final paper
-
-## Notebooks logic
+## Notebooks logic and order of execution
 
 ### `notebooks/dcc_load_prep.qmd`
 
@@ -60,27 +58,56 @@ Rendering: index.qmd compiles the final paper
 
 ### `notebooks/joined_bind_add_metadata_verify.qmd`
 
--   **Description**: Joins both outputs above to one result table, adds metadata and verifies results to create a final result table
+-   **Description**: Joins both outputs of the two notebooks above to one result table, adds metadata and verifies results to create a final result table
 -   **Output**: `data/wrangling_steps/all_sources_binded/dcc_detected_ids_all_sources_8_dedup.RData`
 
 ### `notebooks/plots/plots_prep.qmd`
 
--   **Description**: Using results tables to create tables to feed into the plots code
--   **Output**: \`\`
+-   **Description**: Uses results tables to create tables to feed into the plots code
 
 ### `notebooks/plots.qmd`
 
--   **Description**: Creating plots from tables created in "plots.qmd"
--   **Output**: \`\`
+-   **Description**: Creates plots from tables created in "plots_prep.qmd". These plots are then referenced in the manuscript (`index.qmd`).
 
-## Generating the paper
+## Generating the article in RStudio
 
-quarto::quarto_render("index.qmd") will create an "index.html" file with the rendered paper.
+1. Open `Investigating the Reuse of Biomedical Data Using the DCC.Rproj`
+2. Open `index.qmd`
+3. In Rstudio's terminal:
+  * `quarto render --to pdf` will recreate the article in a pdf format
+  * `quarto render --to html` will recreate the article in a html format
+
+## Software environment
+
+This project was developed using:
+
+- R version 4.3.3 (2024-02-29 ucrt)
+- RStudio 2024.4.0.735
+- Quarto 1.6.42
+
+Package versions are documented in `renv.lock`.
 
 ## Citation
 
+If you use this repository, please cite:
+
+Avihay Cohen, Blanka Ivanovic, Anastasiia Iarkaeva, Vladislav Nachev, Evgeny Bobrov, 2026. **zenodo repo name**. Zenodo.  
+DOI: https://doi.org/10.5281/zenodo.19221824
+
+The corresponding code is available on GitHub:  
+**github release url**
+
 ## License
+
+- Code in this repository is licensed under the MIT License.
+- Text, documentation, and data are licensed under CC BY 4.0.
+
+See `LICENSE` and `LICENSE-text-data.md` for details.
+
+Note: Third-party data or materials may have different licenses.
 
 ## Contact
 
-Name: Email: Affiliation:
+Name: Evgeny Bobrov
+Email: evgeny.bobrov@bih-charite.de
+Affiliation: Berlin Institute of Health at Charité - Universitätsmedizin Berlin (BIH), QUEST Center for Responsible Research
