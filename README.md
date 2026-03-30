@@ -102,6 +102,13 @@ See `LICENSE` and `LICENSE-text-data.md` for details.
 
 Note: Third-party data or materials may have different licenses.
 
+## Archived citable version
+
+Releases of this repository are archived in Zenodo. Release v1.0.0 is available at https://doi.org/10.5281/zenodo.19235631. 
+
+Please cite this repository using the following citation:
+Cohen, A., Ivanović, B., Iarkaeva, A., Nachev, V., & Bobrov, E. (2026). quest-bih/Mapping-the-reuse-of-biomedical-research-data: Initial Release (data-citation-corpus). Zenodo. https://doi.org/10.5281/zenodo.19235631
+
 ## Contact
 
 Name: Avihay Cohen
