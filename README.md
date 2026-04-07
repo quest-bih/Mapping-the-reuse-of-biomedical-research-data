@@ -1,17 +1,18 @@
 ---
 title: "README"
 author: "Avihay Cohen"
-date: "2026-26-03"
+date: "07-04-2026"
 output: html_document
 ---
 
 ## Project Title
 
-*Investigating the Reuse of Biomedical Data Using the DCC*
+*Matching data references and institutional output to map thereuse of biomedical research data*
 
 ## Overview
 
--   This project uses the Data Citation Corpus (DCC) to map the reuse of datasets shared alongside articles published by researchers from Charité
+-   This project uses the 3rd version of the Data Citation Corpus (DCC) to map the reuse of datasets shared alongside articles published by researchers from Charité
+-   The DCC (v3) is available at https://doi.org/10.5281/zenodo.14897662) 
 -   The data processing steps are described below under "Notebooks logic"
 -   All notebooks contain text and comments describing the data processing and analysis steps
 -   All raw data was processed and analyzed in R (R Studio) using a Quarto manuscript project
@@ -46,14 +47,16 @@ Output:
 
 Results:
 
--   In the root project folder, `results.txt` contains a all results of statistical analyses
+-   In the root project folder, `results.txt` contains all results of statistical analyses
 -   Results variables are generated in `scripts/vars_for_paper.R` and being referenced in the manuscript (`index.qmd`)
 
 Rendering:
 
--   index.qmd compiles the final article.
+-   `index.qmd` compiles the final article.
 
 ## Notebooks logic and order of execution
+
+**Note:** Numeric suffixes in the `.RData` output file names (e.g., _4) refer to sequential processing steps in the data pipeline and should not be interpreted as version numbers.
 
 ### `notebooks/dcc_load_prep.qmd`
 
@@ -68,7 +71,7 @@ Rendering:
 ### `notebooks/ds_added_and_datastet_load_prep_match_clean.qmd`
 
 -   **Description**: Loads and cleans additionally extracted Charité datasets and dataset extracted from DataStet, looks for them in the DCC, cleans the results table
--   **Output**: `data/wrangling_steps/dcc_datastet_and_added/dcc_ds_and_added_joined_8_ex.RData.RData`
+-   **Output**: `data/wrangling_steps/dcc_datastet_and_added/dcc_ds_and_added_joined_8_ex.RData`
 
 ### `notebooks/joined_bind_add_metadata_verify.qmd`
 
