@@ -7,15 +7,15 @@ output: html_document
 
 ## Project Title
 
-*Matching data references and institutional output to map thereuse of biomedical research data*
+**Matching data references and institutional output to map the reuse of biomedical research data**
 
 ## Overview
 
 -   This project uses the 3rd version of the Data Citation Corpus (DCC) to map the reuse of datasets shared alongside articles published by researchers from Charité
--   The DCC (v3) is available at https://doi.org/10.5281/zenodo.14897662) 
+-   The DCC (v3) is available at https://doi.org/10.5281/zenodo.14897662 
 -   The data processing steps are described below under "Notebooks logic"
 -   All notebooks contain text and comments describing the data processing and analysis steps
--   All raw data was processed and analyzed in R (R Studio) using a Quarto manuscript project
+-   All raw data was processed and analyzed in R (RStudio) using a Quarto manuscript project
 -   The article is available in the root project folder in both HTML (`index.html`) and PDF (`index.pdf`) formats
 
 ------------------------------------------------------------------------
@@ -28,9 +28,9 @@ Generating the article in RStudio:
 
 1. Open `Investigating the Reuse of Biomedical Data Using the DCC.Rproj`
 2. Open `index.qmd`
-3. In Rstudio's terminal:
-  * `quarto render --to pdf` will recreate the article in a pdf format
-  * `quarto render --to html` will recreate the article in a html format
+3. In RStudio's terminal:
+  * `quarto render --to pdf` will recreate the article in a PDF format
+  * `quarto render --to html` will recreate the article in an HTML format
 
 ### Data Workflow Overview
 
@@ -48,7 +48,7 @@ Output:
 Results:
 
 -   In the root project folder, `results.txt` contains all results of statistical analyses
--   Results variables are generated in `scripts/vars_for_paper.R` and being referenced in the manuscript (`index.qmd`)
+-   Result variables are generated in `scripts/vars_for_paper.R` and are referenced in the manuscript (`index.qmd`)
 
 Rendering:
 
@@ -70,17 +70,17 @@ Rendering:
 
 ### `notebooks/ds_added_and_datastet_load_prep_match_clean.qmd`
 
--   **Description**: Loads and cleans additionally extracted Charité datasets and dataset extracted from DataStet, looks for them in the DCC, cleans the results table
+-   **Description**: Loads and cleans additionally extracted Charité datasets and datasets extracted from DataStet, looks for them in the DCC, cleans the results table
 -   **Output**: `data/wrangling_steps/dcc_datastet_and_added/dcc_ds_and_added_joined_8_ex.RData`
 
 ### `notebooks/joined_bind_add_metadata_verify.qmd`
 
--   **Description**: Joins both outputs of the two notebooks above to one result table, adds metadata and verifies results to create a final result table
+-   **Description**: Joins both outputs of the two notebooks above into one result table, adds metadata and verifies results to create a final result table
 -   **Output**: `data/wrangling_steps/all_sources_binded/dcc_detected_ids_all_sources_8_dedup.RData`
 
 ### `notebooks/plots/plots_prep.qmd`
 
--   **Description**: Uses results tables to create tables to feed into the plots code
+-   **Description**: Uses result tables to create tables to feed into the plots code
 
 ### `notebooks/plots.qmd`
 
