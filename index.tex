@@ -465,7 +465,9 @@ This description applies to the analysis of direct dataset references
 (See Figure~\ref{fig-dist-counts}). For the analysis of indirect data
 references through data articles, additional steps had to be performed,
 as described in Section~\ref{sec-methods-charite-data-articles} (See
-Figure~\ref{fig-da-flowchart}).
+Figure~\ref{fig-da-flowchart}). Code and data underlying all presented
+analyses have been published in Cohen et al.
+(\citeproc{ref-cohenMatchingDataReferences2026}{2026}).
 
 \subsection{Preparing and quality-checking the Data Citation
 Corpus}\label{sec-methods-dcc}
@@ -1099,18 +1101,18 @@ were added using ODDPub-identified datasets as a seed.}
 We then used a logistic regression to examine which dataset-level
 characteristics were associated with the likelihood of being reused,
 defined as inclusion in the DCC in comparison to 200 randomly drawn
-datasets that were not found to be reused. This analysis examined
-factors associated with the probability of a dataset to be referenced.
-We found that the use of DOIs is \textbf{negatively} correlated with
-dataset reuse, as shown by logistic regression (\emph{p} \textless{}
-0.001; Odds Ratio = 0.15; Figure~\ref{fig-matched-non}). This result,
-which seems counterintuitive at first, can be explained by the higher
-reuse probability for datasets from disciplinary as opposed to
-general-purpose repositories, in conjunction with differing approaches
-to assigning identifiers between repositories. Within the top five
-most-referenced repositories (GEO, PDB, dbGaP, NCBI RefSeq, ENA), only
-PDB assigns DOIs, and even in this case the reference used in articles
-is overwhelmingly to the accession code rather than the DOI.
+datasets that were not found to be reused. This analysis examined in an
+exploratory fashion factors associated with the probability of a dataset
+to be referenced. We found that the use of DOIs is \textbf{negatively}
+correlated with dataset reuse, as shown by logistic regression (\emph{p}
+\textless{} 0.001; Odds Ratio = 0.15; Figure~\ref{fig-matched-non}).
+This result, which seems counterintuitive at first, can be explained by
+the higher reuse probability for datasets from disciplinary as opposed
+to general-purpose repositories, in conjunction with differing
+approaches to assigning identifiers between repositories. Within the top
+five most-referenced repositories (GEO, PDB, dbGaP, NCBI RefSeq, ENA),
+only PDB assigns DOIs, and even in this case the reference used in
+articles is overwhelmingly to the accession code rather than the DOI.
 General-purpose repositories, which in all cases assign DOIs to
 datasets, constitute only a small fraction of the DCC, with 4.4\% of
 references belonging to Dryad, Figshare, Mendeley, and Zenodo
@@ -2066,10 +2068,45 @@ RStudio 2024.4.0.735 and Quarto 1.6.42. A reproducibility package which
 includes data, code, and text is deposited in github with url
 \url{https://github.com/quest-bih/Mapping-the-reuse-of-biomedical-research-data},
 release v1.0.1. This release has been deposited in Zenodo under the
-concept DOI \url{https://doi.org/10.5281/zenodo.19235630}, and the DOI
-has been added to the README file in Github. New versions of the article
-will be accompanied by new releases in Github and new versions of the
-deposit in Zenodo.
+concept DOI \url{https://doi.org/10.5281/zenodo.19235630}
+(\citeproc{ref-cohenMatchingDataReferences2026}{Cohen et al. 2026}), and
+the DOI has been added to the README file in Github. New versions of the
+article will be accompanied by new releases in Github and new versions
+of the deposit in Zenodo.
+
+\section{Declarations}\label{declarations}
+
+\begin{itemize}
+\tightlist
+\item
+  This project did not receive any dedicated funding.
+\item
+  The authors declare that they have no conflicts of interest.
+\item
+  Author Contributions:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Avihay Cohen \url{https://orcid.org/0000-0002-0829-0810}: Data
+    curation, Formal analysis, Investigation, Software, Validation,
+    Visualization, and Writing - original draft.
+  \item
+    Blanka Ivanović \url{https://orcid.org/0000-0003-4915-6818}: Data
+    curation, Investigation, Validation, and Writing - original draft.
+  \item
+    Anastasiia Iarkaeva \url{https://orcid.org/0000-0002-7370-1663}:
+    Validation and Writing - review \& editing.
+  \item
+    Vladislav Nachev \url{https://orcid.org/0000-0003-0521-6153}:
+    Methodology, Software, and Writing - review \& editing.
+  \item
+    Evgeny Bobrov \url{https://orcid.org/0000-0002-2368-464X}:
+    Conceptualization, Methodology, Project administration, Supervision,
+    Validation, Writing - original draft, and Writing - review \&
+    editing.
+  \end{itemize}
+\end{itemize}
 
 \newpage
 
@@ -2204,6 +2241,12 @@ Research.''} n.d. \url{https://quest-dashboard.charite.de/\#tabStart}.
 \bibitem[\citeproctext]{ref-chariteFair}
 {``Charité Metrics Dashboard: Data Reusability (FAIR Data).''} n.d.
 \url{https://quest-dashboard.charite.de/\#tabFAIR}.
+
+\bibitem[\citeproctext]{ref-cohenMatchingDataReferences2026}
+Cohen, Avihay, Blanka Ivanović, Anastasiia Iarkaeva, Vladislav Nachev,
+and Evgeny Bobrov. 2026. {``Matching Data References and Institutional
+Output to Map the Reuse of Biomedical Research Data (V1.0.1).''} Zenodo.
+\url{https://doi.org/10.5281/ZENODO.19235630}.
 
 \bibitem[\citeproctext]{ref-colavizzaAnalysisEffectsSharing2024}
 Colavizza, Giovanni, Lauren Cadwallader, Marcel LaFlamme, Grégory Dozot,
