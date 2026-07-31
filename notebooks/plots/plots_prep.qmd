@@ -5,7 +5,7 @@ author: "Avihay Cohen"
 format:
   html:
     self-contained: true
-editor: visual
+editor: source
 ---
 
 This notebook loads results RData objects from the other notebooks and creates tables that are then loaded in "plots.qmd" to create the article's plots.

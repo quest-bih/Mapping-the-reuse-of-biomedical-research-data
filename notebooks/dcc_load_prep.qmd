@@ -5,7 +5,7 @@ author: "Avihay Cohen"
 format:
   html:
     self-contained: true
-editor: visual
+editor: source
 ---
 
 ```{r setup, echo=FALSE}
