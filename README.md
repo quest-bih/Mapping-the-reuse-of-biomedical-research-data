@@ -28,7 +28,7 @@ output: html_document
 4. Open `index.qmd`
 5. In RStudio's terminal:
   * `quarto render --to pdf` will generate the article in a PDF format
-  * `quarto render --to html` will generate the article in an HTML format
+  * `quarto render --to html` will generate the article in an HTML format (Please note that depending on your system and browser, the HTML might open automatically for you or not, but the file will be created in any case)
 
 ### Data Workflow Overview
 
@@ -83,6 +83,10 @@ Rendering:
 ### `notebooks/plots.qmd`
 
 -   **Description**: Creates plots from tables created in "plots_prep.qmd". These plots are then referenced in the manuscript (`index.qmd`).
+
+### `archive` folders
+
+-   **Description**: Internal files and folders that were kept for the sake of the project's integrity. They might be referenced in the code for documentation purposes, but they should be overall ignored.
 
 ## Software environment
 

@@ -24,41 +24,38 @@ if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 library(pacman)
 pacman::p_load(tidyverse, DT, patchwork, RColorBrewer, here, tcltk, networkD3, htmlwidgets, ggvenn, ggbeeswarm, ggforce, glue, broom,
                scales, tibble, grid, purrr)
-# Load tables for plots (in the comment beside each load() is the label of each plot for easy searching)
 
-load(here("data", "tables_for_plots", "combined_long_counts.RData")) # fig-distinct-numbers
+# Load tables for plots (in the comment beside each load() is the label of each plot for easy searching):
 
-load(here("data", "tables_for_plots", "ds_freq.RData"))                # fig-datasets-freq-dist
+# 1. Data created in /notebooks/plots/plots_prep.qmd:
 
-load(here("data", "tables_for_plots", "rep_dt.RData"))                 # fig-repo-dist-ref
+load(here("data", "tables_for_plots", "ds_freq.RData")) # fig-datasets-freq-dist
 
-load(here("data", "tables_for_plots", "rep_dt_ds.RData"))                 # fig-repo-dist-ds
+load(here("data", "tables_for_plots", "rep_dt.RData")) # repo-dist
 
-load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_collapsed.RData")) # fig-ref-by-year-top-7
-
-load(here("data", "tables_for_plots", "links_all.RData")) # fig-datasets-properties
-
-load(here("data", "tables_for_plots", "links_all_2.RData")) # fig-datasets-properties-2
-
-load(here("data", "tables_for_plots", "combined_count_tibbles.RData")) # fig-distinct-numbers
-
-load(here("data", "tables_for_plots", "dif_for_plot.RData")) # fig-datasets-and-papers-years
-
-load(here("data", "tables_for_plots", "dcc_years_dist_for_plot.RData")) # fig-dcc-pub-years
-
-load(here("data", "tables_for_plots", "rep_for_plot.RData")) # fig-dcc-rep
-
-load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-venn-ids
-
-load(here("data", "tables_for_plots", "not_mentioned_years.RData")) # fig-non-years
+load(here("data", "tables_for_plots", "rep_dt_ds.RData")) # fig-repo-dist-ds
 
 load(here("data", "tables_for_plots", "rep_dt_da_ds.RData")) # fig-repo-dist-ds-da
 
-load(here("data", "tables_for_plots", "tidy_model_matched_non_matched.RData")) # fig-matched-non
+load(here("data", "tables_for_plots", "id_source_for_venn.RData")) # fig-venn-ids
+
+load(here("data", "tables_for_plots", "links_all_2.RData")) # fig-datasets-properties-2; fig-datasets-properties-2-pdf-static
+
+load(here("data", "tables_for_plots", "year_dcc_dt_all_for_plot_collapsed.RData")) # fig-ref-by-year-top-7
+
+# 2. Data created in /notebooks/dcc_load_prep.qmd
+
+load(here("data", "tables_for_plots", "rep_for_plot.RData")) # dcc-rep
+
+# 3. Data created in /scripts/statistical_analysis.R
 
 load(here("data", "tables_for_plots", "ids_and_years_only_0_3_ages_for_plot.RData")) # fig-age-citation-1
 
-load(here("data", "tables_for_plots", "ids_and_years_for_plot.RData")) # fig-age-citation-2
+load(here("data", "tables_for_plots", "ids_and_years_for_plot.RData")) # age-citation-2
+
+load(here("data", "tables_for_plots", "tidy_model_matched_non_matched.RData")) # fig-matched-non
+
+# Note: Data for fig-da-flowchart is created in this notebook.
 
 
 ```
@@ -168,158 +165,192 @@ rep_dt |>
 
 ```
 
-# Datasets References by Year: TOP 7 mentioned identifiers
+# Distribution of Datasets Across Repositories
 
 ```{r}
-#| label: fig-ref-by-year-top-7
-#| fig-cap: Distribution of References by Year (N = 1,495). The bar plot displays the frequency of dataset references across all referencing articles by the year of reference, defined as the publication year of the corresponding referencing article. The seven most frequently referenced datasets are highlighted by individual colors, while the sum of all other references is shown in grey. Two references from 2024 are not presented in the plot. Note that datasets were detected through Charité articles from the years 2020 to 2023, but these datasets could have already been shared with other, earlier articles. This explains the detection of referencing articles from before 2020.
-#| fig.height: 10
-#| fig.width: 12
+#| label: fig-repo-dist-ds
+#| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets across all mentioning articles, split by the repository where data were deposited.
+#| fig.height: 6
+#| fig.width: 10
 
+# log scale
 
-# The most mentioned dataset *ovearll* (i.e. across all years) will be shown at the top of each bar:
-desired_order <- c("6y2f", "gse55235", "6y2e", "gse44076", "gse14764", "6y2g", "gse45547", "Others")
-
-
-year_dcc_dt_all_for_plot_collapsed |>
-  dplyr::mutate(
-    detected_id = factor(detected_id, levels = desired_order),
-    publication_year_dcc = dplyr::case_when(
-      publication_year_dcc == "<=2012" ~ "<=2012",
-      TRUE ~ publication_year_dcc
-    )
-  ) |>
-  ggplot(aes(x = factor(publication_year_dcc), fill = detected_id)) +
-  geom_bar(
-    stat = "identity",
-    position = "stack",
-    aes(y = count)
+rep_dt_ds |>
+  ggplot(aes(x = reorder(repository, n), y = n)) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           fill = "#80CBC4") +
+  geom_text(aes(y = n, label = n),
+            hjust = -0.2,
+            size = 5, color = "black") +
+  scale_y_log10(
+    breaks = c(1, 3, 10, 30, 100),
+    labels = c(1, 3, 10, 30, 100),
+    expand = expansion(mult = c(0.02, 0.15))
   ) +
-  geom_text(
-    data = year_dcc_dt_all_for_plot_collapsed |>
-      dplyr::mutate(detected_id = factor(detected_id, levels = desired_order)) |>
-      dplyr::group_by(publication_year_dcc) |>
-      dplyr::mutate(label = dplyr::case_when(
-        (publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count)) ~ NA_character_,
-        count < 3 ~ NA_character_,
-        .default = as.character(count)
-      )),
-    aes(y = count, label = label),
-    position = position_stack(vjust = 0.5),
-    size = 4.3
-  ) +
-  labs(
-    x = "Publication Year of Referencing Article",
-    y = "Number of References",
-    fill = "Accession Number"
-  ) +
-  scale_x_discrete(
-    labels = \(x) dplyr::case_when(
-      x == "<=2012" ~ "\u2264 2012",
-      .default = x
-    )
-  ) +
-  scale_fill_manual(
-    values = c(
-      "6y2f" = "#C3B1E1",
-      "gse55235" = "#F9DC5C",
-      "6y2e" = "#FFB6B9",
-      "gse44076" = "#E89FB4",
-      "gse14764" = "#5DAF9E",
-      "6y2g" = "#F4A261",
-      "gse45547" = "#1F77B4",
-      "Others" = "grey"
-    )
-  ) +
+  coord_flip() +
+  labs(x = "Repository", y = "Number of Datasets (Log Scale)") +
   theme_classic() +
   theme(
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
+    legend.position = "none",
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
     axis.text.y = element_text(size = 16, color = "black"),
-    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1),
-    legend.title = element_text(size = 20, margin = margin(b = 15)),
-    legend.text  = element_text(size = 16),
-    legend.key.height = unit(25, "pt"),
-    legend.box.margin = margin(l = 16)  # space between plot and legend area
+    axis.text.x = element_text(size = 20, color = "black"),
+    panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
+    panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
+    panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
   )
 
-
-
 ```
 
-# Datasets Properties Not Including Human Data (Sankey Plot)
+# Repositories Distribution of Data Articles identifiers
 
 ```{r}
-#| label: fig-datasets-properties
-#| fig-cap: Properties of Referenced Datasets (N = 175)
+#| label: fig-repo-dist-ds-da
 #| fig.height: 8
-#| fig.width: 12
+#| fig.width: 8
 
-# Create a function for verifying the ss df structure, extracting its entities and finally plotting it:
+# log scale
 
-# get_nodes_from_links <- function(links) {
-#   stopifnot(all(c("source", "target", "value") %in% names(links)))
-#   data.frame(
-#     name = unique(c(as.character(links$source), as.character(links$target)))
-#   )
-# }
-# 
-# plot_Sankey <- function(links, ...) {
-# 
-#   nodes <- get_nodes_from_links(links)
-# 
-#   # Assign group labels to nodes
-#   # Map directly to colors
-#   highlight_colors <- list(
-#     "Accession Number" = "blue",
-#     "DOI" = "red",
-#     "Open Data" = "#FFF9C4",
-#     "Restricted-Access" = "#B2F2BB",
-#     "Not Covid Related" = "purple",
-#     "Covid Related" = "pink",
-#     "No CC License" = "darkgrey",
-#     "CC License" = "white"
-#   )
-# 
-#   # Assign group (color name) to each node, default to gray
-#   nodes$group <- sapply(nodes$name, function(n) {
-#     if (!is.null(highlight_colors[[n]])) highlight_colors[[n]] else "gray"
-#   })
-# 
-#   links$IDsource <- match(links$source, nodes$name) - 1
-#   links$IDtarget <- match(links$target, nodes$name) - 1
-# 
-#   # Color scale: domain = unique group values (colors), range = same
-#   color_domain <- unique(nodes$group)
-#   domain_str <- paste0('"', color_domain, '"', collapse = ", ")
-#   range_str <- paste0('"', color_domain, '"', collapse = ", ")
-#   my_color <- paste0(
-#     "d3.scaleOrdinal()",
-#     ".domain([", domain_str, "])",
-#     ".range([", range_str, "])"
-#   )
-# 
-#   sankeyNetwork(
-#     Links = links, Nodes = nodes,
-#     Source = "IDsource", Target = "IDtarget",
-#     Value = "value", NodeID = "name",
-#     NodeGroup = "group",  # ← now using color group directly
-#     colourScale = my_color,
-#     ...
-#   )
-# }
-# 
-# # Plot
-# 
-# plot_Sankey(links_all, sinksRight = FALSE, fontSize = 18)
-# 
-# s_plot <- plot_Sankey(links_all, sinksRight = FALSE, fontSize = 18)
-# 
-# saveWidget(s_plot, file = here("notebooks", "processed", "dcc_charite_joined", "sankey_interactive_plot.html"), selfcontained = TRUE)
+rep_dt_da_ds |>
+  ggplot(aes(x = reorder(repository, n), y = n)) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           fill = "#FFBC9A") +
+  geom_text(aes(y = n, label = n),
+            hjust = -0.2,
+            size = 6, color = "black") +
+  coord_flip() +
+  labs(x = "Data Deposit Platform", y = "Number of Datasets") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
+    axis.text.y = element_text(size = 18, color = "black"),
+    axis.text.x = element_text(size = 18, color = "black"),
+    panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
+    panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
+    panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
+  )
 
 ```
 
-# Datasets Properties Including Human Data (Sankey Plot)
+# Sources of Identifiers
+
+```{r}
+#| label: fig-venn-ids
+#| fig.height: 7
+#| fig.width: 8
+
+setlist <- id_source_for_venn |>
+  distinct(detected_id, source_charite) |>  # avoid duplicates
+  group_by(source_charite) |>
+  summarise(items = list(detected_id)) |>
+  deframe()
+
+# # Plot Venn
+# ggvenn(
+#   setlist,
+#   set_name_size = 5,  # size of group labels
+#   text_size = 3.5,       # size of counts
+#   fill_color   = c("#E6E6E6", "#A6CEE3", "#B2DF8A"),  # light grey, blue, green
+#   stroke_size = 0.7,
+#   stroke_color = "black",                             # circle outlines
+# )
+
+# Oval
+
+venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#A6CEE3", "#B2DF8A")) {
+  stopifnot(length(setlist) == 2)
+  
+  # Control circle's size and shape
+  ellipses <- tibble(
+    group = names(setlist),
+    x0 = c(1, 2),
+    y0 = c(1, 1),
+    a  = a,
+    b  = b,
+    angle = 0
+  )
+  
+  names(colors) <- names(setlist)
+  
+  # Extract sets
+  A <- unique(setlist[[1]])
+  B <- unique(setlist[[2]])
+
+  total <- length(union(A, B))
+  
+  # Define Venn regions
+  regions <- tibble(
+    label = c(
+      "A only", "B only", "A & B"
+    ),
+    count = c(
+      length(setdiff(A, B)),
+      length(setdiff(B, A)),
+      length(intersect(A, B))
+    )
+  ) |>
+    mutate(
+      pct = count / total,
+      label_text = sprintf("%d\n(%.1f%%)", count, 100 * pct),
+      
+      # control text labels locations
+      x = c(0.4, # right
+            2.6, # left
+            #1.5, # top
+            #1.5, # bottom inter
+            #0.8, # left inter
+            #2.3, # right inter
+            1.5), # center inner
+      y = c(1,
+            1,
+            #2.5,
+            #0.7, 
+            #1.75,
+            #1.75,
+            1.2)
+    )
+  
+  # control titles locations
+  titles <- tibble(
+    group = names(setlist),
+    x = c(0.6, 2.4),
+    y = c(-0.15, -0.15)  # top/top/bottom
+  )
+  
+  ggplot() +
+    geom_ellipse(
+      data = ellipses,
+      aes(x0 = x0, y0 = y0, a = a, b = b, angle = angle, fill = group),
+      color = "black",
+      linewidth = 0.7,
+      alpha = 0.4
+    ) +
+    geom_text(
+      data = regions,
+      aes(x = x, y = y, label = label_text),
+      size = 7
+    ) +
+    geom_text(
+      data = titles,
+      aes(x = x, y = y, label = group),
+      size = 9
+    ) +
+    scale_fill_manual(values = colors) +
+    coord_fixed() +
+    theme_void() +
+    theme(legend.position = "none")
+  }
+
+venn_ellipse_plot(setlist, a=1.3, b=1) # global circle control 
+
+```
+
+# Datasets Properties (Sankey Plot)
 
 ```{r}
 #| include: false
@@ -491,41 +522,82 @@ ggplot2::ggsave(filename = png_file, plot = p_static, width = 12, height = 8, dp
 ```
 :::
 
-# DCC Publication years distribution
+# Datasets References by Year: TOP 7 mentioned identifiers
 
 ```{r}
-#| label: fig-dcc-pub-years
-#| fig-cap: DCC Papers Publication Years Distribution
-#| fig.height: 8
-#| fig.width: 10
+#| label: fig-ref-by-year-top-7
+#| fig-cap: Distribution of References by Year (N = 1,495). The bar plot displays the frequency of dataset references across all referencing articles by the year of reference, defined as the publication year of the corresponding referencing article. The seven most frequently referenced datasets are highlighted by individual colors, while the sum of all other references is shown in grey. Two references from 2024 are not presented in the plot. Note that datasets were detected through Charité articles from the years 2020 to 2023, but these datasets could have already been shared with other, earlier articles. This explains the detection of referencing articles from before 2020.
+#| fig.height: 10
+#| fig.width: 12
 
-dcc_years_dist_for_plot |>
-  ggplot(aes(x = reorder(year, year), y = n, fill = highlight)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           color = "black") +
-  geom_bar(stat = "identity",
-           fill = "white",
-           alpha = 0.2,
-           position = position_nudge(x = -0.05, y = -0.1)) +
-  geom_text(aes(y = n + 2,
-                label = perc),
-            vjust = -0.7,
-            hjust = 0.5,
-            size = 4,
-            color = "black") +
-  scale_fill_manual(values = c(`TRUE` = "yellow", `FALSE` = "white")) +
-  scale_y_continuous(
-    limits = c(0, 250000),
-    breaks = c(0, 10000, 50000, 100000, 150000, 200000, 250000),
-    labels = c("0", "10k", "50k", "100k", "150k", "200k", "250k"),
-    expand = expansion(mult = c(0.02, 0.02))
+
+# The most mentioned dataset *ovearll* (i.e. across all years) will be shown at the top of each bar:
+desired_order <- c("6y2f", "gse55235", "6y2e", "gse44076", "gse14764", "6y2g", "gse45547", "Others")
+
+
+year_dcc_dt_all_for_plot_collapsed |>
+  dplyr::mutate(
+    detected_id = factor(detected_id, levels = desired_order),
+    publication_year_dcc = dplyr::case_when(
+      publication_year_dcc == "<=2012" ~ "<=2012",
+      TRUE ~ publication_year_dcc
+    )
+  ) |>
+  ggplot(aes(x = factor(publication_year_dcc), fill = detected_id)) +
+  geom_bar(
+    stat = "identity",
+    position = "stack",
+    aes(y = count)
   ) +
-  labs(x = "Year", y = "Number of Papers") +
+  geom_text(
+    data = year_dcc_dt_all_for_plot_collapsed |>
+      dplyr::mutate(detected_id = factor(detected_id, levels = desired_order)) |>
+      dplyr::group_by(publication_year_dcc) |>
+      dplyr::mutate(label = dplyr::case_when(
+        (publication_year_dcc %in% c("<=2012", "2013", "2015", "2017") & count == min(count)) ~ NA_character_,
+        count < 3 ~ NA_character_,
+        .default = as.character(count)
+      )),
+    aes(y = count, label = label),
+    position = position_stack(vjust = 0.5),
+    size = 4.3
+  ) +
+  labs(
+    x = "Publication Year of Referencing Article",
+    y = "Number of References",
+    fill = "Accession Number"
+  ) +
+  scale_x_discrete(
+    labels = \(x) dplyr::case_when(
+      x == "<=2012" ~ "\u2264 2012",
+      .default = x
+    )
+  ) +
+  scale_fill_manual(
+    values = c(
+      "6y2f" = "#C3B1E1",
+      "gse55235" = "#F9DC5C",
+      "6y2e" = "#FFB6B9",
+      "gse44076" = "#E89FB4",
+      "gse14764" = "#5DAF9E",
+      "6y2g" = "#F4A261",
+      "gse45547" = "#1F77B4",
+      "Others" = "grey"
+    )
+  ) +
   theme_classic() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(size = 12, color = "black"),
-        axis.text.y = element_text(size = 12, color = "black"))
+  theme(
+    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),
+    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),
+    axis.text.y = element_text(size = 16, color = "black"),
+    axis.text.x = element_text(size = 14, color = "black", angle = 45, hjust = 1),
+    legend.title = element_text(size = 20, margin = margin(b = 15)),
+    legend.text  = element_text(size = 16),
+    legend.key.height = unit(25, "pt"),
+    legend.box.margin = margin(l = 16)  # space between plot and legend area
+  )
+
+
 
 ```
 
@@ -563,190 +635,6 @@ geom_text(aes(y = n + 2, label = perc),
     axis.text.y = element_text(size = 16, color = "black"))
 
 
-
-```
-
-# Sources of Identifiers
-
-```{r}
-#| label: fig-venn-ids
-#| fig.height: 7
-#| fig.width: 8
-
-setlist <- id_source_for_venn |>
-  distinct(detected_id, source_charite) |>  # avoid duplicates
-  group_by(source_charite) |>
-  summarise(items = list(detected_id)) |>
-  deframe()
-
-# # Plot Venn
-# ggvenn(
-#   setlist,
-#   set_name_size = 5,  # size of group labels
-#   text_size = 3.5,       # size of counts
-#   fill_color   = c("#E6E6E6", "#A6CEE3", "#B2DF8A"),  # light grey, blue, green
-#   stroke_size = 0.7,
-#   stroke_color = "black",                             # circle outlines
-# )
-
-# Oval
-
-venn_ellipse_plot <- function(setlist, a = 1.6, b = 1.0, colors = c("#A6CEE3", "#B2DF8A")) {
-  stopifnot(length(setlist) == 2)
-  
-  # Control circle's size and shape
-  ellipses <- tibble(
-    group = names(setlist),
-    x0 = c(1, 2),
-    y0 = c(1, 1),
-    a  = a,
-    b  = b,
-    angle = 0
-  )
-  
-  names(colors) <- names(setlist)
-  
-  # Extract sets
-  A <- unique(setlist[[1]])
-  B <- unique(setlist[[2]])
-
-  total <- length(union(A, B))
-  
-  # Define Venn regions
-  regions <- tibble(
-    label = c(
-      "A only", "B only", "A & B"
-    ),
-    count = c(
-      length(setdiff(A, B)),
-      length(setdiff(B, A)),
-      length(intersect(A, B))
-    )
-  ) |>
-    mutate(
-      pct = count / total,
-      label_text = sprintf("%d\n(%.1f%%)", count, 100 * pct),
-      
-      # control text labels locations
-      x = c(0.4, # right
-            2.6, # left
-            #1.5, # top
-            #1.5, # bottom inter
-            #0.8, # left inter
-            #2.3, # right inter
-            1.5), # center inner
-      y = c(1,
-            1,
-            #2.5,
-            #0.7, 
-            #1.75,
-            #1.75,
-            1.2)
-    )
-  
-  # control titles locations
-  titles <- tibble(
-    group = names(setlist),
-    x = c(0.6, 2.4),
-    y = c(-0.15, -0.15)  # top/top/bottom
-  )
-  
-  ggplot() +
-    geom_ellipse(
-      data = ellipses,
-      aes(x0 = x0, y0 = y0, a = a, b = b, angle = angle, fill = group),
-      color = "black",
-      linewidth = 0.7,
-      alpha = 0.4
-    ) +
-    geom_text(
-      data = regions,
-      aes(x = x, y = y, label = label_text),
-      size = 7
-    ) +
-    geom_text(
-      data = titles,
-      aes(x = x, y = y, label = group),
-      size = 9
-    ) +
-    scale_fill_manual(values = colors) +
-    coord_fixed() +
-    theme_void() +
-    theme(legend.position = "none")
-  }
-
-venn_ellipse_plot(setlist, a=1.3, b=1) # global circle control 
-
-```
-
-# Publication Years of Non-matched Datasets (Sample of 200 Datasets)
-
-```{r}
-#| label: fig-non-years
-#| fig-cap: Publication Years of Non-matched Datasets (N = 199)
-#| fig.height: 8
-#| fig.width: 10
-
-not_mentioned_years |>
-  dplyr::mutate(charite_id_year = as.character(charite_id_year),
-                year_numeric = as.numeric(charite_id_year)) |>
-  ggplot(aes(x = reorder(charite_id_year, year_numeric), y = n)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           color = "black",
-           fill = "lightgrey") +
-  geom_text(aes(y = n + 2, label = n),
-            vjust = 1,
-            hjust = 0.5,
-            size = 6,
-            color = "black") +
-  labs(x = "Year", y = "Number of Datasets") +
-  theme_classic() +
-  theme(
-    legend.position = "none",
-    axis.title.x = element_text(size = 22, color = "black", margin = margin(t = 12)),
-    axis.title.y = element_text(size = 22, color = "black", margin = margin(r = 12)),
-    axis.text.x = element_text(size = 16, color = "black"),
-    axis.text.y = element_text(size = 16, color = "black")
-  )
-```
-
-# Distribution of Datasets Across Repositories
-
-```{r}
-#| label: fig-repo-dist-ds
-#| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets across all mentioning articles, split by the repository where data were deposited.
-#| fig.height: 6
-#| fig.width: 10
-
-# log scale
-
-rep_dt_ds |>
-  ggplot(aes(x = reorder(repository, n), y = n)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           fill = "#80CBC4") +
-  geom_text(aes(y = n, label = n),
-            hjust = -0.2,
-            size = 5, color = "black") +
-  scale_y_log10(
-    breaks = c(1, 3, 10, 30, 100),
-    labels = c(1, 3, 10, 30, 100),
-    expand = expansion(mult = c(0.02, 0.15))
-  ) +
-  coord_flip() +
-  labs(x = "Repository", y = "Number of Datasets (Log Scale)") +
-  theme_classic() +
-  theme(
-    legend.position = "none",
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 16, color = "black"),
-    axis.text.x = element_text(size = 20, color = "black"),
-    panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
-    panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
-    panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
-  )
 
 ```
 
@@ -930,79 +818,14 @@ tidy_model_matched_non_matched |>
 
 ```
 
-# Repositories Distribution of Data Articles identifiers
-
-```{r}
-#| label: fig-repo-dist-ds-da
-#| fig.height: 8
-#| fig.width: 8
-
-# log scale
-
-rep_dt_da_ds |>
-  ggplot(aes(x = reorder(repository, n), y = n)) +
-  geom_bar(stat = "identity",
-           position = "dodge",
-           fill = "#FFBC9A") +
-  geom_text(aes(y = n, label = n),
-            hjust = -0.2,
-            size = 6, color = "black") +
-  coord_flip() +
-  labs(x = "Data Deposit Platform", y = "Number of Datasets") +
-  theme_classic() +
-  theme(
-    legend.position = "none",
-    axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
-    axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
-    axis.text.y = element_text(size = 18, color = "black"),
-    axis.text.x = element_text(size = 18, color = "black"),
-    panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
-    panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
-    panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
-  )
-
-```
-
-# Repositories Distribution of Data Articles Identifiers Mentions
-
-```{r}
-#| label: fig-repo-dist-ref-da
-#| fig-cap: Repositories Distribution of Data Articles Identifiers Mentions
-#| fig.height: 10
-#| fig.width: 10
-
-# log scale
-
-# rep_dt_da_ds |>
-#   ggplot(aes(x = reorder(repository, n), y = n)) +
-#   geom_bar(stat = "identity",
-#            position = "dodge",
-#            fill = "#FFBC9A") +
-#   geom_text(aes(y = n, label = n),
-#             hjust = -0.2,
-#             size = 6, color = "black") +
-#   coord_flip() +
-#   labs(x = "Data Deposit Platform", y = "Number of Datasets") +
-#   theme_classic() +
-#   theme(
-#     legend.position = "none",
-#     axis.title.y = element_text(size = 24, color = "black", margin = margin(r = 20)),  # space between y title and axis
-#     axis.title.x = element_text(size = 24, color = "black", margin = margin(t = 20)),  # space between x title and axis
-#     axis.text.y = element_text(size = 20, color = "black"),
-#     axis.text.x = element_text(size = 20, color = "black"),
-#     panel.grid.major.x = element_line(color = "gray80", size = 0.5),  # Add vertical gridlines
-#     panel.grid.minor.x = element_blank(),  # Optional: remove minor gridlines
-#     panel.grid.major.y = element_blank()   # Keep horizontal gridlines off
-#   )
-
-```
-
 # Data Articles Analysis Flowchart
 
 ```{r}
 #| label: fig-da-flowchart
 #| fig.height: 8
 #| fig.width: 8
+
+# Note: Data for figure is created here below and not in another qmd file. 
 
 df <- tibble(
   charite_da = 21L,
