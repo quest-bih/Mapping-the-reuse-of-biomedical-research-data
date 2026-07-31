@@ -20,17 +20,15 @@ output: html_document
 
 ------------------------------------------------------------------------
 
-## Installation and Setup:
+## Installation, Setup and Reproducing the Article:
 
-Clone the repository to your local machine. Then, in RStudio's Console, run `renv::restore()` in order to install the exact R package versions recorded in `renv.lock` and recreate the project library on your machine.
-
-Generating the article in RStudio:
-
-1. Open `Investigating the Reuse of Biomedical Data Using the DCC.Rproj`
-2. Open `index.qmd`
-3. In RStudio's terminal:
-  * `quarto render --to pdf` will recreate the article in a PDF format
-  * `quarto render --to html` will recreate the article in an HTML format
+1. Clone the repository to your local machine
+2. In RStudio, open `Investigating the Reuse of Biomedical Data Using the DCC.Rproj`
+3. In RStudio's console, run `renv::restore()` to recreate the environment needed to generate the article on your machine
+4. Open `index.qmd`
+5. In RStudio's terminal:
+  * `quarto render --to pdf` will generate the article in a PDF format
+  * `quarto render --to html` will generate the article in an HTML format
 
 ### Data Workflow Overview
 
