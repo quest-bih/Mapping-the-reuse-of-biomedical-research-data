@@ -1,12 +1,12 @@
----
-title: "Glossary"
-author: "Avihay Cohen"
----
-
 # Glossary {.unnumbered}
 
-[Data Citation Corpus (DCC)]{#gls-dcc}
-: A collection of scholarly publications and their associated data citations.
+<!-- [Data Citation Corpus (DCC)]{#gls-dcc} -->
+<!-- : A collection of scholarly publications and their associated data citations. -->
 
-[Data Availability Statement (DAS)]{#gls-das}
-: A statement describing whether and how the data supporting an article can be accessed.
+<!-- [Data Availability Statement (DAS)]{#gls-das} -->
+<!-- : A statement describing whether and how the data supporting an article can be accessed. -->
+
+| Term | Definition |
+|---|---|
+| [Data Citation Corpus (DCC)]{#gls-dcc} | A collection of scholarly publications and their associated data citations. |
+| [Data Availability Statement (DAS)]{#gls-das} | A statement describing whether and how the data supporting an article can be accessed. |
