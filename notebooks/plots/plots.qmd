@@ -778,7 +778,7 @@ geom_text(
 ```{r}
 #| label: fig-matched-non
 #| fig-cap: |
-#|   Determinants of Institutional Dataset Reuse. The figure shows odds ratios for inclusion in the DCC. 175 referenced datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model. Significance levels are indicated as follows: *p < 0.05, **p < 0.01, ***p < 0.001.
+#|   Determinants of Institutional Dataset Reuse. The figure shows odds ratios for inclusion in the DCC. 175 referenced datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model. Significance levels are indicated as follows: \*p < 0.05, \*\*p < 0.01, \*\*\*p < 0.001.
 #| fig.height: 8
 #| fig.width: 10
 
