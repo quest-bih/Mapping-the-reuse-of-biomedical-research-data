@@ -64,12 +64,16 @@ The Chunk below lets the user choose a folder with the downloaded csv files and 
 
 # Check if directory is already set
 if (!exists("selected_dir")) {
-  # Try to select a directory
-  selected_dir <- tryCatch({
-    tclvalue(tkchooseDirectory(title = "Please select a directory containing DCC corpus csv files"))
-  }, error = function(e) {
-    stop("No directory selected or selection was cancelled!")
-  })
+#   # Try to select a directory
+    selected_dir <- rstudioapi::selectDirectory(
+    caption = "Please select a directory containing DCC corpus csv files"
+  )
+    
+#   selected_dir <- tryCatch({
+#     tclvalue(tkchooseDirectory(title = "Please select a directory containing DCC corpus csv files"))
+#   }, error = function(e) {
+#     stop("No directory selected or selection was cancelled!")
+#   })
   
   if (nchar(selected_dir) == 0) {
     stop("Directory selection was cancelled!")
@@ -83,7 +87,11 @@ message("Selected directory: ", selected_dir)
 setwd(selected_dir)
 
 # Get a list of all CSV files in the directory
-file_list <- list.files(pattern = "*.csv")
+file_list <- list.files(
+  path = selected_dir,
+  pattern = "\\.csv$", 
+  full.names = T
+)
 
 # Read all CSV files into a list of data frames
 data_list <- lapply(file_list, read.csv)
