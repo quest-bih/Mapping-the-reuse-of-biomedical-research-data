@@ -842,11 +842,9 @@ regardless of which article was published first. We made this choice
 because the DataStet extraction was intended to add datasets not already
 captured by ODDPub, rather than to replace ODDPub matches. To analyze
 how dataset properties related to reuse probability, we used a logistic
-regression, comparing datasets found to be referenced in the DCC to 200
-randomly drawn Charité datasets that were not found to be referenced.
-\textbf{{[}AC{]} please double-check{]}} All p-values in this analysis
-were adjusted for multiple comparisons using the False Discovery Rate
-(Benjamini--Hochberg) procedure.
+regression, comparing the properties of datasets found to be referenced
+in the DCC to the properties of 200 randomly drawn Charité datasets that
+were not found to be referenced.
 
 Furthermore, we were interested in the development of data references
 over time as a function of dataset age. The publication years of both
@@ -1318,31 +1316,28 @@ We then used a logistic regression to examine in an exploratory fashion
 which dataset-level characteristics were associated with the likelihood
 of a dataset to be referenced. For this, we compared the referenced
 datasets with 200 non-referenced ones, and adjusted all \emph{p}-values
-for multiple comparisons using the False Discovery Rate procedure. We
-found that the use of DOIs is \textbf{negatively} correlated with
-dataset reuse, as shown by logistic regression (\emph{p} \textless{}
-0.001; Odds Ratio = 0.15; Figure~\ref{fig-matched-non}). General-purpose
-repositories, which in all cases assign DOIs to datasets, constitute
-only a small fraction of the DCC, with 4.4\% of references belonging to
-Dryad, Figshare, Mendeley, and Zenodo
-(Supplementary Figure~\ref{suppfig-dcc-rep}). As we discuss in section
-\textbf{{[}AC{]} discussion section 3.4. Determinants and patterns of
-data reuse}, this indicates that in the overall literature datasets in
-disciplinary repositories are referenced much more often. In addition,
-we find that even this small num¬ber is not reflected in the references
-to Charité datasets. While datasets in general-purpose repositories
-constitute 20.5\% of shared datasets as detected using ODDPub, only
-2.5\% of referenced datasets were shared in general-purpose
-repositories. On the level of references, the contrast was even more
-stark, with only 0.5\% of dataset references referring to datasets in
-general-purpose repositories. We attribute the unexpected negative
-correlation of data reuse with DOIs, as well as a similar negative
-correlation between dataset reuse and the attribution of CC licenses
-(\emph{p} \textless{} 0.001; Odds Ratio = 0.29) to a disproportionately
-higher reuse of data in disciplinary repositories which do not assign
-DOIs or licenses. \textbf{{[}AC{]} once you rendered, please check that
-this paragraph is complete with all numbers and makes sense - I shifted
-a lot around, and it is difficult to make sure in Quarto.}
+for multiple comparisons using the False Discovery Rate
+(Benjamini--Hochberg) procedure. We found that the use of DOIs is
+\textbf{negatively} correlated with dataset reuse, as shown by logistic
+regression (\emph{p} \textless{} 0.001; Odds Ratio = 0.15;
+Figure~\ref{fig-matched-non}). General-purpose repositories, which in
+all cases assign DOIs to datasets, constitute only a small fraction of
+the DCC, with 4.4\% of references belonging to Dryad, Figshare,
+Mendeley, and Zenodo (Supplementary Figure~\ref{suppfig-dcc-rep}). As we
+discuss in Section~\ref{sec-discussion-determinants}, this indicates
+that in the overall literature datasets in disciplinary repositories are
+referenced much more often. In addition, we find that even this small
+num¬ber is not reflected in the references to Charité datasets. While
+datasets in general-purpose repositories constitute 20.5\% of shared
+datasets as detected using ODDPub, only 2.5\% of referenced datasets
+were shared in general-purpose repositories. On the level of references,
+the contrast was even more stark, with only 0.5\% of dataset references
+referring to datasets in general-purpose repositories. We attribute the
+unexpected negative correlation of data reuse with DOIs, as well as a
+similar negative correlation between dataset reuse and the attribution
+of CC licenses (\emph{p} \textless{} 0.001; Odds Ratio = 0.29) to a
+disproportionately higher reuse of data in disciplinary repositories
+which do not assign DOIs or licenses.
 
 We investigated further determinants of dataset reuse and found that
 human data, which constitutes 77.1\% of all checked datasets, is used
@@ -1724,9 +1719,9 @@ data citations through data articles on the other. Combining these two
 sources, we obtain an overall number of 210 Charité datasets which have
 been referenced 3,225 times. Thus, we observe that datasets shared
 alongside articles co-authored by Charité researchers in a given year
-are referred to (directly or indirectly) on average 806.25 times.
-However, the numbers on data reuse reported for the DCC analysis, which
-is the main source of data references, are probably very substantially
+are referred to (directly or indirectly) on average 806 times. However,
+the numbers on data reuse reported for the DCC analysis, which is the
+main source of data references, are probably very substantially
 underestimated. This is due to several reasons listed below in what we
 estimate to be a descending order of influence on the results. For
 further limitations, which do not introduce an obvious directionality by
@@ -1896,7 +1891,7 @@ as spurious. We observed that the probability of data reuse is much
 as for data mentioned in a DAS. The first two observations, which seem
 counterintuitive at first, can be explained by the higher reuse
 probability for datasets from disciplinary as opposed to general-purpose
-repositories, in conjunction with differing ap­proaches to assigning
+repositories, in conjunction with differing approaches to assigning
 identifiers between repositories. Within the top five most-referenced
 repositories (GEO, PDB, dbGaP, NCBI RefSeq, ENA), only PDB assigns DOIs,
 and even in this case the reference used in articles is overwhelmingly
@@ -1938,19 +1933,19 @@ explanation seems to be an interplay of research field and prevalence of
 DAS in journals from this field, but we did not investigate this
 further. It should also be kept in mind that the Charité article sharing
 the dataset must not have necessarily been the \textbf{first} article to
-do so (see Section 3.6), and thus, some datasets might have been found
-by re-users through other, earlier articles where the dataset was more
-clearly marked. Also, this analysis does not differentiate between data
-references outside of a present DAS and articles without a DAS, and it
-was based on a very skewed sample, as of 200 datasets not referenced,
-only 7\% were not mentioned in a data availability statement.
-Nevertheless, summing up these three negative correlations, it can be
-said that the overall compliance of datasets with FAIR criteria or the
-findability through DAS is not the determining factor for data reuse. If
-the repository practices investigated did have the expected positive
-impact on reuse, it cannot be detected against the backdrop of the
-specific practices followed by a set of highly-used disciplinary
-repositories.
+do so (see Section~\ref{sec-methods-metadata}), and thus, some datasets
+might have been found by re-users through other, earlier articles where
+the dataset was more clearly marked. Also, this analysis does not
+differentiate between data references outside of a present DAS and
+articles without a DAS, and it was based on a very skewed sample, as of
+200 datasets not referenced, only 7\% were not mentioned in a data
+availability statement. Nevertheless, summing up these three negative
+correlations, it can be said that the overall compliance of datasets
+with FAIR criteria or the findability through DAS is not the determining
+factor for data reuse. If the repository practices investigated did have
+the expected positive impact on reuse, it cannot be detected against the
+backdrop of the specific practices followed by a set of highly-used
+disciplinary repositories.
 
 Most reused datasets were shared via disciplinary repositories,
 substantially beyond the fraction expected based on both the overall
