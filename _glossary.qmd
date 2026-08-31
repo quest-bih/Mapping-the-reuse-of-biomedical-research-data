@@ -1,12 +1,10 @@
-# Glossary {.unnumbered}
-
-<!-- [Data Citation Corpus (DCC)]{#gls-dcc} -->
-<!-- : A collection of scholarly publications and their associated data citations. -->
-
-<!-- [Data Availability Statement (DAS)]{#gls-das} -->
-<!-- : A statement describing whether and how the data supporting an article can be accessed. -->
+# glossary {.unnumbered}
 
 | Term | Definition |
 |---|---|
-| [Data Citation Corpus (DCC)]{#gls-dcc} | A collection of scholarly publications and their associated data citations. |
-| [Data Availability Statement (DAS)]{#gls-das} | A statement describing whether and how the data supporting an article can be accessed. |
+| [data article]{#gls-data-article} | Type of research article which presents a dataset's background, methodology and sometimes possible applications, but no analysis of this dataset. Used synonymously with "data paper". |
+| [data citation]{#gls-data-citation} | Entry in a reference list or bibliography of a research article which refers to a data object. |
+| [data reuse]{#gls-data-reuse} | The use of a data object by researchers other than the data creators, as indicated by a → data mention in a research article. Please consult @sec-discussion-reuse "What is data reuse anyway" for details. |
+| [data mention]{#gls-data-mention} | Statement in a research article full-text (including a data availability statement) which refers to a data object. |
+| [data reference]{#gls-data-reference} | Summary term for → data citation and → data mention. |
+| [indirect data citation]{#gls-indirect-data-citation} | Citation from a research article to a data article where the digital object used has been the dataset presented in the data article, rather than the text of the data article itself. |
