@@ -244,13 +244,14 @@ currently the only way to detect reuse of data at scale is to screen the
 research literature. We used the Data Citation Corpus to detect
 instances in which datasets shared by researchers from our biomedical
 research institution had been referenced, which we interpreted as
-indicative of reuse. We observed that 4.9\% of datasets shared between
-2020 and 2023 had been referenced by February 2025. Overall, 175 Charité
-datasets from this period were reused, which had been referenced 1,497
-times. The large majority of reused datasets were from `omics' fields,
-which generate particularly structured and standardized data. Data from
-humans had a higher probability of reuse, as well as COVID-19-related
-data. Dataset properties indicative of technical reusability as DOIs and
+indicative of reuse. We observed that 4.9\% of datasets identified
+through articles published between 2020 and 2023 had been referenced by
+February 1\textsuperscript{st}, 2025. Overall, 175 Charité datasets from
+this period were reused, which had been referenced 1,497 times. The
+large majority of reused datasets were from `omics' fields, which
+generate particularly structured and standardized data. Data from humans
+had a higher probability of reuse, as well as COVID-19-related data.
+Dataset properties indicative of technical reusability as DOIs and
 Creative Commons licenses had no positive influence on reuse
 probability, presumably because these are not used by the most common
 omics repositories. We conducted a complementary analysis of datasets
@@ -860,7 +861,9 @@ captured by ODDPub, rather than to replace ODDPub matches. To analyze
 how dataset properties related to reuse probability, we used a logistic
 regression, comparing the properties of datasets found to be referenced
 in the DCC to the properties of 200 randomly drawn Charité datasets that
-were not found to be referenced.
+were not found to be referenced. All p-values in this analysis were
+adjusted for multiple comparisons using the False Discovery Rate
+(Benjamini--Hochberg) procedure.
 
 Furthermore, we were interested in the development of data references
 over time as a function of dataset age. The publication years of both
@@ -974,22 +977,23 @@ words, we aimed at detecting indirect data citations.
 
 \emph{Data in Brief} and \emph{Scientific Data} are, to our knowledge,
 the two most common data journals not specific to any discipline. All
-Charité articles published in these journals were detected on 16.08.2024
-using publication data from Embase and PubMed for 2016-2020, as well as
-OpenAlex (\citeproc{ref-priemOpenAlexFullyopenIndex2022}{Priem, Piwowar,
-and Orr 2022}; \citeproc{ref-openalex}{{``OpenAlex,''} n.d.}) for 2021
-and 2022. For each data article, we determined whether the data
-presented was deposited in repositories, and if so, under which
-identifier(s). Of the 28 data articles, seven shared the data
-exclusively in the article itself or as supplementary materials. These
-cases were not considered further, as our definition of open data
-required the sharing of data through repositories. All six data articles
-published between 2016 and 2018 were part of this set of seven articles
-without datasets in repositories, and thus the analysis is effectively
-restricted to data articles from 2019 to 2022. Of the remaining 21
-articles with datasets in repositories, some had multiple datasets
-attributed to them, thus corresponding to 35 unique datasets overall
-(excluding deposits of the same dataset in two or more repositories).
+Charité articles published in these journals were detected on August
+16\textsuperscript{th}, 2024 using publication data from Embase and
+PubMed for 2016-2020, as well as OpenAlex
+(\citeproc{ref-priemOpenAlexFullyopenIndex2022}{Priem, Piwowar, and Orr
+2022}; \citeproc{ref-openalex}{{``OpenAlex,''} n.d.}) for 2021 and 2022.
+For each data article, we determined whether the data presented was
+deposited in repositories, and if so, under which identifier(s). Of the
+28 data articles, seven shared the data exclusively in the article
+itself or as supplementary materials. These cases were not considered
+further, as our definition of open data required the sharing of data
+through repositories. All six data articles published between 2016 and
+2018 were part of this set of seven articles without datasets in
+repositories, and thus the analysis is effectively restricted to data
+articles from 2019 to 2022. Of the remaining 21 articles with datasets
+in repositories, some had multiple datasets attributed to them, thus
+corresponding to 35 unique datasets overall (excluding deposits of the
+same dataset in two or more repositories).
 
 For each of these articles we used Google Scholar to obtain the list of
 articles which cited it, applying the ``sort by date'' function and thus
@@ -1024,7 +1028,7 @@ per data article. Apart from the removal of author overlap cases,
 articles were ineligible if it was not possible for us to access the
 citing article full-text and/or the language was not English. In these
 cases, additional citing articles were added to reach 60, if that many
-were still available. Out of 21 data articles, four had more than 60
+were still available. Out of 21 data articles, five had more than 60
 eligible articles citing them on the respective date of checking.
 
 Where the number of citing articles exceeded 60, we extrapolated a
@@ -1218,19 +1222,19 @@ DCC}\label{sec-results-quant}
 
 We started from a set of 15,748 articles (co-)authored by Charité
 researchers between 2020 and 2023. Not including datasets detected using
-DataStet, these articles reported the deposition of 2,502 datasets
+DataStet, these articles reported the deposition of 2,385 datasets
 (`Charité datasets'). We observed that 118 datasets (4.9\% of the ODDPub
 and ``additional'' datasets) have been referenced at least once.
 Overall, there were 1,032 references to the datasets, by the time the
-DCC version used was last updated (Feb.~25\textsuperscript{th}, 2025).
-These numbers are shown in \textbf{?@fig-dist-counts}. The fact that
-only a subset of datasets has so far been referenced is also reflected
-in the distribution of references per reused dataset. While a small
-number of datasets has been referenced many times, with a maximum of 142
-references, 70 out of 118 cited datasets (59.3\%) have been referenced
-only once (Figure~\ref{fig-datasets-freq-dist}), and 2,267 datasets
-(95.1\%) have not been referenced so far. An additional source of
-datasets were those detected using DataStet. These additional 57
+DCC version used was last updated (February 25\textsuperscript{th},
+2025). These numbers are shown in \textbf{?@fig-dist-counts}. The fact
+that only a subset of datasets has so far been referenced is also
+reflected in the distribution of references per reused dataset. While a
+small number of datasets has been referenced many times, with a maximum
+of 142 references, 70 out of 118 cited datasets (59.3\%) have been
+referenced only once (Figure~\ref{fig-datasets-freq-dist}), and 2,267
+datasets (95.1\%) have not been referenced so far. An additional source
+of datasets were those detected using DataStet. These additional 57
 datasets were referenced 465 times (\textbf{?@fig-dist-counts}). For
 these, a percentage of datasets referenced cannot be calculated (see
 Section~\ref{sec-methods-match} for details). Including these datasets
@@ -1246,7 +1250,7 @@ plus screening for additional identifiers was 118. This nearly exactly
 matched the number of identifiers extracted using the DataStet machine
 learning-based tool, also followed by manual validation, which was 119.
 A substantial number of dataset identifiers was detected only using one
-method, and only 35.4\% of articles were detected using both approaches.
+method, and only 35.4\% of datasets were detected using both approaches.
 
 \subsection{Determinants of institutional dataset
 reuse}\label{sec-results-determinants}
@@ -1315,8 +1319,8 @@ a seed.}
 
 \end{minipage}%
 
-\caption{\label{fig-dcc-side-by-side}Frequency Distribution of Datasets
-References (N=175). The histogram displays the number of times
+\caption{\label{fig-dcc-side-by-side}Frequency Distribution of Dataset
+References (N = 175). The histogram displays the number of times
 individual datasets were referenced across all referencing articles. The
 x-axis indicates the frequency of references per dataset, while the
 y-axis shows the number of datasets corresponding to each reference
@@ -1343,8 +1347,8 @@ Mendeley, and Zenodo (Supplementary Figure~\ref{suppfig-dcc-rep}). As we
 discuss in Section~\ref{sec-discussion-determinants}, this indicates
 that in the overall literature datasets in disciplinary repositories are
 referenced much more often. In addition, we find that even this small
-num¬ber is not reflected in the references to Charité datasets. While
-datasets in general-purpose repositories constitute 20.5\% of shared
+number is not reflected in the references to Charité datasets. While
+datasets in general-purpose repositories constitute 21.5\% of shared
 datasets as detected using ODDPub, only 2.5\% of referenced datasets
 were shared in general-purpose repositories. On the level of references,
 the contrast was even more stark, with only 0.5\% of dataset references
@@ -1380,10 +1384,9 @@ explained meaningful variation in dataset reuse (\(\chi^2\)(5) = 86.59,
 
 \caption{\label{fig-repo-dist-ds}Distribution of Referenced Datasets
 across Repositories (N = 175). The bar plot displays the number of
-referenced datasets across all mentioning articles, split by the
-repository where data were deposited. Where the same number of datasets
-from multiple repositories was reused, these are listed in reverse
-alphabetical order.}
+referenced datasets, split by the repository where data were deposited.
+Where the same number of datasets from multiple repositories was reused,
+these are listed in reverse alphabetical order.}
 
 \end{figure}%
 
@@ -1401,13 +1404,14 @@ referenced datasets (i.e., datasets that were found in the DCC) and a
 sample of 200 datasets that were not found in the DCC were included in
 this analysis. Values \textgreater1 indicate higher odds and values
 \textless1 indicate lower odds. For example, human datasets have 1.97
-times the odds of being reused, whereas datasets with DOI identifiers
-have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are
-adjusted, meaning that each estimate reflects the association between a
-given determinant and inclusion in the DCC, while controlling for the
-other determinants in the model. Significance levels are indicated as
-follows: *p \textless{} 0.05, **p \textless{} 0.01, ***p \textless{}
-0.001.}
+times the odds of being reused (97\% higher odds), whereas datasets with
+DOI identifiers have 0.15 times the odds of being reused (85\% lower
+odds) compared with datasets with accession number identifiers. All odds
+ratios are adjusted, meaning that each estimate reflects the association
+between a given determinant and inclusion in the DCC, while controlling
+for the other determinants in the model. Significance levels are
+indicated as follows: *p \textless{} 0.05, **p \textless{} 0.01, ***p
+\textless{} 0.001.}
 
 \end{figure}%
 
@@ -1445,23 +1449,23 @@ age}\label{sec-results-age}
 We investigated whether there is a correlation between dataset age and
 the number of references. This was done using a generalized linear mixed
 model (negative binomial) with the dataset's identifier as a random
-effect (S = 0.83). This analysis is constrained by the fact that the
-large majority of datasets were published between 2020 and 2023, so it
-might not be representative of other time periods. Datasets published
-earlier could still be part of the analyzed set, and in this regard it
-is important to consider, as mentioned earlier, that the analyzed
-Charité articles were not necessarily the first ones to base their
-analyses on the respective datasets. Rather, these articles were only
-\textbf{the earliest detected} out of n≥1 instances where a dataset was,
-by our definition, shared by Charité authors. The overall development of
-citations over the first 3 years
+effect (random-intercept SD = 0.83). This analysis is constrained by the
+fact that the large majority of datasets were published between 2020 and
+2023, so it might not be representative of other time periods. Datasets
+published earlier could still be part of the analyzed set, and in this
+regard it is important to consider, as mentioned earlier, that the
+analyzed Charité articles were not necessarily the first ones to base
+their analyses on the respective datasets. Rather, these articles were
+only \textbf{the earliest detected} out of n≥1 instances where a dataset
+was, by our definition, shared by Charité authors. The overall
+development of citations over the first 3 years
 (Supplementary Figure~\ref{suppfig-age-citation-2}) suggests that
 dataset references do not follow a clear trend in the first three years
-from the dataset's publication (IRR = 0.93, 95\% CI {[}0.81-1.05{]},
-\emph{p} = 0.24). However, this analysis is strongly skewed by the
-datasets which are cited only once. We thus generated a subset
-containing only datasets referenced at least once in the year the
-dataset was published and the three subsequent years
+from the dataset's publication (incidence rate ratio {[}IRR{]} = 0.93,
+95\% CI {[}0.81-1.05{]}, \emph{p} = 0.24). However, this analysis is
+strongly skewed by the datasets which are cited only once. We thus
+generated a subset containing only datasets referenced at least once in
+the year the dataset was published and the three subsequent years
 (Figure~\ref{fig-age-citation-1}). For this subset, consisting of only
 seven datasets, we observed a negative correlation, corresponding to an
 average 22\% decrease in the number of citations per year. This
@@ -1550,14 +1554,14 @@ articles were cited \textgreater60 times, we restricted manual checks to
 60 references. In this ``truncated'' set, we found that out of 537
 references, 113 references (21\%) were in fact indirect data citations.
 We used this to extrapolate numbers for the additional references to the
-three most-cited articles for which not all referencing articles could
-be screened. Adding these extrapolations, we estimated 846 citations for
+five most-cited articles for which not all referencing articles could be
+screened. Adding these extrapolations, we estimated 846 citations for
 these 35 datasets (Figure~\ref{fig-da-flowchart}). It should be
 mentioned that the overall number of indirect data citations is strongly
 impacted by one outlier, which received an extrapolated number of 662
 references. However, even after removing this outlier, we would still
 estimate 184 indirect data citations. We also observed that these
-datasets were rarely published in OMICS repositories (only 5 out of 35
+datasets were rarely published in omics repositories (only 5 out of 35
 datasets; Figure~\ref{fig-repo-dist-ds-da}), which suggests a very
 different pattern of sharing and reuse for datasets presented in data
 articles.
@@ -1616,12 +1620,12 @@ to reused datasets. Between 2020 and 2023, Charité researchers published
 least one dataset was shared, as detected using ODDPub, with 2,385
 datasets overall. Out of the overall sample including these datasets as
 well as 119 datasets detected using DataStet, 175 datasets were
-referenced in the literature, with 1,390 references overall. This is, to
-our knowledge, the first analysis to quantitatively show at the scale of
-a research institution, how the datasets produced are reused and enter
-the published literature. Former work has focused on individual
-repositories (\citeproc{ref-strecker2025}{Strecker, Soltau, and Bach
-2025}) or research communities
+referenced 1,497 times in 1,390 papers. This is, to our knowledge, the
+first analysis to quantitatively show at the scale of a research
+institution, how the datasets produced are reused and enter the
+published literature. Former work has focused on individual repositories
+(\citeproc{ref-strecker2025}{Strecker, Soltau, and Bach 2025}) or
+research communities
 (\citeproc{ref-milhamAssessmentImpactShared2018}{Milham et al. 2018};
 \citeproc{ref-khanMeasuringImpactBiodiversity2021}{Khan, Thelwall, and
 Kousha 2021}) or has compared different disciplines
@@ -1853,8 +1857,8 @@ number we observe.
 We searched for reuse of datasets associated with Charité publications
 starting in 2020. Although some datasets were older, the majority was
 published in temporal proximity to the article through which we detected
-it. Thus, at the time of the creation of DCC version three, which we
-used (February 1\textsuperscript{st} 2025), most datasets were still
+it. Thus, at the time of the creation of DCC version 3, which we used
+(February 1\textsuperscript{st}, 2025), most datasets were still
 comparatively new. The literature on data reuse
 (\citeproc{ref-vriesSharingNeurophysiologyData2022}{Vries, Siegle, and
 Koch 2022}) as well as our own analyses (see
@@ -2187,7 +2191,7 @@ The following restrictions and limitations apply to our analysis:
 \item
   Over the years, our criteria for inclusion have somewhat changed. For
   instance, we decided at some point to include a ``persistence''
-  requirement, which leads e.g.~to the exclusion of deposits on Github.
+  requirement, which leads e.g.~to the exclusion of deposits on GitHub.
   However, given the reuse cases we detected up to now (mostly accession
   codes in disciplinary repositories), it seems probable that this drift
   over time did not influence our analysis as described here.
@@ -2372,8 +2376,8 @@ includes data, code, and text is deposited on GitHub at
 release v1.0.3. This release has been deposited in Zenodo under the
 concept DOI \url{https://doi.org/10.5281/zenodo.19235630}
 (\citeproc{ref-cohenMatchingDataReferences2026}{Cohen et al. 2026}), and
-the DOI has been added to the README file in Github. New versions of the
-article will be accompanied by new releases in Github and new versions
+the DOI has been added to the README file in GitHub. New versions of the
+article will be accompanied by new releases in GitHub and new versions
 of the deposit in Zenodo.
 
 \section{Declarations}\label{declarations}

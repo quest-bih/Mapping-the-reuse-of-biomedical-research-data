@@ -169,7 +169,7 @@ rep_dt |>
 
 ```{r}
 #| label: fig-repo-dist-ds
-#| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets across all mentioning articles, split by the repository where data were deposited. Where the same number of datasets from multiple repositories was reused, these are listed in reverse alphabetical order.
+#| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets, split by the repository where data were deposited. Where the same number of datasets from multiple repositories was reused, these are listed in reverse alphabetical order.
 #| fig.height: 6
 #| fig.width: 10
 
@@ -778,7 +778,7 @@ geom_text(
 ```{r}
 #| label: fig-matched-non
 #| fig-cap: |
-#|   Determinants of Institutional Dataset Reuse. The figure shows odds ratios for inclusion in the DCC. 175 referenced datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused, whereas datasets with DOI identifiers have 0.85 times (1 - 0.15) the odds of being reused. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model. Significance levels are indicated as follows: \*p < 0.05, \*\*p < 0.01, \*\*\*p < 0.001.
+#|   Determinants of Institutional Dataset Reuse. The figure shows odds ratios for inclusion in the DCC. 175 referenced datasets (i.e., datasets that were found in the DCC) and a sample of 200 datasets that were not found in the DCC were included in this analysis. Values >1 indicate higher odds and values <1 indicate lower odds. For example, human datasets have 1.97 times the odds of being reused (97% higher odds), whereas datasets with DOI identifiers have 0.15 times the odds of being reused (85% lower odds) compared with datasets with accession number identifiers. All odds ratios are adjusted, meaning that each estimate reflects the association between a given determinant and inclusion in the DCC, while controlling for the other determinants in the model. Significance levels are indicated as follows: \*p < 0.05, \*\*p < 0.01, \*\*\*p < 0.001.
 #| fig.height: 8
 #| fig.width: 10
 
@@ -805,7 +805,7 @@ tidy_model_matched_non_matched |>
   
   labs(
     x = "Determinant",
-    y = "Likelihood of Reuse (Odds Ratio)"
+    y = "Odds Ratio for Dataset Reuse"
   ) +
   theme_classic() +
   theme(
