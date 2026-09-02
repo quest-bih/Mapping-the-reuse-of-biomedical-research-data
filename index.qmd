@@ -52,6 +52,7 @@ crossref:
 ---
 
 ::: {.content-visible when-format="pdf"}
+```{=tex}
 \begin{center}
 {\LARGE Matching data references and institutional output to map the reuse of biomedical research data\par}
 \vspace{0.8em}
@@ -62,6 +63,7 @@ Avihay Cohen$^{1}$, Blanka Ivanović$^{1}$, Anastasiia Iarkaeva$^{1}$, Vladislav
 {\small $\ast$ Corresponding author\par}
 \end{center}
 \vspace{1em}
+```
 :::
 
 ```{r}
@@ -327,7 +329,6 @@ table#tbl-data-articles tbody tr:last-child td {
 \endgroup
 :::
 
-
 # Results {#sec-results}
 
 We conducted analyses of two independent sets of dataset references. First, we compiled a list of identifiers of datasets which were shared alongside publications by our institutional authors. This set was based on three sources of dataset identifiers:
@@ -362,7 +363,7 @@ To better understand the patterns of institutional dataset reuse, we analyzed in
 \newpage
 :::
 
-::::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="(a) Frequency Distribution of Datasets References (N=175). The histogram displays the number of times individual datasets were referenced across all referencing articles. The x-axis indicates the frequency of references per dataset, while the y-axis shows the number of datasets corresponding to each reference frequency. (b) Contribution of each data source to identified referenced datasets (N = 175). The Venn diagram shows the number of referenced datasets that originated from each source (ODDPub and DataStet), including the overlap between the sources. ODDPub includes datasets that were added using ODDPub-identified datasets as a seed."}
+::: {#fig-dcc-side-by-side layout-ncol="2" fig-cap="(a) Frequency Distribution of Datasets References (N=175). The histogram displays the number of times individual datasets were referenced across all referencing articles. The x-axis indicates the frequency of references per dataset, while the y-axis shows the number of datasets corresponding to each reference frequency. (b) Contribution of each data source to identified referenced datasets (N = 175). The Venn diagram shows the number of referenced datasets that originated from each source (ODDPub and DataStet), including the overlap between the sources. ODDPub includes datasets that were added using ODDPub-identified datasets as a seed."}
 ::: {style="height: 420px;"}
 {{< embed notebooks/plots/plots.qmd#fig-datasets-freq-dist width="100%" height="420px" >}}
 :::
@@ -370,7 +371,7 @@ To better understand the patterns of institutional dataset reuse, we analyzed in
 ::: {style="height: 420px;"}
 {{< embed notebooks/plots/plots.qmd#fig-venn-ids width="100%" height="420px" >}}
 :::
-:::::
+:::
 
 We then used a logistic regression to examine in an exploratory fashion which dataset-level characteristics were associated with the likelihood of a dataset to be referenced. For this, we compared the referenced datasets with 200 non-referenced ones, and adjusted all *p*-values for multiple comparisons using the False Discovery Rate (Benjamini–Hochberg) procedure. We found that the use of DOIs is **negatively** correlated with dataset reuse, as shown by logistic regression (*p* `r if (stat_chi_metadata_res$p_adj_is_detected_id_doi < 0.001) "< 0.001" else paste0("= ", round(stat_chi_metadata_res$p_adj_is_detected_id_doi, 2))`; Odds Ratio = `r stat_chi_metadata_res$odds_ratios_is_detected_id_doi`; @fig-matched-non). General-purpose repositories, which in all cases assign DOIs to datasets, constitute only a small fraction of the DCC, with 4.4% of references belonging to Dryad, Figshare, Mendeley, and Zenodo (@suppfig-dcc-rep). As we discuss in @sec-discussion-determinants, this indicates that in the overall literature datasets in disciplinary repositories are referenced much more often. In addition, we find that even this small num¬ber is not reflected in the references to Charité datasets. While datasets in general-purpose repositories constitute `r round(res$n_ids_gen_rep_for_match_count / (res$n_ids_for_match_count + res$n_2nd_for_match_count) * 100, 1)`% of shared datasets as detected using ODDPub, only `r round(res$n_matched_ids_count_dist_gen_rep / res$n_matched_ids_count_dist * 100, 1)`% of referenced datasets were shared in general-purpose repositories. On the level of references, the contrast was even more stark, with only `r round(res$n_mentions_gen / res$n_mentions * 100, 1)`% of dataset references referring to datasets in general-purpose repositories. We attribute the unexpected negative correlation of data reuse with DOIs, as well as a similar negative correlation between dataset reuse and the attribution of CC licenses (*p* `r if (stat_chi_metadata_res$p_adj_license_for_analysis < 0.001) "< 0.001" else paste0("= ", round(stat_chi_metadata_res$p_adj_license_for_analysis, 2))`; Odds Ratio = `r stat_chi_metadata_res$odds_ratios_license_for_analysis`) to a disproportionately higher reuse of data in disciplinary repositories which do not assign DOIs or licenses.
 
@@ -390,11 +391,11 @@ We investigated further determinants of dataset reuse and found that human data,
 \newpage
 :::
 
-:::: {.content-visible when-format="html"}
+::: {.content-visible when-format="html"}
 ::: quarto-figure
 ![Properties of Institutional Dataset Reuse (N = 175). The Sankey plot maps characteristics of mentioned datasets and the relations between them. The dataset properties displayed are, from left to right: (i) is the data identified using a DOI or an accession number, (ii) is the data shared with a CC license, (iii) is the data openly available or restricted-access, (iv) which repository is the data deposited in, (v) is the data collected from human subjects, and (vi) is the data related to COVID-19 research.](plots_files/sankey/sankey_interactive_plot_2.html){#fig-sankey-2 .embedded width="100%" height="600px"}
 :::
-::::
+:::
 
 ::: {.content-visible when-format="pdf"}
 ![Properties of Institutional Dataset Reuse (N = 175). The Sankey plot maps characteristics of mentioned datasets and the relations between them. The dataset properties displayed are, from left to right: (i) is the data identified using a DOI or an accession number, (ii) is the data shared with a CC license, (iii) is the data openly available or restricted-access, (iv) which repository is the data deposited in, (v) is the data collected from human subjects, and (vi) is the data related to COVID-19 research.](plots_files/sankey/sankey_for_pdf.png){width="\\linewidth" height="0.82\\textheight"}
@@ -430,7 +431,7 @@ In addition to an analysis of data references, we conducted an independent analy
 \vspace{30pt}
 :::
 
-::::: {#fig-da-side-by-side layout-ncol="2" fig-cap="(a) Overview of Charité Datasets Indirectly Cited through Data Articles. The flowchart diagram shows how many data articles were analyzed, the number of datasets shared, how often indirect data citations were detected, and how many were extrapolated based on the manually screened sample. (b) Distribution of repositories in which datasets shared with data articles had been deposited (N = 35)."}
+::: {#fig-da-side-by-side layout-ncol="2" fig-cap="(a) Overview of Charité Datasets Indirectly Cited through Data Articles. The flowchart diagram shows how many data articles were analyzed, the number of datasets shared, how often indirect data citations were detected, and how many were extrapolated based on the manually screened sample. (b) Distribution of repositories in which datasets shared with data articles had been deposited (N = 35)."}
 ::: {style="height: 420px;"}
 {{< embed notebooks/plots/plots.qmd#fig-da-flowchart width="100%" height="420px" >}}
 :::
@@ -438,7 +439,7 @@ In addition to an analysis of data references, we conducted an independent analy
 ::: {style="height: 420px;"}
 {{< embed notebooks/plots/plots.qmd#fig-repo-dist-ds-da width="100%" height="420px" >}}
 :::
-:::::
+:::
 
 ::: {.content-visible when-format="pdf"}
 \newpage
@@ -528,23 +529,23 @@ Lastly, it is also important to mention that we understand “data” throughout
 
 The following restrictions and limitations apply to our analysis:
 
-- We only detect reuse detected through references in the published literature. This excludes many types of data reuse, as described in @sec-discussion-undetected. In addition, dataset reuse by commercial actors is common and cannot be detected via bibliographic methods [@ross2024].
+-   We only detect reuse detected through references in the published literature. This excludes many types of data reuse, as described in @sec-discussion-undetected. In addition, dataset reuse by commercial actors is common and cannot be detected via bibliographic methods [@ross2024].
 
-- We do not distinguish between reuse of the dataset by directly employing it and referencing it for comparison or context. We conceptualize all references as "reuse", but some authors as e.g. @yangResearchDataScientific2025 make such a distinction, which requires deeper text analysis. Based on their work, it is expected that the majority of data references indeed indicate reuse by their definition, as they found 2.9 times more cases of "reuse" than "referencing".
+-   We do not distinguish between reuse of the dataset by directly employing it and referencing it for comparison or context. We conceptualize all references as "reuse", but some authors as e.g. @yangResearchDataScientific2025 make such a distinction, which requires deeper text analysis. Based on their work, it is expected that the majority of data references indeed indicate reuse by their definition, as they found 2.9 times more cases of "reuse" than "referencing".
 
-- ODDPub has been developed to detect dataset references in article full texts. If shared dataset identifiers were listed in the reference list only, and not in the article text, they might not have been detected. However, while formal citation of datasets is best practice, it is still highly uncommon [@ninkov2021; @park2018], and thus we do not expect to have missed a substantial number of datasets.
+-   ODDPub has been developed to detect dataset references in article full texts. If shared dataset identifiers were listed in the reference list only, and not in the article text, they might not have been detected. However, while formal citation of datasets is best practice, it is still highly uncommon [@ninkov2021; @park2018], and thus we do not expect to have missed a substantial number of datasets.
 
-- Over the years, our criteria for inclusion have somewhat changed. For instance, we decided at some point to include a “persistence” requirement, which leads e.g. to the exclusion of deposits on Github. However, given the reuse cases we detected up to now (mostly accession codes in disciplinary repositories), it seems probable that this drift over time did not influence our analysis as described here.
+-   Over the years, our criteria for inclusion have somewhat changed. For instance, we decided at some point to include a “persistence” requirement, which leads e.g. to the exclusion of deposits on Github. However, given the reuse cases we detected up to now (mostly accession codes in disciplinary repositories), it seems probable that this drift over time did not influence our analysis as described here.
 
-- When we speak of datasets “from our institution”, we refer to datasets underlying articles with at least one co-author from the Charité. This does not imply that the dataset was actually generated or shared by Charité authors. This would be impossible to know from the literature alone.
+-   When we speak of datasets “from our institution”, we refer to datasets underlying articles with at least one co-author from the Charité. This does not imply that the dataset was actually generated or shared by Charité authors. This would be impossible to know from the literature alone.
 
-- The article we determined as sharing data doesn’t have to be the first one to have shared the data, and this is indeed what we observed. We detected **one** paper from the Charité which shared the data, but it doesn’t have to be the first one.
+-   The article we determined as sharing data doesn’t have to be the first one to have shared the data, and this is indeed what we observed. We detected **one** paper from the Charité which shared the data, but it doesn’t have to be the first one.
 
-- The large majority of datasets were published between 2020 and 2023, so the findings might not be representative of other time periods. This is in particular due to overlap with the COVID-19 pandemic, which might have led to transient changes regarding which datasets were predominantly shared and reused. The analysis of the development of dataset reuse over time is exploratory and needs to be interpreted with particular caution due to both the small sample and the short time window.
+-   The large majority of datasets were published between 2020 and 2023, so the findings might not be representative of other time periods. This is in particular due to overlap with the COVID-19 pandemic, which might have led to transient changes regarding which datasets were predominantly shared and reused. The analysis of the development of dataset reuse over time is exploratory and needs to be interpreted with particular caution due to both the small sample and the short time window.
 
-- We have addressed some data quality issues of the DCC by cleaning steps. However, there are no studies as yet investigating potential bias in the DCC, which could affect e.g. certain disciplines, repositories, or identifier types. Thus, it is unclear how faithfully the DCC represents the complete body of dataset references in the literature, and results e.g. on repositories or determinants of data reuse could be systematically skewed.
+-   We have addressed some data quality issues of the DCC by cleaning steps. However, there are no studies as yet investigating potential bias in the DCC, which could affect e.g. certain disciplines, repositories, or identifier types. Thus, it is unclear how faithfully the DCC represents the complete body of dataset references in the literature, and results e.g. on repositories or determinants of data reuse could be systematically skewed.
 
-- Our definition disregards the question of dataset authorship, and we analyze article authorship only. Unfortunately, not all repositories provide authorship information, but where it is available it would be possible to define reuse as a lack of authorship overlap between an article and a dataset. This could be more reflective of actual data sharing and reuse processes, but whether it really is would warrant further investigation.
+-   Our definition disregards the question of dataset authorship, and we analyze article authorship only. Unfortunately, not all repositories provide authorship information, but where it is available it would be possible to define reuse as a lack of authorship overlap between an article and a dataset. This could be more reflective of actual data sharing and reuse processes, but whether it really is would warrant further investigation.
 
 For steps to ensure the validity of data, see the methods section.
 
@@ -564,14 +565,14 @@ Analyses were conducted in R version 4.3.3 (2024-02-29 ucrt) using RStudio 2024.
 
 # Declarations
 
-- This project did not receive any dedicated funding. <br>
-- The authors declare that they have no conflicts of interest. <br>
-- Author Contributions:
-  - Avihay Cohen <https://orcid.org/0000-0002-0829-0810>: Data curation, Formal analysis, Investigation, Software, Validation, Visualization, and Writing - original draft.
-  - Blanka Ivanović <https://orcid.org/0000-0003-4915-6818>: Data curation, Investigation, Validation, and Writing - original draft.
-  - Anastasiia Iarkaeva <https://orcid.org/0000-0002-7370-1663>: Validation and Writing - review & editing.
-  - Vladislav Nachev <https://orcid.org/0000-0003-0521-6153>: Methodology, Software, and Writing - review & editing.
-  - Evgeny Bobrov <https://orcid.org/0000-0002-2368-464X>: Conceptualization, Methodology, Project administration, Supervision, Validation, Writing - original draft, and Writing - review & editing.
+-   This project did not receive any dedicated funding. <br>
+-   The authors declare that they have no conflicts of interest. <br>
+-   Author Contributions:
+    -   Avihay Cohen <https://orcid.org/0000-0002-0829-0810>: Data curation, Formal analysis, Investigation, Software, Validation, Visualization, and Writing - original draft.
+    -   Blanka Ivanović <https://orcid.org/0000-0003-4915-6818>: Data curation, Investigation, Validation, and Writing - original draft.
+    -   Anastasiia Iarkaeva <https://orcid.org/0000-0002-7370-1663>: Validation and Writing - review & editing.
+    -   Vladislav Nachev <https://orcid.org/0000-0003-0521-6153>: Methodology, Software, and Writing - review & editing.
+    -   Evgeny Bobrov <https://orcid.org/0000-0002-2368-464X>: Conceptualization, Methodology, Project administration, Supervision, Validation, Writing - original draft, and Writing - review & editing.
 
 ::: {.content-visible when-format="pdf"}
 \newpage

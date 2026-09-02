@@ -169,7 +169,7 @@ rep_dt |>
 
 ```{r}
 #| label: fig-repo-dist-ds
-#| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets across all mentioning articles, split by the repository where data were deposited.
+#| fig-cap: Distribution of Referenced Datasets across Repositories (N = 175). The bar plot displays the number of referenced datasets across all mentioning articles, split by the repository where data were deposited. Where the same number of datasets from multiple repositories was reused, these are listed in reverse alphabetical order.
 #| fig.height: 6
 #| fig.width: 10
 

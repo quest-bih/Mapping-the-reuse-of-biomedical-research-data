@@ -369,8 +369,17 @@ to cases where a \hyperref[gls-data-article]{data article} rather than
 the dataset itself is referenced. Definitions of importance to this
 article are included in the \hyperref[glossary]{glossary}.
 
-\section*{glossary}\label{glossary}
-\addcontentsline{toc}{section}{glossary}
+\edef\GlossarySavedSection{\number\value{section}}
+\edef\GlossarySavedSubsection{\number\value{subsection}}
+\edef\GlossarySavedSubsubsection{\number\value{subsubsection}}
+\edef\GlossarySavedTable{\number\value{table}}
+
+\section*{Glossary}\label{glossary}
+\addcontentsline{toc}{section}{Glossary}
+
+\begingroup
+\let\GlossaryOriginalRaggedRight\raggedright
+\renewcommand{\raggedright}{\GlossaryOriginalRaggedRight\rightskip=0pt}
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
@@ -385,28 +394,35 @@ Definition
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\phantomsection\label{gls-data-article}{data article} & Type of research
+data article\phantomsection\label{gls-data-article}{} & Type of research
 article which presents a dataset's background, methodology and sometimes
 possible applications, but no analysis of this dataset. Used
 synonymously with ``data paper''. \\
-\phantomsection\label{gls-data-citation}{data citation} & Entry in a
+data citation\phantomsection\label{gls-data-citation}{} & Entry in a
 reference list or bibliography of a research article which refers to a
 data object. \\
-\phantomsection\label{gls-data-reuse}{data reuse} & The use of a data
-object by researchers other than the data creators, as indicated by a →
-data mention in a research article. Please consult
+data reuse\phantomsection\label{gls-data-reuse}{} & The use of a data
+object by researchers other than the data creators, as indicated by a
+→data mention in a research article. Please consult
 Section~\ref{sec-discussion-reuse} ``What is data reuse anyway'' for
 details. \\
-\phantomsection\label{gls-data-mention}{data mention} & Statement in a
+data mention\phantomsection\label{gls-data-mention}{} & Statement in a
 research article full-text (including a data availability statement)
 which refers to a data object. \\
-\phantomsection\label{gls-data-reference}{data reference} & Summary term
-for → data citation and → data mention. \\
-\phantomsection\label{gls-indirect-data-citation}{indirect data
-citation} & Citation from a research article to a data article where the
-digital object used has been the dataset presented in the data article,
-rather than the text of the data article itself. \\
+data reference\phantomsection\label{gls-data-reference}{} & Summary term
+for →data citation and →data mention. \\
+indirect data
+citation\phantomsection\label{gls-indirect-data-citation}{} & Citation
+from a research article to a data article where the digital object used
+has been the dataset presented in the data article, rather than the text
+of the data article itself. \\
 \end{longtable}
+
+\endgroup
+\setcounter{section}{\GlossarySavedSection}
+\setcounter{subsection}{\GlossarySavedSubsection}
+\setcounter{subsubsection}{\GlossarySavedSubsubsection}
+\setcounter{table}{\GlossarySavedTable}
 
 \subsection{Institutional dataset reuse as specific
 application}\label{sec-intro-application}
@@ -1365,7 +1381,9 @@ explained meaningful variation in dataset reuse (\(\chi^2\)(5) = 86.59,
 \caption{\label{fig-repo-dist-ds}Distribution of Referenced Datasets
 across Repositories (N = 175). The bar plot displays the number of
 referenced datasets across all mentioning articles, split by the
-repository where data were deposited.}
+repository where data were deposited. Where the same number of datasets
+from multiple repositories was reused, these are listed in reverse
+alphabetical order.}
 
 \end{figure}%
 

@@ -1,10 +1,48 @@
-# glossary {.unnumbered}
+```{=html}
+<style>
+.glossary-table table > thead > tr > th,
+.glossary-table table > tbody > tr > td {
+  vertical-align: top !important;
+}
+
+.glossary-table table > tbody > tr > td:nth-child(2) {
+  text-align: justify;
+}
+</style>
+```
+
+```{=latex}
+\edef\GlossarySavedSection{\number\value{section}}
+\edef\GlossarySavedSubsection{\number\value{subsection}}
+\edef\GlossarySavedSubsubsection{\number\value{subsubsection}}
+\edef\GlossarySavedTable{\number\value{table}}
+```
+
+# Glossary {#glossary .unnumbered}
+
+::: {.glossary-table}
+
+```{=latex}
+\begingroup
+\let\GlossaryOriginalRaggedRight\raggedright
+\renewcommand{\raggedright}{\GlossaryOriginalRaggedRight\rightskip=0pt}
+```
 
 | Term | Definition |
 |---|---|
-| [data article]{#gls-data-article} | Type of research article which presents a dataset's background, methodology and sometimes possible applications, but no analysis of this dataset. Used synonymously with "data paper". |
-| [data citation]{#gls-data-citation} | Entry in a reference list or bibliography of a research article which refers to a data object. |
-| [data reuse]{#gls-data-reuse} | The use of a data object by researchers other than the data creators, as indicated by a → data mention in a research article. Please consult @sec-discussion-reuse "What is data reuse anyway" for details. |
-| [data mention]{#gls-data-mention} | Statement in a research article full-text (including a data availability statement) which refers to a data object. |
-| [data reference]{#gls-data-reference} | Summary term for → data citation and → data mention. |
-| [indirect data citation]{#gls-indirect-data-citation} | Citation from a research article to a data article where the digital object used has been the dataset presented in the data article, rather than the text of the data article itself. |
+| data article[]{#gls-data-article} | Type of research article which presents a dataset's background, methodology and sometimes possible applications, but no analysis of this dataset. Used synonymously with "data paper". |
+| data citation[]{#gls-data-citation} | Entry in a reference list or bibliography of a research article which refers to a data object. |
+| data reuse[]{#gls-data-reuse} | The use of a data object by researchers other than the data creators, as indicated by a →data mention in a research article. Please consult @sec-discussion-reuse "What is data reuse anyway" for details. |
+| data mention[]{#gls-data-mention} | Statement in a research article full-text (including a data availability statement) which refers to a data object. |
+| data reference[]{#gls-data-reference} | Summary term for →data citation and →data mention. |
+| indirect data citation[]{#gls-indirect-data-citation} | Citation from a research article to a data article where the digital object used has been the dataset presented in the data article, rather than the text of the data article itself. |
+
+```{=latex}
+\endgroup
+\setcounter{section}{\GlossarySavedSection}
+\setcounter{subsection}{\GlossarySavedSubsection}
+\setcounter{subsubsection}{\GlossarySavedSubsubsection}
+\setcounter{table}{\GlossarySavedTable}
+```
+
+:::
