@@ -642,7 +642,7 @@ geom_text(aes(y = n + 2, label = perc),
 
 ```{r}
 #| label: fig-age-citation-1
-#| fig-cap: Distribution of References by Dataset Age. The plot shows the relation between the age of datasets and the number of times it was referenced. The plot includes only the seven most referenced datasets among the subset of those datasets which were referenced in all four age bins, i.e., 0, 1, 2, and 3 years after their publication. The dataset age (X axis) is the number of years that have passed between the dataset publication year and the publication year of the referencing article. Dataset identifiers are added in blue text, and the number of references during a particular age bin is added in red text. The dashed line displays the overall trend in the number of references over age bins for this subset of datasets. 
+#| fig-cap: Distribution of References by Dataset Age. The plot shows the relation between the age of datasets and the number of times it was referenced. The plot includes only the seven most referenced datasets among the subset of those datasets which were referenced in all four age bins, i.e., 0, 1, 2, and 3 years after their publication. The dataset age (X axis) is the number of years that have passed between the dataset publication year and the publication year of the referencing article. Dataset identifiers are added in blue text, and the number of references during a particular age bin is added in red text. A pseudo-log transformation (base = 12, sigma = 10) was applied to the y-axis to improve visualization across the wide range of citation counts. The minimum observed citation count was 1. The dashed line displays the overall trend in the number of references over age bins for this subset of datasets. 
 #| fig.height: 8
 #| fig.width: 10
 
@@ -690,10 +690,15 @@ ids_and_years_only_0_3_ages_for_plot |>
   ) +
 
   scale_x_continuous(breaks = 0:3) +
-  scale_y_continuous(trans = scales::pseudo_log_trans(base = 12, sigma = 10)) +
+  scale_y_continuous(
+  trans = scales::pseudo_log_trans(base = 12, sigma = 10),
+  breaks = \(x) scales::breaks_extended()(x) |>
+    c(1) |>
+    setdiff(0) |>
+    sort()) +
   labs(
     x = "Age of Dataset (Years Since Publication)",
-    y = "Number of References (Log Scale)"
+    y = "Number of References (Pseudo-log Scale)"
   ) +
   theme_classic() +
   theme(
@@ -757,10 +762,15 @@ geom_text(
   ) +
 
   scale_x_continuous(breaks = 0:3) +
-  scale_y_continuous(trans = scales::pseudo_log_trans(base = 12, sigma = 10)) +
+  scale_y_continuous(
+  trans = scales::pseudo_log_trans(base = 12, sigma = 10),
+  breaks = \(x) scales::breaks_extended()(x) |>
+    c(1) |>
+    setdiff(0) |>
+    sort()) +
   labs(
     x = "Age of Dataset (Years Since Publication)",
-    y = "Number of References (Log Scale)"
+    y = "Number of References (Pseudo-log Scale)"
   ) +
   theme_classic() +
   theme(
