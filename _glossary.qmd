@@ -15,7 +15,6 @@
 \edef\GlossarySavedSection{\number\value{section}}
 \edef\GlossarySavedSubsection{\number\value{subsection}}
 \edef\GlossarySavedSubsubsection{\number\value{subsubsection}}
-\edef\GlossarySavedTable{\number\value{table}}
 ```
 
 # Glossary {#glossary .unnumbered}
@@ -44,7 +43,6 @@
 \setcounter{section}{\GlossarySavedSection}
 \setcounter{subsection}{\GlossarySavedSubsection}
 \setcounter{subsubsection}{\GlossarySavedSubsubsection}
-\setcounter{table}{\GlossarySavedTable}
 ```
 
 :::
