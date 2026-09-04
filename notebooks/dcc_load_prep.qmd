@@ -1153,7 +1153,7 @@ save_cr(dcc_years_dist_for_plot, file = file.path(here("data", "tables_for_plots
 
 ```{r}
 
-rep_for_plot <- DCC_corpus_orig |> 
+rep_for_plot <- DCC_corpus_11_std_lbl |>
   mutate(repository = case_when(repository == "figshare" ~ "Figshare", .default = repository)) |> 
   select(repository) |> 
   group_by(repository) |> 

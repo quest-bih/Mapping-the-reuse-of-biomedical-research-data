@@ -37,6 +37,8 @@
 | data reference[]{#gls-data-reference} | Summary term for →data citation and →data mention. |
 | indirect data citation[]{#gls-indirect-data-citation} | Citation from a research article to a data article where the digital object used has been the dataset presented in the data article, rather than the text of the data article itself. |
 
+: {tbl-colwidths="[25,75]"}
+
 ```{=latex}
 \endgroup
 \setcounter{section}{\GlossarySavedSection}

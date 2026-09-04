@@ -149,7 +149,7 @@
 \usepackage{xurl}
 \renewcommand{\arraystretch}{1.15}
 \setlength{\tabcolsep}{6pt}
-\KOMAoption{captions}{tableheading}
+\KOMAoption{captions}{tablesignature}
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
 \floatstyle{plain}
@@ -264,7 +264,7 @@ datasets in disciplinary repositories from fields outside of omics, as
 well as general-purpose repositories. Our study shows that data are
 reused on a large scale, but at the same time reuse of data in many
 fields is limited, especially if data are deposited in general-purpose
-repositories. Data is reused most if it is shared with disciplinary
+repositories. Data are reused most if it is shared with disciplinary
 metadata and/or described by data articles. Our methods do not allow us
 to map data reuse in its entirety, and further large-scale studies on
 the determinants, temporal patterns and purposes of data reuse are
@@ -303,7 +303,7 @@ reuse data for purposes outside of research, such as teaching
 (\citeproc{ref-gregory2020}{Gregory et al. 2020}). Thus, many reuse
 cases might never find their way into the literature. However, the
 traces of \hyperref[gls-data-reuse]{data reuse} in the literature are
-currently the only way to investigate at scale, whether data is reused.
+currently the only way to investigate at scale, whether data are reused.
 Thus, we focus on references to data reuse in the published literature
 as a proxy of overall data reuse to investigate the impact of shared
 data. Ultimately, answering questions around data reuse is central to
@@ -383,8 +383,8 @@ article are included in the \hyperref[glossary]{glossary}.
 \renewcommand{\raggedright}{\GlossaryOriginalRaggedRight\rightskip=0pt}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.7500}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Term
@@ -496,7 +496,7 @@ deduce this from the observations that (i) the DCC includes records from
 DataCite Event Data (\citeproc{ref-DataCitationCorpus2024}{Make Data
 Count, n.d.}), (ii) the DataCite Event Data service imports data
 citation events from the Crossref data citation endpoint
-(\citeproc{ref-ConsumingCitationsReferences}{Datacite, n.d.}), and (iii)
+(\citeproc{ref-ConsumingCitationsReferences}{DataCite, n.d.}), and (iii)
 Crossref's endpoint scans the reference field and the relation field of
 article metadata (\citeproc{ref-DataCitations}{Crossref, n.d.}), where
 the reference field represents bibliographic references. However, there
@@ -636,8 +636,9 @@ articles with ODDPub}\label{sec-methods-charite-oddpub}
 
 The process through which we obtained the list of shared datasets has
 been described in detail in our publication Iarkaeva, Nachev, and Bobrov
-(\citeproc{ref-iarkaeva2024}{2024}), as well as a detailed protocol
-(\citeproc{ref-iarkaevaSemiautomatedExtractionInformation2025}{Iarkaeva
+(\citeproc{ref-iarkaevaWorkflowDetectingBiomedical2024}{2024}), as well
+as a detailed protocol
+(\citeproc{ref-iarkaevaSemiautomatedExtractionInformation2025a}{Iarkaeva
 et al. 2025}). Briefly, starting with an institutional bibliography, the
 steps are the following:
 
@@ -650,7 +651,7 @@ steps are the following:
 \item
   Screening of these texts with the ODDPub text mining tool
   (\citeproc{ref-riedel}{Riedel, Kip, and Bobrov, n.d.};
-  \citeproc{ref-nicoriedel2025}{Nico Riedel and Nachev 2025}) to detect
+  \citeproc{ref-nicoriedel2025}{Riedel and Nachev 2025}) to detect
   statements indicative of open data
 \item
   Manually verifying that the open data cases flagged by ODDPub are
@@ -682,27 +683,31 @@ based on the assumption of higher usability of data with persistent
 identifiers. However, this assumption and thus the subsequent
 methodological choice were not supported by the findings. In addition,
 cleaning of this list was still necessary in some instances before a
-matching with the DCC could take place.
+matching with the DCC could take place. During the verification process,
+we also confirmed that 117 of the 2,385 dataset identifiers detected had
+a secondary identifier, where the repository assigned two identifiers to
+one dataset, or versions thereof. We included these secondary
+identifiers in the matching with the DCC.
 
 \subsubsection{Using datasets detected with ODDPub as seeds to detect
 additional datasets}\label{sec-methods-charite-added}
 
 In the detection procedure described in Iarkaeva, Nachev, and Bobrov
-(\citeproc{ref-iarkaeva2024}{2024}), as well as briefly in
-Section~\ref{sec-methods-charite-oddpub}, we extracted one dataset
-identifier per repository. However, we had observed that in many cases
-multiple datasets had been deposited in the same repository, in some
-cases up to several dozen. Thus, we used the identifiers of datasets
-which had been referenced in the literature as ``seeds'' to detect
-further identifiers in the same repository. To do so, the previously
-extracted identifier of a dataset was searched for in the article text
-and any additional identifiers from the same repository were also
-documented. These additional identifiers were only searched for in the
-text surrounding the seed identifier, as well as any additional sections
-clearly indicated there as containing further identifiers. Importantly,
-we only used identifiers as seeds if the dataset had been referenced in
-the literature, and thus some cases of dataset reuse were probably
-missed. Zhang et al.
+(\citeproc{ref-iarkaevaWorkflowDetectingBiomedical2024}{2024}), as well
+as briefly in Section~\ref{sec-methods-charite-oddpub}, we extracted one
+dataset identifier per repository. However, we had observed that in many
+cases multiple datasets had been deposited in the same repository, in
+some cases up to several dozen. Thus, we used the identifiers of
+datasets which had been referenced in the literature as ``seeds'' to
+detect further identifiers in the same repository. To do so, the
+previously extracted identifier of a dataset was searched for in the
+article text and any additional identifiers from the same repository
+were also documented. These additional identifiers were only searched
+for in the text surrounding the seed identifier, as well as any
+additional sections clearly indicated there as containing further
+identifiers. Importantly, we only used identifiers as seeds if the
+dataset had been referenced in the literature, and thus some cases of
+dataset reuse were probably missed. Zhang et al.
 (\citeproc{ref-zhangCrystalStructureSARSCoV22020}{2020}) can serve as an
 example for the procedure. This article contains the statement
 (shortened from the original): ``Crystallographic coordinates are
@@ -924,25 +929,28 @@ These required additional validation, as they appear counterintuitive at
 first, and we checked all these cases manually. However, they are all
 explained by our definition of ``Charité datasets'' (see section
 Section~\ref{sec-methods-metadata}). This can lead to cases in which the
-expected order of events is reversed. We validated a subset of such
-cases to confirm that this was indeed the case. In nearly all cases
-where this occurred, the apparent contradiction was explained by the
-sharing of the dataset in question (or an earlier version thereof)
-having happened substantially before the Charité article publication.
-The validation additionally yielded one case violating check (1) above,
-where the referencing article was published before the dataset, and the
-texts of both articles clearly suggested that the Charité article
-reported the study in which the dataset had been created, while the
-referencing article had indeed reused the dataset. This case might be
-due to a process where the dataset identifier was created and shared
-with collaborators before the dataset was officially published in the
+expected order of events is reversed. We validated all such cases to
+confirm that this was indeed the case. In nearly all cases where this
+occurred, the apparent contradiction was explained by the sharing of the
+dataset in question (or an earlier version thereof) having happened
+substantially before the Charité article publication. The validation
+additionally yielded one case violating check (1) above, where the
+referencing article was published before the dataset, and the texts of
+both articles clearly suggested that the Charité article reported the
+study in which the dataset had been created, while the referencing
+article had indeed reused the dataset. This case might be due to a
+process where the dataset identifier was created and shared with
+collaborators before the dataset was officially published in the
 repository and obtained a timestamp.
 
-We concluded the validation step by checking a sample of 20 randomly
-selected cases out of the final results table. This confirmed that
-dataset publication years as well as age relations between dataset,
-Charité article, and referencing article were plausible based on
-authorship lists in conjunction with our definition of data reuse.
+We concluded the validation step by checking an additional sample of 20
+randomly selected cases out of the final results table. This sample
+consisted primarily of cases where no putative inconsistencies in the
+publication sequence were detected in the automated screening. This
+confirmed that dataset publication years as well as age relations
+between dataset, Charité article, and referencing article were plausible
+based on authorship lists in conjunction with our definition of data
+reuse.
 
 Apart from validating dataset age, the following additional steps were
 taken during our study to ensure validity:
@@ -1007,7 +1015,7 @@ indirect data citation. All places where the data article was cited were
 investigated. We distinguished between cases of dataset reuse (i.e.,
 indirect data citations), and cases where no data reuse took place.
 These second cases correspond to references to the data article text
-proper. Table~\ref{tbl-data-articles} shows examples for both indirect
+proper. \textbf{?@tbl-data-articles} shows examples for both indirect
 data citations and citations to the data article which were not
 indicative of data reuse. In addition, it includes, for comparison,
 direct references to the dataset itself. While we attempted to detect
@@ -1101,14 +1109,6 @@ our coverage via ODDPub and DataStet.
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2914}}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2610}}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4461}}@{}}
-\caption{Examples of different types of references to either a data
-article or the underlying dataset. The data article referred to has DOI
-10.1038/s41597-020-0495-6. The example article was chosen for its wide
-reuse, but it should be noted that in this case the Charité is
-represented in the author list of the data article, but not the author
-list of the dataset. This is compliant with our definition of ``Charité
-datasets'', but highlights the difficulties of dataset
-attribution.}\label{tbl-data-articles}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Direct reference to the dataset
@@ -1130,6 +1130,15 @@ Citation to data article (no data reuse)
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
+\tabularnewline
+\caption{Examples of different types of references to either a data
+article or the underlying dataset. The data article referred to is
+Wagner et al., 2020 (DOI: 10.1038/s41597-020-0495-6). The example
+article was chosen for its wide reuse, but it should be noted that in
+this case the Charité is represented in the author list of the data
+article, but not the author list of the dataset. This is compliant with
+our definition of ``Charité datasets'', but highlights the difficulties
+of dataset attribution.}\tabularnewline
 \endlastfoot
 ``The ECGs used in this study were from open source databases and
 available in \url{https://physionet.org/content/ptb-xl/1.0.1/}
@@ -1153,8 +1162,8 @@ involved the use of the PTB-XLdb to analyze 12-lead ECG signals {[}23,
 24{]}.'' {[}reference 24 being the data article of Wagner et al.{]}
 
 \emph{10.1007/s11760-025-03893-3} & ``The availability of public ECG
-datasets has increased considerably,14 however, they typically lack
-clinical ground truth {[}\ldots{]}'' {[}reference 14 being the data
+datasets has increased considerably, {[}14{]} however, they typically
+lack clinical ground truth {[}\ldots{]}'' {[}reference 14 being the data
 article of Wagner et al.{]}
 
 \emph{10.1093/ehjdh/ztae039} \\
@@ -1226,7 +1235,7 @@ DataStet, these articles reported the deposition of 2,385 datasets
 (`Charité datasets'). We observed that 118 datasets (4.9\% of the ODDPub
 and ``additional'' datasets) have been referenced at least once.
 Overall, there were 1,032 references to the datasets, by the time the
-DCC version used was last updated (February 25\textsuperscript{th},
+DCC version used was last updated (February 1\textsuperscript{st},
 2025). These numbers are shown in \textbf{?@fig-dist-counts}. The fact
 that only a subset of datasets has so far been referenced is also
 reflected in the distribution of references per reused dataset. While a
@@ -1552,7 +1561,7 @@ citation, where the data article citation stood in for the dataset. In
 this analysis of data articles published between 2019 (i.e., starting a
 year earlier than the DCC analysis) and 2022 in the journals Scientific
 Data and Data in Brief (n = 21), we detected 35 shared datasets overall.
-These articles had been cited 1,728 times. In the 4 cases where data
+These articles had been cited 1,728 times. In the five cases where data
 articles were cited \textgreater60 times, we restricted manual checks to
 60 references. In this ``truncated'' set, we found that out of 537
 references, 113 references (21\%) were in fact indirect data citations.
@@ -1692,7 +1701,7 @@ We complemented this approach by an analysis of references to data
 articles. We examined a sample of 21 data articles published by Charité
 researchers between 2019 and 2022 in the two most common,
 non-disciplinary data journals. These articles shared 35 datasets
-overall. We found 2,574 references to these datasets through Google
+overall. We found 846 references to these datasets through Google
 Scholar, including extrapolated references (see below, as well as
 Section~\ref{sec-methods-charite-data-articles}). Thus, indirect data
 citations constitute a substantial fraction of all instances in which
@@ -1741,10 +1750,10 @@ reuse}\label{sec-discussion-undetected}
 We report references to Charité datasets detected via two sources:
 references to datasets in the literature on the one hand and indirect
 data citations through data articles on the other. Combining these two
-sources, we obtain an overall number of 210 Charité datasets which have
-been referenced 3,225 times. Thus, we observe that datasets shared
+sources, we obtain an overall number of 194 Charité datasets which have
+been referenced 2,343 times. Thus, we observe that datasets shared
 alongside articles co-authored by Charité researchers in a given year
-are referred to (directly or indirectly) on average 806 times. However,
+are referred to (directly or indirectly) on average 586 times. However,
 the numbers on data reuse reported for the DCC analysis, which is the
 main source of data references, are probably very substantially
 underestimated. This is due to several reasons listed below in what we
@@ -1906,8 +1915,9 @@ positively correlated with data reuse is a relation of the data to
 COVID-19. This is based on a small sample (19 of 175 referenced datasets
 had a COVID relation), but a higher rate of reuse for COVID data seems
 plausible, as data reuse increased in the pandemic
-(\citeproc{ref-scienceStateOpenData2021}{Science et al. 2021}) and some
-of the most-referenced datasets in our sample were related to COVID.
+(\citeproc{ref-scienceStateOpenData2021}{Digital Science et al. 2021})
+and some of the most-referenced datasets in our sample were related to
+COVID.
 
 In addition, we observed negative correlations with three additional
 predictors. However, in all three cases we interpret these correlations
@@ -2069,13 +2079,14 @@ jurisdictions, as e.g.~in Germany (\citeproc{ref-bmwk}{BMWK, n.d.}), and
 ``data ownership is an inherently problematic concept from a legal
 perspective''
 (\citeproc{ref-publicationsofficeoftheeuropeanunion.2024}{Publications
-Office of the European Union. 2024}). Questions of data ownership are
-linked to the view widely held by researchers that data are intellectual
-property of some sort (whether this is legally enforceable or not).
-Taken together, this leaves open whether a clear line between an
-``owner'' (or, possibly, ``creator'') and a ``non-owner'' (or, possibly,
-``non-creator'') can be drawn, and whether a consistent and at the same
-time useful definition of what ``data reuse'' means is achievable.
+Office of the European Union and Graux 2024}). Questions of data
+ownership are linked to the view widely held by researchers that data
+are intellectual property of some sort (whether this is legally
+enforceable or not). Taken together, this leaves open whether a clear
+line between an ``owner'' (or, possibly, ``creator'') and a
+``non-owner'' (or, possibly, ``non-creator'') can be drawn, and whether
+a consistent and at the same time useful definition of what ``data
+reuse'' means is achievable.
 
 Beyond the fundamental question of defining own data use vs.~data reuse,
 further practical challenges are posed by our bibliographic approach.
@@ -2131,7 +2142,7 @@ reference are indicative of data reuse, depends entirely on the
 definition of data use (and thus, reuse) applied. The observations by
 Lafia et al. (\citeproc{ref-lafia2023}{2023}) that only a subset of
 references indicates ``interactions'' with the dataset and by Gregory et
-al. (\citeproc{ref-gregoryDiggingDeeperData2026}{2026}) that data is
+al. (\citeproc{ref-gregoryDiggingDeeperData2026}{2026}) that data are
 referenced for many reasons strongly suggest that not all references to
 datasets we observed are indicative of active engagement with the data.
 As we did not restrict our analysis to instances of proven interaction
@@ -2308,8 +2319,8 @@ journals. It would also be informative to analyze the sharing and reuse
 patterns in more detail, including a comparison of Charité data reuse
 with data reuse by Charité researchers. This could surface both areas
 where the institution is very strong with regard to its data impact, and
-areas where data is either shared or reused below the expected level. On
-the level of individual researchers, the references to datasets we
+areas where data are either shared or reused below the expected level.
+On the level of individual researchers, the references to datasets we
 analyzed could be used to inform about the reuse of shared datasets. We
 assume that this would be of major interest to at least some of the data
 providers, and could result to be a relevant motivational factor
@@ -2490,7 +2501,7 @@ citation counts. The minimum observed citation count was 1.}
 \phantomsection\label{refs}
 \begin{CSLReferences}{1}{0}
 \bibitem[\citeproctext]{ref-AttitudesOpenScience}
-Abele-Brehm, Andrea. E., Mario Gollwitzer, Ulf Steinberg, and Felix
+Abele-Brehm, Andrea E., Mario Gollwitzer, Ulf Steinberg, and Felix
 Schönbrodt. 2019. {``Attitudes {Toward Open Science} and {Public Data
 Sharing}: {A Survey Among Members} of the {German Psychological
 Society}.''} \emph{Social Psychology} 50 (4): 252--60.
@@ -2620,13 +2631,19 @@ Crossref. n.d. {``Data Citations.''} Website. Crossref.
 https://corpus.datacite.org/dashboard.
 
 \bibitem[\citeproctext]{ref-ConsumingCitationsReferences}
-Datacite. n.d. {``Consuming {Citations} and {References}.''} DataCite
+DataCite. n.d. {``Consuming {Citations} and {References}.''} DataCite
 Support.
 \url{https://support.datacite.org/docs/consuming-citations-and-references}.
 
 \bibitem[\citeproctext]{ref-dataciteDataCitationCorpus2024}
 DataCite, Make Data Count. 2024. {``Data {Citation Corpus Data File}.''}
 DataCite. \url{https://doi.org/10.5281/zenodo.13376773}.
+
+\bibitem[\citeproctext]{ref-scienceStateOpenData2021}
+Digital Science, Natasha Simons, Greg Goodey, Megan Hardeman, Connie
+Clare, Sara Gonzales, Damon Strange, et al. 2021. {``The {State} of
+{Open Data} 2021.''} Report. Digital Science.
+\url{https://doi.org/10.6084/m9.figshare.17061347.v1}.
 
 \bibitem[\citeproctext]{ref-eosceden}
 EOSC EDEN. n.d. {``Eden Project- about Us.''}
@@ -2683,7 +2700,7 @@ Investigating Disciplinary Differences in Data Citation.''}
 
 \bibitem[\citeproctext]{ref-hahnel2024}
 Hahnel, Mark, Graham Smith, and Ann Campbell. 2024. {``{The State of
-Open Data 2024: Special Report }: Bridging Policy and Practice in Data
+Open Data 2024: Special Report}: Bridging Policy and Practice in Data
 Sharing.''} \url{https://doi.org/10.6084/M9.FIGSHARE.27337476.V2}.
 
 \bibitem[\citeproctext]{ref-hardwickeCitationPatternsFollowing2021}
@@ -2698,16 +2715,18 @@ Methods and Practices in Psychological Science} 4 (3):
 Helmholtz Open Science Office. n.d. {``Creative {Commons Licenses}.''}
 \url{https://os.helmholtz.de/en/open-access/creative-commons-licenses/}.
 
-\bibitem[\citeproctext]{ref-iarkaevaSemiautomatedExtractionInformation2025}
+\bibitem[\citeproctext]{ref-iarkaevaSemiautomatedExtractionInformation2025a}
 Iarkaeva, Anastasiia, Evgeny Bobrov, Jan Taubitz, Benjamin Gregory
 Carlisle, and Nico Riedel. 2025. {``Semi-Automated Extraction of
-Information on Open Datasets Mentioned in Articles,''} July.
+Information on Open Datasets Mentioned in Articles {V}.2.''}
+protocols.io.
+\url{https://doi.org/10.17504/protocols.io.q26g74p39gwz/v2}.
 
-\bibitem[\citeproctext]{ref-iarkaeva2024}
+\bibitem[\citeproctext]{ref-iarkaevaWorkflowDetectingBiomedical2024}
 Iarkaeva, Anastasiia, Vladislav Nachev, and Evgeny Bobrov. 2024.
 {``Workflow for Detecting Biomedical Articles with Underlying Open and
-Restricted-Access Datasets,''} January.
-\url{https://doi.org/10.31222/osf.io/z4bkf}.
+Restricted-Access Datasets.''} \emph{PLOS ONE} 19 (5): e0302787.
+\url{https://doi.org/10.1371/journal.pone.0302787}.
 
 \bibitem[\citeproctext]{ref-ioannidisWhyMostPublished2005a}
 Ioannidis, John P. A. 2005. {``Why {Most Published Research Findings Are
@@ -2790,10 +2809,6 @@ MPDL, Research Data Management. n.d. {``Licenses.''}
 NFDI4Chem. n.d. {``Licences.''}
 \url{https://knowledgebase.nfdi4chem.de/knowledge_base/docs/licences/}.
 
-\bibitem[\citeproctext]{ref-nicoriedel2025}
-Nico Riedel, and Vladislav Nachev. 2025. \emph{Quest-Bih/Oddpub: Vulcan
-Point}. Zenodo. \url{https://doi.org/10.5281/zenodo.15555546}.
-
 \bibitem[\citeproctext]{ref-ninkov2021}
 Ninkov, Anton, Kathleen Gregory, Isabella Peters, and Stefanie Haustein.
 2021. {``Datasets on DataCite - an Initial Bibliometric
@@ -2811,7 +2826,7 @@ Park, Hyoungjoo, Sukjin You, and Dietmar Wolfram. 2018. {``Informal Data
 Citation for Data Sharing and Reuse Is More Common Than Formal Data
 Citation in Biomedical Fields.''} \emph{Journal of the Association for
 Information Science and Technology} 69 (11): 1346--54.
-https://doi.org/\url{https://doi.org/10.1002/asi.24049}.
+\url{https://doi.org/10.1002/asi.24049}.
 
 \bibitem[\citeproctext]{ref-plosmedicine}
 PLOS Medicine. n.d. {``Data Availability.''}
@@ -2823,11 +2838,11 @@ Fully-Open Index of Scholarly Works, Authors, Venues, Institutions, and
 Concepts.''} arXiv. \url{https://doi.org/10.48550/arXiv.2205.01833}.
 
 \bibitem[\citeproctext]{ref-publicationsofficeoftheeuropeanunion.2024}
-Publications Office of the European Union. 2024. \emph{What is data
-ownership, and does it still matter under EU data law?: an exploration
-of traditional concepts of data ownership, and of the expected impact of
-the Data Act.} LU: Publications Office.
-\url{https://data.europa.eu/doi/10.2830/052185}.
+Publications Office of the European Union, and H. Graux. 2024.
+\emph{What is data ownership, and does it still matter under EU data
+law?: an exploration of traditional concepts of data ownership, and of
+the expected impact of the Data Act.} {Publications Office of the
+European Union}. \url{https://data.europa.eu/doi/10.2830/052185}.
 
 \bibitem[\citeproctext]{ref-redner1998}
 Redner, S. 1998. {``How Popular Is Your Paper? An Empirical Study of the
@@ -2840,6 +2855,10 @@ Riedel, Nico, Miriam Kip, and Evgeny Bobrov. n.d. {``ODDPub
 {\textendash} a Text-Mining Algorithm to Detect Data Sharing in
 Biomedical Publications.''}
 \url{https://doi.org/10.1101/2020.05.11.088021}.
+
+\bibitem[\citeproctext]{ref-nicoriedel2025}
+Riedel, Nico, and Vladislav Nachev. 2025. \emph{Quest-Bih/Oddpub: Vulcan
+Point}. Zenodo. \url{https://doi.org/10.5281/zenodo.15555546}.
 
 \bibitem[\citeproctext]{ref-rosenbloomSharingResearchData2025}
 Rosenbloom, Joshua L. 2025. {``Sharing Research Data: Researcher
@@ -2868,12 +2887,6 @@ Journal} 18 (1). \url{https://doi.org/10.5334/dsj-2019-022}.
 Schönbrodt, Felix D., Mario Gollwitzer, and Andrea Abele-Brehm. 2017.
 {``Data {Management} in {Psychological Science}: {Specification} of the
 {DFG Guidelines}.''} 2017. \url{https://doi.org/10.31234/osf.io/vhx89}.
-
-\bibitem[\citeproctext]{ref-scienceStateOpenData2021}
-Science, Digital, Natasha Simons, Greg Goodey, Megan Hardeman, Connie
-Clare, Sara Gonzales, Damon Strange, et al. 2021. {``The {State} of
-{Open Data} 2021.''} Report. Digital Science.
-\url{https://doi.org/10.6084/m9.figshare.17061347.v1}.
 
 \bibitem[\citeproctext]{ref-senaPublicationBiasReports2010}
 Sena, Emily S., H. Bart van der Worp, Philip M. W. Bath, David W.
@@ -2931,8 +2944,8 @@ HINTS.''} \emph{Learned Publishing} 32 (3): 199--206.
 Zhang, Linlin, Daizong Lin, Xinyuanyuan Sun, Ute Curth, Christian
 Drosten, Lucie Sauerhering, Stephan Becker, Katharina Rox, and Rolf
 Hilgenfeld. 2020. {``Crystal Structure of {SARS-CoV-2} Main Protease
-Provides a Basis for Design of Improved α-Ketoamide Inhibitors.''}
-\emph{Science} 368 (6489): 409--12.
+Provides a Basis for Design of Improved {\(\alpha\)}-Ketoamide
+Inhibitors.''} \emph{Science} 368 (6489): 409--12.
 \url{https://doi.org/10.1126/science.abb3405}.
 
 \bibitem[\citeproctext]{ref-zuiderwijkWhatDrivesInhibits2020}

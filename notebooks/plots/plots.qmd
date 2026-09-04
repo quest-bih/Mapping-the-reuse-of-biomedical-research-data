@@ -222,7 +222,7 @@ rep_dt_da_ds |>
             hjust = -0.2,
             size = 6, color = "black") +
   coord_flip() +
-  labs(x = "Data Deposit Platform", y = "Number of Datasets") +
+  labs(x = "Repository", y = "Number of Datasets") +
   theme_classic() +
   theme(
     legend.position = "none",
