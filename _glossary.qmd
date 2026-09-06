@@ -15,6 +15,7 @@
 \edef\GlossarySavedSection{\number\value{section}}
 \edef\GlossarySavedSubsection{\number\value{subsection}}
 \edef\GlossarySavedSubsubsection{\number\value{subsubsection}}
+\edef\GlossarySavedHTable{\theHtable}
 ```
 
 # Glossary {#glossary .unnumbered}
@@ -40,9 +41,12 @@
 
 ```{=latex}
 \endgroup
+\addtocounter{table}{-1}
 \setcounter{section}{\GlossarySavedSection}
 \setcounter{subsection}{\GlossarySavedSubsection}
 \setcounter{subsubsection}{\GlossarySavedSubsubsection}
+\renewcommand{\theHtable}{\GlossarySavedHTable}
+\newpage
 ```
 
 :::
