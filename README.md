@@ -22,13 +22,51 @@ output: html_document
 
 ## Installation, Setup and Reproducing the Article:
 
-1. Clone the repository to your local machine
+### Render with RStudio
+
+1. Clone the repository to your local machine.
+
 2. In RStudio, open `Investigating the Reuse of Biomedical Data Using the DCC.Rproj`
-3. In RStudio's console, run `renv::restore()` to recreate the environment needed to generate the article on your machine
-4. Open `index.qmd`
+
+3. In RStudio's console, run:
+
+   * `install.packages("renv")` to install "renv" library.
+   * `renv::restore()` to recreate the environment needed to generate the article on your machine. When asked whether you want to proceed, enter: `y`
+
+4. In RStudio's terminal:
+
+* `quarto render --to pdf` will generate the article in a PDF format
+* `quarto render --to html` will generate the article in an HTML format (Please note that depending on your system and browser, the HTML might open automatically for you or not, but the file will be created in the root folder in any case)
+
+If these steps work successfully, no further compatibility setup is required. If `renv::restore()` or rendering fails because of R or package compatibility issues, follow the steps below.
+
+### Verify compatibility of R, RStudio and libraries versions
+
+1. Download and install the Rtools version appropriate for your R version (Windows only):
+  https://cran.r-project.org/bin/windows/Rtools/
+  
+2. Restart RStudio after installing Rtools
+
+3 In RStudio's console, run:
+
+  * `renv::lockfile_read()$R$Version` to check the R version required by the project
+  * `R.version.string` to check the R version currently being used by your system
+
+4. If the R versions do not match, download and install the R version required by the project from
+  https://cran.r-project.org/bin/windows/base/old/
+
+  * In RStudio's console, run `renv::lockfile_read()$R$Version`
+  * In RStudio's menu, change the version to the required one: **Tools → Global Options → General → R version → Change**
+  * Verify that your version and the required version match:
+
+  ```r
+  renv::lockfile_read()$R$Version
+  R.version.string
+  ```
 5. In RStudio's terminal:
-  * `quarto render --to pdf` will generate the article in a PDF format
-  * `quarto render --to html` will generate the article in an HTML format (Please note that depending on your system and browser, the HTML might open automatically for you or not, but the file will be created in any case)
+
+* `quarto render --to pdf` will generate the article in a PDF format
+* `quarto render --to html` will generate the article in an HTML format (Please note that depending on your system and browser, the HTML might open automatically for you or not, but the file will be created in the root folder in any case)
 
 ### Data Workflow Overview
 
