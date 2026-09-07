@@ -251,8 +251,8 @@ this period were reused, which had been referenced 1,497 times. The
 large majority of reused datasets were from `omics' fields, which
 generate particularly structured and standardized data. Data from humans
 had a higher probability of reuse, as well as COVID-19-related data.
-Dataset properties indicative of technical reusability as DOIs and
-Creative Commons licenses had no positive influence on reuse
+Dataset properties indicative of technical reusability, such as DOIs and
+Creative Commons licenses, had no positive influence on reuse
 probability, presumably because these are not used by the most common
 omics repositories. We conducted a complementary analysis of datasets
 shared alongside data articles. Here, we observed that a major fraction
@@ -373,7 +373,7 @@ article are included in the \hyperref[glossary]{glossary}.
 \edef\GlossarySavedSection{\number\value{section}}
 \edef\GlossarySavedSubsection{\number\value{subsection}}
 \edef\GlossarySavedSubsubsection{\number\value{subsubsection}}
-\edef\GlossarySavedTable{\number\value{table}}
+\edef\GlossarySavedHTable{\theHtable}
 
 \section*{Glossary}\label{glossary}
 \addcontentsline{toc}{section}{Glossary}
@@ -383,8 +383,8 @@ article are included in the \hyperref[glossary]{glossary}.
 \renewcommand{\raggedright}{\GlossaryOriginalRaggedRight\rightskip=0pt}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.7500}}@{}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.3500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.6500}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Term
@@ -420,10 +420,12 @@ of the data article itself. \\
 \end{longtable}
 
 \endgroup
+\addtocounter{table}{-1}
 \setcounter{section}{\GlossarySavedSection}
 \setcounter{subsection}{\GlossarySavedSubsection}
 \setcounter{subsubsection}{\GlossarySavedSubsubsection}
-\setcounter{table}{\GlossarySavedTable}
+\renewcommand{\theHtable}{\GlossarySavedHTable}
+\newpage
 
 \subsection{Institutional dataset reuse as specific
 application}\label{sec-intro-application}
@@ -560,7 +562,7 @@ sections in more detail:
 \end{enumerate}
 
 This description applies to the analysis of direct dataset references
-(See \textbf{?@fig-dist-counts}). For the analysis of indirect data
+(See Figure~\ref{fig-dist-counts}). For the analysis of indirect data
 references through data articles, additional steps had to be performed,
 as described in Section~\ref{sec-methods-charite-data-articles} (See
 Figure~\ref{fig-da-flowchart}). Code and data underlying all presented
@@ -582,7 +584,7 @@ the DCC for our needs, as well as to quality-check the entries:
 \item
   Checking whether article publication years are plausible; we found six
   entries with implausible publication years (e.g., 2104, 2108) and
-  corrected them by replacing the leading ``1'' with a ``0''; these
+  corrected them by exchanging the positions of ``1'' and ``0''; these
   corrected publication years were then manually verified
 \item
   Renaming several columns for clarity
@@ -878,18 +880,18 @@ publication years of datasets were extracted manually, and this was not
 always done in a fully consistent fashion. In the original extraction
 based on ODDPub, we typically extracted the year of the newest version
 of the dataset. Sometimes these were versions with changes to the data
-content while in other cases these were just - from what we could gather
-- only small changes to the original dataset metadata. In contrast, in
-the additional screens we performed to include other data sources
-(DataStet and `additional identifiers'), we documented the year in which
-the dataset was first created, insofar available. However, as described
+content while in other cases these were - from what we could gather -
+only small changes to the original dataset metadata. In contrast, in the
+additional screens we performed to include other data sources (DataStet
+and `additional identifiers'), we documented the year in which the
+dataset was first created, where available. However, as described
 before, we removed version information from dataset identifiers as far
 as possible before matching them to the DCC. Thus, the version
 originally documented is not expected to have a substantial impact on
 the detection of dataset references overall, except for rare cases where
 new versions receive fully new identifiers (as is the case for Zenodo).
 However, which version and thus which dataset age was documented can
-have an impact when analyzing dataset citations over time.
+have an impact when analyzing dataset references over time.
 
 With regard to the analysis of dataset references over time, it is
 important to consider that referenced datasets could have been published
@@ -927,7 +929,7 @@ Charité article.
 We observed a small number of cases where check (2) above was violated.
 These required additional validation, as they appear counterintuitive at
 first, and we checked all these cases manually. However, they are all
-explained by our definition of ``Charité datasets'' (see section
+explained by our definition of ``Charité datasets'' (see
 Section~\ref{sec-methods-metadata}). This can lead to cases in which the
 expected order of events is reversed. We validated all such cases to
 confirm that this was indeed the case. In nearly all cases where this
@@ -1015,7 +1017,7 @@ indirect data citation. All places where the data article was cited were
 investigated. We distinguished between cases of dataset reuse (i.e.,
 indirect data citations), and cases where no data reuse took place.
 These second cases correspond to references to the data article text
-proper. \textbf{?@tbl-data-articles} shows examples for both indirect
+proper. Table~\ref{tbl-data-articles} shows examples for both indirect
 data citations and citations to the data article which were not
 indicative of data reuse. In addition, it includes, for comparison,
 direct references to the dataset itself. While we attempted to detect
@@ -1024,7 +1026,7 @@ could also concur with indirect data citations. All cases classified as
 indirect data citations referred to some use of the data. However, we
 did not distinguish between different purposes of data reuse (e.g.,
 re-analysis, meta-analysis, comparison). For data article references
-proper, we also did not distringuish between different citation contexts
+proper, we also did not distinguish between different citation contexts
 (e.g., supportive, contradictory, neutral). A full mapping of the
 distribution and purposes of data article citations was not in scope for
 this study.
@@ -1056,20 +1058,19 @@ article in their sample which had too many citations to check all
 manually.
 
 Some limitations of this analysis, in addition to uncertainty introduced
-by partial validation, need to be mentioned. First, it is based on
-references found through Google Scholar. Google Scholar has been shown
-to cover only a part of all dataset citations
-(\citeproc{ref-gerasimov2024}{Gerasimov et al. 2024}). We also noticed
-that the sorting by date was sometimes erroneous, thus limiting the
-reproducibility of this step. Second, in some cases we cannot be certain
-that all references in the article text were checked. This applied in
-particular to two articles which used numbers to indicate citations. As
-these numbers appeared in the articles \textgreater100 times, a
-comprehensive check was not feasible. Third, even if it was clearly
-visible that a dataset had been reused, it was not always possible to
-determine with clarity, which of several shared copies or versions of
-datasets had been used. In case of doubt regarding the exact dataset
-used, we proceeded using the following three principles:
+by partial validation, need to be mentioned. First, it is based only on
+article citations found through Google Scholar, and in addition to
+possibly incomplete coverage, we noticed that the sorting by date was
+sometimes erroneous, thus limiting the reproducibility of this step.
+Second, in some cases we cannot be certain that all references in the
+article text were checked. This applied in particular to two articles
+which used numbers to indicate citations. As these numbers appeared in
+the articles \textgreater100 times, a comprehensive check was not
+feasible. Third, even if it was clearly visible that a dataset had been
+reused, it was not always possible to determine with clarity, which of
+several shared copies or versions of datasets had been used. In case of
+doubt regarding the exact dataset used, we proceeded using the following
+three principles:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -1098,10 +1099,12 @@ not include these two additional datasets to the DCC analysis, both for
 simplicity and to not influence any putative interpretations drawn from
 our coverage via ODDPub and DataStet.
 
-\newpage
+\vspace{16pt}
+
 \begingroup
 \setlength{\LTleft}{0pt}
 \setlength{\LTright}{50pt}
+\setlength{\LTpre}{12pt}
 \setlength{\LTpost}{12pt}
 \fontsize{8pt}{12pt}\selectfont
 
@@ -1138,7 +1141,7 @@ article was chosen for its wide reuse, but it should be noted that in
 this case the Charité is represented in the author list of the data
 article, but not the author list of the dataset. This is compliant with
 our definition of ``Charité datasets'', but highlights the difficulties
-of dataset attribution.}\tabularnewline
+of dataset attribution.}\label{tbl-data-articles}\tabularnewline
 \endlastfoot
 ``The ECGs used in this study were from open source databases and
 available in \url{https://physionet.org/content/ptb-xl/1.0.1/}
@@ -1189,6 +1192,8 @@ data article of Wagner et al.; the article is of type ``survey''{]}
 
 \endgroup
 
+\newpage
+
 \section{Results}\label{sec-results}
 
 We conducted analyses of two independent sets of dataset references.
@@ -1215,16 +1220,15 @@ on three sources of dataset identifiers:
 \end{enumerate}
 
 Second, we screened data articles published by institutional authors,
-and used Google Scholar to obtain a list of references to these data
-articles (as described in
-Section~\ref{sec-methods-charite-data-articles}). This was subsequently
-screened to distinguish between data article citations proper and
-indirect data citations. The latter constituted the second set of
-dataset references. The details for the collation of each dataset are
-described in the methods section. We present these results separately
-first, with analyses of their respective properties. Subsequently, we
-combine the numbers of dataset references to quantify the overall
-citation impact of institutional datasets.
+and obtained a list of references to these data articles using Google
+Scholar (see Section~\ref{sec-methods-charite-data-articles}). This list
+was then screened to distinguish between data article citations proper
+and indirect data citations. The latter constituted the second set of
+dataset references (see Section~\ref{sec-methods} for details of the
+collation of each dataset). We present these results separately first,
+with analyses of their respective properties. Subsequently, we combine
+the numbers of dataset references to quantify the overall citation
+impact of institutional datasets.
 
 \subsection{Quantification of institutional dataset reuse using the
 DCC}\label{sec-results-quant}
@@ -1236,71 +1240,50 @@ DataStet, these articles reported the deposition of 2,385 datasets
 and ``additional'' datasets) have been referenced at least once.
 Overall, there were 1,032 references to the datasets, by the time the
 DCC version used was last updated (February 1\textsuperscript{st},
-2025). These numbers are shown in \textbf{?@fig-dist-counts}. The fact
+2025). These numbers are shown in Figure~\ref{fig-dist-counts}. The fact
 that only a subset of datasets has so far been referenced is also
 reflected in the distribution of references per reused dataset. While a
 small number of datasets has been referenced many times, with a maximum
-of 142 references, 70 out of 118 cited datasets (59.3\%) have been
+of 142 references, 70 out of 118 referenced datasets (59.3\%) have been
 referenced only once (Figure~\ref{fig-datasets-freq-dist}), and 2,267
 datasets (95.1\%) have not been referenced so far. An additional source
 of datasets were those detected using DataStet. These additional 57
-datasets were referenced 465 times (\textbf{?@fig-dist-counts}). For
+datasets were referenced 465 times (Figure~\ref{fig-dist-counts}). For
 these, a percentage of datasets referenced cannot be calculated (see
 Section~\ref{sec-methods-match} for details). Including these datasets
 detected using DataStet, we obtained 175 Charité datasets overall which
-were cited 1,497 times.
+were referenced 1,497 times. Figure~\ref{fig-venn-ids} shows the
+different data sources, and how they overlap. Here, we pooled in the
+oval depicting datasets extracted via ODDPub/Numbat data sources (1) and
+(2), as these are conceptually identical and will in the future be
+extracted in one step. The number of datasets found using the ODDPub
+text mining tool with manual validation, plus screening for additional
+identifiers was 118. This nearly exactly matched the number of
+identifiers extracted using the DataStet machine learning-based tool,
+also followed by manual validation, which was 119. A substantial number
+of dataset identifiers was detected only using one method, and only
+35.4\% of datasets were detected using both approaches.
 
-Figure~\ref{fig-venn-ids} shows the different data sources, and how they
-overlap. Here, we pooled in the oval depicting datasets extracted via
-ODDPub/Numbat data sources (1) and (2), as these are conceptually
-identical and will in the future be extracted in one step. The number of
-datasets found using the ODDPub text mining tool with manual validation,
-plus screening for additional identifiers was 118. This nearly exactly
-matched the number of identifiers extracted using the DataStet machine
-learning-based tool, also followed by manual validation, which was 119.
-A substantial number of dataset identifiers was detected only using one
-method, and only 35.4\% of datasets were detected using both approaches.
+\vspace{16pt}
 
-\subsection{Determinants of institutional dataset
-reuse}\label{sec-results-determinants}
+\begin{figure}
 
-To better understand the patterns of institutional dataset reuse, we
-analyzed in which repositories the reused datasets were deposited. We
-observed that out of 175 datasets which had been referenced, 86 (49.1\%)
-had been deposited in the Gene Expression Omnibus (GEO)
-(Figure~\ref{fig-repo-dist-ds}). The overall pattern was very similar
-when looking at the distribution of dataset references across
-repositories, rather than the distribution of referenced datasets
-(Supplementary Figure~\ref{suppfig-repo-dist}). Overall, references were
-overwhelmingly to datasets from the fields of genomics and proteomics,
-i.e., sequences of DNA, RNA, and proteins. On the level of individual
-references, the ten most-referenced repositories contain datasets which
-are predominantly constituted by sequence data. Only 11 of 1,497 data
-references (0.7\%) referred to datasets of other type, deposited in
-either disciplinary repositories (e.g.~Electron Microscopy Data Bank, 4
-references) or general-purpose repositories (e.g.~Mendeley, 3
-references). This clearly shows that `omics' fields currently contribute
-the large majority of data references, and thus at least a major
-fraction of data reuse cases overall.
+\centering{
 
-\begin{figure}[H]
-
-{\centering \pandocbounded{\includegraphics[keepaspectratio]{plots_files/plots_png/flowchart_high_res/flowchart.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{plots_files/plots_png/flowchart_high_res/flowchart.pdf}}
 
 }
 
-\caption{Flowchart detailing the detection of Charité datasets
-referenced in the literature, as listed in the DCC. The flowchart shows
-the process from obtaining open and restricted-access dataset
-identifiers using both ODDPub and DataStet sources, through
+\caption{\label{fig-dist-counts}Flowchart detailing the detection of
+Charité datasets referenced in the literature, as listed in the DCC. The
+flowchart shows the process from obtaining open and restricted-access
+dataset identifiers using both ODDPub and DataStet sources, through
 identification of datasets included in the DCC, up to determining the
 overall number of instances of dataset reuse. Data identified using
 ODDPub include datasets added after using ODDPub-identified datasets as
 a seed.}
 
 \end{figure}%
-
-\newpage
 
 \begin{figure}[H]
 
@@ -1341,6 +1324,30 @@ were added using ODDPub-identified datasets as a seed.}
 
 \end{figure}%
 
+\subsection{Determinants of institutional dataset
+reuse}\label{sec-results-determinants}
+
+To better understand the patterns of institutional dataset reuse, we
+analyzed in which repositories the reused datasets were deposited. We
+observed that out of 175 datasets which had been referenced, 86 (49.1\%)
+had been deposited in the Gene Expression Omnibus (GEO)
+(Figure~\ref{fig-repo-dist-ds}). The overall pattern was very similar
+when looking at the distribution of dataset references across
+repositories, rather than the distribution of referenced datasets
+(Supplementary Figure~\ref{suppfig-repo-dist}). Overall, references were
+overwhelmingly to datasets from the fields of genomics and proteomics,
+i.e., sequences of DNA, RNA, and proteins. On the level of individual
+references, the ten most-referenced repositories contain datasets which
+are predominantly constituted by sequence data. Only 11 of 1,497 data
+references (0.7\%) referred to datasets of other types, deposited in
+either disciplinary repositories (e.g.~Electron Microscopy Data Bank, 4
+references) or general-purpose repositories (e.g.~Mendeley, 3
+references). This clearly shows that `omics' fields currently contribute
+the large majority of data references, and thus at least a major
+fraction of data reuse cases overall.
+
+\newpage
+
 We then used a logistic regression to examine in an exploratory fashion
 which dataset-level characteristics were associated with the likelihood
 of a dataset to be referenced. For this, we compared the referenced
@@ -1368,19 +1375,6 @@ of CC licenses (\emph{p} \textless{} 0.001; Odds Ratio = 0.29) to a
 disproportionately higher reuse of data in disciplinary repositories
 which do not assign DOIs or licenses.
 
-We investigated further determinants of dataset reuse and found that
-human data, which constitutes 77.1\% of all checked datasets, is used
-more often than non-human data (\emph{p} = 0.01; Odds Ratio = 1.97; See
-Figure~\ref{fig-matched-non}). We also observed that data reuse was more
-probable if data bore a relation to COVID-19 (\emph{p} = 0.04; Odds
-Ratio = 2.32; See Figure~\ref{fig-matched-non}). In addition, the
-location of data references in the original publication was also
-significantly correlated with data reuse, in that datasets listed in the
-data availability statement were \textbf{less} commonly reused (\emph{p}
-\textless{} 0.001; Odds Ratio = 0.22). Overall, the logistic regression
-explained meaningful variation in dataset reuse (\(\chi^2\)(5) = 86.59,
-\emph{p} \textless{} 0.001).
-
 \vspace{16pt}
 
 \begin{figure}[H]
@@ -1398,6 +1392,23 @@ Where the same number of datasets from multiple repositories was reused,
 these are listed in reverse alphabetical order.}
 
 \end{figure}%
+
+\newpage
+
+We investigated further determinants of dataset reuse and found that
+human data, which constitutes 77.1\% of all checked datasets, is used
+more often than non-human data (\emph{p} = 0.01; Odds Ratio = 1.97; See
+Figure~\ref{fig-matched-non}). We also observed that data reuse was more
+probable if data bore a relation to COVID-19 (\emph{p} = 0.04; Odds
+Ratio = 2.32; See Figure~\ref{fig-matched-non}). In addition, the
+location of data references in the original publication was also
+significantly correlated with data reuse, in that datasets listed in the
+data availability statement were \textbf{less} commonly reused (\emph{p}
+\textless{} 0.001; Odds Ratio = 0.22). Overall, the logistic regression
+explained meaningful variation in dataset reuse (\(\chi^2\)(5) = 86.59,
+\emph{p} \textless{} 0.001).
+
+\vspace{30pt}
 
 \begin{figure}[H]
 
@@ -1424,29 +1435,31 @@ indicated as follows: *p \textless{} 0.05, **p \textless{} 0.01, ***p
 
 \end{figure}%
 
-\textbf{?@fig-sankey-2} presents an overall characterization of reused
+\newpage
+
+Figure~\ref{fig-sankey-2} presents an overall characterization of reused
 Charité datasets, with a focus on how these different characteristics
 are interrelated. It can be observed that reused datasets were, in their
 majority, shared openly, without either DOI or Creative Commons (CC)
 license. Restricted-access reused data were mostly shared through dbGaP.
 COVID-19-related data were mostly shared through GEO, EGA, and PDB.
 
-\newpage
+\begin{figure}
 
-\begin{figure}[H]
+\centering{
 
-{\centering \pandocbounded{\includegraphics[keepaspectratio]{plots_files/sankey/sankey_for_pdf.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{plots_files/sankey/sankey_for_pdf.png}}
 
 }
 
-\caption{Properties of Institutional Dataset Reuse (N = 175). The Sankey
-plot maps characteristics of mentioned datasets and the relations
-between them. The dataset properties displayed are, from left to right:
-(i) is the data identified using a DOI or an accession number, (ii) is
-the data shared with a CC license, (iii) is the data openly available or
-restricted-access, (iv) which repository is the data deposited in, (v)
-is the data collected from human subjects, and (vi) is the data related
-to COVID-19 research.}
+\caption{\label{fig-sankey-2}Properties of Institutional Dataset Reuse
+(N = 175). The Sankey plot maps characteristics of mentioned datasets
+and the relations between them. The dataset properties displayed are,
+from left to right: (i) is the data identified using a DOI or an
+accession number, (ii) is the data shared with a CC license, (iii) is
+the data openly available or restricted-access, (iv) which repository is
+the data deposited in, (v) is the data collected from human subjects,
+and (vi) is the data related to COVID-19 research.}
 
 \end{figure}%
 
@@ -1472,7 +1485,7 @@ development of citations over the first 3 years
 dataset references do not follow a clear trend in the first three years
 from the dataset's publication (incidence rate ratio {[}IRR{]} = 0.93,
 95\% CI {[}0.81-1.05{]}, \emph{p} = 0.24). However, this analysis is
-strongly skewed by the datasets which are cited only once. We thus
+strongly skewed by the datasets which are referenced only once. We thus
 generated a subset containing only datasets referenced at least once in
 the year the dataset was published and the three subsequent years
 (Figure~\ref{fig-age-citation-1}). For this subset, consisting of only
@@ -1481,7 +1494,7 @@ average 22\% decrease in the number of citations per year. This
 association was, however, not statistically significant (IRR = 0.78,
 95\% CI {[}0.58-1.04{]}, \emph{p} = 0.09).
 
-\newpage
+\vspace{30pt}
 
 \begin{figure}[H]
 
@@ -1508,6 +1521,8 @@ this subset of datasets.}
 
 \end{figure}%
 
+\newpage
+
 However, this analysis is limited by the short time period observed. In
 addition, the time period covered opens the possibility for a one-off
 effect of the reuse of COVID-19-related datasets. Indeed, the two
@@ -1515,7 +1530,7 @@ most-referenced datasets were COVID-19 protein structures, which
 supports such an effect. Taken together, this analysis would support the
 conclusion that dataset references do not follow a clear trend in the
 first years after publication, except for particularly timely and highly
-referenced datasets, which are cited most right after publication.
+referenced datasets, which are referenced most right after publication.
 However, this analysis is based on rather limited and presumably not
 representative data, and thus these trends need to be evaluated on much
 larger sets of data references. Figure~\ref{fig-ref-by-year-top-7} shows
@@ -1523,7 +1538,7 @@ a fuller picture of citation by dataset year by including all dataset
 references and not applying a normalization to the year of dataset
 publication.
 
-\newpage
+\vspace{16pt}
 
 \begin{figure}[H]
 
@@ -1685,7 +1700,7 @@ than databases which build on citation metadata only. This is
 necessarily true for DataCite (analyzed e.g.~by
 \citeproc{ref-ninkov2021}{Ninkov et al. 2021}) which constitutes the
 subset of data citations within the DCC. It has been shown for datasets
-in the earth sciences, that proprietary databases, which include
+in the earth sciences that proprietary databases, which include
 additional methods and sources, have better coverage
 (\citeproc{ref-gerasimov2024}{Gerasimov et al. 2024}), and the analysis
 of Strecker, Soltau, and Bach (\citeproc{ref-strecker2025}{2025}) has
@@ -1844,8 +1859,8 @@ following reasons:
 \item
   We assume that indirect data citations are particularly common for
   data presented via data articles. However, it is to be expected that
-  indirect data citation is also common for other types of articles,
-  which are cited instead of the data underlying them. This is suggested
+  indirect data citation also occurs for other types of articles, which
+  are cited instead of the data underlying them. This is suggested
   e.g.~by the survey of Gregory et al.
   (\citeproc{ref-gregory2023}{2023}), which shows that citing the
   article analyzing the data is much more common than citing the data
@@ -1941,7 +1956,7 @@ for omics fields, which currently rarely assign DOIs or offer to select
 CC licenses. It remains open whether the comparatively high reuse of
 data from these repositories occurs \textbf{despite} the lack of DOI and
 CC licenses, or whether this has no effect on reuse whatsoever. We had
-conducted this analyses based on the hypotheses that DOIs and CC
+conducted this analysis based on the hypotheses that DOIs and CC
 licenses would both \textbf{increase} data reuse. DOIs and persistent
 identifiers generally are broadly recommended
 (\citeproc{ref-F1MetaData}{GO FAIR initiative, n.d.};
@@ -2179,7 +2194,7 @@ The following restrictions and limitations apply to our analysis:
 
 \begin{itemize}
 \item
-  We only detect reuse detected through references in the published
+  We only detect reuse cases indicated by references in the published
   literature. This excludes many types of data reuse, as described in
   Section~\ref{sec-discussion-undetected}. In addition, dataset reuse by
   commercial actors is common and cannot be detected via bibliographic
@@ -2247,7 +2262,8 @@ The following restrictions and limitations apply to our analysis:
   further investigation.
 \end{itemize}
 
-For steps to ensure the validity of data, see the methods section.
+For steps to ensure the validity of data, see the methods section
+(Section~\ref{sec-methods}).
 
 \subsection{Outlook}\label{sec-discussion-outlook}
 
@@ -2599,7 +2615,7 @@ CLARIN. n.d. {``Persistent {Identifiers}.''}
 \bibitem[\citeproctext]{ref-cohenMatchingDataReferences2026}
 Cohen, Avihay, Blanka Ivanović, Anastasiia Iarkaeva, Vladislav Nachev,
 and Evgeny Bobrov. 2026. {``Matching Data References and Institutional
-Output to Map the Reuse of Biomedical Research Data (V1.0.1).''} Zenodo.
+Output to Map the Reuse of Biomedical Research Data (V1.0.3).''} Zenodo.
 \url{https://doi.org/10.5281/ZENODO.19235630}.
 
 \bibitem[\citeproctext]{ref-colavizzaAnalysisEffectsSharing2024}
